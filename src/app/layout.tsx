@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { PwaProvider } from "@/components/pwa/PwaProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
@@ -11,7 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: t("name"), template: `%s · ${t("name")}` },
     description: t("tagline"),
     applicationName: t("name"),
+    manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: t("name") },
+    formatDetection: { telephone: false },
   };
 }
 
@@ -29,7 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
         <NextIntlClientProvider>
-          {children}
+          <PwaProvider>{children}</PwaProvider>
           <Toaster />
         </NextIntlClientProvider>
       </body>
