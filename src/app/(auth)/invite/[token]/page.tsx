@@ -10,6 +10,18 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+// The preview masks the invited address (`x•••@domain`); the definitive check is server-side in
+// accept_invitation. Here we only avoid showing the accept button to an obviously wrong account.
+function matchesMasked(current: string | null, masked: string): boolean {
+  if (!current) return false;
+  const at = masked.indexOf("@");
+  if (at < 1) return true;
+  return (
+    current.startsWith(masked.slice(0, 1).toLowerCase()) &&
+    current.endsWith(masked.slice(at).toLowerCase())
+  );
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("invite");
   return { title: t("title") };
@@ -67,9 +79,10 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               ) : !user ? (
                 <div className="flex flex-col gap-3">
                   <p className="text-sm">{t("signInHint", { email: preview.email })}</p>
-                  <LoginForm next={`/invite/${token}`} initialEmail={preview.email} allowSignup />
+                  {/* The preview only carries a masked address: the invitee types their own. */}
+                  <LoginForm next={`/invite/${token}`} allowSignup />
                 </div>
-              ) : userEmail !== preview.email.toLowerCase() ? (
+              ) : !matchesMasked(userEmail, preview.email) ? (
                 <div className="flex flex-col gap-4">
                   <Alert variant="warning">
                     <AlertTitle>{t("mismatch.title")}</AlertTitle>

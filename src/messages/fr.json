@@ -226,7 +226,8 @@
     "conflict": "Quelqu'un a modifié cet élément entre-temps. Rechargez la page et réessayez.",
     "boat_name_mismatch": "Le nom saisi ne correspond pas au nom du bateau.",
     "engine_in_use": "Ce moteur a des relevés ou des points de checklist : désactivez-le plutôt.",
-    "date_in_future": "Cette date est dans le futur."
+    "date_in_future": "Cette date est dans le futur.",
+    "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus."
   },
   "members": {
     "title": "Membres",
@@ -265,7 +266,23 @@
       "submit": "Envoyer l'invitation",
       "sent": "Invitation envoyée à {email}.",
       "proTitle": "Ce que verra ce professionnel",
-      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions resteront dans le journal."
+      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions resteront dans le journal.",
+      "duration": "Durée d'accès",
+      "durations": {
+        "7": "7 jours",
+        "30": "30 jours",
+        "90": "90 jours",
+        "unlimited": "Sans limite"
+      },
+      "durationHelp": "L'accès s'arrête seul à la date indiquée. Vous pourrez le prolonger ou le retirer avant.",
+      "durationHelpEditor": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour 90 jours au plus.",
+      "sentTitle": "Invitation envoyée",
+      "sentDescription": "{email} a reçu un e-mail. Vous pouvez aussi lui transmettre le lien directement.",
+      "validUntil": "Accès jusqu'au {date}",
+      "copyLink": "Copier le lien",
+      "linkCopied": "Lien copié.",
+      "share": "Partager",
+      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman"
     },
     "invitations": {
       "title": "Invitations en attente",
@@ -279,12 +296,17 @@
         "accepted": "Acceptée",
         "revoked": "Annulée"
       }
-    }
+    },
+    "expired": "Accès expiré le {date}",
+    "reactivate": "Réactiver 90 j",
+    "reactivated": "Accès prolongé de 90 jours.",
+    "lastOwnerHint": "Pour changer de propriétaire, transférez d'abord le bateau.",
+    "transferLink": "Transférer le bateau"
   },
   "invite": {
     "title": "Invitation",
     "summary": "{inviter} vous invite en tant que {role}.",
-    "signInHint": "Connectez-vous avec l'adresse {email} pour rejoindre le bateau.",
+    "signInHint": "Connectez-vous avec l'adresse invitée ({email}) pour rejoindre le bateau.",
     "accept": "Rejoindre {boat}",
     "invalid": {
       "title": "Invitation introuvable",
@@ -304,10 +326,6 @@
     "title": "Mon profil",
     "identity": "Identité",
     "fullName": "Nom affiché",
-    "locale": "Langue",
-    "locales": {
-      "fr": "Français"
-    },
     "saved": "Profil enregistré.",
     "delete": {
       "title": "Supprimer mon compte",
@@ -316,7 +334,11 @@
       "dialogTitle": "Confirmer la suppression",
       "dialogDescription": "Cette action est irréversible. Tapez {keyword} pour confirmer.",
       "confirmLabel": "Confirmation",
-      "keyword": "SUPPRIMER"
+      "keyword": "SUPPRIMER",
+      "blockedTitle": "Vous êtes le seul propriétaire de {boat}",
+      "blockedDescription": "Avant de supprimer votre compte, transférez le bateau à un autre propriétaire ou supprimez-le.",
+      "transfer": "Transférer le bateau",
+      "deleteBoat": "Supprimer le bateau"
     }
   },
   "roles": {

@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import { updateProfile } from "@/lib/actions/profile";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -55,12 +54,6 @@ export function ProfileForm({ defaultValues }: { defaultValues: UpdateProfileInp
               aria-invalid={form.formState.errors.fullName ? true : undefined}
               {...form.register("fullName")}
             />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="locale">{t("locale")}</Label>
-            <NativeSelect id="locale" {...form.register("locale")}>
-              <option value="fr">{t("locales.fr")}</option>
-            </NativeSelect>
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={pending}>

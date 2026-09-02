@@ -8,9 +8,11 @@ import { getTranslations } from "next-intl/server";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { publicEnv } from "@/lib/env";
+import { addDays, toIsoDate } from "@/lib/numbers";
 import {
   acceptInvitationSchema,
   changeMemberRoleSchema,
+  extendMemberAccessSchema,
   inviteMemberSchema,
   removeMemberSchema,
   revokeInvitationSchema,
@@ -27,10 +29,10 @@ function membersPath(boatId: string) {
 // accounts, magic link for existing ones), redirecting to /invite/[token].
 export async function inviteMember(
   input: unknown,
-): Promise<ActionResult<{ invitationId: string }>> {
+): Promise<ActionResult<{ invitationId: string; inviteUrl: string; validUntil: string | null }>> {
   const parsed = parseInput(inviteMemberSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { boatId, email, role } = parsed.data;
+  const { boatId, email, role, duration } = parsed.data;
 
   const supabase = await createClient();
   const {
@@ -38,10 +40,17 @@ export async function inviteMember(
   } = await supabase.auth.getUser();
   if (!user) return fail("errors.forbidden");
 
+  // D28: an editor invites pro/viewer only, always with an end date (≤ 90 days).
+  const { data: inviterRole } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  if (inviterRole === "editor" && (role === "editor" || duration === "unlimited")) {
+    return fail("errors.invitation_duration_required");
+  }
+  const validUntil = duration === "unlimited" ? null : addDays(toIsoDate(), Number(duration));
+
   const token = randomBytes(32).toString("base64url");
   const { data: invitation, error } = await supabase
     .from("boat_invitations")
-    .insert({ boat_id: boatId, email, role, token, invited_by: user.id })
+    .insert({ boat_id: boatId, email, role, token, invited_by: user.id, valid_until: validUntil })
     .select("id")
     .single();
   if (error || !invitation) return fail(dbErrorKey(error ?? { message: "insert failed" }));
@@ -78,7 +87,23 @@ export async function inviteMember(
   }
 
   revalidatePath(membersPath(boatId));
-  return ok({ invitationId: invitation.id });
+  return ok({ invitationId: invitation.id, inviteUrl: redirectTo, validUntil });
+}
+
+// D29: an expired member is reactivated for 90 more days (owner only, by RLS).
+export async function extendMemberAccess(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(extendMemberAccessSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const supabase = await createClient();
+  const { error, count } = await supabase
+    .from("boat_members")
+    .update({ valid_until: addDays(toIsoDate(), 90) }, { count: "exact" })
+    .eq("boat_id", parsed.data.boatId)
+    .eq("user_id", parsed.data.userId);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+  revalidatePath(membersPath(parsed.data.boatId));
+  return ok(undefined);
 }
 
 export async function revokeInvitation(input: unknown): Promise<ActionResult> {

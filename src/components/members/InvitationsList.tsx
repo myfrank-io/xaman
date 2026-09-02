@@ -20,6 +20,7 @@ export type InvitationRow = {
   role: BoatRole;
   status: InvitationStatus;
   expiresAt: string;
+  validUntil: string | null;
   invitedByName: string | null;
 };
 
@@ -62,6 +63,7 @@ export function InvitationsList({
                 {i.status === "expired"
                   ? t("invitations.expired")
                   : t("invitations.expires", { date: formatDate(i.expiresAt) })}
+                {i.validUntil ? ` · ${t("validUntil", { date: formatDate(i.validUntil) })}` : ""}
               </p>
             </div>
             <Badge variant={i.status === "expired" ? "outline" : "secondary"}>

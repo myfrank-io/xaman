@@ -477,9 +477,10 @@ describe("invitation functions", () => {
       ]);
       return res.rows[0] as Record<string, unknown> | undefined;
     });
+    // 0007: the address is masked on the public page; only the domain and the initial show.
     expect(preview).toMatchObject({
       boat_name: "Bateau test",
-      email: "stranger@test.xaman",
+      email: "s•••@test.xaman",
       role: "viewer",
       status: "pending",
     });

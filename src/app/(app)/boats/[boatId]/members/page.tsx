@@ -20,7 +20,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
   if (!boatRole || !can(boatRole, "write")) notFound();
   const isOwner = can(boatRole, "manageMembers");
 
-  const [{ data: members }, { data: invitations }] = await Promise.all([
+  const [{ data: members }, { data: invitations }, { data: boat }] = await Promise.all([
     supabase
       .from("boat_members")
       .select(
@@ -31,10 +31,11 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
     isOwner
       ? supabase
           .from("boat_invitations_safe")
-          .select("id, email, role, status, expires_at, invited_by_name, created_at")
+          .select("id, email, role, status, expires_at, valid_until, invited_by_name, created_at")
           .eq("boat_id", boatId)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
+    supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
   ]);
 
   const t = await getTranslations("members");
@@ -44,7 +45,13 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
-        actions={isOwner ? <InviteMemberDialog boatId={boatId} /> : undefined}
+        actions={
+          <InviteMemberDialog
+            boatId={boatId}
+            boatName={boat?.name ?? ""}
+            inviterRole={isOwner ? "owner" : "editor"}
+          />
+        }
       />
       <MembersList
         boatId={boatId}
@@ -67,6 +74,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
             role: i.role ?? "viewer",
             status: (i.status ?? "pending") as InvitationStatus,
             expiresAt: i.expires_at ?? "",
+            validUntil: i.valid_until ?? null,
             invitedByName: i.invited_by_name ?? null,
           }))}
         />

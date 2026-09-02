@@ -23,11 +23,25 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, email, locale")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: ownerships }] = await Promise.all([
+    supabase.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("boat_members")
+      .select("boat_id, boats!boat_members_boat_id_fkey(name)")
+      .eq("user_id", user.id)
+      .eq("role", "owner"),
+  ]);
+  // D31: boats where this account is the last owner block the deletion; say which and offer a way out.
+  const blocking: { id: string; name: string }[] = [];
+  for (const membership of ownerships ?? []) {
+    const { count } = await supabase
+      .from("boat_members")
+      .select("user_id", { count: "exact", head: true })
+      .eq("boat_id", membership.boat_id)
+      .eq("role", "owner")
+      .neq("user_id", user.id);
+    if (!count) blocking.push({ id: membership.boat_id, name: membership.boats?.name ?? "" });
+  }
   const t = await getTranslations("profile");
   const tc = await getTranslations("common");
 
@@ -44,13 +58,8 @@ export default async function ProfilePage() {
         subtitle={profile?.email ?? user.email ?? ""}
         actions={<SignOutButton variant="outline" />}
       />
-      <ProfileForm
-        defaultValues={{
-          fullName: profile?.full_name ?? "",
-          locale: (profile?.locale as "fr") ?? "fr",
-        }}
-      />
-      <DeleteAccountCard />
+      <ProfileForm defaultValues={{ fullName: profile?.full_name ?? "" }} />
+      <DeleteAccountCard blockingBoats={blocking} />
     </main>
   );
 }

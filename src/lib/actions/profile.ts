@@ -18,7 +18,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
   if (!user) return fail("errors.forbidden");
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: parsed.data.fullName, locale: parsed.data.locale })
+    .update({ full_name: parsed.data.fullName })
     .eq("id", user.id);
   if (error) return fail(dbErrorKey(error));
   revalidatePath("/settings/profile");
@@ -50,6 +50,22 @@ export async function deleteAccount(): Promise<ActionResult> {
       .eq("role", "owner")
       .neq("user_id", user.id);
     if (!count) return fail("errors.last_owner");
+  }
+
+  // D31: the name stays readable in the checklist history once the profile is gone.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", user.id)
+    .maybeSingle();
+  const frozenName = profile?.full_name ?? profile?.email ?? user.email ?? null;
+  if (frozenName) {
+    const { error: freezeError } = await admin
+      .from("checklist_completions")
+      .update({ completed_by_name: frozenName })
+      .eq("completed_by", user.id)
+      .is("completed_by_name", null);
+    if (freezeError) return fail(dbErrorKey(freezeError));
   }
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
