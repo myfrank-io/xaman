@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "supabase/.temp/**",
+    "supabase/functions/**",
+    ".claude/**",
     "src/types/database.ts",
     "public/sw.js",
   ]),

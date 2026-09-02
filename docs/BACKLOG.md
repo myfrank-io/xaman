@@ -80,13 +80,13 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 - [x] **E9-2 (M, 1)** Export : Server Action `exportBoat` → JSON complet + `interventions.csv` + `depenses.csv` (pas de zip), bouton dans Paramètres.
 - [x] **E9-2b (M, 2)** **Rapport d'état** `/boats/[boatId]/report` : une page serveur imprimable (`@media print`, PDF via Partager → Imprimer) : identité, moteurs et heures, état des 8 systèmes, échéances des 12 mois, 12 derniers mois d'interventions (réalisé par), sorties de l'eau, coûts avec bascule « inclure les coûts », pied « Carnet tenu dans Xaman · N interventions · N réalisations ».
-- [ ] **E9-1 (M, 2)** Hors ligne : `OfflineBanner` (`navigator.onLine` + échecs consécutifs), âge des données, boutons en style hors ligne (`aria-disabled` + toast), **brouillons locaux** (créations seulement, renvoi manuel, 20 max, D25), runtime caching Serwist des pages du bateau.
+- [~] **E9-1 (M, 2)** Hors ligne : `OfflineBanner` (`navigator.onLine` + échecs consécutifs), âge des données, boutons en style hors ligne (`aria-disabled` + toast), **brouillons locaux** (créations seulement, renvoi manuel, 20 max, D25), runtime caching Serwist des pages du bateau. **Fait** : bandeau + âge des données, bouton « Hors ligne — réessayer » dans la barre d'action, pages en cache runtime (Serwist `defaultCache`). **Reste** : brouillons locaux renvoyés manuellement (D25), à faire après la fusion du journal (E9-1b).
 - [x] **E1-8 (M, 1)** Transfert du bateau (D30).
-- [ ] **E9-6 (M, 2)** **E-mail hebdomadaire** (ex-E11-1, remonté en V1) : Edge Function + cron, vendredi matin, owner/editor, retards + bientôt + planifiées / urgentes ; pas de push, pas de notification par point.
+- [x] **E9-6 (M, 2)** **E-mail hebdomadaire** (ex-E11-1, remonté en V1) : Edge Function + cron, vendredi matin, owner/editor, retards + bientôt + planifiées / urgentes ; pas de push, pas de notification par point. **Livré** : fonction SQL `weekly_digest_payload` + `enqueue_weekly_digest` (pg_cron vendredi 06:30 UTC, pg_net, secrets Vault) et Edge Function `weekly-digest` (Resend). À activer avec le projet Supabase : secrets `RESEND_API_KEY`, `DIGEST_FROM`, `APP_URL`, Vault `xaman_digest_url` / `xaman_digest_key`.
 - [ ] **E9-3 (M, 2)** Tests E2E Playwright (iPad paysage + iPhone) sur les parcours `SPEC.md §6.1 à §6.4` + **budget d'interaction chronométré** (vidange ≤ 7 taps, cochage ≤ 3 taps, relevé ≤ 3 taps) + parcours « premier lancement » (assistant).
 - [ ] **E9-4 (M, 2)** QA iPad Safari réelle : zoom, clavier, safe areas, scroll des dialogues, cibles, mode standalone, plein soleil réel, gants / doigts mouillés, reconnexion Realtime après veille.
-- [~] **E9-5 (M, 1)** `/health` (fait), capture d'erreurs front (optionnel), README (installation, seed, déploiement, requête d'activation).
-- [ ] **E1-6b (M, 1)** Tests RLS des vues et fonctions secondaires (rapport, export, `boat_todo_queue`) — partie livrée par `0004`.
+- [x] **E9-5 (M, 1)** `/health` (fait), capture d'erreurs front (optionnel), README (installation, seed, déploiement, requête d'activation). README réécrit (installation, base locale, tests, déploiement, demande d'accès).
+- [x] **E1-6b (M, 1)** Tests RLS des vues et fonctions secondaires (rapport, export, `boat_todo_queue`) — partie livrée par `0004`. Tests ajoutés pour `expenses_by_category`, `engine_current_hours`, `boat_invitations_safe` (sans token), `maintenance_logs_trash_view`.
 
 ## L8 — Confort
 

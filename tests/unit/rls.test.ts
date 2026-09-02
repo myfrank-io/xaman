@@ -873,6 +873,62 @@ describe("status views", () => {
   });
 });
 
+// E1-6b: the secondary views follow the same tenant isolation as the tables they read.
+describe("secondary views", () => {
+  it.each(["expenses_by_category", "engine_current_hours"] as const)(
+    "%s: members see their boat, outsiders see nothing, anon is denied",
+    async (v) => {
+      for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+        expect(await count(U[role], v, "boat_id = $1", [BOAT]), `${role} on ${v}`).toBeGreaterThan(
+          0,
+        );
+      }
+      expect(await count(U.stranger, v, "boat_id = $1", [BOAT])).toBe(0);
+      expect(await count(null, v)).toBe(-1);
+    },
+  );
+
+  it("boat_invitations_safe: owners and the admin only, never the token", async () => {
+    expect(await count(U.owner, "boat_invitations_safe", "boat_id = $1", [BOAT])).toBeGreaterThan(
+      0,
+    );
+    expect(await count(U.admin, "boat_invitations_safe", "boat_id = $1", [BOAT])).toBeGreaterThan(
+      0,
+    );
+    for (const role of ["editor", "pro", "viewer", "stranger"] as Role[]) {
+      expect(await count(U[role], "boat_invitations_safe", "boat_id = $1", [BOAT]), role).toBe(0);
+    }
+    const columns = await as(U.owner, async (c) => {
+      const res = await c.query(
+        "select column_name from information_schema.columns where table_schema = 'public' and table_name = 'boat_invitations_safe'",
+      );
+      return res.rows.map((row) => row.column_name as string);
+    });
+    expect(columns).not.toContain("token");
+    expect(columns).toContain("valid_until");
+  });
+
+  it("maintenance_logs_trash_view: a trashed log shows for owner/editor, nothing for outsiders", async () => {
+    const seen = async (u: User) =>
+      as(u, async (c) => {
+        await c.query("set local role service_role");
+        await c.query("update public.maintenance_logs set deleted_at = now() where id = $1", [
+          LOG_OWNER,
+        ]);
+        await c.query("set local role authenticated");
+        const res = await c.query(
+          "select count(*)::int as n from public.maintenance_logs_trash_view where id = $1",
+          [LOG_OWNER],
+        );
+        return Number(res.rows[0]?.n);
+      });
+    expect(await seen(U.owner)).toBe(1);
+    expect(await seen(U.editor)).toBe(1);
+    expect(await seen(U.stranger)).toBe(0);
+    expect(await count(null, "maintenance_logs_trash_view")).toBe(-1);
+  });
+});
+
 describe("boat_todo_queue", () => {
   const seedQueue = async (c: PoolClient) => {
     await c.query("set local role service_role");

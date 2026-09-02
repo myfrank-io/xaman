@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
+import { useOnline } from "@/components/common/use-online";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
@@ -49,7 +51,9 @@ export function FormActionBar({
   className?: string;
 }) {
   const t = useTranslations("common");
+  const to = useTranslations("offline");
   const keyboard = useKeyboardOffset();
+  const { online } = useOnline();
   return (
     <div
       className={cn(
@@ -64,14 +68,24 @@ export function FormActionBar({
       <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
         {cancelLabel ?? t("cancel")}
       </Button>
-      <Button type="submit" disabled={pending || disabled} aria-busy={pending}>
+      {/* Offline: the form is never emptied, the button says why and stays tappable (§5.4). */}
+      <Button
+        type={online ? "submit" : "button"}
+        disabled={pending || disabled}
+        aria-busy={pending}
+        aria-disabled={!online || undefined}
+        variant={online ? "default" : "outline"}
+        onClick={online ? undefined : () => toast.error(to("actionUnavailable"))}
+      >
         {pending ? (
           <>
             <Spinner className="size-4" />
             {t("saving")}
           </>
-        ) : (
+        ) : online ? (
           (saveLabel ?? t("save"))
+        ) : (
+          to("retryLabel")
         )}
       </Button>
     </div>

@@ -450,7 +450,8 @@
     "actionUnavailable": "Hors ligne — cette action nécessite le réseau.",
     "backOnline": "De nouveau en ligne",
     "refresh": "Actualiser",
-    "pendingWrites": "{count, plural, one {# modification non enregistrée} other {# modifications non enregistrées}}"
+    "pendingWrites": "{count, plural, one {# modification non enregistrée} other {# modifications non enregistrées}}",
+    "retryLabel": "Hors ligne — réessayer"
   },
   "trash": {
     "title": "Corbeille",

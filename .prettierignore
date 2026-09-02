@@ -13,3 +13,5 @@ src/types/database.ts
 docs
 seed
 *.md
+supabase/functions
+.claude

@@ -98,7 +98,7 @@ export default async function BoatLayout({
           ) : undefined
         }
         accountMenu={<AccountMenu boatId={boatId} role={boatRole} user={account} />}
-        banner={<OfflineBanner />}
+        banner={<OfflineBanner lastSyncAt={new Date().toISOString()} />}
       >
         {children}
       </AppShell>
