@@ -30,7 +30,8 @@
     "yes": "Oui",
     "no": "Non",
     "today": "Aujourd'hui",
-    "empty": "Rien à afficher pour le moment."
+    "empty": "Rien à afficher pour le moment.",
+    "comingSoon": "Cet écran arrive bientôt."
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -103,6 +104,40 @@
       "toastMessage": "Intervention enregistrée",
       "emptyTitle": "Aucune intervention",
       "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal."
+    }
+  },
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Sans mot de passe : recevez un code par e-mail et saisissez-le ici.",
+    "email": {
+      "label": "Adresse e-mail",
+      "placeholder": "prenom@exemple.fr",
+      "submit": "Recevoir mon code",
+      "help": "Vous recevrez un code à 6 chiffres valable 10 minutes, ainsi qu'un lien de secours.",
+      "invalid": "Saisissez une adresse e-mail valide."
+    },
+    "code": {
+      "title": "Saisissez le code reçu",
+      "help": "Un code à 6 chiffres a été envoyé à {email}. Pensez à vérifier vos courriers indésirables.",
+      "label": "Code à 6 chiffres",
+      "submit": "Se connecter",
+      "back": "Changer d'adresse",
+      "resend": "Renvoyer le code",
+      "linkHint": "Le lien contenu dans l'e-mail fonctionne aussi, mais il s'ouvre dans Safari plutôt que dans l'application installée."
+    },
+    "errors": {
+      "send": "Impossible d'envoyer le code. Réessayez dans une minute.",
+      "noAccount": "Aucun compte n'existe pour cette adresse. Demandez une invitation au propriétaire du bateau.",
+      "code": "Code incorrect ou expiré.",
+      "link": "Ce lien de connexion n'est plus valable. Demandez un nouveau code.",
+      "hint": "Vérifiez l'adresse saisie, ou demandez un nouveau code."
+    }
+  },
+  "boats": {
+    "title": "Vos bateaux",
+    "none": {
+      "title": "Vous n'avez pas encore de bateau",
+      "description": "Demandez une invitation au propriétaire du bateau : vous recevrez un e-mail avec un lien pour le rejoindre."
     }
   }
 }

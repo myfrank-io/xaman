@@ -1599,7 +1599,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invitation: { Args: { p_token: string }; Returns: string }
+      boat_id_from_storage_path: { Args: { p_name: string }; Returns: string }
+      boat_role: {
+        Args: { p_boat_id: string }
+        Returns: Database["public"]["Enums"]["boat_role"]
+      }
+      can_contribute_boat: { Args: { p_boat_id: string }; Returns: boolean }
+      can_write_boat: { Args: { p_boat_id: string }; Returns: boolean }
+      get_invitation_preview: {
+        Args: { p_token: string }
+        Returns: {
+          boat_name: string
+          email: string
+          inviter_name: string
+          role: Database["public"]["Enums"]["boat_role"]
+          status: string
+        }[]
+      }
+      is_boat_member: { Args: { p_boat_id: string }; Returns: boolean }
+      is_boat_owner: { Args: { p_boat_id: string }; Returns: boolean }
+      is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      shares_boat_with: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
       attachment_entity:
