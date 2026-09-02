@@ -1,0 +1,142 @@
+{
+  "$schema_note": "Historique du carnet papier de Xaman (briefing de Xav, avril 2025 → juillet 2026), transcrit tel quel. `raw_date` = date écrite dans le carnet ; `performed_at` = date utilisée à l'import (corrigée si la date brute est invalide). `needs_review: true` = l'intervention est importée avec un badge « À vérifier », ses `engine_hours` (clé = external_ref du moteur) sont stockées dans `maintenance_logs.pending_engine_hours` (converties en engine_id par le script) et AUCUN relevé d'heures moteur n'est créé tant que Xav n'a pas validé la ligne dans l'app (`mark_log_reviewed`). Toutes les interventions du carnet portant des heures sont marquées `needs_review` car la série est globalement incohérente (voir review_summary). Les changements de bouteille de gaz sont importés dans `purchases` (kind = gas), pas dans le journal.",
+  "review_summary": [
+    "Dates invalides : 20/13/25 (importé au 20/10/2025, à confirmer : 20/10 ou 20/12 ?), 31/11/25 (importé au 30/11/2025).",
+    "Heures moteur non monotones : SB 502 (23/04/25) → 625 (28/08/25) → 708 (20/13/25) → 315→347 (30/12/25) → ~580 (06/03/26) ; BB 868/876 (04/25) → 658 (28/08/25) → 642 (20/13/25) → 347 (30/12/25) → ~580 (06/03/26) → 1008 (25/03/26). Hypothèses : colonnes SB/BB inversées sur certaines lignes, ou compteur remplacé / relevé sur un autre afficheur. Xav valide ligne par ligne dans l'app puis crée les relevés d'heures."
+  ],
+  "maintenance_logs": [
+    {
+      "external_ref": "paper-2025-04-18-oil",
+      "raw_date": "18/04/25",
+      "performed_at": "2025-04-18",
+      "title": "Vidange huile moteurs",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": null, "bb": 868 },
+      "engine_hours": { "xaman-engine-bb": 868 },
+      "notes": "OK. Carnet : SB —, BB 868 h.",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2025-04-23-oil-levels",
+      "raw_date": "23/04/25",
+      "performed_at": "2025-04-23",
+      "title": "Vidange + niveaux",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": 502, "bb": 876 },
+      "engine_hours": { "xaman-engine-sb": 502, "xaman-engine-bb": 876 },
+      "notes": "Huile OK, courroie OK. Carnet : SB 502 h, BB 876 h.",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2025-08-28-levels",
+      "raw_date": "28/08/25",
+      "performed_at": "2025-08-28",
+      "title": "Check niveaux",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": 625, "bb": 658 },
+      "engine_hours": { "xaman-engine-sb": 625, "xaman-engine-bb": 658 },
+      "notes": "Huile moteur, courroie retrou OK. Carnet : SB 625 h, BB 658 h (BB inférieur au relevé d'avril 2025 : à vérifier).",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2025-13-20-coolant",
+      "raw_date": "20/13/25",
+      "performed_at": "2025-10-20",
+      "title": "Niveaux + liquide refroidissement",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": 708, "bb": 642 },
+      "engine_hours": { "xaman-engine-sb": 708, "xaman-engine-bb": 642 },
+      "notes": "Déviation liquide refroid OK. Carnet : date « 20/13/25 » (mois invalide, importé au 20/10/2025 — à corriger), SB 708 h, BB 642 h.",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2025-12-30-levels",
+      "raw_date": "30/12/25",
+      "performed_at": "2025-12-30",
+      "title": "Niveaux + check",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": "315 → 347", "bb": 347 },
+      "engine_hours": { "xaman-engine-sb": 347, "xaman-engine-bb": 347 },
+      "notes": "Huile SD OK. Carnet : SB « 315 → 347 », BB 347 (valeurs très inférieures aux relevés précédents : compteur différent ? à vérifier).",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2026-03-06-full-service",
+      "raw_date": "06/03/26",
+      "performed_at": "2026-03-06",
+      "title": "Vidange + entretien complet (2 moteurs)",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": "~580", "bb": "~580" },
+      "engine_hours": { "xaman-engine-sb": 580, "xaman-engine-bb": 580 },
+      "contact_ref": "contact-yanmar",
+      "notes": "2 moteurs, fait par entreprise (prestataire à préciser). Carnet : ~580 h sur chaque moteur.",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2026-03-25-belt",
+      "raw_date": "25/03/26",
+      "performed_at": "2026-03-25",
+      "title": "Niveaux + courroie",
+      "category_ref": "engines",
+      "status": "done",
+      "priority": "normal",
+      "raw_hours": { "sb": null, "bb": 1008 },
+      "engine_hours": { "xaman-engine-bb": 1008 },
+      "notes": "Courroie BB OK. Carnet : BB 1008 h (incohérent avec ~580 h le 06/03/26 : à vérifier).",
+      "needs_review": true
+    }
+  ],
+  "purchases": [
+    {
+      "external_ref": "paper-2025-07-12-gas",
+      "raw_date": "12/07/25",
+      "purchased_at": "2025-07-12",
+      "kind": "gas",
+      "designation": "Remplacement bouteille gaz",
+      "bottle_type": null,
+      "supplier_name": null,
+      "amount": null,
+      "category_ref": "plumbing_systems",
+      "notes": "Carnet : « Remplacement bouteille gaz — Hyères » (lieu d'achat : Hyères, fournisseur non précisé).",
+      "needs_review": false
+    },
+    {
+      "external_ref": "paper-2025-11-31-gas",
+      "raw_date": "31/11/25",
+      "purchased_at": "2025-11-30",
+      "kind": "gas",
+      "designation": "Changement bouteille gaz",
+      "bottle_type": null,
+      "supplier_name": null,
+      "amount": null,
+      "category_ref": "plumbing_systems",
+      "notes": "Carnet : date « 31/11/25 » (inexistante, importée au 30/11/2025 — à corriger).",
+      "needs_review": true
+    },
+    {
+      "external_ref": "paper-2026-07-05-gas",
+      "raw_date": "05/07/26",
+      "purchased_at": "2026-07-05",
+      "kind": "gas",
+      "designation": "Changement bouteille (gaz, à confirmer)",
+      "bottle_type": null,
+      "supplier_name": null,
+      "amount": null,
+      "category_ref": "plumbing_systems",
+      "notes": "Carnet : « Changement bouteille » (type non précisé, supposé gaz).",
+      "needs_review": true
+    }
+  ]
+}

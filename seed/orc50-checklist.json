@@ -1,0 +1,176 @@
+{
+  "$schema_note": "Modèle de checklist ORC 50. `source: briefing` = fourni par Xav dans le briefing ; `source: proposal` = proposition standard à valider/remplacer par la liste complète de Xav (80+ points). `engine_scope` : none | inboard | outboard | all (absent = none). Intervalles : interval_months et/ou interval_hours (heures moteur, nécessite un moteur lié).",
+  "template": {
+    "external_ref": "orc50-v1",
+    "name": "ORC 50 — Marsaudon Composites",
+    "builder": "Marsaudon Composites",
+    "model": "ORC 50",
+    "boat_type": "catamaran",
+    "version": 1,
+    "is_public": true
+  },
+  "categories": [
+    {
+      "external_ref": "engines",
+      "name": "Moteurs",
+      "color": "#D97706",
+      "icon": "cog",
+      "sort_order": 1,
+      "items": [
+        { "external_ref": "eng-oil", "label": "Vidange huile moteur + filtre à huile", "interval_months": 12, "interval_hours": 250, "engine_scope": "inboard", "source": "proposal", "actions": ["Faire tourner le moteur 10 min pour fluidifier l'huile", "Pomper l'huile usagée par la jauge", "Remplacer le filtre à huile (joint huilé, serrage à la main + 3/4 tour)", "Remplir avec l'huile préconisée Yanmar, vérifier le niveau à la jauge", "Démarrer, contrôler l'absence de fuite, recontrôler le niveau à froid", "Noter les heures moteur"] },
+        { "external_ref": "eng-fuel-filters", "label": "Filtres à gasoil (préfiltre décanteur + filtre moteur)", "interval_months": 12, "interval_hours": 250, "engine_scope": "inboard", "source": "proposal", "actions": ["Fermer la vanne de gasoil", "Vidanger le bol du décanteur, remplacer la cartouche", "Remplacer le filtre secondaire sur moteur", "Purger le circuit, redémarrer, vérifier l'absence de fuite"] },
+        { "external_ref": "eng-impeller", "label": "Turbine de pompe à eau de mer (impeller)", "interval_months": 12, "engine_scope": "inboard", "source": "proposal", "actions": ["Fermer la vanne d'eau de mer", "Déposer le couvercle de pompe, extraire la turbine", "Contrôler les ailettes (fissures, ailettes manquantes → chercher les morceaux dans l'échangeur)", "Remonter turbine neuve graissée, joint neuf", "Rouvrir la vanne, démarrer, vérifier le débit à l'échappement"] },
+        { "external_ref": "eng-belt", "label": "Courroie alternateur / pompe (tension, usure)", "interval_months": 6, "interval_hours": 250, "engine_scope": "inboard", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-anodes", "label": "Anodes moteur (échangeur, collecteur)", "interval_months": 6, "engine_scope": "inboard", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-coolant", "label": "Liquide de refroidissement (niveau, remplacement)", "interval_months": 24, "engine_scope": "inboard", "source": "proposal", "actions": ["Contrôle du niveau à chaque visite", "Remplacement complet tous les 2 ans"] },
+        { "external_ref": "eng-air-filter", "label": "Filtre à air", "interval_months": 12, "engine_scope": "inboard", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-gearbox-oil", "label": "Huile inverseur / embase (saildrive si applicable)", "interval_months": 12, "interval_hours": 250, "engine_scope": "inboard", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-saildrive-boot", "label": "Soufflet et anode d'embase saildrive (si applicable)", "interval_months": 12, "engine_scope": "inboard", "source": "proposal", "actions": ["Contrôle visuel du soufflet à chaque sortie de l'eau", "Remplacement selon préconisation Yanmar"] },
+        { "external_ref": "eng-mounts", "label": "Silent-blocs, alignement, fixations", "interval_months": 12, "engine_scope": "inboard", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-exhaust", "label": "Circuit d'échappement (coude, waterlock, durites, colliers)", "interval_months": 12, "engine_scope": "inboard", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-zf-controls", "label": "Commandes électriques ZF (calibration, connexions, test des deux postes)", "interval_months": 12, "engine_scope": "none", "source": "proposal", "actions": [] },
+        { "external_ref": "eng-outboard-service", "label": "Entretien hors-bord annexe (vidange embase, bougies, anode, filtre, rinçage)", "interval_months": 12, "engine_scope": "outboard", "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "daggerboards_rudders",
+      "name": "Dérives & Safrans",
+      "color": "#0EA5E9",
+      "icon": "anchor",
+      "sort_order": 2,
+      "items": [
+        { "external_ref": "db-inspection", "label": "Dérives : inspection (chocs, fissures, délaminage, bord d'attaque)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "db-wells", "label": "Puits de dérive : nettoyage, patins / guides (usure, jeu)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "db-lifting", "label": "Système de relevage des dérives (bosses, poulies, bloqueurs, winches dédiés)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "rud-bearings", "label": "Safrans : jeu des paliers, mèches, fixations", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "rud-steering", "label": "Transmission de barre (liaisons, drosses / biellettes, fixation vérin pilote)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "rud-emergency", "label": "Barre de secours : présence et essai de montage", "interval_months": 12, "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "sails_rigging",
+      "name": "Voiles & Gréement",
+      "color": "#7C3AED",
+      "icon": "sailboat",
+      "sort_order": 3,
+      "items": [
+        { "external_ref": "sail-main-check", "label": "Grand-voile (coutures, lattes, œillets)", "interval_months": 6, "source": "briefing", "actions": [] },
+        { "external_ref": "sail-jib-check", "label": "Foc / Génois", "interval_months": 6, "source": "briefing", "actions": [] },
+        { "external_ref": "furler-bearings", "label": "Enrouleur génois (roulements)", "interval_months": 12, "source": "briefing", "actions": [] },
+        { "external_ref": "stays-shrouds", "label": "Étai & haubans", "interval_months": 6, "source": "briefing", "actions": [] },
+        { "external_ref": "winch-gv-sb", "label": "Check winch GV SB (démontage, nettoyage, graissage cliquets)", "interval_months": 6, "source": "briefing", "actions": ["Déposer la poupée (circlip / vis de tête)", "Extraire les tambours et roulements, repérer l'ordre", "Nettoyer au dégraissant, sécher", "Contrôler cliquets et ressorts, remplacer si usés", "Graisser légèrement les roulements et engrenages (graisse winch), huiler les cliquets (huile fine, jamais de graisse)", "Remonter, tester les deux vitesses et le retour des cliquets"] },
+        { "external_ref": "winch-gv-bb", "label": "Check winch GV BB (démontage, nettoyage, graissage cliquets)", "interval_months": 6, "source": "briefing", "actions": ["Voir procédure winch GV SB"] },
+        { "external_ref": "winch-derive-sb", "label": "Check winch Dérive SB", "interval_months": 6, "source": "briefing", "actions": ["Voir procédure winch GV SB"] },
+        { "external_ref": "winch-derive-bb", "label": "Check winch Dérive BB", "interval_months": 6, "source": "briefing", "actions": ["Voir procédure winch GV SB"] },
+        { "external_ref": "winch-j1-sb", "label": "Check winch J1 SB", "interval_months": 6, "source": "briefing", "actions": ["Voir procédure winch GV SB"] },
+        { "external_ref": "winch-j1-bb", "label": "Check winch J1 BB", "interval_months": 6, "source": "briefing", "actions": ["Voir procédure winch GV SB"] },
+        { "external_ref": "winch-mast-sb", "label": "Check winch pied de mât SB (électrique Andersen ST62)", "interval_months": 6, "source": "briefing", "actions": ["Procédure winch standard", "Winch électrique : vérification moteur, connexions, interrupteur", "Contrôler le serrage des cosses et l'absence de corrosion", "Tester l'interrupteur et le disjoncteur"] },
+        { "external_ref": "winch-mast-bb", "label": "Check winch pied de mât BB (manuel)", "interval_months": 6, "source": "briefing", "actions": ["Voir procédure winch GV SB"] },
+        { "external_ref": "winch-lube", "label": "Lubrification winches", "interval_months": 6, "source": "briefing", "actions": [] },
+        { "external_ref": "boom-vang", "label": "Bôme & vang", "interval_months": 6, "source": "briefing", "actions": [] },
+        { "external_ref": "mast-carbon", "label": "Mât carbone (inspection délaminage, fixations)", "interval_months": 12, "source": "briefing", "actions": [] },
+        { "external_ref": "bowsprit", "label": "Bowsprit carbone", "interval_months": 6, "source": "briefing", "actions": [] },
+        { "external_ref": "halyards-sheets", "label": "Drisses & écoutes (usure, gaines, épissures, points de ragage)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "hooks-code0-j2", "label": "Drisses hookées (Code 0, J2) : hooks, fonctionnement, usure", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "furlers-karver", "label": "Emmagasineurs Karver (rinçage, roulements, sangles, émerillons)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "rail-3d", "label": "Rail transversal 3D (chariots, bloqueurs, fixation)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "textile-shrouds", "label": "Haubans textiles kevlar (gaine, UV, ridoirs, terminaisons)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "masthead", "label": "Visite en tête de mât (réas, capelage, feux, girouette, antennes)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "spi-sock", "label": "Spis : chaussette, coutures, points d'écoute / d'amure", "interval_months": 12, "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "hull_deck",
+      "name": "Coque & Pont",
+      "color": "#64748B",
+      "icon": "ship",
+      "sort_order": 4,
+      "items": [
+        { "external_ref": "coppercoat", "label": "Copper Coat : polissage léger et retouches (Nautix A88M)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "hull-inspection", "label": "Carènes : inspection à la sortie de l'eau (chocs, cloques, délaminage)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "seacocks", "label": "Passe-coques et vannes (manœuvre, corrosion, colliers doubles)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "hull-anodes", "label": "Anodes de coque / embases", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "crossbeam-check", "label": "Traverse et poutres carbone (fissures, laquage, liaisons)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "skirts-check", "label": "Jupes et échelles de bain (fixations, chocs)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "trampoline", "label": "Trampoline / filets (coutures, ridoirs, tension)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "deck-hardware", "label": "Accastillage de pont (rails, chariots, bloqueurs, poulies, rinçage eau douce)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "hatches", "label": "Hublots et capots (joints, étanchéité, compas)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "windlass-service", "label": "Guindeau (graissage, barbotin, commande, disjoncteur)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "anchor-chain-check", "label": "Chaîne de mouillage (marquage, usure, émerillon, manilles, ancre Spade)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "davits", "label": "Bossoirs (fixations, palans, support panneaux solaires)", "interval_months": 6, "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "electronics_nav",
+      "name": "Électronique / Nav",
+      "color": "#2563EB",
+      "icon": "radar",
+      "sort_order": 5,
+      "items": [
+        { "external_ref": "bg-firmware", "label": "B&G : mises à jour firmware (centrale, écrans, pilote)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "bg-calibration", "label": "B&G : calibration compas, loch, girouette", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "speedo-sensor", "label": "Capteur loch / speedo (nettoyage roue à aubes)", "interval_months": 3, "source": "proposal", "actions": [] },
+        { "external_ref": "autopilot", "label": "Pilote automatique (vérin / drive, fixations, test)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "vhf-test", "label": "VHF fixe : test émission, DSC, antenne, connexions", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "ais-test", "label": "AIS : test émission / réception, MMSI", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "garmin-charts", "label": "Traceur Garmin : mise à jour cartes et logiciel", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "starlink-rutx", "label": "Starlink / routeur RUTX10 (fixations, câbles, firmware)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "connectors", "label": "Connectique et boîtiers (étanchéité, corrosion, presse-étoupes)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "nav-lights", "label": "Feux de navigation et de mouillage (test)", "interval_months": 6, "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "energy",
+      "name": "Énergie",
+      "color": "#EAB308",
+      "icon": "zap",
+      "sort_order": 6,
+      "items": [
+        { "external_ref": "lithium-bms", "label": "Batteries Lithium Super B : contrôle BMS, équilibrage, tensions cellules", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "battery-terminals", "label": "Serrage des bornes, fusibles, coupe-batteries", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "solar-clean", "label": "Panneaux solaires (nettoyage, fixations, contrôle production MPPT)", "interval_months": 3, "source": "proposal", "actions": [] },
+        { "external_ref": "victron-check", "label": "Victron (inverter / chargeur, MPPT, BMV : firmware, paramètres, test)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "shore-power", "label": "Chargeur de quai 40 A + isolateur galvanique (test, câble de quai)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "alternators", "label": "Alternateurs (charge, régulateur, câblage)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "wiring-panel", "label": "Tableau électrique et câblage (échauffement, corrosion, étiquetage)", "interval_months": 12, "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "plumbing_systems",
+      "name": "Hydraulique & Circuits",
+      "color": "#0D9488",
+      "icon": "droplets",
+      "sort_order": 7,
+      "items": [
+        { "external_ref": "bilge-pumps", "label": "Pompes de cale (test manuel / auto, flotteurs, crépines)", "interval_months": 3, "source": "proposal", "actions": [] },
+        { "external_ref": "freshwater", "label": "Eau douce : réservoirs (désinfection), pompe, filtres, groupe de pression", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "watermaker-service", "label": "Dessalinisateur Aqua Base (préfiltres, rinçage, conservation membrane)", "interval_months": 3, "source": "proposal", "actions": [] },
+        { "external_ref": "daggerboard-hydraulics", "label": "Circuit de relevage des dérives (vérins, flexibles, niveau si hydraulique)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "gas-system", "label": "Gaz : flexibles (dates), détendeur, test d'étanchéité, coffre ventilé", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "heater-service", "label": "Chauffage Wallas 30DT (entretien, filtre carburant, test)", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "fridge-freezer", "label": "Réfrigérateur / congélateur (keel cooler, joints, compresseur)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "hoses-clamps", "label": "Durites et colliers (état, doubles colliers sous flottaison)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "toilets", "label": "Toilettes et eaux noires (pompes, joints, vannes, détartrage)", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "washing-machine-filter", "label": "Lave-linge (filtre, fixation)", "interval_months": 12, "source": "proposal", "actions": [] }
+      ]
+    },
+    {
+      "external_ref": "safety",
+      "name": "Sécurité",
+      "color": "#DC2626",
+      "icon": "life-buoy",
+      "sort_order": 8,
+      "items": [
+        { "external_ref": "liferaft", "label": "Radeau de survie : révision (date de validité)", "interval_months": 36, "source": "proposal", "actions": [] },
+        { "external_ref": "epirb", "label": "EPIRB : autotest, date batterie, enregistrement", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "lifejackets", "label": "Gilets / harnais : cartouches, percuteurs, dates, longes", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "extinguishers", "label": "Extincteurs : dates, pression, couverture anti-feu", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "pyrotechnics", "label": "Pyrotechnie : dates de péremption", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "handheld-vhf", "label": "VHF portable : batterie, test", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "lifelines", "label": "Lignes de vie, bouée fer à cheval, lampes flash, filières", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "first-aid", "label": "Trousse de secours : dates, contenu", "interval_months": 12, "source": "proposal", "actions": [] },
+        { "external_ref": "gas-co-alarms", "label": "Détecteurs gaz / CO / fumée : test, piles", "interval_months": 6, "source": "proposal", "actions": [] }
+      ]
+    }
+  ]
+}
