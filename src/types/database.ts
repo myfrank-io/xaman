@@ -181,6 +181,7 @@ export type Database = {
           role: Database["public"]["Enums"]["boat_role"]
           token: string
           updated_at: string
+          valid_until: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -195,6 +196,7 @@ export type Database = {
           role: Database["public"]["Enums"]["boat_role"]
           token: string
           updated_at?: string
+          valid_until?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -209,6 +211,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["boat_role"]
           token?: string
           updated_at?: string
+          valid_until?: string | null
         }
         Relationships: [
           {
@@ -419,6 +422,7 @@ export type Database = {
           engine_hours: number | null
           id: string
           maintenance_log_id: string | null
+          next_due_at: string | null
           note: string | null
           updated_at: string
           updated_by: string | null
@@ -434,6 +438,7 @@ export type Database = {
           engine_hours?: number | null
           id?: string
           maintenance_log_id?: string | null
+          next_due_at?: string | null
           note?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -449,6 +454,7 @@ export type Database = {
           engine_hours?: number | null
           id?: string
           maintenance_log_id?: string | null
+          next_due_at?: string | null
           note?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -529,6 +535,8 @@ export type Database = {
       checklist_items: {
         Row: {
           actions: NonNullable<Json>
+          anchor_date: string
+          anchor_hours: number | null
           boat_id: string
           category_id: string
           created_at: string
@@ -549,6 +557,8 @@ export type Database = {
         }
         Insert: {
           actions?: NonNullable<Json>
+          anchor_date?: string
+          anchor_hours?: number | null
           boat_id: string
           category_id: string
           created_at?: string
@@ -569,6 +579,8 @@ export type Database = {
         }
         Update: {
           actions?: NonNullable<Json>
+          anchor_date?: string
+          anchor_hours?: number | null
           boat_id?: string
           category_id?: string
           created_at?: string
@@ -1009,6 +1021,8 @@ export type Database = {
         Row: {
           boat_id: string
           brand: string | null
+          counter_reset_at: string | null
+          counter_reset_note: string | null
           created_at: string
           created_by: string | null
           external_ref: string | null
@@ -1027,6 +1041,8 @@ export type Database = {
         Insert: {
           boat_id: string
           brand?: string | null
+          counter_reset_at?: string | null
+          counter_reset_note?: string | null
           created_at?: string
           created_by?: string | null
           external_ref?: string | null
@@ -1045,6 +1061,8 @@ export type Database = {
         Update: {
           boat_id?: string
           brand?: string | null
+          counter_reset_at?: string | null
+          counter_reset_note?: string | null
           created_at?: string
           created_by?: string | null
           external_ref?: string | null
@@ -1105,6 +1123,7 @@ export type Database = {
           name: string
           notes: string | null
           quantity: number
+          removed_at: string | null
           serial: string | null
           sort_order: number
           specs: NonNullable<Json>
@@ -1124,6 +1143,7 @@ export type Database = {
           name: string
           notes?: string | null
           quantity?: number
+          removed_at?: string | null
           serial?: string | null
           sort_order?: number
           specs?: NonNullable<Json>
@@ -1143,6 +1163,7 @@ export type Database = {
           name?: string
           notes?: string | null
           quantity?: number
+          removed_at?: string | null
           serial?: string | null
           sort_order?: number
           specs?: NonNullable<Json>
@@ -1297,15 +1318,14 @@ export type Database = {
           created_by: string | null
           currency: string
           deleted_at: string | null
+          equipment_id: string | null
           external_ref: string | null
           haul_out_id: string | null
           id: string
           needs_review: boolean
-          next_due_at: string | null
           notes: string | null
           pending_engine_hours: Json | null
           performed_at: string
-          priority: Database["public"]["Enums"]["log_priority"]
           status: Database["public"]["Enums"]["log_status"]
           title: string
           updated_at: string
@@ -1320,15 +1340,14 @@ export type Database = {
           created_by?: string | null
           currency?: string
           deleted_at?: string | null
+          equipment_id?: string | null
           external_ref?: string | null
           haul_out_id?: string | null
           id?: string
           needs_review?: boolean
-          next_due_at?: string | null
           notes?: string | null
           pending_engine_hours?: Json | null
           performed_at: string
-          priority?: Database["public"]["Enums"]["log_priority"]
           status?: Database["public"]["Enums"]["log_status"]
           title: string
           updated_at?: string
@@ -1343,15 +1362,14 @@ export type Database = {
           created_by?: string | null
           currency?: string
           deleted_at?: string | null
+          equipment_id?: string | null
           external_ref?: string | null
           haul_out_id?: string | null
           id?: string
           needs_review?: boolean
-          next_due_at?: string | null
           notes?: string | null
           pending_engine_hours?: Json | null
           performed_at?: string
-          priority?: Database["public"]["Enums"]["log_priority"]
           status?: Database["public"]["Enums"]["log_status"]
           title?: string
           updated_at?: string
@@ -1398,6 +1416,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
             referencedColumns: ["id"]
           },
           {
@@ -1788,36 +1813,51 @@ export type Database = {
       boat_dashboard_stats: {
         Row: {
           boat_id: string | null
+          engines_without_reading: number | null
+          expenses_12m: number | null
           in_progress_logs: number | null
           last_haul_out_at: string | null
           low_stock_parts: number | null
           months_since_haul_out: number | null
+          never_recorded_items: number | null
           overdue_items: number | null
           planned_logs: number | null
+          review_pending_logs: number | null
+          review_pending_purchases: number | null
           soon_items: number | null
           urgent_logs: number | null
           ytd_expenses: number | null
         }
         Insert: {
           boat_id?: string | null
+          engines_without_reading?: never
+          expenses_12m?: never
           in_progress_logs?: never
           last_haul_out_at?: never
           low_stock_parts?: never
           months_since_haul_out?: never
+          never_recorded_items?: never
           overdue_items?: never
           planned_logs?: never
+          review_pending_logs?: never
+          review_pending_purchases?: never
           soon_items?: never
           urgent_logs?: never
           ytd_expenses?: never
         }
         Update: {
           boat_id?: string | null
+          engines_without_reading?: never
+          expenses_12m?: never
           in_progress_logs?: never
           last_haul_out_at?: never
           low_stock_parts?: never
           months_since_haul_out?: never
+          never_recorded_items?: never
           overdue_items?: never
           planned_logs?: never
+          review_pending_logs?: never
+          review_pending_purchases?: never
           soon_items?: never
           urgent_logs?: never
           ytd_expenses?: never
@@ -1838,6 +1878,7 @@ export type Database = {
           revoked_at: string | null
           role: Database["public"]["Enums"]["boat_role"] | null
           status: string | null
+          valid_until: string | null
         }
         Relationships: [
           {
@@ -1878,9 +1919,11 @@ export type Database = {
           icon: string | null
           name: string | null
           never_count: number | null
+          never_recorded_count: number | null
           ok_count: number | null
           overdue_count: number | null
           progress: number | null
+          punctual_count: number | null
           soon_count: number | null
           sort_order: number | null
           total: number | null
@@ -1905,18 +1948,24 @@ export type Database = {
       checklist_item_status: {
         Row: {
           actions: Json | null
+          anchor_date: string | null
+          anchor_hours: number | null
           boat_id: string | null
           category_id: string | null
+          counter_reset_at: string | null
           current_hours: number | null
           days_remaining: number | null
           description: string | null
           due_at: string | null
           due_hours: number | null
           engine_id: string | null
+          fixed_due_at: string | null
+          has_completion: boolean | null
           hours_remaining: number | null
           id: string | null
           interval_hours: number | null
           interval_months: number | null
+          is_estimated: boolean | null
           label: string | null
           last_completed_at: string | null
           last_completed_by: string | null
@@ -1924,6 +1973,8 @@ export type Database = {
           last_completion_id: string | null
           last_engine_hours: number | null
           last_note: string | null
+          reference_at: string | null
+          reference_hours: number | null
           sort_order: number | null
           source: Database["public"]["Enums"]["checklist_item_source"] | null
           status: Database["public"]["Enums"]["checklist_state"] | null
@@ -2041,6 +2092,7 @@ export type Database = {
           deleted_by: string | null
           deleted_by_name: string | null
           id: string | null
+          pending_engine_hours: Json | null
           performed_at: string | null
           status: Database["public"]["Enums"]["log_status"] | null
           title: string | null
@@ -2100,15 +2152,15 @@ export type Database = {
           created_by_name: string | null
           currency: string | null
           engine_hours: Json | null
+          equipment_id: string | null
+          equipment_name: string | null
           external_ref: string | null
           haul_out_id: string | null
           id: string | null
           needs_review: boolean | null
-          next_due_at: string | null
           notes: string | null
           pending_engine_hours: Json | null
           performed_at: string | null
-          priority: Database["public"]["Enums"]["log_priority"] | null
           purchases_count: number | null
           status: Database["public"]["Enums"]["log_status"] | null
           title: string | null
@@ -2159,6 +2211,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "maintenance_logs_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "maintenance_logs_haul_out_id_fkey"
             columns: ["haul_out_id"]
             isOneToOne: false
@@ -2186,15 +2245,38 @@ export type Database = {
         Args: { p_boat_id: string }
         Returns: Database["public"]["Enums"]["boat_role"]
       }
+      boat_todo_queue: {
+        Args: { p_boat_id: string; p_limit?: number }
+        Returns: {
+          category_color: string
+          category_id: string
+          category_name: string
+          days_remaining: number
+          due_at: string
+          due_hours: number
+          engine_id: string
+          engine_label: string
+          hours_remaining: number
+          id: string
+          kind: string
+          rank: number
+          severity: number
+          sort_key: number
+          status: string
+          title: string
+        }[]
+      }
       can_contribute_boat: { Args: { p_boat_id: string }; Returns: boolean }
       can_write_boat: { Args: { p_boat_id: string }; Returns: boolean }
       checklist_compute_status: {
         Args: {
           p_current_hours: number
+          p_fixed_due_at?: string
+          p_has_completion?: boolean
           p_interval_hours: number
           p_interval_months: number
-          p_last_completed_at: string
-          p_last_engine_hours: number
+          p_reference_at: string
+          p_reference_hours: number
           p_today?: string
         }
         Returns: Record<string, unknown>
@@ -2239,7 +2321,6 @@ export type Database = {
       checklist_state: "never" | "ok" | "soon" | "overdue"
       engine_position: "port" | "starboard" | "center" | "outboard"
       hour_reading_source: "manual" | "maintenance_log" | "checklist" | "import"
-      log_priority: "low" | "normal" | "high"
       log_status: "planned" | "in_progress" | "done" | "urgent"
       organization_type:
         | "private"
@@ -2397,7 +2478,6 @@ export const Constants = {
       checklist_state: ["never", "ok", "soon", "overdue"],
       engine_position: ["port", "starboard", "center", "outboard"],
       hour_reading_source: ["manual", "maintenance_log", "checklist", "import"],
-      log_priority: ["low", "normal", "high"],
       log_status: ["planned", "in_progress", "done", "urgent"],
       organization_type: [
         "private",

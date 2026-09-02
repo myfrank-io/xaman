@@ -573,3 +573,347 @@ describe("storage bucket boat-files", () => {
     expect(await readAs(U.stranger)).toEqual({ seen: 0, deleted: 0 });
   });
 });
+
+// ---------------------------------------------------------------------------------------------
+// Tracking model (migration 0004_tracking.sql, docs/AUDIT.md §3.1)
+// ---------------------------------------------------------------------------------------------
+const COMPLETION_OWNER = "00000000-0000-0000-0000-000000004001";
+const COMPLETION_PRO = "00000000-0000-0000-0000-000000004002";
+
+describe("invitations issued by an editor (D28)", () => {
+  const invite = (u: User, role: string, token: string, days: number | null) =>
+    run(
+      u,
+      `insert into public.boat_invitations (boat_id, email, role, token, invited_by, valid_until)
+       values ($1, 'meca@test.xaman', $2::public.boat_role, $3, $4, current_date + $5::int)`,
+      [BOAT, role, token, u.id, days],
+    );
+
+  it("an editor may invite a pro or a viewer for 90 days at most", async () => {
+    expect((await invite(U.editor, "pro", "ed-pro-30", 30)).ok, "pro 30 d").toBe(true);
+    expect((await invite(U.editor, "viewer", "ed-viewer-90", 90)).ok, "viewer 90 d").toBe(true);
+    expect((await invite(U.editor, "pro", "ed-pro-91", 91)).ok, "pro 91 d").toBe(false);
+    expect((await invite(U.editor, "pro", "ed-pro-none", null)).ok, "pro, no end date").toBe(false);
+    expect((await invite(U.editor, "editor", "ed-editor", 30)).ok, "editor role").toBe(false);
+    expect((await invite(U.editor, "owner", "ed-owner", 30)).ok, "owner role").toBe(false);
+  });
+
+  it("an owner keeps inviting any role, with or without an end date", async () => {
+    expect((await invite(U.owner, "editor", "ow-editor", null)).ok).toBe(true);
+    expect((await invite(U.owner, "pro", "ow-pro", 365)).ok).toBe(true);
+    expect((await invite(U.pro, "viewer", "pro-viewer", 30)).ok, "a pro invites nobody").toBe(
+      false,
+    );
+    expect(
+      (await invite(U.viewer, "viewer", "viewer-viewer", 30)).ok,
+      "a viewer invites nobody",
+    ).toBe(false);
+  });
+
+  it("accept_invitation carries valid_until over to the membership", async () => {
+    const out = await as(U.stranger, async (c) => {
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.boat_invitations set valid_until = current_date + 30 where token = $1",
+        [INVITATION_TOKEN],
+      );
+      await c.query("set local role authenticated");
+      await c.query("select public.accept_invitation($1)", [INVITATION_TOKEN]);
+      await c.query("set local role service_role");
+      const res = await c.query(
+        `select (valid_until = current_date + 30) as carried
+         from public.boat_members where boat_id = $1 and user_id = $2`,
+        [BOAT, U.stranger.id],
+      );
+      return res.rows[0] as { carried: boolean };
+    });
+    expect(out).toEqual({ carried: true });
+  });
+});
+
+describe("cancelling a completion (D15)", () => {
+  const del = (u: User, id: string) =>
+    run(u, "delete from public.checklist_completions where id = $1", [id]);
+
+  it("owner/editor delete any completion, a pro only their own and only within 24 h", async () => {
+    expect(await del(U.owner, COMPLETION_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await del(U.editor, COMPLETION_OWNER)).toEqual({ ok: true, rowCount: 1 });
+    expect(await del(U.pro, COMPLETION_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await del(U.pro, COMPLETION_OWNER)).toEqual({ ok: true, rowCount: 0 });
+    expect(await del(U.viewer, COMPLETION_PRO)).toEqual({ ok: true, rowCount: 0 });
+    expect(await del(U.stranger, COMPLETION_PRO)).toEqual({ ok: true, rowCount: 0 });
+  });
+
+  it("past 24 h the pro author can no longer cancel", async () => {
+    const rows = await as(U.pro, async (c) => {
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.checklist_completions set created_at = now() - interval '25 hours' where id = $1",
+        [COMPLETION_PRO],
+      );
+      await c.query("set local role authenticated");
+      const res = await c.query("delete from public.checklist_completions where id = $1", [
+        COMPLETION_PRO,
+      ]);
+      return res.rowCount;
+    });
+    expect(rows).toBe(0);
+  });
+
+  it("deleting a completion deletes the hour reading it produced (cascade)", async () => {
+    const out = await as(U.owner, async (c) => {
+      const inserted = await c.query(
+        `insert into public.checklist_completions (boat_id, checklist_item_id, completed_at, engine_hours, created_by)
+         values ($1, $2, current_date, 700, $3) returning id`,
+        [BOAT, ITEM, U.owner.id],
+      );
+      const id = (inserted.rows[0] as { id: string }).id;
+      const readings = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as n from public.engine_hour_readings where checklist_completion_id = $1",
+              [id],
+            )
+          ).rows[0].n,
+        );
+      const before = await readings();
+      await c.query("delete from public.checklist_completions where id = $1", [id]);
+      return { before, after: await readings() };
+    });
+    expect(out).toEqual({ before: 1, after: 0 });
+  });
+});
+
+describe("engine deletion guard (D14)", () => {
+  it("an engine carrying readings or checklist items cannot be deleted", async () => {
+    const used = await run(U.owner, "delete from public.engines where id = $1", [ENGINE]);
+    expect(used.ok).toBe(false);
+    if (!used.ok) expect(used.message).toContain("engine_in_use");
+  });
+
+  it("an engine created by mistake, without any data, is still deletable", async () => {
+    const rows = await as(U.owner, async (c) => {
+      const inserted = await c.query(
+        "insert into public.engines (boat_id, label, position, created_by) values ($1, 'Neuf', 'port', $2) returning id",
+        [BOAT, U.owner.id],
+      );
+      const res = await c.query("delete from public.engines where id = $1", [
+        (inserted.rows[0] as { id: string }).id,
+      ]);
+      return res.rowCount;
+    });
+    expect(rows).toBe(1);
+  });
+
+  it("deleting the boat still cascades to its engines", async () => {
+    const rows = await run(U.owner, "delete from public.boats where id = $1", [BOAT]);
+    expect(rows).toEqual({ ok: true, rowCount: 1 });
+  });
+});
+
+describe("trash and engine hour readings (D5)", () => {
+  it("trashing a log parks its readings in pending_engine_hours, restoring recreates them", async () => {
+    const out = await as(U.owner, async (c) => {
+      const readings = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as n from public.engine_hour_readings where maintenance_log_id = $1",
+              [LOG_OWNER],
+            )
+          ).rows[0].n,
+        );
+      const pending = async () =>
+        (
+          await c.query("select pending_engine_hours from public.maintenance_logs where id = $1", [
+            LOG_OWNER,
+          ])
+        ).rows[0].pending_engine_hours as Record<string, number> | null;
+
+      const before = await readings();
+      await c.query("update public.maintenance_logs set deleted_at = now() where id = $1", [
+        LOG_OWNER,
+      ]);
+      const trashed = { readings: await readings(), pending: await pending() };
+      await c.query("update public.maintenance_logs set deleted_at = null where id = $1", [
+        LOG_OWNER,
+      ]);
+      const restored = { readings: await readings(), pending: await pending() };
+      return { before, trashed, restored };
+    });
+    expect(out.before).toBe(1);
+    expect(out.trashed).toEqual({ readings: 0, pending: { [ENGINE]: 500 } });
+    expect(out.restored).toEqual({ readings: 1, pending: null });
+  });
+});
+
+describe("future dates (D17)", () => {
+  it("a completion dated in the future is refused", async () => {
+    const res = await run(
+      U.owner,
+      `insert into public.checklist_completions (boat_id, checklist_item_id, completed_at, engine_hours, created_by)
+       values ($1, $2, current_date + 2, 700, $3)`,
+      [BOAT, ITEM, U.owner.id],
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.code).toBe("23514");
+      expect(res.message).toContain("date_in_future");
+    }
+  });
+
+  it("an hour reading dated in the future is refused", async () => {
+    const res = await run(
+      U.owner,
+      `insert into public.engine_hour_readings (boat_id, engine_id, hours, read_at, created_by)
+       values ($1, $2, 700, current_date + 2, $3)`,
+      [BOAT, ENGINE, U.owner.id],
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toContain("date_in_future");
+  });
+
+  it("today and tomorrow are accepted (the database is in UTC, the boat is not)", async () => {
+    for (const offset of [0, 1]) {
+      expect(
+        (
+          await run(
+            U.owner,
+            `insert into public.engine_hour_readings (boat_id, engine_id, hours, read_at, created_by)
+             values ($1, $2, 700, current_date + $4::int, $3)`,
+            [BOAT, ENGINE, U.owner.id, offset],
+          )
+        ).ok,
+        `current_date + ${offset}`,
+      ).toBe(true);
+    }
+  });
+});
+
+describe("status views", () => {
+  const VIEWS = [
+    "checklist_item_status",
+    "checklist_category_progress",
+    "boat_dashboard_stats",
+    "maintenance_logs_view",
+  ] as const;
+
+  it.each(VIEWS)("%s: members see their boat, outsiders see nothing, anon is denied", async (v) => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      expect(await count(U[role], v, "boat_id = $1", [BOAT]), `${role} on ${v}`).toBeGreaterThan(0);
+    }
+    expect(await count(U.stranger, v, "boat_id = $1", [BOAT])).toBe(0);
+    expect(await count(null, v)).toBe(-1);
+  });
+
+  it("checklist_item_status hides items of a deactivated engine or category (A14, A15)", async () => {
+    const visible = async (sql: string, params: unknown[]) =>
+      as(U.owner, async (c) => {
+        await c.query(sql, params);
+        const res = await c.query(
+          "select count(*)::int as n from public.checklist_item_status where id = $1",
+          [ITEM],
+        );
+        return Number(res.rows[0].n);
+      });
+    expect(await visible("select 1", [])).toBe(1);
+    expect(
+      await visible("update public.engines set is_active = false where id = $1", [ENGINE]),
+    ).toBe(0);
+    expect(
+      await visible("update public.boat_categories set is_active = false where id = $1", [
+        CATEGORY,
+      ]),
+    ).toBe(0);
+  });
+
+  it("checklist_item_status neutralises the hour deadline after a counter reset (A13)", async () => {
+    const row = await as(U.owner, async (c) => {
+      const before = await c.query(
+        "select due_hours::float8, status::text from public.checklist_item_status where id = $1",
+        [ITEM],
+      );
+      await c.query("update public.engines set counter_reset_at = current_date where id = $1", [
+        ENGINE,
+      ]);
+      const after = await c.query(
+        "select due_hours::float8, reference_hours::float8, status::text from public.checklist_item_status where id = $1",
+        [ITEM],
+      );
+      return { before: before.rows[0], after: after.rows[0] };
+    });
+    expect(row.before).toMatchObject({ due_hours: 850 });
+    expect(row.after).toMatchObject({ due_hours: null, reference_hours: null });
+  });
+
+  it("checklist_item_status keeps the most recent completion of the day (A18)", async () => {
+    const hours = await as(U.owner, async (c) => {
+      for (const [engineHours, ago] of [
+        [800, "1 hour"],
+        [900, "1 minute"],
+      ] as const) {
+        await c.query(
+          `insert into public.checklist_completions (boat_id, checklist_item_id, completed_at, engine_hours, created_by, created_at)
+           values ($1, $2, current_date, $3, $4, now() - $5::interval)`,
+          [BOAT, ITEM, engineHours, U.owner.id, ago],
+        );
+      }
+      const res = await c.query(
+        "select last_engine_hours::float8 from public.checklist_item_status where id = $1",
+        [ITEM],
+      );
+      return res.rows[0].last_engine_hours as number;
+    });
+    expect(hours).toBe(900);
+  });
+});
+
+describe("boat_todo_queue", () => {
+  const seedQueue = async (c: PoolClient) => {
+    await c.query("set local role service_role");
+    await c.query(
+      `insert into public.maintenance_logs (boat_id, title, category_id, status, performed_at, created_by)
+       values ($1, 'Fuite bâbord', $2, 'urgent', current_date - 3, $3)`,
+      [BOAT, CATEGORY, U.owner.id],
+    );
+    await c.query(
+      `insert into public.checklist_items (boat_id, category_id, label, interval_months, anchor_date, created_by)
+       values ($1, $2, 'Point en retard', 6, current_date - interval '8 months', $3),
+              ($1, $2, 'Contrôle ponctuel', null, current_date, $3)`,
+      [BOAT, CATEGORY, U.owner.id],
+    );
+    await c.query("set local role authenticated");
+  };
+
+  const queueOf = (u: User) =>
+    as(u, async (c) => {
+      await seedQueue(c);
+      const res = await c.query(
+        "select rank, kind, title, status from public.boat_todo_queue($1::uuid, 10)",
+        [BOAT],
+      );
+      return res.rows as { rank: number; kind: string; title: string; status: string }[];
+    });
+
+  it("every member sees the queue, ranked, and one-off items never enter it", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const rows = await queueOf(U[role]);
+      expect(
+        rows.map((r) => [r.rank, r.kind, r.title]),
+        role,
+      ).toEqual([
+        [0, "log", "Fuite bâbord"],
+        [1, "item", "Point en retard"],
+      ]);
+      expect(
+        rows.some((r) => r.title === "Contrôle ponctuel"),
+        role,
+      ).toBe(false);
+    }
+  });
+
+  it("an outsider gets an empty queue", async () => {
+    expect(await queueOf(U.stranger)).toEqual([]);
+  });
+});

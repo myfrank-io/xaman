@@ -592,3 +592,58 @@ Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `ch
 - `sync_engine_hours_from_completion` est `security definer` : il est aussi déclenché par la cascade `on delete set null` quand une intervention est supprimée par un autre membre que l'auteur du cochage.
 - `purge_trash()` n'est exécutable que par `service_role` ; planifiée par `pg_cron` (`xaman-purge-trash`, 03:15 UTC) uniquement si l'extension est disponible.
 - `anon` n'a plus aucun privilège sur le schéma `public` (y compris par défaut sur les objets futurs) : seules les fonctions explicitement accordées (`get_invitation_preview`) lui sont accessibles.
+
+## 12. Notes d'implémentation (migration `0004_tracking.sql`)
+Cette migration applique les décisions de l'audit (`docs/AUDIT.md §3.1`). **Elle prime sur les sections 3, 4, 6 et 11 ci-dessus** pour les points qu'elle modifie.
+
+### 12.1 Colonnes ajoutées
+| Table | Colonne | Type | Rôle |
+|---|---|---|---|
+| `checklist_items` | `anchor_date` | date not null default `current_date` | **Ancrage (D1)** : date de référence tant que le point n'a aucune réalisation. Renseignée à `current_date` par `apply_checklist_template`, modifiable (assistant de mise en route, édition d'un point). |
+| `checklist_items` | `anchor_hours` | numeric(8,1) null | Heures du moteur lié au moment de l'ancrage (`engine_current_hours`, null s'il n'y a pas encore de relevé). |
+| `checklist_completions` | `next_due_at` | date null | **Échéance à date fixe (D11)**, « valide jusqu'au… ». `check (next_due_at is null or next_due_at > completed_at)`. |
+| `engines` | `counter_reset_at` | date null | **Compteur remplacé (D12)** : les échéances en heures dont la référence est antérieure sont ignorées. |
+| `engines` | `counter_reset_note` | text null | Contexte de ce remplacement (texte libre). |
+| `maintenance_logs` | `equipment_id` | uuid null, FK `equipment` on delete set null | Historique par équipement ; index partiel `maintenance_logs_equipment_idx`. |
+| `equipment` | `removed_at` | date null | Un équipement n'est jamais supprimé depuis l'UI (E2-3) : il est « déposé le … » et conserve son historique. |
+| `boat_invitations` | `valid_until` | date null | Fin d'accès portée par l'invitation, recopiée dans `boat_members.valid_until` à l'acceptation. Obligatoire pour une invitation émise par un `editor`. |
+
+### 12.2 Colonnes et type supprimés
+- `maintenance_logs.priority` et le type `log_priority` (**D6** : jamais lus, jamais triés ; clé `logPriority` retirée de `src/messages/fr.json`, champ `priority` ignoré par `scripts/seed.mts` et retiré de `seed/xaman-history.json`).
+- `maintenance_logs.next_due_at` (**D4**) : la « prochaine échéance » vit désormais sur la réalisation (`checklist_completions.next_due_at`) ; une intervention planifiée porte sa date dans `performed_at`.
+
+### 12.3 Statut d'un point : fonction pure et vue
+- Nouvelle signature : `checklist_compute_status(reference_at date, interval_months int, reference_hours numeric, interval_hours int, current_hours numeric, has_completion boolean, fixed_due_at date, today date)`. Les deux `coalesce` d'ancrage et la neutralisation du compteur sont **résolus par l'appelant** (la vue), pas par la fonction : elle reste pure et immuable.
+- `due_at = coalesce(fixed_due_at, reference_at + interval_months)` — **la date fixe gagne toujours**.
+- `due_hours = reference_hours + interval_hours`, null si `interval_hours` est null, si `reference_hours` est null, ou si le compteur a été remplacé après la référence (`reference_at < engines.counter_reset_at`).
+- `status` : `overdue` si une échéance est dépassée, sinon `soon` à 30 jours **ou** 25 heures (première échéance atteinte), sinon `never` **uniquement** pour un point sans aucun intervalle et jamais réalisé, sinon `ok`. Un point jamais coché mais ancré n'est donc plus `never` : au jour 1 tout est `ok`, et les points basculent seuls à l'échéance.
+- `checklist_item_status` expose en plus `anchor_date`, `anchor_hours`, `counter_reset_at`, `fixed_due_at`, `has_completion`, `is_estimated` (= `not has_completion`), `reference_at`, `reference_hours` ; elle exclut les points dont le moteur est inactif (`i.engine_id is null or e.is_active`).
+- Parité TS ↔ SQL : `src/lib/checklist-status.ts` reflète la fonction **et** les deux `coalesce` de la vue (helpers exportés `checklistReferenceAt` / `checklistReferenceHours`) ; 30 cas dans `tests/fixtures/checklist-status-cases.json`, dont l'ancrage, la date fixe et le compteur remplacé. Les cas « moteur désactivé », « catégorie désactivée » et « deux réalisations le même jour » relèvent de la vue et sont testés dans `tests/unit/rls.test.ts`.
+
+### 12.4 Progression et agrégats
+- `checklist_category_progress` : le dénominateur (`total`, `progress`, `ok_count`, `soon_count`) ne compte que les **points à intervalle** ; nouvelles colonnes `never_recorded_count` (points à intervalle sans réalisation) et `punctual_count` (points sans intervalle). `overdue_count` n'est volontairement **pas** filtré : un contrôle ponctuel porteur d'une date fixe est une vraie échéance.
+- `boat_dashboard_stats` ajoute `expenses_12m` (12 mois glissants — l'année civile n'a pas de sens pour une saison méditerranéenne), `never_recorded_items` (même définition que `never_recorded_count`), `review_pending_logs`, `review_pending_purchases`, `engines_without_reading` ; les colonnes existantes sont conservées.
+- `maintenance_logs_view` ajoute `equipment_id` et `equipment_name` ; `maintenance_logs_trash_view` ajoute `pending_engine_hours` (les heures parquées, cf. 12.6) ; `boat_invitations_safe` ajoute `valid_until`.
+
+### 12.5 `boat_todo_queue(p_boat_id uuid, p_limit int default 10)`
+Fonction `stable`, **security invoker** (la RLS de l'appelant s'applique : un étranger obtient une file vide). Union ordonnée par `rank`, puis `sort_key` croissant, puis `title` (tri stable obligatoire) :
+
+| rang | contenu | `sort_key` |
+|---|---|---|
+| 0 | interventions `urgent` | `performed_at` (la plus ancienne d'abord) |
+| 1 | points `overdue` | `-severity` — **retard relatif** `greatest((today − due_at)/max(interval_months×30, 30), (current_hours − due_hours)/max(interval_hours, 25))` |
+| 2 | interventions `in_progress` puis `planned` dont `performed_at ≤ today + 30 j` | `+1 000 000` pour `planned`, puis `performed_at` |
+| 3 | points `soon` | `least(days_remaining, hours_remaining × 1,2)` — 1 h moteur ≈ 1,2 jour (seuils 30 j / 25 h) |
+
+Colonnes : `rank, kind ('log'|'item'), id, title, category_id, category_name, category_color, engine_id, engine_label, status, due_at, due_hours, days_remaining, hours_remaining, severity, sort_key`. Pour une intervention, `due_at = performed_at` et `days_remaining = performed_at − current_date`. **Les points `never` sont exclus** : au lancement les ~90 points de la checklist ORC 50 sont tous « jamais faits » et noieraient la file.
+
+### 12.6 Triggers et politiques
+- **Corbeille et relevés (D5)** — `sync_log_readings_trash` (`after update of deleted_at on maintenance_logs`, `security definer`) : à la mise à la corbeille, les `engine_hour_readings` de l'intervention sont fusionnés dans `pending_engine_hours` (`{engine_id: hours}`) puis supprimés ; à la restauration, si `needs_review = false`, ils sont recréés (source `maintenance_log`) et la colonne est vidée. Une intervention encore `needs_review` garde ses heures pour `mark_log_reviewed`. Le compteur ne change donc plus une seconde fois lors du `purge_trash()` 30 jours plus tard, et plus aucun relevé n'est orphelin.
+- **Suppression d'un moteur (D14)** — `prevent_engine_delete_in_use` (`before delete on engines`) refuse (`engine_in_use`, `P0001`) s'il existe des relevés ou des points ; les cascades bateau / compte passent (`pg_trigger_depth() > 1`). Un moteur créé par erreur, sans donnée, reste supprimable.
+- **Dates futures (D17)** — un `check (completed_at <= current_date)` est impossible (`current_date` n'est pas immuable) : la règle est portée par `reject_future_date()`, trigger `before insert or update` sur `checklist_completions.completed_at` et `engine_hour_readings.read_at` (erreur `date_in_future`, `SQLSTATE 23514`). Le seuil est `current_date + 1` : la base tourne en UTC alors que l'iPad est dans son fuseau, donc un relevé saisi à 00 h 30 à Paris (22 h 30 UTC la veille) et daté « aujourd'hui » doit passer ; une date à deux jours est refusée. Même tolérance côté zod (`pastOrTodayDate`, `src/lib/schemas/common.ts`). `maintenance_logs.performed_at` reste libre (une intervention planifiée est dans le futur) : la règle « futur seulement si `planned`/`urgent` » est côté zod.
+- **Annulation d'une réalisation (D15)** — politique `delete` sur `checklist_completions` : `can_write_boat(boat_id) or (created_by = auth.uid() and created_at > now() - interval '24 hours')`. La FK `engine_hour_readings.checklist_completion_id` passe en `on delete cascade` : le relevé dérivé disparaît avec la réalisation, sinon le compteur reste faux.
+- **Invitations (D28)** — politique `insert` sur `boat_invitations` : `invited_by = auth.uid()` **et** (owner, **ou** `editor` avec `role in ('pro','viewer')`, `valid_until` non null et `≤ current_date + 90`). `accept_invitation` recopie `valid_until` dans `boat_members` sans jamais écraser une valeur existante par null. Le changement de rôle et le retrait d'un membre restent réservés à l'owner. *Limite connue* : la politique `select` reste owner-only, donc un editor ne relit ni ne révoque l'invitation qu'il a créée — à traiter avec l'écran Membres si le besoin se confirme.
+- `apply_checklist_template` renseigne `anchor_date = current_date` et, pour un point rattaché à un moteur, `anchor_hours = engine_current_hours.hours` de ce moteur (null s'il n'a pas encore de relevé).
+
+### 12.7 Couleurs de catégories
+Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards_rudders #0284C7`, `sails_rigging #A21CAF`, `hull_deck #52606F`, `electronics_nav #1D4ED8`, `energy #A16207`, `plumbing_systems #0F766E`, `safety #C81E2B` ; `engines #D97706` inchangé. La migration ne met à jour, par `external_ref`, que les `checklist_template_categories` / `boat_categories` **portant encore l'ancienne couleur exacte** : un choix fait par l'utilisateur n'est jamais écrasé. `seed/orc50-checklist.json` porte les nouvelles valeurs et gagne le point `haul-out` « Carénage / sortie de l'eau » (18 mois, catégorie Coque & Pont) qui fait entrer les sorties de l'eau dans le modèle unique (D9).

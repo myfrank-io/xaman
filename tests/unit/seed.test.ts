@@ -78,6 +78,23 @@ describe("pnpm seed:xaman", () => {
     expect(Number(outboard.rows[0]?.n)).toBe(1);
   });
 
+  it("anchors every instantiated item on today (D1) and adds the haul-out item", async () => {
+    const anchors = await pool.query(
+      `select count(*)::int as total, count(*) filter (where i.anchor_date = current_date)::int as anchored
+       from public.checklist_items i join public.boats b on b.id = i.boat_id
+       where b.external_ref = 'xaman'`,
+    );
+    const { total, anchored } = anchors.rows[0] as { total: number; anchored: number };
+    expect(total).toBeGreaterThan(80);
+    expect(anchored).toBe(total);
+
+    const haulOut = await pool.query(
+      `select i.interval_months from public.checklist_items i join public.boats b on b.id = i.boat_id
+       where b.external_ref = 'xaman' and i.external_ref = 'haul-out'`,
+    );
+    expect(haulOut.rows[0]).toEqual({ interval_months: 18 });
+  });
+
   it("imports paper-log lines with pending hours and no readings", async () => {
     const res = await pool.query(
       `select count(*) filter (where needs_review)::int as review,

@@ -146,7 +146,6 @@ const historyFile = z.object({
       title: z.string(),
       category_ref: z.string().nullable().optional(),
       status: z.enum(["planned", "in_progress", "done", "urgent"]).optional(),
-      priority: z.enum(["low", "normal", "high"]).optional(),
       engine_hours: z.record(z.string(), z.number()).optional(),
       contact_ref: nullableText,
       cost: z.number().nullable().optional(),
@@ -555,8 +554,8 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
       }
       const logRow = await one<{ id: string }>(
         client,
-        `insert into public.maintenance_logs (boat_id, title, category_id, status, priority, performed_at, cost, contact_id, notes, needs_review, pending_engine_hours, external_ref, created_by, updated_by)
-         values ($1, $2, $3, $4::public.log_status, $5::public.log_priority, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $13)
+        `insert into public.maintenance_logs (boat_id, title, category_id, status, performed_at, cost, contact_id, notes, needs_review, pending_engine_hours, external_ref, created_by, updated_by)
+         values ($1, $2, $3, $4::public.log_status, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $12)
          on conflict (boat_id, external_ref) do update set title = excluded.title, category_id = excluded.category_id,
            performed_at = excluded.performed_at, contact_id = coalesce(public.maintenance_logs.contact_id, excluded.contact_id),
            notes = coalesce(public.maintenance_logs.notes, excluded.notes)
@@ -566,7 +565,6 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
           l.title,
           l.category_ref ? (categoryIds.get(l.category_ref) ?? null) : null,
           l.status ?? "done",
-          l.priority ?? "normal",
           l.performed_at,
           l.cost ?? null,
           l.contact_ref ? (contactIds.get(l.contact_ref) ?? null) : null,

@@ -35,7 +35,7 @@
     {
       "external_ref": "daggerboards_rudders",
       "name": "Dérives & Safrans",
-      "color": "#0EA5E9",
+      "color": "#0284C7",
       "icon": "anchor",
       "sort_order": 2,
       "items": [
@@ -50,7 +50,7 @@
     {
       "external_ref": "sails_rigging",
       "name": "Voiles & Gréement",
-      "color": "#7C3AED",
+      "color": "#A21CAF",
       "icon": "sailboat",
       "sort_order": 3,
       "items": [
@@ -82,10 +82,11 @@
     {
       "external_ref": "hull_deck",
       "name": "Coque & Pont",
-      "color": "#64748B",
+      "color": "#52606F",
       "icon": "ship",
       "sort_order": 4,
       "items": [
+        { "external_ref": "haul-out", "label": "Carénage / sortie de l'eau", "interval_months": 18, "source": "proposal", "actions": [] },
         { "external_ref": "coppercoat", "label": "Copper Coat : polissage léger et retouches (Nautix A88M)", "interval_months": 12, "source": "proposal", "actions": [] },
         { "external_ref": "hull-inspection", "label": "Carènes : inspection à la sortie de l'eau (chocs, cloques, délaminage)", "interval_months": 12, "source": "proposal", "actions": [] },
         { "external_ref": "seacocks", "label": "Passe-coques et vannes (manœuvre, corrosion, colliers doubles)", "interval_months": 6, "source": "proposal", "actions": [] },
@@ -103,7 +104,7 @@
     {
       "external_ref": "electronics_nav",
       "name": "Électronique / Nav",
-      "color": "#2563EB",
+      "color": "#1D4ED8",
       "icon": "radar",
       "sort_order": 5,
       "items": [
@@ -122,7 +123,7 @@
     {
       "external_ref": "energy",
       "name": "Énergie",
-      "color": "#EAB308",
+      "color": "#A16207",
       "icon": "zap",
       "sort_order": 6,
       "items": [
@@ -138,7 +139,7 @@
     {
       "external_ref": "plumbing_systems",
       "name": "Hydraulique & Circuits",
-      "color": "#0D9488",
+      "color": "#0F766E",
       "icon": "droplets",
       "sort_order": 7,
       "items": [
@@ -157,7 +158,7 @@
     {
       "external_ref": "safety",
       "name": "Sécurité",
-      "color": "#DC2626",
+      "color": "#C81E2B",
       "icon": "life-buoy",
       "sort_order": 8,
       "items": [
