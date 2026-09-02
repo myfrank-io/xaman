@@ -341,7 +341,11 @@ function CompleteForm({
           newLogPath(boatId, {
             item: item.id,
             date: completedAt,
-            hours: engine && hours.trim() !== "" ? `${engine.id}:${hours.trim()}` : undefined,
+            // a comma separates the pairs in `?hours=`: the decimal one travels as a dot
+            hours:
+              engine && hours.trim() !== ""
+                ? `${engine.id}:${hours.trim().replace(",", ".")}`
+                : undefined,
           }) as Route
         }
         className="inline-flex min-h-11 items-center self-start text-label font-medium text-primary underline-offset-4 hover:underline"
