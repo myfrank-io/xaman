@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { SailboatIcon } from "lucide-react";
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { XamanLogotype } from "@/components/brand/XamanLogotype";
 import { EmptyState } from "@/components/common/EmptyState";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,6 +17,7 @@ export default async function BoatsPage() {
     .select("id, name, builder, model")
     .order("name");
   const t = await getTranslations("boats");
+  const ta = await getTranslations("app");
 
   if (boats && boats.length === 1 && boats[0]) {
     redirect(`/boats/${boats[0].id}/dashboard`);
@@ -23,10 +25,11 @@ export default async function BoatsPage() {
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="bg-header-gradient px-6 pt-8 safe-top pb-10 text-white">
+      <header className="bg-header-gradient px-6 pt-8 safe-top pb-10 text-on-navy">
         <div className="mx-auto w-full max-w-2xl">
-          <p className="text-xs font-medium tracking-widest text-white/60 uppercase">Xaman</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{t("title")}</h1>
+          <p className="text-overline text-brass-light uppercase">{ta("eyebrow")}</p>
+          <XamanLogotype className="mt-3 h-9" />
+          <h1 className="mt-5 text-h1">{t("title")}</h1>
         </div>
       </header>
       <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-8">

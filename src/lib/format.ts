@@ -1,4 +1,4 @@
-import { format, formatDistanceToNowStrict, parseISO, isValid } from "date-fns";
+import { differenceInMonths, format, formatDistanceToNowStrict, isValid, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
 // Dates are stored as `yyyy-MM-dd` strings (Postgres `date`). All display formatting goes through here.
@@ -21,6 +21,12 @@ export function formatDate(value: string | Date | null | undefined): string {
 export function formatDateMedium(value: string | Date | null | undefined): string {
   const date = toDate(value);
   return date ? format(date, "d MMM yyyy", { locale: fr }) : "—";
+}
+
+/** 28/08 — short date for dense chips where the year is noise */
+export function formatDayMonth(value: string | Date | null | undefined): string {
+  const date = toDate(value);
+  return date ? format(date, "dd/MM", { locale: fr }) : "—";
 }
 
 /** il y a 3 mois */
@@ -68,3 +74,44 @@ export function formatPercent(ratio: number | null | undefined): string {
   if (ratio === null || ratio === undefined || !Number.isFinite(ratio)) return "—";
   return `${Math.round(ratio * 100)} %`;
 }
+
+/** « dans 9 j » · « aujourd'hui » · « dans 1 j ». Negative days → use formatOverdue. */
+export function formatDueDays(days: number | null | undefined): string {
+  if (days === null || days === undefined || !Number.isFinite(days)) return "—";
+  const d = Math.round(days);
+  if (d === 0) return "aujourd'hui";
+  if (d < 0) return formatOverdue(d);
+  return `dans ${numberFormatter.format(d)} j`;
+}
+
+/** « 126 j de retard » from a negative (or positive) day count. */
+export function formatOverdue(
+  days: number | null | undefined,
+  unit: "days" | "hours" = "days",
+): string {
+  if (days === null || days === undefined || !Number.isFinite(days)) return "—";
+  const value = Math.abs(Math.round(days));
+  return `${numberFormatter.format(value)} ${unit === "days" ? "j" : "h"} de retard`;
+}
+
+/** « il y a 14 mois » — months elapsed since a date, floored. */
+export function monthsSince(value: string | Date | null | undefined): number | null {
+  const date = toDate(value);
+  if (!date) return null;
+  return Math.max(0, differenceInMonths(new Date(), date));
+}
+
+export function formatMonthsSince(value: string | Date | null | undefined): string {
+  const months = monthsSince(value);
+  if (months === null) return "—";
+  if (months === 0) return "ce mois-ci";
+  return `il y a ${numberFormatter.format(months)} mois`;
+}
+
+/**
+ * « 1 234,5 » / « 1234.5 » / « 1 234,5 h » → 1234.5. Empty input → null,
+ * so a blank cost stays « unknown » and never becomes 0 (ux-flows §4.2).
+ * UI-side counterpart of `parseDecimal()` in `src/lib/numbers.ts`, which the
+ * zod schemas use: that one distinguishes « empty » (null) from « not a
+ * number » (undefined); this one is lenient and always returns null.
+ */

@@ -31,7 +31,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-navy-deep/60 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className,
       )}
       {...props}
@@ -40,6 +40,8 @@ function DialogOverlay({
 }
 
 // Content scrolls inside itself (max 100dvh - margins) so the iPad keyboard never traps a form.
+// Below 768 px it docks to the bottom of the screen — a centred dialog with the
+// keyboard open on iPhone is unusable (ux-flows §1.2, item 24).
 function DialogContent({
   className,
   children,
@@ -56,7 +58,11 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-lg border bg-background p-6 shadow-lg duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
+          "fixed z-50 flex flex-col gap-4 overflow-y-auto border bg-surface p-6 shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+          // < 768 px: bottom sheet
+          "inset-x-0 bottom-0 max-h-[85dvh] w-full rounded-t-2xl pb-[max(1.5rem,env(safe-area-inset-bottom))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          // >= 768 px: centred dialog
+          "md:inset-x-auto md:top-[50%] md:bottom-auto md:left-[50%] md:max-h-[calc(100dvh-2rem)] md:w-[min(560px,100vw-2rem)] md:max-w-[calc(100%-2rem)] md:translate-x-[-50%] md:translate-y-[-50%] md:rounded-2xl md:pb-6 md:data-[state=closed]:slide-out-to-bottom-0 md:data-[state=closed]:zoom-out-95 md:data-[state=open]:slide-in-from-bottom-0 md:data-[state=open]:zoom-in-95",
           className,
         )}
         {...props}
@@ -65,7 +71,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-2 right-2 inline-flex size-11 items-center justify-center rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+            className="absolute top-2 right-2 inline-flex size-11 items-center justify-center rounded-lg text-ink-2 transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none [&_svg]:size-5"
           >
             <XIcon />
             <span className="sr-only">{t("close")}</span>
@@ -80,17 +86,21 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 pr-10 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-1 pr-10 text-left", className)}
       {...props}
     />
   );
 }
 
+// Sticky action bar: stays reachable when the iPad keyboard is open (art-direction §7.8).
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
+      className={cn(
+        "sticky bottom-0 -mx-6 mt-auto -mb-6 flex flex-col-reverse gap-2 border-t border-border bg-surface px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end md:-mb-6 md:pb-4",
+        className,
+      )}
       {...props}
     />
   );
@@ -100,7 +110,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn("text-h2", className)}
       {...props}
     />
   );
@@ -113,7 +123,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-body text-ink-2", className)}
       {...props}
     />
   );

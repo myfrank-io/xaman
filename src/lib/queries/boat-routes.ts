@@ -8,10 +8,99 @@ export const BOAT_ROUTES: Record<NavKey, string> = {
   haulOuts: "haul-outs",
   contacts: "contacts",
   boat: "boat",
+  trash: "trash",
   members: "members",
   settings: "settings",
+  profile: "settings/profile",
 };
 
+/**
+ * The profile screen is account-level, not boat-level: it lives outside the
+ * boat tree (ux-flows §1.2) even though the account menu opens it.
+ */
+export const PROFILE_PATH = "/settings/profile";
+
 export function boatPath(boatId: string, key: NavKey): string {
+  if (key === "profile") return PROFILE_PATH;
   return `/boats/${boatId}/${BOAT_ROUTES[key]}`;
+}
+
+function withQuery(path: string, query?: Record<string, string | number | undefined>): string {
+  if (!query) return path;
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== "") search.set(key, String(value));
+  }
+  const qs = search.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
+// Every route string of the app is built here — never concatenated at the call site.
+
+export function logPath(boatId: string, logId: string): string {
+  return `${boatPath(boatId, "logs")}/${logId}`;
+}
+
+export function editLogPath(boatId: string, logId: string): string {
+  return `${logPath(boatId, logId)}/edit`;
+}
+
+export function newLogPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`${boatPath(boatId, "logs")}/new`, query);
+}
+
+export function logsPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(boatPath(boatId, "logs"), query);
+}
+
+export function categoryPath(boatId: string, categoryId: string): string {
+  return `${boatPath(boatId, "checklist")}/${categoryId}`;
+}
+
+export function newChecklistItemPath(boatId: string, categoryId: string): string {
+  return `${categoryPath(boatId, categoryId)}/new`;
+}
+
+export function checklistPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(boatPath(boatId, "checklist"), query);
+}
+
+export function enginePath(boatId: string, engineId: string): string {
+  return `${boatPath(boatId, "boat")}/engines/${engineId}`;
+}
+
+export function equipmentPath(boatId: string, equipmentId: string): string {
+  return `${boatPath(boatId, "boat")}/equipment/${equipmentId}`;
+}
+
+export function contactPath(boatId: string, contactId: string): string {
+  return `${boatPath(boatId, "contacts")}/${contactId}`;
+}
+
+export function haulOutPath(boatId: string, haulOutId: string): string {
+  return `${boatPath(boatId, "haulOuts")}/${haulOutId}`;
+}
+
+export function newHaulOutPath(boatId: string): string {
+  return `${boatPath(boatId, "haulOuts")}/new`;
+}
+
+export function suppliesPath(
+  boatId: string,
+  tab?: "purchases" | "gas" | "stock" | "expenses",
+): string {
+  return withQuery(boatPath(boatId, "supplies"), tab ? { tab } : undefined);
+}
+
+export function boatTabPath(boatId: string, tab?: "identity" | "engines" | "equipment"): string {
+  return withQuery(boatPath(boatId, "boat"), tab ? { tab } : undefined);
 }

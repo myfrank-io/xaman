@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Xaman",
-    "tagline": "Carnet d'entretien numérique et partagé pour bateaux"
+    "tagline": "Carnet d'entretien numérique et partagé pour bateaux",
+    "eyebrow": "Carnet d'entretien"
   },
   "home": {
     "eyebrow": "Carnet d'entretien",
@@ -31,31 +32,57 @@
     "no": "Non",
     "today": "Aujourd'hui",
     "empty": "Rien à afficher pour le moment.",
-    "comingSoon": "Cet écran arrive bientôt."
+    "comingSoon": "Cet écran arrive bientôt.",
+    "seeAll": "Tout afficher",
+    "viewAll": "Voir tout",
+    "undo": "Annuler l'action",
+    "saving": "Enregistrement…",
+    "saved": "Enregistré",
+    "required": "obligatoire",
+    "yesterday": "Hier",
+    "never": "Jamais",
+    "unknownCounter": "compteur inconnu",
+    "archivedCategory": "Catégorie archivée",
+    "discardChanges": "Abandonner cette saisie ?",
+    "discardKeep": "Continuer la saisie",
+    "discardConfirm": "Abandonner"
   },
   "nav": {
     "dashboard": "Tableau de bord",
     "logs": "Journal",
     "checklist": "Checklist",
-    "supplies": "Consommables",
+    "supplies": "Dépenses",
     "haulOuts": "Sorties de l'eau",
     "contacts": "Intervenants",
     "boat": "Bateau",
     "members": "Membres",
     "settings": "Paramètres",
     "profile": "Mon profil",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "trash": "Corbeille",
+    "skipToContent": "Aller au contenu",
+    "account": "Mon compte",
+    "installApp": "Installer l'application",
+    "short": {
+      "dashboard": "Bord",
+      "logs": "Journal",
+      "checklist": "Checklist",
+      "boat": "Bateau",
+      "supplies": "Dépenses",
+      "contacts": "Intervenants",
+      "trash": "Corbeille",
+      "more": "Plus",
+      "haulOuts": "Sorties",
+      "members": "Membres",
+      "settings": "Réglages",
+      "profile": "Profil"
+    }
   },
   "logStatus": {
     "planned": "Planifié",
     "in_progress": "En cours",
     "done": "Terminé",
     "urgent": "Urgent"
-  },
-  "logPriority": {
-    "low": "Basse",
-    "normal": "Normale",
-    "high": "Haute"
   },
   "checklistState": {
     "never": "À faire",
@@ -91,7 +118,15 @@
       "badges": "Badges et états",
       "cards": "Cartes et statistiques",
       "overlays": "Dialogues",
-      "layout": "Navigation"
+      "layout": "Navigation",
+      "brand": "Marque",
+      "typography": "Typographie",
+      "neutrals": "Neutres",
+      "semantic": "Couleurs sémantiques",
+      "categories": "Catégories",
+      "fields": "Champs tactiles",
+      "rows": "Lignes de liste",
+      "states": "États vides et feedback"
     },
     "sample": {
       "boatName": "Xaman",
@@ -103,7 +138,27 @@
       "toast": "Afficher une notification",
       "toastMessage": "Intervention enregistrée",
       "emptyTitle": "Aucune intervention",
-      "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal."
+      "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal.",
+      "undoToast": "Afficher un toast d'annulation",
+      "undoMessage": "Intervention mise à la corbeille",
+      "undoDescription": "Récupérable pendant 30 jours.",
+      "confirmDialog": "Ouvrir une confirmation",
+      "confirmTitle": "Mettre « Vidange moteur SB » à la corbeille ?",
+      "confirmDescription": "La ligne restera récupérable 30 jours.",
+      "confirmAction": "Mettre à la corbeille",
+      "filteredTitle": "Aucun résultat pour « turbine »",
+      "filteredDescription": "Vérifiez l'orthographe ou élargissez la période.",
+      "clearFilters": "Effacer les filtres",
+      "positiveTitle": "Tout est à jour",
+      "positiveDescription": "Prochaine échéance : Vidange huile — Moteur SB, dans 62 jours.",
+      "hoursLabel": "Heures moteur (tribord)",
+      "costLabel": "Coût",
+      "dateLabel": "Date",
+      "categoryLabel": "Catégorie"
+    },
+    "dashboard": {
+      "title": "Tableau de bord — recette visuelle",
+      "subtitle": "Données factices, densité à valider en 1024×768 et 768×1024."
     }
   },
   "auth": {
@@ -156,7 +211,12 @@
     "engine_hours_required": "Les heures moteur sont obligatoires pour ce point.",
     "template_not_found": "Modèle de checklist introuvable.",
     "log_not_found": "Intervention introuvable.",
-    "invitation_email": "L'invitation est enregistrée mais l'e-mail n'a pas pu être envoyé. Vérifiez l'adresse ou réessayez."
+    "invitation_email": "L'invitation est enregistrée mais l'e-mail n'a pas pu être envoyé. Vérifiez l'adresse ou réessayez.",
+    "loadFailed": "Impossible de charger",
+    "saveFailed": "L'enregistrement a échoué. Vos données sont conservées ici.",
+    "notSaved": "Non enregistré",
+    "fieldsToFix": "{count, plural, one {# champ à corriger} other {# champs à corriger}}",
+    "positiveNumber": "Saisissez un nombre positif."
   },
   "members": {
     "title": "Membres",
@@ -248,5 +308,120 @@
       "confirmLabel": "Confirmation",
       "keyword": "SUPPRIMER"
     }
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "editor": "Éditeur",
+    "pro": "Professionnel",
+    "viewer": "Lecteur",
+    "renter": "Locataire",
+    "editorHelp": "Peut tout modifier : interventions, checklist, achats, fiche bateau. Ne gère pas les membres.",
+    "proHelp": "Voit tout le dossier. Enregistre ses propres interventions et cochages. Ne supprime rien, ne voit pas les membres.",
+    "viewerHelp": "Consultation seule. Pour un expert ou un acheteur."
+  },
+  "create": {
+    "title": "Ajouter",
+    "log": "Intervention",
+    "logHint": "Vidange, réparation, contrôle…",
+    "hourReading": "Relevé d'heures moteur",
+    "hourReadingHint": "{engine} · {hours} le {date}",
+    "gas": "Bouteille de gaz",
+    "gasHint": "Dernier changement il y a {days} jours",
+    "purchase": "Achat",
+    "haulOut": "Sortie de l'eau",
+    "checklistItem": "Nouveau point de checklist"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "stats": {
+      "overdue": "En retard",
+      "overdueHint": "points de checklist",
+      "soon": "Bientôt",
+      "soonHint": "sous 30 jours ou 25 h",
+      "openLogs": "Interventions",
+      "openLogsHint": "{count, plural, =0 {aucune ouverte} one {dont # urgente} other {dont # urgentes}}",
+      "expenses": "Dépenses {year}",
+      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}"
+    },
+    "engines": {
+      "title": "Heures moteur",
+      "noReading": "compteur inconnu",
+      "stale": "à mettre à jour",
+      "readAt": "relevé le {date}"
+    },
+    "upcoming": {
+      "title": "À faire prochainement",
+      "allChecklist": "Tous les points à traiter",
+      "allLogs": "Interventions ouvertes",
+      "emptyTitle": "Rien à faire dans les 30 prochains jours",
+      "emptyNext": "Prochaine échéance : {label}, dans {days} jours.",
+      "startTitle": "Votre carnet démarre avec {count} points",
+      "startIntro": "Aucun point n'a encore été réalisé. Trois étapes pour partir du bon pied :",
+      "startStep1": "Saisir les heures des moteurs",
+      "startStep2": "Vérifier les {count} lignes importées du carnet papier",
+      "startStep3": "Cocher ce qui est déjà fait dans la checklist"
+    },
+    "categories": {
+      "title": "État des 8 systèmes",
+      "upToDate": "à jour",
+      "neverDone": "jamais fait",
+      "summary": "{count, plural, one {# point} other {# points}}",
+      "overdue": "{count, plural, one {# en retard} other {# en retard}}"
+    },
+    "recent": {
+      "title": "Dernières interventions"
+    },
+    "recap": {
+      "expenses": "Dépenses {year}",
+      "expensesDetail": "Détail des dépenses",
+      "haulOut": "Sortie de l'eau",
+      "lastHaulOut": "Dernière : {date} — il y a {months} mois",
+      "noHaulOut": "Aucune sortie de l'eau enregistrée",
+      "lowStock": "{count, plural, one {# pièce sous le seuil} other {# pièces sous le seuil}}",
+      "stock": "Stock"
+    },
+    "review": {
+      "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
+      "action": "Vérifier"
+    },
+    "markDone": "Fait"
+  },
+  "offline": {
+    "banner": "Hors ligne — consultation seule.",
+    "lastSync": "Données du {date} à {time}.",
+    "actionUnavailable": "Hors ligne — cette action nécessite le réseau.",
+    "backOnline": "De nouveau en ligne",
+    "refresh": "Actualiser",
+    "pendingWrites": "{count, plural, one {# modification non enregistrée} other {# modifications non enregistrées}}"
+  },
+  "trash": {
+    "title": "Corbeille",
+    "description": "Les éléments supprimés restent 30 jours.",
+    "deletedOn": "Supprimé le {date} par {name}",
+    "purgeIn": "supprimé définitivement dans {days} jours",
+    "restore": "Restaurer",
+    "empty": "La corbeille est vide."
+  },
+  "logs": {
+    "title": "Journal",
+    "emptyTitle": "Aucune intervention",
+    "emptyDescription": "Le journal garde la trace de tout ce qui est fait sur le bateau : vidanges, réparations, contrôles.",
+    "emptyFiltered": "Aucun résultat pour « {query} »",
+    "clearFilters": "Effacer les filtres",
+    "new": "Nouvelle intervention",
+    "byCrew": "Nous-mêmes",
+    "review": {
+      "badge": "À vérifier"
+    }
+  },
+  "checklist": {
+    "title": "Checklist",
+    "markDone": "Fait",
+    "noActiveItems": "Aucun point actif",
+    "emptyTitle": "Aucun point dans cette catégorie",
+    "emptyDescription": "Ajoutez les points que vous suivez réellement sur ce bateau.",
+    "addItem": "Ajouter un point",
+    "upToDateTitle": "Tout est à jour",
+    "upToDateDescription": "Prochaine échéance : {label}, dans {days} jours."
   }
 }
