@@ -78,10 +78,10 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 ## L7 — La preuve et la robustesse
 
-- [ ] **E9-2 (M, 1)** Export : Server Action `exportBoat` → JSON complet + `interventions.csv` + `depenses.csv` (pas de zip), bouton dans Paramètres.
-- [ ] **E9-2b (M, 2)** **Rapport d'état** `/boats/[boatId]/report` : une page serveur imprimable (`@media print`, PDF via Partager → Imprimer) : identité, moteurs et heures, état des 8 systèmes, échéances des 12 mois, 12 derniers mois d'interventions (réalisé par), sorties de l'eau, coûts avec bascule « inclure les coûts », pied « Carnet tenu dans Xaman · N interventions · N réalisations ».
+- [x] **E9-2 (M, 1)** Export : Server Action `exportBoat` → JSON complet + `interventions.csv` + `depenses.csv` (pas de zip), bouton dans Paramètres.
+- [x] **E9-2b (M, 2)** **Rapport d'état** `/boats/[boatId]/report` : une page serveur imprimable (`@media print`, PDF via Partager → Imprimer) : identité, moteurs et heures, état des 8 systèmes, échéances des 12 mois, 12 derniers mois d'interventions (réalisé par), sorties de l'eau, coûts avec bascule « inclure les coûts », pied « Carnet tenu dans Xaman · N interventions · N réalisations ».
 - [ ] **E9-1 (M, 2)** Hors ligne : `OfflineBanner` (`navigator.onLine` + échecs consécutifs), âge des données, boutons en style hors ligne (`aria-disabled` + toast), **brouillons locaux** (créations seulement, renvoi manuel, 20 max, D25), runtime caching Serwist des pages du bateau.
-- [ ] **E1-8 (M, 1)** Transfert du bateau (D30).
+- [x] **E1-8 (M, 1)** Transfert du bateau (D30).
 - [ ] **E9-6 (M, 2)** **E-mail hebdomadaire** (ex-E11-1, remonté en V1) : Edge Function + cron, vendredi matin, owner/editor, retards + bientôt + planifiées / urgentes ; pas de push, pas de notification par point.
 - [ ] **E9-3 (M, 2)** Tests E2E Playwright (iPad paysage + iPhone) sur les parcours `SPEC.md §6.1 à §6.4` + **budget d'interaction chronométré** (vidange ≤ 7 taps, cochage ≤ 3 taps, relevé ≤ 3 taps) + parcours « premier lancement » (assistant).
 - [ ] **E9-4 (M, 2)** QA iPad Safari réelle : zoom, clavier, safe areas, scroll des dialogues, cibles, mode standalone, plein soleil réel, gants / doigts mouillés, reconnexion Realtime après veille.

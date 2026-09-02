@@ -828,19 +828,46 @@
     },
     "soon": "Disponible dans une prochaine étape.",
     "export": {
-      "description": "Toutes les données du bateau en JSON et CSV, à tout moment."
+      "description": "Toutes les données du bateau en JSON et CSV, à tout moment.",
+      "guarantee": "Vos données vous appartiennent : l'export complet est disponible à tout moment, sans condition.",
+      "button": "Préparer l'export",
+      "generating": "Préparation…",
+      "json": "Tout le carnet (JSON)",
+      "interventions": "Interventions (CSV)",
+      "expenses": "Dépenses (CSV)"
     },
     "report": {
-      "description": "Un rapport imprimable de l'état du bateau : points en retard, dernières interventions, moteurs."
+      "description": "Un rapport imprimable de l'état du bateau : points en retard, dernières interventions, moteurs.",
+      "action": "Ouvrir le rapport d'état"
     },
     "recalibrate": {
-      "description": "Réglez les dernières réalisations connues pour que la file d'attente soit juste."
+      "description": "Réglez les dernières réalisations connues pour que la file d'attente soit juste.",
+      "action": "Recaler ma checklist"
     },
     "import": {
-      "description": "Vérifiez les lignes importées du carnet papier en une seule fois."
+      "description": "Vérifiez les lignes importées du carnet papier en une seule fois.",
+      "action": "Vérifier les lignes importées"
     },
     "transfer": {
-      "description": "Cédez le bateau à son nouveau propriétaire : le carnet le suit."
+      "description": "Cédez le bateau à son nouveau propriétaire : le carnet le suit.",
+      "warningTitle": "Ce qui part avec le bateau",
+      "warningDescription": "Tout le carnet : checklist et historique, interventions, relevés, achats et coûts, sorties de l'eau, intervenants, équipements. Le nouveau propriétaire verra tout, y compris les montants.",
+      "step1": "1. Exportez une copie pour vous",
+      "step1Help": "L'export ci-dessus vous garde une trace complète, même après avoir quitté le bateau.",
+      "step2": "2. Invitez le nouveau propriétaire",
+      "email": "Adresse e-mail du nouveau propriétaire",
+      "emailInvalid": "Adresse e-mail invalide.",
+      "invite": "Inviter comme propriétaire",
+      "invited": "Invitation envoyée à {email}.",
+      "expires": "expire le {date}",
+      "revoke": "Annuler",
+      "step3": "3. Quittez le bateau une fois l'invitation acceptée",
+      "step3Waiting": "Le bouton apparaîtra dès qu'un autre propriétaire aura rejoint le bateau.",
+      "step3Ready": "{count, plural, one {Un autre propriétaire est en place} other {# autres propriétaires sont en place}} : vous pouvez quitter le bateau.",
+      "leave": "Quitter le bateau",
+      "leaveTitle": "Quitter {name} ?",
+      "leaveDescription": "Vous perdez l'accès immédiatement. Les interventions que vous avez enregistrées restent dans le carnet.",
+      "membersLink": "Voir les membres"
     },
     "delete": {
       "title": "Supprimer le bateau",
@@ -913,5 +940,76 @@
       "confirm": "Supprimer",
       "done": "Intervenant supprimé"
     }
+  },
+  "report": {
+    "title": "Rapport d'état",
+    "subtitle": "Établi le {date} depuis le carnet d'entretien Xaman",
+    "print": "Imprimer",
+    "printHint": "Sur iPad : Partager, puis Imprimer, pour obtenir un PDF.",
+    "showCosts": "Inclure les coûts",
+    "hideCosts": "Masquer les coûts",
+    "sections": {
+      "identity": "Identité",
+      "engines": "Moteurs et compteurs",
+      "systems": "État des systèmes",
+      "due": "Échéances des 12 prochains mois",
+      "logs": "Interventions des 12 derniers mois",
+      "haulOuts": "Sorties de l'eau",
+      "totals": "Récapitulatif"
+    },
+    "identity": {
+      "model": "Modèle",
+      "builder": "Constructeur",
+      "hull": "Numéro de coque",
+      "year": "Année",
+      "homePort": "Port d'attache",
+      "flag": "Pavillon",
+      "sail": "Numéro de voile",
+      "length": "Longueur"
+    },
+    "engines": {
+      "engine": "Moteur",
+      "brand": "Marque / modèle",
+      "hours": "Compteur",
+      "readAt": "Relevé le",
+      "noReading": "compteur inconnu",
+      "none": "Aucun moteur enregistré."
+    },
+    "systems": {
+      "system": "Système",
+      "points": "Points suivis",
+      "progress": "À jour",
+      "overdue": "En retard",
+      "never": "Jamais renseigné",
+      "neverDone": "jamais fait"
+    },
+    "due": {
+      "item": "Point",
+      "system": "Système",
+      "deadline": "Échéance",
+      "state": "État",
+      "hours": "{hours} h",
+      "none": "Aucune échéance dans les 12 prochains mois."
+    },
+    "logs": {
+      "date": "Date",
+      "title": "Intervention",
+      "system": "Système",
+      "by": "Réalisé par",
+      "cost": "Coût",
+      "crew": "Équipage",
+      "none": "Aucune intervention terminée sur les 12 derniers mois.",
+      "total": "Total des 12 derniers mois"
+    },
+    "haulOuts": {
+      "out": "Sortie",
+      "in": "Remise à l'eau",
+      "yard": "Chantier",
+      "works": "Travaux",
+      "cost": "Coût",
+      "inProgress": "en cours",
+      "none": "Aucune sortie de l'eau enregistrée."
+    },
+    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}"
   }
 }

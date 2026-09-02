@@ -16,6 +16,14 @@ export const inviteMemberSchema = z.object({
 });
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
 
+// Transfer (E1-8, D30): the new owner is invited as owner; the former one leaves afterwards.
+export const inviteNewOwnerSchema = z.object({
+  boatId: z.string().uuid(),
+  email: z.string().trim().toLowerCase().email(),
+});
+
+export const leaveBoatSchema = z.object({ boatId: z.string().uuid() });
+
 export const extendMemberAccessSchema = z.object({
   boatId: z.string().uuid(),
   userId: z.string().uuid(),

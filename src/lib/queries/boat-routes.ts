@@ -94,6 +94,11 @@ export function editContactPath(boatId: string, contactId: string): string {
   return `${contactPath(boatId, contactId)}/edit`;
 }
 
+// Printable state report (E9-2b), outside the tab navigation.
+export function reportPath(boatId: string, costs = true): string {
+  return withQuery(`/boats/${boatId}/report`, costs ? undefined : { costs: 0 });
+}
+
 export function haulOutPath(boatId: string, haulOutId: string): string {
   return `${boatPath(boatId, "haulOuts")}/${haulOutId}`;
 }

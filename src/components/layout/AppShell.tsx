@@ -39,7 +39,7 @@ export async function AppShell({
     node ? <Fragment key={placement}>{node}</Fragment> : undefined;
 
   return (
-    <div className="min-h-dvh lg:pl-64">
+    <div className="min-h-dvh lg:pl-64 print:pl-0">
       <a
         href="#main"
         className="sr-only rounded-lg bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
@@ -52,27 +52,27 @@ export async function AppShell({
         items={nav}
         primaryAction={at("sidebar-action", primaryAction)}
         accountMenu={at("sidebar-account", accountMenu)}
-        className="hidden lg:flex"
+        className="hidden lg:flex print:hidden"
       />
       <TopBar
         boatName={boatName}
         boatSubtitle={boatSubtitle}
         nav={nav}
         action={at("header-action", primaryAction)}
-        className="lg:hidden"
+        className="lg:hidden print:hidden"
       />
-      {banner}
+      <div className="print:hidden">{banner}</div>
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto w-full max-w-6xl px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-8 lg:pb-12"
+        className="mx-auto w-full max-w-6xl px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-8 lg:pb-12 print:max-w-none print:p-0"
       >
         {children}
       </main>
       <BottomTabs
         items={nav}
         accountMenu={at("sheet-account", accountMenu)}
-        className="lg:hidden"
+        className="lg:hidden print:hidden"
       />
     </div>
   );
