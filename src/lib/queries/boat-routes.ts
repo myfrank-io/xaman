@@ -86,6 +86,14 @@ export function contactPath(boatId: string, contactId: string): string {
   return `${boatPath(boatId, "contacts")}/${contactId}`;
 }
 
+export function newContactPath(boatId: string): string {
+  return `${boatPath(boatId, "contacts")}/new`;
+}
+
+export function editContactPath(boatId: string, contactId: string): string {
+  return `${contactPath(boatId, contactId)}/edit`;
+}
+
 export function haulOutPath(boatId: string, haulOutId: string): string {
   return `${boatPath(boatId, "haulOuts")}/${haulOutId}`;
 }

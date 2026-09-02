@@ -22,6 +22,7 @@ import type { BoatRole } from "@/lib/permissions";
 import {
   hourReadingPath,
   newChecklistItemPath,
+  newContactPath,
   newHaulOutPath,
   newLogPath,
   suppliesPath,
@@ -101,6 +102,9 @@ export function PrimaryActionSheet({
   if (segments[0] === "logs" && segments.length === 1) directHref = newLogPath(boatId);
   if (segments[0] === "checklist" && segments.length === 2 && segments[1]) {
     directHref = newChecklistItemPath(boatId, segments[1]);
+  }
+  if (segments[0] === "contacts" && segments.length === 1 && role !== "pro") {
+    directHref = newContactPath(boatId);
   }
 
   const keys = role === "pro" ? PRO_KEYS : ALL_KEYS;

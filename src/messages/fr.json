@@ -837,5 +837,59 @@
     "installed": "Xaman est déjà installé sur cet appareil.",
     "install": "Installer",
     "later": "Plus tard"
+  },
+  "contacts": {
+    "title": "Intervenants",
+    "new": "Nouvel intervenant",
+    "edit": "Modifier l'intervenant",
+    "search": "Rechercher un nom, une entreprise, une spécialité",
+    "emptyTitle": "Aucun intervenant",
+    "emptyDescription": "Le mécano, le voilier, le chantier : l'annuaire relie chaque intervention et chaque achat à la bonne personne, avec son téléphone à un tap.",
+    "noResult": "Aucun intervenant pour « {query} »",
+    "count": "{count, plural, =0 {Aucun intervenant} one {# intervenant} other {# intervenants}}",
+    "saved": "Intervenant enregistré",
+    "call": "Appeler",
+    "fields": {
+      "name": "Nom",
+      "specialty": "Spécialité",
+      "specialtyOther": "Précisez la spécialité",
+      "company": "Entreprise",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "address": "Adresse",
+      "notes": "Notes"
+    },
+    "specialties": {
+      "yard": "Chantier carénage",
+      "sailmaker": "Voilier",
+      "electronics": "Électronicien",
+      "engine": "Motoriste",
+      "rigger": "Gréeur",
+      "outboard": "Mécanicien hors-bord",
+      "chandlery": "Shipchandler",
+      "other": "Autre"
+    },
+    "picker": {
+      "crew": "Nous-mêmes",
+      "provider": "Un prestataire",
+      "placeholder": "Choisir un intervenant",
+      "add": "Nouvel intervenant",
+      "quickTitle": "Nouvel intervenant",
+      "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire."
+    },
+    "references": {
+      "logs": "Interventions",
+      "purchases": "Achats",
+      "haulOutsCount": "{count, plural, one {# sortie de l'eau avec ce chantier} other {# sorties de l'eau avec ce chantier}}",
+      "none": "Aucune intervention ni achat chez cet intervenant pour l'instant.",
+      "seeAll": "Voir tout"
+    },
+    "delete": {
+      "action": "Supprimer",
+      "title": "Supprimer {name} ?",
+      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} garderont leur historique mais perdront le lien vers cet intervenant. Cette suppression est définitive.",
+      "confirm": "Supprimer",
+      "done": "Intervenant supprimé"
+    }
   }
 }
