@@ -126,6 +126,7 @@ export function UpcomingList({
             key={entryKey(entry)}
             row={entry.row}
             withCategory
+            compact
             href={categoryPath(boatId, entry.row.categoryId)}
             onDone={canContribute ? (row) => setCompleting(toCompletable(row)) : undefined}
           />

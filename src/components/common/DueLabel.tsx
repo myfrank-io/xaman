@@ -18,6 +18,7 @@ export function DueLabel({
   daysRemaining,
   hoursRemaining,
   hasCounter = true,
+  compact = false,
   className,
 }: {
   status: ChecklistState | null | undefined;
@@ -25,6 +26,8 @@ export function DueLabel({
   hoursRemaining?: number | null;
   /** false when the linked engine has no hour reading at all. */
   hasCounter?: boolean;
+  /** « 126 j » instead of « 126 j de retard » where the badge already says overdue. */
+  compact?: boolean;
   className?: string;
 }) {
   const t = useTranslations("common");
@@ -48,14 +51,17 @@ export function DueLabel({
   if (value === null || !Number.isFinite(value)) return null;
 
   const overdue = status === "overdue" || value < 0;
+  const amount = numberFr.format(Math.abs(Math.round(value)));
   const text = overdue
-    ? `${numberFr.format(Math.abs(Math.round(value)))} ${unit} de retard`
-    : `dans ${numberFr.format(Math.round(value))} ${unit}`;
+    ? compact
+      ? `${amount} ${unit}`
+      : `${amount} ${unit} de retard`
+    : `dans ${amount} ${unit}`;
 
   return (
     <span
       className={cn(
-        "num text-num-sm font-semibold",
+        "num text-num-sm font-semibold whitespace-nowrap",
         overdue ? "text-state-overdue-fg" : status === "soon" ? "text-state-soon-fg" : "text-ink-2",
         className,
       )}

@@ -46,6 +46,7 @@ export function ChecklistItemRow({
   href,
   onClick,
   onDone,
+  compact = false,
   className,
 }: {
   row: ChecklistRow;
@@ -53,6 +54,8 @@ export function ChecklistItemRow({
   href?: string;
   onClick?: () => void;
   onDone?: (row: ChecklistRow) => void;
+  /** Short due label for narrow layouts (dashboard queue). */
+  compact?: boolean;
   className?: string;
 }) {
   const t = useTranslations("checklist");
@@ -75,6 +78,7 @@ export function ChecklistItemRow({
             daysRemaining={row.daysRemaining}
             hoursRemaining={row.hoursRemaining}
             hasCounter={row.engineId === null || row.currentHours !== null}
+            compact={compact}
           />
         )
       }

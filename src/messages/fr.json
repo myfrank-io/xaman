@@ -163,7 +163,8 @@
     },
     "dashboard": {
       "title": "Tableau de bord — recette visuelle",
-      "subtitle": "Données factices, densité à valider en 1024×768 et 768×1024."
+      "subtitle": "Données factices, densité à valider en 1024×768 et 768×1024.",
+      "brandNew": "État « carnet neuf »"
     }
   },
   "auth": {

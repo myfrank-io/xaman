@@ -94,18 +94,15 @@ export function EngineStrip({
   }
 
   return (
-    <div className="mt-3 flex items-center gap-2">
-      <span className="shrink-0 text-overline text-on-navy-3 uppercase">{t("title")}</span>
-      {/* Phone: one scrollable row rather than three stacked chips. */}
-      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible">
-        {engines.map((engine) => (
-          <EngineChip
-            key={engine.id}
-            engine={engine}
-            onOpen={canContribute ? (id) => openFor(id) : undefined}
-          />
-        ))}
-      </div>
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      <span className="mr-1 shrink-0 text-overline text-on-navy-3 uppercase">{t("title")}</span>
+      {engines.map((engine) => (
+        <EngineChip
+          key={engine.id}
+          engine={engine}
+          onOpen={canContribute ? (id) => openFor(id) : undefined}
+        />
+      ))}
       {canContribute ? (
         <>
           <Button

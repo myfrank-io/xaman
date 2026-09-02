@@ -1,15 +1,17 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ChevronRightIcon, GaugeIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
+import { ChevronRightIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
 
-import { CategoryBadge, CategoryIcon } from "@/components/common/CategoryBadge";
-import { ChecklistStateBadge } from "@/components/common/ChecklistStateBadge";
-import { DueLabel } from "@/components/common/DueLabel";
+import type { ChecklistRow } from "@/components/checklist/rows";
+import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatCard } from "@/components/common/StatCard";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
+import { EngineStrip } from "@/components/dashboard/EngineStrip";
+import { UpcomingList, type UpcomingEntry } from "@/components/dashboard/UpcomingList";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell } from "@/components/layout/AppShell";
 import { PrimaryActionSheet } from "@/components/layout/PrimaryActionSheet";
@@ -23,67 +25,118 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate, formatDayMonth, formatHours } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 import { SAMPLE_CATEGORIES } from "../sample-data";
 
 const DEV_BOAT_ID = "00000000-0000-4000-8000-000000000000";
 
 const ENGINES = [
-  { id: "sb", name: "Moteur SB", hours: 1256, readAt: "2026-08-28", stale: false },
-  { id: "bb", name: "Moteur BB", hours: 1208, readAt: "2026-08-28", stale: false },
-  { id: "annex", name: "Annexe", hours: null, readAt: null, stale: false },
-] as const;
+  { id: "sb", label: "Moteur SB", lastHours: 1256, lastDate: "2026-08-28" },
+  { id: "bb", label: "Moteur BB", lastHours: 1208, lastDate: "2026-05-02" },
+  { id: "annex", label: "Annexe", lastHours: null, lastDate: null },
+];
+
+function sampleRow(over: Partial<ChecklistRow> & Pick<ChecklistRow, "id" | "label">): ChecklistRow {
+  return {
+    description: null,
+    actions: [],
+    categoryId: SAMPLE_CATEGORIES[0].id,
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+    engineId: null,
+    engineLabel: null,
+    intervalMonths: 12,
+    intervalHours: null,
+    sortOrder: 1,
+    anchorDate: null,
+    anchorHours: null,
+    counterResetAt: null,
+    currentHours: null,
+    hasCompletion: true,
+    lastCompletionId: null,
+    lastCompletedAt: "2026-03-06",
+    lastCompletedByName: "Xavier",
+    lastEngineHours: null,
+    fixedDueAt: null,
+    status: "overdue",
+    dueAt: "2026-05-01",
+    dueHours: null,
+    daysRemaining: -126,
+    hoursRemaining: null,
+    ...over,
+  };
+}
 
 // « À faire prochainement » — rank 0 urgent logs, 1 overdue items, 2 open logs, 3 soon items.
-const UPCOMING = [
+const UPCOMING: UpcomingEntry[] = [
   {
+    kind: "log",
     id: "u1",
-    kind: "log" as const,
-    status: "urgent" as const,
     title: "Fuite inverseur BB",
-    category: SAMPLE_CATEGORIES[0],
-    trailing: "depuis 4 j",
+    status: "urgent",
+    dueAt: "2026-08-29",
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
   },
   {
-    id: "u2",
-    kind: "item" as const,
-    state: "overdue" as const,
-    title: "Vidange huile + filtre — Moteur SB",
-    category: SAMPLE_CATEGORIES[0],
-    days: -126,
+    kind: "item",
+    row: sampleRow({
+      id: "u2",
+      label: "Vidange huile + filtre à huile",
+      engineId: "sb",
+      engineLabel: "Moteur SB",
+      intervalHours: 250,
+      currentHours: 1256,
+      lastEngineHours: 580,
+      dueHours: 830,
+      hoursRemaining: -426,
+    }),
   },
   {
-    id: "u3",
-    kind: "item" as const,
-    state: "overdue" as const,
-    title: "Enrouleur génois (roulements)",
-    category: SAMPLE_CATEGORIES[2],
-    days: -58,
+    kind: "item",
+    row: sampleRow({
+      id: "u3",
+      label: "Enrouleur génois (roulements)",
+      categoryId: SAMPLE_CATEGORIES[2].id,
+      categoryName: SAMPLE_CATEGORIES[2].name,
+      categoryColor: SAMPLE_CATEGORIES[2].color,
+      lastCompletedAt: "2025-06-15",
+      daysRemaining: -58,
+    }),
   },
   {
-    id: "u4",
-    kind: "item" as const,
-    state: "overdue" as const,
-    title: "Pompes de cale (test auto/manuel)",
-    category: SAMPLE_CATEGORIES[6],
-    days: -12,
+    kind: "item",
+    row: sampleRow({
+      id: "u4",
+      label: "Pompes de cale (test auto/manuel)",
+      categoryId: SAMPLE_CATEGORIES[6].id,
+      categoryName: SAMPLE_CATEGORIES[6].name,
+      categoryColor: SAMPLE_CATEGORIES[6].color,
+      intervalMonths: 6,
+      daysRemaining: -12,
+    }),
   },
   {
+    kind: "log",
     id: "u5",
-    kind: "log" as const,
-    status: "planned" as const,
     title: "Révision radeau de survie",
-    category: SAMPLE_CATEGORIES[7],
-    trailing: "15/10/2026",
+    status: "planned",
+    dueAt: "2026-10-15",
+    categoryName: SAMPLE_CATEGORIES[7].name,
+    categoryColor: SAMPLE_CATEGORIES[7].color,
   },
   {
-    id: "u6",
-    kind: "item" as const,
-    state: "soon" as const,
-    title: "Capteur loch (roue à aubes)",
-    category: SAMPLE_CATEGORIES[4],
-    days: 9,
+    kind: "item",
+    row: sampleRow({
+      id: "u6",
+      label: "Capteur loch (roue à aubes)",
+      categoryId: SAMPLE_CATEGORIES[4].id,
+      categoryName: SAMPLE_CATEGORIES[4].name,
+      categoryColor: SAMPLE_CATEGORIES[4].color,
+      status: "soon",
+      daysRemaining: 9,
+    }),
   },
 ];
 
@@ -120,7 +173,6 @@ export default async function DevDashboardPage() {
   const tn = await getTranslations("nav");
   const tc = await getTranslations("common");
   const td = await getTranslations("dev");
-  const tch = await getTranslations("checklist");
   const tl = await getTranslations("logs");
 
   const keys: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
@@ -194,35 +246,7 @@ export default async function DevDashboardPage() {
             />
           </div>
 
-          {/* Engine strip: a tappable chip per engine → hour reading dialog */}
-          <div className="mt-3 flex items-center gap-2">
-            <span className="shrink-0 text-overline text-on-navy-3 uppercase">
-              {t("engines.title")}
-            </span>
-            {/* Phone: one scrollable row rather than three stacked chips. */}
-            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible">
-              {ENGINES.map((engine) => (
-                <button
-                  key={engine.id}
-                  type="button"
-                  className="inline-flex min-h-11 shrink-0 pressable items-center gap-2 rounded-lg border border-on-navy-border bg-on-navy-surface px-3 text-label text-on-navy"
-                >
-                  <GaugeIcon className="size-4 shrink-0 text-on-navy-3" aria-hidden />
-                  <span className="font-medium">{engine.name}</span>
-                  {engine.hours === null ? (
-                    <span className="text-on-navy-3">{t("engines.noReading")}</span>
-                  ) : (
-                    <span className="num">
-                      {formatHours(engine.hours)} · {formatDayMonth(engine.readAt)}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <Button variant="inverse" size="icon" aria-label={tc("add")} className="shrink-0">
-              <PlusIcon />
-            </Button>
-          </div>
+          <EngineStrip boatId={DEV_BOAT_ID} engines={ENGINES} canContribute canWrite />
         </header>
 
         {/* 2 — contextual banner (a single one, by priority) */}
@@ -242,46 +266,30 @@ export default async function DevDashboardPage() {
           actionHref="/dev/ui/dashboard"
           actionLabel={t("upcoming.allChecklist")}
         >
-          {UPCOMING.map((row) => (
-            <ListRow
-              key={row.id}
-              size="lg"
-              categoryColor={row.category.color}
-              lead={
-                row.kind === "log" ? (
-                  <StatusBadge status={row.status} size="sm" />
-                ) : (
-                  <ChecklistStateBadge state={row.state} size="sm" />
-                )
-              }
-              title={row.title}
-              meta={
-                <CategoryBadge
-                  name={row.category.name}
-                  color={row.category.color}
-                  icon={row.category.icon}
-                  withIcon
-                  size="sm"
-                  variant="inline"
-                />
-              }
-              trailing={
-                row.kind === "item" ? (
-                  <DueLabel status={row.state} daysRemaining={row.days} />
-                ) : (
-                  <span className="num text-caption text-ink-2">{row.trailing}</span>
-                )
-              }
-              action={
-                row.kind === "item" ? (
-                  <Button size="sm" variant="outline" className="min-w-22">
-                    {tch("markDone")}
-                  </Button>
-                ) : undefined
-              }
-              href={row.kind === "log" ? "/dev/ui/dashboard" : undefined}
-            />
-          ))}
+          <UpcomingList
+            boatId={DEV_BOAT_ID}
+            entries={UPCOMING}
+            members={[
+              { id: "u-xav", name: "Xavier Marin" },
+              { id: "u-emm", name: "Emmanuel Lesaffre" },
+            ]}
+            currentUserId="u-xav"
+            currentUserName="Xavier Marin"
+            canContribute
+            todoCount={23}
+            openLogs={2}
+          />
+        </SectionCard>
+
+        {/* 3b — day-one state of the same block */}
+        <SectionCard title={td("dashboard.brandNew")} bare>
+          <BrandNewBlock
+            boatId={DEV_BOAT_ID}
+            count={90}
+            reviewCount={7}
+            steps={{ hours: true, review: false, checklist: false }}
+            canContribute
+          />
         </SectionCard>
 
         {/* 4 — the 8 systems, fixed order (sort_order), never re-sorted by urgency */}
