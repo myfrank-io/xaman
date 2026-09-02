@@ -10,12 +10,13 @@ import {
   SECONDARY_NAV_KEYS,
   type NavItem,
 } from "@/components/layout/nav";
+import { devUiEnabled } from "@/lib/dev-ui";
 
 export const DEV_BOAT_ID = "00000000-0000-4000-8000-000000000000";
 
 // Application frame around a preview page: same sidebar / tabs as the real app, fake boat.
 export async function DevShell({ children }: { children: React.ReactNode }) {
-  if (process.env.NODE_ENV === "production") notFound();
+  if (!devUiEnabled()) notFound();
   const tn = await getTranslations("nav");
   const nav: NavItem[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS].map(
     (key) => ({

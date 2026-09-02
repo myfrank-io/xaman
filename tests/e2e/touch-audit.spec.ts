@@ -10,6 +10,7 @@ const PAGES = [
   "/dev/ui",
   "/dev/ui/dashboard",
   "/dev/ui/contacts",
+  "/dev/ui/checklist",
   "/dev/ui/boat",
   "/dev/ui/boat/engine",
   "/dev/ui/boat/engine-form",

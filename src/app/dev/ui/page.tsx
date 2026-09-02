@@ -44,6 +44,7 @@ import { formatCurrency, formatDate, formatHours } from "@/lib/format";
 
 import { DevFields, DevOverlays } from "./DevInteractive";
 import { NEUTRALS, SAMPLE_CATEGORIES } from "./sample-data";
+import { devUiEnabled } from "@/lib/dev-ui";
 
 const DEV_BOAT_ID = "00000000-0000-4000-8000-000000000000";
 
@@ -80,7 +81,7 @@ function Section({
 }
 
 export default async function DevUiPage() {
-  if (process.env.NODE_ENV === "production") notFound();
+  if (!devUiEnabled()) notFound();
 
   const t = await getTranslations("dev");
   const tn = await getTranslations("nav");

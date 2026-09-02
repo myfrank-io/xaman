@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 
 import { ContactPickerDemo } from "./ContactPickerDemo";
+import { devUiEnabled } from "@/lib/dev-ui";
 
 const DEV_BOAT_ID = "00000000-0000-4000-8000-000000000000";
 
@@ -54,7 +55,7 @@ const CONTACTS = [
 
 /** Static mock-up of the contacts module for visual acceptance (no seed needed). */
 export default async function DevContactsPage() {
-  if (process.env.NODE_ENV === "production") notFound();
+  if (!devUiEnabled()) notFound();
   const t = await getTranslations("contacts");
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 p-6">
