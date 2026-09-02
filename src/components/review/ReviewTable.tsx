@@ -188,7 +188,7 @@ export function ReviewTable({
         <section className="flex flex-col gap-3">
           <h2 className="text-overline text-ink-2 uppercase">{t("logsTitle")}</h2>
           <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-            <table className="w-full min-w-[46rem] border-collapse">
+            <table className="w-full min-w-[42rem] border-collapse">
               <thead>
                 <tr className="border-b border-border text-left">
                   <th scope="col" className="px-4 py-3 text-caption font-semibold text-ink-2">
@@ -345,7 +345,10 @@ export function ReviewTable({
         </section>
       ) : null}
 
-      <div className="sticky bottom-0 z-20 -mx-4 flex justify-end border-t border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6">
+      <div
+        className="sticky z-20 -mx-4 flex justify-end border-t border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6"
+        style={{ bottom: "var(--bottom-nav-height, 0px)" }}
+      >
         <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
           {pending ? <Spinner /> : null}
           {pending

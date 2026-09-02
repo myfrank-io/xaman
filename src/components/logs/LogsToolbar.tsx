@@ -101,32 +101,35 @@ export function LogsToolbar({
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <NativeSelect
-          aria-label={t("filters.category")}
-          value={filters.category}
-          className="w-auto min-w-44"
-          onChange={(event) => go({ category: event.target.value })}
-        >
-          <option value="">{t("filters.allCategories")}</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </NativeSelect>
-        <NativeSelect
-          aria-label={t("filters.status")}
-          value={filters.status}
-          className="w-auto min-w-36"
-          onChange={(event) => go({ status: event.target.value })}
-        >
-          <option value="">{t("filters.allStatuses")}</option>
-          {LOG_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {ts(status)}
-            </option>
-          ))}
-        </NativeSelect>
+        {/* NativeSelect fills its parent: the width is set on the wrapper, not on the select. */}
+        <div className="w-52 max-w-full">
+          <NativeSelect
+            aria-label={t("filters.category")}
+            value={filters.category}
+            onChange={(event) => go({ category: event.target.value })}
+          >
+            <option value="">{t("filters.allCategories")}</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+        <div className="w-44 max-w-full">
+          <NativeSelect
+            aria-label={t("filters.status")}
+            value={filters.status}
+            onChange={(event) => go({ status: event.target.value })}
+          >
+            <option value="">{t("filters.allStatuses")}</option>
+            {LOG_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {ts(status)}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
         {reviewCount > 0 ? (
           <Button
             type="button"

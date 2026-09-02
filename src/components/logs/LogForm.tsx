@@ -23,6 +23,7 @@ import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { ChecklistMatches } from "@/components/logs/ChecklistMatches";
 import { EngineHoursSection } from "@/components/logs/EngineHoursSection";
 import { TitleSuggestions } from "@/components/logs/TitleSuggestions";
+import { useTitleSuggestions } from "@/components/logs/use-title-suggestions";
 import type {
   LogFormChoice,
   LogFormEngine,
@@ -161,6 +162,7 @@ export function LogForm({
     Boolean(defaultValues.equipmentId || defaultValues.haulOutId),
   );
   const [focusEngineId, setFocusEngineId] = useState<string | null>(null);
+  const titleMatches = useTitleSuggestions(boatId, titleFocused ? title : "");
   // Suggestions are kept with the question they answer, so a stale list is never displayed and
   // nothing has to be cleared from inside an effect.
   const [suggested, setSuggested] = useState<{ key: string; items: ItemSuggestion[] }>({
@@ -186,20 +188,23 @@ export function LogForm({
     if (!categoryId || trimmed.length < MIN_MATCH_CHARS) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      void suggestChecklistItems({ boatId, categoryId, title: trimmed }).then((result) => {
-        if (cancelled || !result.ok) return;
-        setSuggested({ key: `${categoryId}|${trimmed}`, items: result.data });
-        // Pre-tick a fresh entry (D3); an edited one keeps the points it already carries.
-        if (log) return;
-        const current = form.getValues("checklistItemIds");
-        const added = result.data
-          .filter((item) => item.score > 0.5 && !decided.current.has(item.id))
-          .map((item) => item.id);
-        if (added.length > 0) {
-          form.setValue("checklistItemIds", [...new Set([...current, ...added])]);
-          if (result.data.some((item) => item.intervalHours !== null)) setHoursOpen(true);
-        }
-      });
+      suggestChecklistItems({ boatId, categoryId, title: trimmed })
+        .then((result) => {
+          if (cancelled || !result.ok) return;
+          setSuggested({ key: `${categoryId}|${trimmed}`, items: result.data });
+          // Pre-tick a fresh entry (D3); an edited one keeps the points it already carries.
+          if (log) return;
+          const current = form.getValues("checklistItemIds");
+          const added = result.data
+            .filter((item) => item.score > 0.5 && !decided.current.has(item.id))
+            .map((item) => item.id);
+          if (added.length > 0) {
+            form.setValue("checklistItemIds", [...new Set([...current, ...added])]);
+            if (result.data.some((item) => item.intervalHours !== null)) setHoursOpen(true);
+          }
+        })
+        // A failed lookup must never break the saisie: no suggestion, nothing else changes.
+        .catch(() => undefined);
     }, MATCH_DEBOUNCE_MS);
     return () => {
       cancelled = true;
@@ -308,8 +313,7 @@ export function LogForm({
         </Field>
         {titleFocused ? (
           <TitleSuggestions
-            boatId={boatId}
-            query={title}
+            items={titleMatches}
             categories={categories}
             engines={engines}
             onPick={(suggestion) => {

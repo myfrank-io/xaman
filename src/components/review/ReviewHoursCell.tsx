@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { ArrowLeftRightIcon } from "lucide-react";
 
+import { shortEngineLabel } from "@/components/logs/rows";
 import type { ReviewHourContext } from "@/components/review/review-rows";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,7 +41,10 @@ export function ReviewHoursCell({
         <div>
           <Button type="button" variant="outline" size="sm" onClick={onSwap}>
             <ArrowLeftRightIcon />
-            {t("swap", { a: hours[0]?.engineLabel ?? "", b: hours[1]?.engineLabel ?? "" })}
+            {t("swap", {
+              a: shortEngineLabel(hours[0]?.engineLabel ?? ""),
+              b: shortEngineLabel(hours[1]?.engineLabel ?? ""),
+            })}
           </Button>
         </div>
       ) : null}

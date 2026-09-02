@@ -1,3 +1,5 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
@@ -5,7 +7,9 @@ import { CategoriesManager, type CategoryRow } from "@/components/categories/Cat
 import { PageHeader } from "@/components/common/PageHeader";
 import { DeleteBoatCard } from "@/components/settings/DeleteBoatCard";
 import { SettingsSection } from "@/components/settings/SettingsSection";
+import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
+import { logsReviewPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 // Boat settings (E2-5): categories, then the blocks delivered by later lots, then the danger zone.
@@ -48,6 +52,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
 
   const t = await getTranslations("settings");
   const tcat = await getTranslations("categories");
+  const treview = await getTranslations("review");
 
   return (
     <div className="flex flex-col gap-10">
@@ -60,11 +65,14 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
         description={t("recalibrate.description")}
         soon={t("soon")}
       />
-      <SettingsSection
-        title={t("sections.import")}
-        description={t("import.description")}
-        soon={t("soon")}
-      />
+      {/* « Reprise du carnet » (E3-7): the guided review of the imported rows. */}
+      <SettingsSection title={t("sections.import")} description={t("import.description")}>
+        <div>
+          <Button asChild variant="outline">
+            <Link href={logsReviewPath(boatId) as Route}>{treview("title")}</Link>
+          </Button>
+        </div>
+      </SettingsSection>
       <SettingsSection
         title={t("sections.export")}
         description={t("export.description")}

@@ -77,7 +77,6 @@ export function ChecklistMatches({
                 daysRemaining={item.daysRemaining}
                 hoursRemaining={item.hoursRemaining}
                 hasCounter={item.currentHours !== null}
-                compact
                 className="shrink-0"
               />
             </li>
