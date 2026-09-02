@@ -173,3 +173,22 @@ begin
   end if;
 end;
 $$;
+
+-- Storage migration 0055 (prevent direct deletes): statement triggers that refuse deletes on
+-- storage.buckets / storage.objects unless the Storage API's GUC is set in the transaction.
+create or replace function storage.protect_delete() returns trigger
+language plpgsql as $$
+begin
+  if coalesce(current_setting('storage.allow_delete_query', true), 'false') <> 'true' then
+    raise exception 'Direct deletion from storage tables is not allowed. Use the Storage API instead.'
+      using hint = 'This prevents accidental data loss from orphaned objects.', errcode = '42501';
+  end if;
+  return null;
+end;
+$$;
+drop trigger if exists protect_buckets_delete on storage.buckets;
+create trigger protect_buckets_delete before delete on storage.buckets
+  for each statement execute function storage.protect_delete();
+drop trigger if exists protect_objects_delete on storage.objects;
+create trigger protect_objects_delete before delete on storage.objects
+  for each statement execute function storage.protect_delete();

@@ -564,6 +564,9 @@ describe("storage bucket boat-files", () => {
           "select count(*)::int as n from storage.objects where name = $1",
           [OBJECT],
         );
+        // Storage ≥ 1.x guards storage.objects against direct deletes (statement trigger
+        // storage.protect_delete); the Storage API sets this GUC before deleting.
+        await c.query("set local storage.allow_delete_query = 'true'");
         const del = await c.query("delete from storage.objects where name = $1", [OBJECT]);
         return { seen: Number(res.rows[0]?.n), deleted: del.rowCount };
       });
