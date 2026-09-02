@@ -22,7 +22,7 @@
     "db:migrate": "supabase migration up",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --local --schema public > src/types/database.ts",
-    "db:types:url": "supabase gen types typescript --db-url \"$DATABASE_URL\" --schema public > src/types/database.ts"
+    "db:types:url": "node scripts/db-types.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "@supabase/postgres-meta": "^0.99.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22",
     "@types/react": "^19",
