@@ -19,7 +19,13 @@ import { UpcomingList, type UpcomingEntry } from "@/components/dashboard/Upcomin
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, toDateString, todayString } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
-import { boatPath, checklistPath, logsPath, suppliesPath } from "@/lib/queries/boat-routes";
+import {
+  boatPath,
+  checklistPath,
+  logPath,
+  logsPath,
+  suppliesPath,
+} from "@/lib/queries/boat-routes";
 import { completionContext } from "@/lib/queries/completion-context";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -390,7 +396,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
                   {log.cost === null ? tc("none") : formatCurrency(log.cost)}
                 </span>
               }
-              href={logsPath(boatId)}
+              href={log.id ? logPath(boatId, log.id) : logsPath(boatId)}
             />
           ))
         )}

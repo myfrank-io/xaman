@@ -977,3 +977,131 @@ describe("boat_todo_queue", () => {
     expect(await queueOf(U.stranger)).toEqual([]);
   });
 });
+
+describe("journal helpers (0005)", () => {
+  const suggestions = (u: User | null, query: string) =>
+    as(u, async (c) => {
+      try {
+        const res = await c.query(
+          "select title, category_id, engine_id, occurrences from public.log_title_suggestions($1::uuid, $2)",
+          [BOAT, query],
+        );
+        return res.rows as {
+          title: string;
+          category_id: string | null;
+          engine_id: string | null;
+          occurrences: number;
+        }[];
+      } catch {
+        return null; // permission denied (anon)
+      }
+    });
+
+  const items = (u: User | null, title: string) =>
+    as(u, async (c) => {
+      try {
+        const res = await c.query(
+          "select id, label, engine_id, status::text, score::float8 from public.suggest_checklist_items($1::uuid, $2::uuid, $3)",
+          [BOAT, CATEGORY, title],
+        );
+        return res.rows as {
+          id: string;
+          label: string;
+          engine_id: string | null;
+          status: string;
+          score: number;
+        }[];
+      } catch {
+        return null;
+      }
+    });
+
+  it("every member gets the titles of their boat, with category and engine", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const rows = await suggestions(U[role], "vid");
+      // equal occurrences: the most recent title comes first
+      expect(
+        rows?.map((r) => r.title),
+        role,
+      ).toEqual(["Vidange (pro)", "Vidange (owner)"]);
+      expect(rows?.[0], role).toMatchObject({
+        category_id: CATEGORY,
+        engine_id: ENGINE,
+        occurrences: 1,
+      });
+    }
+  });
+
+  it("the match ignores case, needs 2 characters and treats % as text", async () => {
+    expect((await suggestions(U.owner, "VIDANGE"))?.length).toBe(2);
+    expect((await suggestions(U.owner, "v"))?.length).toBe(0);
+    expect((await suggestions(U.owner, "%"))?.length).toBe(0);
+  });
+
+  it("accents are folded on both sides", async () => {
+    const rows = await as(U.owner, async (c) => {
+      await c.query("update public.maintenance_logs set title = 'Carénage' where id = $1", [
+        LOG_PRO,
+      ]);
+      const res = await c.query("select title from public.log_title_suggestions($1::uuid, $2)", [
+        BOAT,
+        "carenage",
+      ]);
+      return res.rows.map((r) => r.title as string);
+    });
+    expect(rows).toEqual(["Carénage"]);
+  });
+
+  it("an outsider sees nothing and anon cannot execute the function", async () => {
+    expect(await suggestions(U.stranger, "vid")).toEqual([]);
+    expect(await suggestions(null, "vid")).toBeNull();
+  });
+
+  it("a trashed log stops suggesting its title", async () => {
+    const rows = await as(U.owner, async (c) => {
+      await c.query("update public.maintenance_logs set deleted_at = now() where id = $1", [
+        LOG_PRO,
+      ]);
+      const res = await c.query("select title from public.log_title_suggestions($1::uuid, $2)", [
+        BOAT,
+        "vid",
+      ]);
+      return res.rows.map((r) => r.title as string);
+    });
+    expect(rows).toEqual(["Vidange (owner)"]);
+  });
+
+  it("suggest_checklist_items matches the point of the category above 0.5", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const rows = await items(U[role], "Vidange moteur");
+      expect(
+        rows?.map((r) => r.id),
+        role,
+      ).toEqual([ITEM]);
+      expect(rows?.[0]?.score ?? 0, role).toBeGreaterThan(0.5);
+      expect(rows?.[0]?.engine_id, role).toBe(ENGINE);
+    }
+  });
+
+  it("an unrelated title matches nothing, and a title under 3 characters is not searched", async () => {
+    expect(await items(U.owner, "Réparation de la grand-voile")).toEqual([]);
+    expect(await items(U.owner, "Vi")).toEqual([]);
+  });
+
+  it("an outsider sees no point and anon cannot execute the function", async () => {
+    expect(await items(U.stranger, "Vidange moteur")).toEqual([]);
+    expect(await items(null, "Vidange moteur")).toBeNull();
+  });
+
+  it("a deactivated point leaves the suggestions", async () => {
+    const rows = await as(U.owner, async (c) => {
+      await c.query("update public.checklist_items set is_active = false where id = $1", [ITEM]);
+      const res = await c.query(
+        "select id from public.suggest_checklist_items($1::uuid, $2::uuid, $3)",
+        [BOAT, CATEGORY, "Vidange moteur"],
+      );
+      return res.rows;
+    });
+    expect(rows).toEqual([]);
+  });
+});

@@ -11,7 +11,7 @@ import { SettingsSection } from "@/components/settings/SettingsSection";
 import { TransferBoatCard, type OwnerInvitation } from "@/components/settings/TransferBoatCard";
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
-import { checklistSetupPath, logsPath, reportPath } from "@/lib/queries/boat-routes";
+import { checklistSetupPath, logsReviewPath, reportPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 // Boat settings (E2-5): categories, the tools of the logbook, then the owner-only zone.
@@ -98,7 +98,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
       <SettingsSection title={t("sections.import")} description={t("import.description")}>
         <div>
           <Button asChild variant="outline">
-            <Link href={logsPath(boatId, { review: 1 }) as Route}>{t("import.action")}</Link>
+            <Link href={logsReviewPath(boatId) as Route}>{t("import.action")}</Link>
           </Button>
         </div>
       </SettingsSection>

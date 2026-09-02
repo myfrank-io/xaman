@@ -18,7 +18,7 @@ import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { formatDate } from "@/lib/format";
-import { categoryPath, checklistPath, logsPath } from "@/lib/queries/boat-routes";
+import { categoryPath, checklistPath, logPath, logsPath } from "@/lib/queries/boat-routes";
 import type { Database } from "@/types/database";
 
 type LogStatus = Database["public"]["Enums"]["log_status"];
@@ -147,7 +147,7 @@ export function UpcomingList({
               ) : null
             }
             categoryColor={entry.categoryColor}
-            href={logsPath(boatId)}
+            href={logPath(boatId, entry.id)}
           />
         ),
       )}

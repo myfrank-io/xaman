@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -28,6 +30,7 @@ import { completeChecklistItem, deleteCompletion } from "@/lib/actions/checklist
 import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { addDays } from "@/lib/numbers";
+import { newLogPath } from "@/lib/queries/boat-routes";
 import { completeItemSchema } from "@/lib/schemas/checklist";
 
 export type CompletableItem = {
@@ -331,6 +334,24 @@ function CompleteForm({
           </AlertDescription>
         </Alert>
       ) : null}
+      {/* « + Ajouter les détails » (E4-5 / D3): the same acknowledgement, told in full — the
+          intervention form opens with the point ticked, the date and the hours already typed. */}
+      <Link
+        href={
+          newLogPath(boatId, {
+            item: item.id,
+            date: completedAt,
+            // a comma separates the pairs in `?hours=`: the decimal one travels as a dot
+            hours:
+              engine && hours.trim() !== ""
+                ? `${engine.id}:${hours.trim().replace(",", ".")}`
+                : undefined,
+          }) as Route
+        }
+        className="inline-flex min-h-11 items-center self-start text-label font-medium text-primary underline-offset-4 hover:underline"
+      >
+        {t("addDetails")}
+      </Link>
       <p className="text-caption text-ink-3">
         {item.lastCompletedAt
           ? item.lastEngineHours !== null
