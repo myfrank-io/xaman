@@ -2,7 +2,11 @@ import { z } from "zod";
 
 import { addDays, parseDecimal, roundTo, toIsoDate } from "@/lib/numbers";
 
-export const uuid = z.string().uuid();
+// Any 8-4-4-4-12 hex id: the app generates v4 ids (crypto.randomUUID) but the dev seed and
+// imported rows carry ids without a version nibble, which zod's uuid() rejects.
+export const uuid = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
 export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
