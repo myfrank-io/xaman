@@ -11,14 +11,15 @@ function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxP
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer size-6 shrink-0 rounded-[6px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary",
+        // 44 px tap target (rule 1) around a 24 px box drawn by ::before
+        "peer relative inline-flex size-11 shrink-0 items-center justify-center rounded-lg outline-none before:absolute before:inset-2.5 before:rounded-[6px] before:border before:border-input before:bg-surface before:shadow-xs before:transition-colors before:content-[''] focus-visible:before:border-ring focus-visible:before:ring-[3px] focus-visible:before:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:before:border-destructive data-[state=checked]:before:border-primary data-[state=checked]:before:bg-primary",
         className,
       )}
       {...props}
     >
       <CheckboxPrimitive.Indicator
         data-slot="checkbox-indicator"
-        className="flex items-center justify-center text-current transition-none"
+        className="relative z-10 flex items-center justify-center text-primary-foreground"
       >
         <CheckIcon className="size-4" />
       </CheckboxPrimitive.Indicator>

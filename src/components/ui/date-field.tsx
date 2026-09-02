@@ -56,12 +56,8 @@ export function DateField({
         disabled={disabled}
         aria-label={t("today")}
       >
-        <ToggleGroupItem value="today" className="min-h-9">
-          {t("today")}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="yesterday" className="min-h-9">
-          {t("yesterday")}
-        </ToggleGroupItem>
+        <ToggleGroupItem value="today">{t("today")}</ToggleGroupItem>
+        <ToggleGroupItem value="yesterday">{t("yesterday")}</ToggleGroupItem>
       </ToggleGroup>
       <Input
         id={id}

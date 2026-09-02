@@ -26,7 +26,8 @@
     "db:types": "supabase gen types typescript --local --schema public > src/types/database.ts",
     "db:types:url": "node scripts/db-types.mjs",
     "seed:xaman": "node --env-file-if-exists=.env.local --import tsx scripts/seed.mts",
-    "build:sw": "serwist build serwist.config.mts"
+    "build:sw": "serwist build serwist.config.mts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
