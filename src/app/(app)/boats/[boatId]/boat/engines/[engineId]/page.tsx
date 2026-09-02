@@ -9,6 +9,8 @@ import {
   type EngineReadingRow,
 } from "@/components/engines/EngineSheet";
 import { can, type BoatRole } from "@/lib/permissions";
+import { AuditFooter } from "@/components/common/AuditFooter";
+import { auditNames } from "@/lib/queries/audit-names";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EnginePage({
@@ -111,31 +113,41 @@ export default async function EnginePage({
     contactName: log.contact_name,
   }));
 
+  const names = await auditNames(supabase, [engine.created_by, engine.updated_by]);
+
   return (
-    <EngineSheet
-      boatId={boatId}
-      engine={{
-        id: engine.id,
-        label: engine.label,
-        position: engine.position,
-        brand: engine.brand,
-        model: engine.model,
-        serial: engine.serial,
-        installedAt: engine.installed_at,
-        notes: engine.notes,
-        isActive: engine.is_active,
-        counterResetAt: engine.counter_reset_at,
-      }}
-      currentHours={current?.hours ?? null}
-      currentReadAt={current?.read_at ?? null}
-      currentByName={byName(currentReading)}
-      items={itemRows}
-      readings={readingRows}
-      logs={logRows}
-      linkedCount={linkedCount ?? 0}
-      hasTemplate={Boolean(boat?.checklist_template_id)}
-      canWrite={can(boatRole, "write")}
-      canContribute={can(boatRole, "contribute")}
-    />
+    <div className="flex flex-col gap-6">
+      <EngineSheet
+        boatId={boatId}
+        engine={{
+          id: engine.id,
+          label: engine.label,
+          position: engine.position,
+          brand: engine.brand,
+          model: engine.model,
+          serial: engine.serial,
+          installedAt: engine.installed_at,
+          notes: engine.notes,
+          isActive: engine.is_active,
+          counterResetAt: engine.counter_reset_at,
+        }}
+        currentHours={current?.hours ?? null}
+        currentReadAt={current?.read_at ?? null}
+        currentByName={byName(currentReading)}
+        items={itemRows}
+        readings={readingRows}
+        logs={logRows}
+        linkedCount={linkedCount ?? 0}
+        hasTemplate={Boolean(boat?.checklist_template_id)}
+        canWrite={can(boatRole, "write")}
+        canContribute={can(boatRole, "contribute")}
+      />
+      <AuditFooter
+        createdByName={names.get(engine.created_by ?? "")}
+        createdAt={engine.created_at}
+        updatedByName={names.get(engine.updated_by ?? "")}
+        updatedAt={engine.updated_at}
+      />
+    </div>
   );
 }

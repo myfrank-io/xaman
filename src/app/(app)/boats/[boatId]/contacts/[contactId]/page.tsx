@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath, editContactPath, logsPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { AuditFooter } from "@/components/common/AuditFooter";
+import { auditNames } from "@/lib/queries/audit-names";
 import { createClient } from "@/lib/supabase/server";
 
 const REFERENCE_LIMIT = 10;
@@ -64,6 +66,7 @@ export default async function ContactPage({
     haulOuts: haulOutsCount ?? 0,
   };
   const phone = contact.phone?.replace(/\s/g, "") ?? null;
+  const names = await auditNames(supabase, [contact.created_by, contact.updated_by]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -195,6 +198,12 @@ export default async function ContactPage({
           {t("references.haulOutsCount", { count: references.haulOuts })}
         </p>
       ) : null}
+      <AuditFooter
+        createdByName={names.get(contact.created_by ?? "")}
+        createdAt={contact.created_at}
+        updatedByName={names.get(contact.updated_by ?? "")}
+        updatedAt={contact.updated_at}
+      />
     </div>
   );
 }

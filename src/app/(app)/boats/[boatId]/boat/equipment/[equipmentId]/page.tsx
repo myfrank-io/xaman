@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import type { LogStatus } from "@/components/common/StatusBadge";
 import { EquipmentSheet, type EquipmentLogRow } from "@/components/equipment/EquipmentSheet";
 import { can, type BoatRole } from "@/lib/permissions";
+import { AuditFooter } from "@/components/common/AuditFooter";
+import { auditNames } from "@/lib/queries/audit-names";
 import { createClient } from "@/lib/supabase/server";
 
 function specsToList(specs: unknown): { key: string; value: string }[] {
@@ -47,30 +49,40 @@ export default async function EquipmentPage({
     contactName: log.contact_name,
   }));
 
+  const names = await auditNames(supabase, [item.created_by, item.updated_by]);
+
   return (
-    <EquipmentSheet
-      boatId={boatId}
-      item={{
-        id: item.id,
-        name: item.name,
-        brand: item.brand,
-        model: item.model,
-        serial: item.serial,
-        quantity: item.quantity,
-        installedAt: item.installed_at,
-        removedAt: item.removed_at,
-        notes: item.notes,
-        specs: specsToList(item.specs),
-        category: item.boat_categories
-          ? {
-              id: item.boat_categories.id,
-              name: item.boat_categories.name,
-              color: item.boat_categories.color,
-            }
-          : null,
-      }}
-      logs={logRows}
-      canWrite={can(boatRole, "write")}
-    />
+    <div className="flex flex-col gap-6">
+      <EquipmentSheet
+        boatId={boatId}
+        item={{
+          id: item.id,
+          name: item.name,
+          brand: item.brand,
+          model: item.model,
+          serial: item.serial,
+          quantity: item.quantity,
+          installedAt: item.installed_at,
+          removedAt: item.removed_at,
+          notes: item.notes,
+          specs: specsToList(item.specs),
+          category: item.boat_categories
+            ? {
+                id: item.boat_categories.id,
+                name: item.boat_categories.name,
+                color: item.boat_categories.color,
+              }
+            : null,
+        }}
+        logs={logRows}
+        canWrite={can(boatRole, "write")}
+      />
+      <AuditFooter
+        createdByName={names.get(item.created_by ?? "")}
+        createdAt={item.created_at}
+        updatedByName={names.get(item.updated_by ?? "")}
+        updatedAt={item.updated_at}
+      />
+    </div>
   );
 }

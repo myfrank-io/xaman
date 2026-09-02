@@ -50,7 +50,12 @@
     "actions": "Actions",
     "show": "Afficher",
     "hide": "Masquer",
-    "reload": "Recharger"
+    "reload": "Recharger",
+    "audit": {
+      "created": "Créé par {name} le {date}",
+      "updated": "modifié par {name} le {date}",
+      "unknown": "un membre"
+    }
   },
   "nav": {
     "dashboard": "Tableau de bord",
