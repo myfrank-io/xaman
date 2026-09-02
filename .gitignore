@@ -49,3 +49,6 @@ pnpm-debug.log*
 !.vscode/extensions.json
 !.vscode/settings.json
 *.pem
+
+# Agent worktrees (Claude Code isolation)
+.claude/worktrees/
