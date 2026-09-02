@@ -1,0 +1,19 @@
+{
+  "app": {
+    "name": "Xaman",
+    "tagline": "Carnet d'entretien numérique et partagé pour bateaux"
+  },
+  "home": {
+    "eyebrow": "Carnet d'entretien",
+    "title": "Xaman",
+    "subtitle": "Le carnet d'entretien numérique et partagé de votre bateau.",
+    "status": "L'application est en cours de construction. La connexion sera disponible prochainement."
+  },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "close": "Fermer"
+  }
+}
