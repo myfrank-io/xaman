@@ -131,20 +131,9 @@ export default async function LogsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t("title")}
-        subtitle={t("results", { count: total })}
-        actions={
-          canContribute ? (
-            <Button asChild>
-              <Link href={newLogPath(boatId) as Route}>
-                <PlusIcon />
-                {t("new")}
-              </Link>
-            </Button>
-          ) : undefined
-        }
-      />
+      {/* One « + » per screen (D19): on /logs the sidebar button already creates an
+          intervention, so the header carries no second one. */}
+      <PageHeader title={t("title")} subtitle={t("results", { count: total })} />
 
       <div className="flex flex-wrap gap-2 border-b border-border">
         {tabs.map((entry) => (
