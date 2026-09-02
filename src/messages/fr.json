@@ -356,7 +356,8 @@
       "title": "Heures moteur",
       "noReading": "compteur inconnu",
       "stale": "à mettre à jour",
-      "readAt": "relevé le {date}"
+      "readAt": "relevé le {date}",
+      "addReading": "Relevé d'heures"
     },
     "upcoming": {
       "title": "À faire prochainement",
@@ -368,7 +369,15 @@
       "startIntro": "Aucun point n'a encore été réalisé. Trois étapes pour partir du bon pied :",
       "startStep1": "Saisir les heures des moteurs",
       "startStep2": "Vérifier les {count} lignes importées du carnet papier",
-      "startStep3": "Cocher ce qui est déjà fait dans la checklist"
+      "startStep3": "Cocher ce qui est déjà fait dans la checklist",
+      "allChecklistCount": "Tous les points à traiter ({count})",
+      "allLogsCount": "Interventions ouvertes ({count})",
+      "emptyNextHours": "Prochaine échéance : {label}, dans {hours} h.",
+      "startStep1Action": "Saisir les heures",
+      "startStep2Action": "Vérifier",
+      "startStep3Action": "Ouvrir la checklist",
+      "startDismiss": "Masquer",
+      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}"
     },
     "categories": {
       "title": "État des 8 systèmes",
@@ -378,7 +387,8 @@
       "overdue": "{count, plural, one {# en retard} other {# en retard}}"
     },
     "recent": {
-      "title": "Dernières interventions"
+      "title": "Dernières interventions",
+      "empty": "Aucune intervention terminée pour l'instant."
     },
     "recap": {
       "expenses": "Dépenses {year}",
@@ -387,13 +397,29 @@
       "lastHaulOut": "Dernière : {date} — il y a {months} mois",
       "noHaulOut": "Aucune sortie de l'eau enregistrée",
       "lowStock": "{count, plural, one {# pièce sous le seuil} other {# pièces sous le seuil}}",
-      "stock": "Stock"
+      "stock": "Stock",
+      "expenses12m": "Dépenses, 12 derniers mois",
+      "noExpenses": "Aucune dépense sur les 12 derniers mois",
+      "other": "Autres",
+      "haulOutDetail": "Voir les sorties de l'eau",
+      "stockDetail": "Voir le stock",
+      "stockOk": "Aucune pièce sous le seuil"
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
       "action": "Vérifier"
     },
-    "markDone": "Fait"
+    "markDone": "Fait",
+    "state": {
+      "overdue": "{count, plural, one {# point en retard} other {# points en retard}}",
+      "soon": "{count, plural, one {# point à faire bientôt} other {# points à faire bientôt}}",
+      "ok": "Tout est à jour",
+      "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}"
+    },
+    "banner": {
+      "noReadings": "Aucun relevé d'heures pour {engines}.",
+      "noReadingsAction": "Saisir"
+    }
   },
   "offline": {
     "banner": "Hors ligne — consultation seule.",
@@ -801,5 +827,14 @@
       "confirmDescription": "Tapez le nom du bateau pour confirmer. Tout son carnet sera supprimé pour tous les membres.",
       "keyword": "Nom du bateau"
     }
+  },
+  "install": {
+    "title": "Installer Xaman sur l'écran d'accueil",
+    "iosHint": "Dans Safari : Partager, puis « Sur l'écran d'accueil ».",
+    "androidHint": "L'application s'ouvre en plein écran, sans barre d'adresse.",
+    "otherHint": "Dans le menu du navigateur : « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+    "installed": "Xaman est déjà installé sur cet appareil.",
+    "install": "Installer",
+    "later": "Plus tard"
   }
 }

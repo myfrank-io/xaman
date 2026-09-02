@@ -6,6 +6,7 @@ import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { Badge } from "@/components/ui/badge";
 import { categoryPath } from "@/lib/queries/boat-routes";
+import type { Database } from "@/types/database";
 
 export type CategoryProgress = {
   id: string;
@@ -18,6 +19,22 @@ export type CategoryProgress = {
   punctual: number;
   progress: number | null;
 };
+
+export type CategoryProgressRow = Database["public"]["Views"]["checklist_category_progress"]["Row"];
+
+export function toCategoryProgress(row: CategoryProgressRow): CategoryProgress {
+  return {
+    id: row.category_id ?? "",
+    name: row.name ?? "",
+    color: row.color ?? "#63748A",
+    icon: row.icon,
+    total: row.total ?? 0,
+    overdue: row.overdue_count ?? 0,
+    neverRecorded: row.never_recorded_count ?? 0,
+    punctual: row.punctual_count ?? 0,
+    progress: row.progress,
+  };
+}
 
 // Fixed-order grid of the boat's systems (E4-3, D21): the position is the memory.
 export async function ChecklistGrid({

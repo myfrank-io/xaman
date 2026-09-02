@@ -24,10 +24,15 @@ type ListRowProps = {
   className?: string;
 };
 
+const focusRing =
+  "focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:-outline-offset-2 focus-visible:outline-none";
+
 /**
  * Normalised list row (ux-flows §2.4): 64 / 76 px, one badge on the left, the
  * title on one line, metadata below, one action on the right. Never a card per
  * row — 80 checklist points in separate cards become an unreadable accordion.
+ * With both a link and an action, the link covers the text and the action sits
+ * beside it: a button is never nested inside an anchor.
  */
 export function ListRow({
   lead,
@@ -41,9 +46,9 @@ export function ListRow({
   size = "md",
   className,
 }: ListRowProps) {
-  const body = (
+  const rule = categoryColor ? <CategoryBar color={categoryColor} className="my-2" /> : null;
+  const content = (
     <>
-      {categoryColor ? <CategoryBar color={categoryColor} className="my-2" /> : null}
       {/* Fixed left column from `sm` so the titles line up down the list. */}
       {lead ? <div className="flex shrink-0 items-center sm:w-26">{lead}</div> : null}
       <div className="min-w-0 flex-1">
@@ -57,32 +62,60 @@ export function ListRow({
         ) : null}
       </div>
       {trailing ? <div className="max-w-28 shrink-0 text-right">{trailing}</div> : null}
-      {action ? (
-        <div className="shrink-0">{action}</div>
-      ) : href || onClick ? (
-        <ChevronRightIcon className="size-5 shrink-0 text-n-400" aria-hidden />
-      ) : null}
     </>
   );
+  const chevron =
+    href || onClick ? (
+      <ChevronRightIcon className="size-5 shrink-0 text-n-400" aria-hidden />
+    ) : null;
 
   const shell = cn(
     "flex w-full items-center gap-3 border-b border-border px-4 text-left last:border-b-0",
     size === "lg" ? "min-h-19 py-3" : "min-h-16 py-2",
-    (href || onClick) &&
-      "tap-feedback focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:-outline-offset-2 focus-visible:outline-none",
     className,
   );
 
+  if (action && (href || onClick)) {
+    const target = cn(
+      "-my-2 -ml-4 flex min-w-0 flex-1 items-center gap-3 self-stretch tap-feedback py-2 pl-4 text-left",
+      focusRing,
+    );
+    return (
+      <div className={shell}>
+        {rule}
+        {href ? (
+          <Link href={href as Route} className={target}>
+            {content}
+          </Link>
+        ) : (
+          <button type="button" onClick={onClick} className={target}>
+            {content}
+          </button>
+        )}
+        <div className="shrink-0">{action}</div>
+      </div>
+    );
+  }
+
+  const body = (
+    <>
+      {rule}
+      {content}
+      {action ? <div className="shrink-0">{action}</div> : chevron}
+    </>
+  );
+  const interactive = cn(shell, "tap-feedback", focusRing);
+
   if (href) {
     return (
-      <Link href={href as Route} className={shell}>
+      <Link href={href as Route} className={interactive}>
         {body}
       </Link>
     );
   }
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={shell}>
+      <button type="button" onClick={onClick} className={interactive}>
         {body}
       </button>
     );

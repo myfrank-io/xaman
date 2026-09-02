@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { InstallDialog } from "@/components/pwa/InstallDialog";
+import { useInstallPrompt } from "@/components/pwa/use-install-prompt";
 import { Avatar, AvatarFallback, initials } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,7 +35,7 @@ export type AccountUser = {
   email: string;
 };
 
-type Entry = { key: string; label: string; icon: LucideIcon; href?: string; disabled?: boolean };
+type Entry = { key: string; label: string; icon: LucideIcon; href?: string; onSelect?: () => void };
 
 /**
  * Never a tab (0.1 opening per month, ux-flows §1.6). Sidebar footer from `lg`,
@@ -56,6 +58,8 @@ export function AccountMenu({
   const t = useTranslations("nav");
   const tr = useTranslations("roles");
   const write = can(role, "write");
+  const install = useInstallPrompt();
+  const [installOpen, setInstallOpen] = React.useState(false);
 
   const entries: Entry[] = [
     {
@@ -80,8 +84,17 @@ export function AccountMenu({
           },
         ]
       : []),
-    // Placeholder until the install prompt is wired (BACKLOG E0-6 / flux j).
-    { key: "install", label: t("installApp"), icon: DownloadIcon, disabled: true },
+    // Absent once the app runs from the home screen (E7-2).
+    ...(install.ready && install.standalone
+      ? []
+      : [
+          {
+            key: "install",
+            label: t("installApp"),
+            icon: DownloadIcon,
+            onSelect: () => setInstallOpen(true),
+          },
+        ]),
   ];
 
   const identity = (
@@ -120,14 +133,15 @@ export function AccountMenu({
                 {entry.label}
               </Link>
             ) : (
-              <span
+              <button
                 key={entry.key}
-                aria-disabled
-                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-body font-medium text-ink-3"
+                type="button"
+                onClick={entry.onSelect}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg tap-feedback px-3 text-left text-body font-medium focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
-                <entry.icon className="size-5 shrink-0" />
+                <entry.icon className="size-5 shrink-0 text-ink-2" />
                 {entry.label}
-              </span>
+              </button>
             ),
           )}
           <button
@@ -158,7 +172,7 @@ export function AccountMenu({
                 </Link>
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem key={entry.key} disabled>
+              <DropdownMenuItem key={entry.key} onSelect={entry.onSelect}>
                 <entry.icon />
                 {entry.label}
               </DropdownMenuItem>
@@ -177,6 +191,7 @@ export function AccountMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <InstallDialog open={installOpen} onOpenChange={setInstallOpen} prompt={install} />
     </div>
   );
 }

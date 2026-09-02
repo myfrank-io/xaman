@@ -85,6 +85,7 @@ export function ChecklistItemRow({
             variant={row.status === "ok" ? "outline" : "default"}
             className="w-22"
             onClick={(event) => {
+              event.preventDefault();
               event.stopPropagation();
               onDone(row);
             }}

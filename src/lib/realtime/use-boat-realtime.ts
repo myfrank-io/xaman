@@ -48,10 +48,24 @@ export function useBoatRealtime(boatId: string) {
         refresh,
       );
     }
-    channel.subscribe();
+    // Any gap (channel error, timeout, network loss) may have hidden changes: the recovery is a
+    // full refresh of the boat, not a replay (ux-flows §5.7).
+    let dropped = false;
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        if (dropped) {
+          dropped = false;
+          refresh();
+        }
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        dropped = true;
+      }
+    });
+    window.addEventListener("online", refresh);
 
     return () => {
       if (timer.current) clearTimeout(timer.current);
+      window.removeEventListener("online", refresh);
       void supabase.removeChannel(channel);
     };
   }, [boatId, queryClient, router]);

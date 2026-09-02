@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { ChecklistGrid, type CategoryProgress } from "@/components/checklist/ChecklistGrid";
+import { ChecklistGrid, toCategoryProgress } from "@/components/checklist/ChecklistGrid";
 import { ChecklistViewTabs } from "@/components/checklist/ChecklistViewTabs";
 import { TodoList, type TodoFilter } from "@/components/checklist/TodoList";
 import { toChecklistRow } from "@/components/checklist/rows";
@@ -45,17 +45,7 @@ export default async function ChecklistPage({
   if (!role) notFound();
   const boatRole = role as BoatRole;
 
-  const categories: CategoryProgress[] = (progress ?? []).map((row) => ({
-    id: row.category_id ?? "",
-    name: row.name ?? "",
-    color: row.color ?? "#63748A",
-    icon: row.icon,
-    total: row.total ?? 0,
-    overdue: row.overdue_count ?? 0,
-    neverRecorded: row.never_recorded_count ?? 0,
-    punctual: row.punctual_count ?? 0,
-    progress: row.progress,
-  }));
+  const categories = (progress ?? []).map(toCategoryProgress);
   const byCategory = new Map(categories.map((category) => [category.id, category]));
   const engineLabels = new Map((engines ?? []).map((engine) => [engine.id, engine.label]));
   const rows = (status ?? [])
