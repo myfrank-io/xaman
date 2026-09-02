@@ -570,3 +570,13 @@ Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `ch
 ## 9. Compatibilité offline V2 (anticipée, non implémentée)
 - UUID générés côté client ✔ ; `updated_at` sur toutes les tables ✔ ; pas de séquences ✔.
 - V2 ajoutera une colonne `client_updated_at` et une stratégie « dernier écrit gagne » par ligne, avec journal de conflits pour `maintenance_logs`. Rien à faire en V1 sinon ne pas introduire de compteurs auto-incrémentés ni de logique dépendante de l'ordre d'arrivée.
+
+## 10. Notes d'implémentation (migration `0001_init.sql`)
+Écarts et précisions par rapport aux sections précédentes, décidés à l'implémentation :
+- **RLS activée dès `0001`** sur toutes les tables, sans politique (refus total pour `anon` / `authenticated`) ; les politiques arrivent dans `0002_rls.sql`. Aucune fenêtre d'exposition entre les deux migrations.
+- `boat_members`, `boat_invitations` et `organization_members` portent aussi `updated_at` (convention transversale, trigger `set_updated_at`).
+- `equipment.quantity`, `equipment.sort_order`, `purchases.quantity`, `parts.unit` sont `not null` avec leur valeur par défaut ; `parts.min_quantity >= 0`.
+- Contraintes de forme : `color ~ '^#[0-9A-Fa-f]{6}$'` (catégories et modèles), `jsonb_typeof(actions) = 'array'`, `jsonb_typeof(specs) = 'object'`, `pending_engine_hours` objet ou null, `boat_invitations.email = lower(email)`, `maintenance_logs.title` entre 1 et 160 caractères, `attachments.size_bytes` entre 1 et 10 Mio, `checklist_template_items.source in ('briefing','proposal','builder')`, `organization_members.role in ('admin','member')`, `boat_members.valid_until >= valid_from`.
+- Index supplémentaires sur `boat_id` (+ FK fréquentes) de toutes les tables métier, pour les politiques RLS et les listes ; index partiels sur `maintenance_logs.haul_out_id`, `checklist_items.engine_id`, `checklist_completions.maintenance_log_id`, `purchases.maintenance_log_id`.
+- Trigger `on_auth_user_email_updated` : synchronise `profiles.email` quand l'e-mail change dans `auth.users` ; `handle_new_user` lit `full_name` / `avatar_url` dans `raw_user_meta_data` (renseignés par le seed via `inviteUserByEmail`).
+- Supabase fournit Postgres 17 ; la validation locale sans Docker se fait sur Postgres 16 avec `tests/support/supabase-shim.sql` (aucune fonctionnalité spécifique à la 17 n'est utilisée).
