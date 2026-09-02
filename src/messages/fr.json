@@ -14,6 +14,95 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "back": "Retour",
-    "close": "Fermer"
+    "close": "Fermer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "more": "Plus",
+    "menu": "Menu",
+    "openMenu": "Ouvrir le menu",
+    "confirm": "Confirmer",
+    "retry": "Réessayer",
+    "none": "—",
+    "unknown": "Inconnu",
+    "optional": "optionnel",
+    "yes": "Oui",
+    "no": "Non",
+    "today": "Aujourd'hui",
+    "empty": "Rien à afficher pour le moment."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "logs": "Journal",
+    "checklist": "Checklist",
+    "supplies": "Consommables",
+    "haulOuts": "Sorties de l'eau",
+    "contacts": "Intervenants",
+    "boat": "Bateau",
+    "members": "Membres",
+    "settings": "Paramètres",
+    "profile": "Mon profil",
+    "signOut": "Se déconnecter"
+  },
+  "logStatus": {
+    "planned": "Planifié",
+    "in_progress": "En cours",
+    "done": "Terminé",
+    "urgent": "Urgent"
+  },
+  "logPriority": {
+    "low": "Basse",
+    "normal": "Normale",
+    "high": "Haute"
+  },
+  "checklistState": {
+    "never": "À faire",
+    "ok": "OK",
+    "soon": "Bientôt",
+    "overdue": "En retard"
+  },
+  "enginePosition": {
+    "port": "Bâbord",
+    "starboard": "Tribord",
+    "center": "Central",
+    "outboard": "Hors-bord"
+  },
+  "units": {
+    "hours": "{count, plural, one {# h} other {# h}}",
+    "engineHours": "{hours} h moteur",
+    "months": "{count, plural, one {# mois} other {# mois}}",
+    "days": "{count, plural, one {# jour} other {# jours}}",
+    "everyMonths": "Tous les {count} mois",
+    "everyHours": "Toutes les {count} h",
+    "remainingDays": "{count, plural, =0 {Aujourd'hui} one {Dans # jour} other {Dans # jours}}",
+    "overdueDays": "{count, plural, one {# jour de retard} other {# jours de retard}}",
+    "remainingHours": "Dans {count} h",
+    "overdueHours": "{count} h de retard"
+  },
+  "dev": {
+    "title": "Design system",
+    "subtitle": "Composants de base Xaman — cibles tactiles ≥ 44 px, champs 16 px.",
+    "sections": {
+      "colors": "Couleurs",
+      "buttons": "Boutons",
+      "forms": "Formulaires",
+      "badges": "Badges et états",
+      "cards": "Cartes et statistiques",
+      "overlays": "Dialogues",
+      "layout": "Navigation"
+    },
+    "sample": {
+      "boatName": "Xaman",
+      "title": "Vidange moteur SB",
+      "category": "Moteurs",
+      "openDialog": "Ouvrir un dialogue",
+      "dialogTitle": "Marquer comme fait",
+      "dialogDescription": "Le point sera enregistré avec la date et les heures moteur saisies.",
+      "toast": "Afficher une notification",
+      "toastMessage": "Intervention enregistrée",
+      "emptyTitle": "Aucune intervention",
+      "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal."
+    }
   }
 }

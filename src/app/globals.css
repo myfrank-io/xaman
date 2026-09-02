@@ -36,6 +36,16 @@
   /* Xaman design tokens (SPEC §10). Category colors live in the database, not here. */
   --navy: #0c1b33;
   --navy-light: #1e3a5f;
+  /* maintenance log status */
+  --status-planned: #2563eb;
+  --status-in-progress: #d97706;
+  --status-done: #16a34a;
+  --status-urgent: #dc2626;
+  /* checklist item state */
+  --state-never: #64748b;
+  --state-ok: #16a34a;
+  --state-soon: #ea580c;
+  --state-overdue: #dc2626;
 }
 
 .dark {
@@ -100,6 +110,14 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-navy: var(--navy);
   --color-navy-light: var(--navy-light);
+  --color-status-planned: var(--status-planned);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-done: var(--status-done);
+  --color-status-urgent: var(--status-urgent);
+  --color-state-never: var(--state-never);
+  --color-state-ok: var(--state-ok);
+  --color-state-soon: var(--state-soon);
+  --color-state-overdue: var(--state-overdue);
 }
 
 @layer base {
@@ -115,4 +133,16 @@
     @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+@utility bg-header-gradient {
+  background-image: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+}
+
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
