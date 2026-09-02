@@ -1,0 +1,1372 @@
+{
+  "app": {
+    "name": "Xaman",
+    "tagline": "Carnet d'entretien numérique et partagé pour bateaux",
+    "eyebrow": "Carnet d'entretien"
+  },
+  "home": {
+    "eyebrow": "Carnet d'entretien",
+    "title": "Xaman",
+    "subtitle": "Le carnet d'entretien numérique et partagé de votre bateau.",
+    "status": "L'application est en cours de construction. La connexion sera disponible prochainement."
+  },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "close": "Fermer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "more": "Plus",
+    "menu": "Menu",
+    "openMenu": "Ouvrir le menu",
+    "confirm": "Confirmer",
+    "retry": "Réessayer",
+    "none": "—",
+    "unknown": "Inconnu",
+    "optional": "optionnel",
+    "yes": "Oui",
+    "no": "Non",
+    "today": "Aujourd'hui",
+    "empty": "Rien à afficher pour le moment.",
+    "comingSoon": "Cet écran arrive bientôt.",
+    "seeAll": "Tout afficher",
+    "viewAll": "Voir tout",
+    "undo": "Annuler l'action",
+    "saving": "Enregistrement…",
+    "saved": "Enregistré",
+    "required": "obligatoire",
+    "yesterday": "Hier",
+    "never": "Jamais",
+    "unknownCounter": "compteur inconnu",
+    "archivedCategory": "Catégorie archivée",
+    "discardChanges": "Abandonner cette saisie ?",
+    "discardKeep": "Continuer la saisie",
+    "discardConfirm": "Abandonner",
+    "notSpecified": "Non renseigné",
+    "actions": "Actions",
+    "show": "Afficher",
+    "hide": "Masquer",
+    "reload": "Recharger",
+    "audit": {
+      "created": "Créé par {name} le {date}",
+      "updated": "modifié par {name} le {date}",
+      "unknown": "un membre"
+    }
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "logs": "Journal",
+    "checklist": "Checklist",
+    "supplies": "Dépenses",
+    "haulOuts": "Sorties de l'eau",
+    "contacts": "Intervenants",
+    "boat": "Bateau",
+    "members": "Membres",
+    "settings": "Paramètres",
+    "profile": "Mon profil",
+    "signOut": "Se déconnecter",
+    "trash": "Corbeille",
+    "skipToContent": "Aller au contenu",
+    "account": "Mon compte",
+    "installApp": "Installer l'application",
+    "short": {
+      "dashboard": "Bord",
+      "logs": "Journal",
+      "checklist": "Checklist",
+      "boat": "Bateau",
+      "supplies": "Dépenses",
+      "contacts": "Intervenants",
+      "trash": "Corbeille",
+      "more": "Plus",
+      "haulOuts": "Sorties",
+      "members": "Membres",
+      "settings": "Réglages",
+      "profile": "Profil"
+    }
+  },
+  "logStatus": {
+    "planned": "Planifié",
+    "in_progress": "En cours",
+    "done": "Terminé",
+    "urgent": "Urgent"
+  },
+  "checklistState": {
+    "never": "À faire",
+    "ok": "OK",
+    "soon": "Bientôt",
+    "overdue": "En retard"
+  },
+  "enginePosition": {
+    "port": "Bâbord",
+    "starboard": "Tribord",
+    "center": "Central",
+    "outboard": "Hors-bord"
+  },
+  "units": {
+    "hours": "{count, plural, one {# h} other {# h}}",
+    "engineHours": "{hours} h moteur",
+    "months": "{count, plural, one {# mois} other {# mois}}",
+    "days": "{count, plural, one {# jour} other {# jours}}",
+    "everyMonths": "Tous les {count} mois",
+    "everyHours": "Toutes les {count} h",
+    "remainingDays": "{count, plural, =0 {Aujourd'hui} one {Dans # jour} other {Dans # jours}}",
+    "overdueDays": "{count, plural, one {# jour de retard} other {# jours de retard}}",
+    "remainingHours": "Dans {count} h",
+    "overdueHours": "{count} h de retard"
+  },
+  "dev": {
+    "title": "Design system",
+    "subtitle": "Composants de base Xaman — cibles tactiles ≥ 44 px, champs 16 px.",
+    "sections": {
+      "colors": "Couleurs",
+      "buttons": "Boutons",
+      "forms": "Formulaires",
+      "badges": "Badges et états",
+      "cards": "Cartes et statistiques",
+      "overlays": "Dialogues",
+      "layout": "Navigation",
+      "brand": "Marque",
+      "typography": "Typographie",
+      "neutrals": "Neutres",
+      "semantic": "Couleurs sémantiques",
+      "categories": "Catégories",
+      "fields": "Champs tactiles",
+      "rows": "Lignes de liste",
+      "states": "États vides et feedback"
+    },
+    "sample": {
+      "boatName": "Xaman",
+      "title": "Vidange moteur SB",
+      "category": "Moteurs",
+      "openDialog": "Ouvrir un dialogue",
+      "dialogTitle": "Marquer comme fait",
+      "dialogDescription": "Le point sera enregistré avec la date et les heures moteur saisies.",
+      "toast": "Afficher une notification",
+      "toastMessage": "Intervention enregistrée",
+      "emptyTitle": "Aucune intervention",
+      "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal.",
+      "undoToast": "Afficher un toast d'annulation",
+      "undoMessage": "Intervention mise à la corbeille",
+      "undoDescription": "Récupérable pendant 30 jours.",
+      "confirmDialog": "Ouvrir une confirmation",
+      "confirmTitle": "Mettre « Vidange moteur SB » à la corbeille ?",
+      "confirmDescription": "La ligne restera récupérable 30 jours.",
+      "confirmAction": "Mettre à la corbeille",
+      "filteredTitle": "Aucun résultat pour « turbine »",
+      "filteredDescription": "Vérifiez l'orthographe ou élargissez la période.",
+      "clearFilters": "Effacer les filtres",
+      "positiveTitle": "Tout est à jour",
+      "positiveDescription": "Prochaine échéance : Vidange huile — Moteur SB, dans 62 jours.",
+      "hoursLabel": "Heures moteur (tribord)",
+      "costLabel": "Coût",
+      "dateLabel": "Date",
+      "categoryLabel": "Catégorie"
+    },
+    "dashboard": {
+      "title": "Tableau de bord — recette visuelle",
+      "subtitle": "Données factices, densité à valider en 1024×768 et 768×1024.",
+      "brandNew": "État « carnet neuf »"
+    }
+  },
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Sans mot de passe : recevez un code par e-mail et saisissez-le ici.",
+    "email": {
+      "label": "Adresse e-mail",
+      "placeholder": "prenom@exemple.fr",
+      "submit": "Recevoir mon code",
+      "help": "Vous recevrez un code à 6 chiffres valable 10 minutes, ainsi qu'un lien de secours.",
+      "invalid": "Saisissez une adresse e-mail valide."
+    },
+    "code": {
+      "title": "Saisissez le code reçu",
+      "help": "Un code à 6 chiffres a été envoyé à {email}. Pensez à vérifier vos courriers indésirables.",
+      "label": "Code à 6 chiffres",
+      "submit": "Se connecter",
+      "back": "Changer d'adresse",
+      "resend": "Renvoyer le code",
+      "linkHint": "Le lien contenu dans l'e-mail fonctionne aussi, mais il s'ouvre dans Safari plutôt que dans l'application installée."
+    },
+    "errors": {
+      "send": "Impossible d'envoyer le code. Réessayez dans une minute.",
+      "noAccount": "Aucun compte n'existe pour cette adresse. Demandez une invitation au propriétaire du bateau.",
+      "code": "Code incorrect ou expiré.",
+      "link": "Ce lien de connexion n'est plus valable. Demandez un nouveau code.",
+      "hint": "Vérifiez l'adresse saisie, ou demandez un nouveau code."
+    }
+  },
+  "boats": {
+    "title": "Vos bateaux",
+    "none": {
+      "title": "Vous n'avez pas encore de bateau",
+      "description": "Demandez une invitation au propriétaire du bateau : vous recevrez un e-mail avec un lien pour le rejoindre."
+    }
+  },
+  "errors": {
+    "unknown": "Une erreur est survenue. Réessayez.",
+    "forbidden": "Vous n'avez pas le droit de faire cette action sur ce bateau.",
+    "duplicate": "Cet élément existe déjà.",
+    "reference": "Cet élément est lié à d'autres données et ne peut pas être modifié ainsi.",
+    "invalid": "Certains champs sont invalides.",
+    "offline": "Vous êtes hors ligne : la modification sera possible au retour du réseau.",
+    "last_owner": "Un bateau doit garder au moins un propriétaire. Nommez d'abord un autre propriétaire.",
+    "invitation_not_found": "Cette invitation n'existe pas.",
+    "invitation_accepted": "Cette invitation a déjà été utilisée.",
+    "invitation_revoked": "Cette invitation a été annulée.",
+    "invitation_expired": "Cette invitation a expiré. Demandez-en une nouvelle.",
+    "invitation_email_mismatch": "Cette invitation a été envoyée à une autre adresse e-mail. Connectez-vous avec l'adresse qui l'a reçue.",
+    "engine_hours_required": "Les heures moteur sont obligatoires pour ce point.",
+    "template_not_found": "Modèle de checklist introuvable.",
+    "log_not_found": "Intervention introuvable.",
+    "invitation_email": "L'invitation est enregistrée mais l'e-mail n'a pas pu être envoyé. Vérifiez l'adresse ou réessayez.",
+    "loadFailed": "Impossible de charger",
+    "saveFailed": "L'enregistrement a échoué. Vos données sont conservées ici.",
+    "notSaved": "Non enregistré",
+    "fieldsToFix": "{count, plural, one {# champ à corriger} other {# champs à corriger}}",
+    "positiveNumber": "Saisissez un nombre positif.",
+    "conflict": "Quelqu'un a modifié cet élément entre-temps. Rechargez la page et réessayez.",
+    "boat_name_mismatch": "Le nom saisi ne correspond pas au nom du bateau.",
+    "engine_in_use": "Ce moteur a des relevés ou des points de checklist : désactivez-le plutôt.",
+    "date_in_future": "Cette date est dans le futur.",
+    "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus."
+  },
+  "members": {
+    "title": "Membres",
+    "subtitle": "Qui a accès au carnet de ce bateau, et avec quels droits.",
+    "you": "(vous)",
+    "roleLabel": "Rôle",
+    "roleUpdated": "Rôle mis à jour.",
+    "removed": "Membre retiré. Ses interventions restent dans le journal.",
+    "remove": "Retirer",
+    "validUntil": "Accès jusqu'au {date}",
+    "list": {
+      "title": "{count, plural, one {# membre} other {# membres}}"
+    },
+    "roles": {
+      "owner": "Propriétaire",
+      "editor": "Éditeur",
+      "pro": "Professionnel",
+      "viewer": "Lecteur",
+      "renter": "Locataire"
+    },
+    "roleHelp": {
+      "owner": "Tout, y compris la gestion des membres et la suppression du bateau.",
+      "editor": "Toutes les données du bateau, sans la gestion des membres.",
+      "pro": "Lit tout, enregistre ses propres interventions et cochages, ne supprime rien, ne voit pas les membres.",
+      "viewer": "Lecture seule."
+    },
+    "removeDialog": {
+      "title": "Retirer {name} ?",
+      "description": "La personne perd l'accès au bateau immédiatement. Les interventions qu'elle a enregistrées restent dans le journal."
+    },
+    "invite": {
+      "button": "Inviter",
+      "title": "Inviter une personne",
+      "description": "Elle recevra un e-mail avec un lien valable 14 jours, puis se connectera par code.",
+      "email": "Adresse e-mail",
+      "submit": "Envoyer l'invitation",
+      "sent": "Invitation envoyée à {email}.",
+      "proTitle": "Ce que verra ce professionnel",
+      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions resteront dans le journal.",
+      "duration": "Durée d'accès",
+      "durations": {
+        "7": "7 jours",
+        "30": "30 jours",
+        "90": "90 jours",
+        "unlimited": "Sans limite"
+      },
+      "durationHelp": "L'accès s'arrête seul à la date indiquée. Vous pourrez le prolonger ou le retirer avant.",
+      "durationHelpEditor": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour 90 jours au plus.",
+      "sentTitle": "Invitation envoyée",
+      "sentDescription": "{email} a reçu un e-mail. Vous pouvez aussi lui transmettre le lien directement.",
+      "validUntil": "Accès jusqu'au {date}",
+      "copyLink": "Copier le lien",
+      "linkCopied": "Lien copié.",
+      "share": "Partager",
+      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman"
+    },
+    "invitations": {
+      "title": "Invitations en attente",
+      "expires": "expire le {date}",
+      "expired": "expirée",
+      "revoke": "Annuler",
+      "revoked": "Invitation annulée.",
+      "status": {
+        "pending": "En attente",
+        "expired": "Expirée",
+        "accepted": "Acceptée",
+        "revoked": "Annulée"
+      }
+    },
+    "expired": "Accès expiré le {date}",
+    "reactivate": "Réactiver 90 j",
+    "reactivated": "Accès prolongé de 90 jours.",
+    "lastOwnerHint": "Pour changer de propriétaire, transférez d'abord le bateau.",
+    "transferLink": "Transférer le bateau"
+  },
+  "invite": {
+    "title": "Invitation",
+    "summary": "{inviter} vous invite en tant que {role}.",
+    "signInHint": "Connectez-vous avec l'adresse invitée ({email}) pour rejoindre le bateau.",
+    "accept": "Rejoindre {boat}",
+    "invalid": {
+      "title": "Invitation introuvable",
+      "description": "Ce lien n'est pas valable. Demandez une nouvelle invitation au propriétaire du bateau."
+    },
+    "mismatch": {
+      "title": "Ce n'est pas la bonne adresse",
+      "description": "Vous êtes connecté avec {current} mais l'invitation a été envoyée à {invited}. Déconnectez-vous puis reconnectez-vous avec cette adresse."
+    },
+    "status": {
+      "accepted": "Cette invitation a déjà été acceptée.",
+      "revoked": "Cette invitation a été annulée.",
+      "expired": "Cette invitation a expiré. Demandez-en une nouvelle."
+    }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "identity": "Identité",
+    "fullName": "Nom affiché",
+    "saved": "Profil enregistré.",
+    "delete": {
+      "title": "Supprimer mon compte",
+      "description": "Votre compte est supprimé définitivement. Les interventions et cochages que vous avez enregistrés restent dans les carnets des bateaux. Si vous êtes le seul propriétaire d'un bateau, nommez d'abord un autre propriétaire.",
+      "button": "Supprimer mon compte",
+      "dialogTitle": "Confirmer la suppression",
+      "dialogDescription": "Cette action est irréversible. Tapez {keyword} pour confirmer.",
+      "confirmLabel": "Confirmation",
+      "keyword": "SUPPRIMER",
+      "blockedTitle": "Vous êtes le seul propriétaire de {boat}",
+      "blockedDescription": "Avant de supprimer votre compte, transférez le bateau à un autre propriétaire ou supprimez-le.",
+      "transfer": "Transférer le bateau",
+      "deleteBoat": "Supprimer le bateau"
+    }
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "editor": "Éditeur",
+    "pro": "Professionnel",
+    "viewer": "Lecteur",
+    "renter": "Locataire",
+    "editorHelp": "Peut tout modifier : interventions, checklist, achats, fiche bateau. Ne gère pas les membres.",
+    "proHelp": "Voit tout le dossier. Enregistre ses propres interventions et cochages. Ne supprime rien, ne voit pas les membres.",
+    "viewerHelp": "Consultation seule. Pour un expert ou un acheteur."
+  },
+  "create": {
+    "title": "Ajouter",
+    "log": "Intervention",
+    "logHint": "Vidange, réparation, contrôle…",
+    "hourReading": "Relevé d'heures moteur",
+    "hourReadingHint": "{engine} · {hours} le {date}",
+    "gas": "Bouteille de gaz",
+    "gasHint": "Dernier changement il y a {days} jours",
+    "purchase": "Achat",
+    "haulOut": "Sortie de l'eau",
+    "checklistItem": "Nouveau point de checklist"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "stats": {
+      "overdue": "En retard",
+      "overdueHint": "points de checklist",
+      "soon": "Bientôt",
+      "soonHint": "sous 30 jours ou 25 h",
+      "openLogs": "Interventions",
+      "openLogsHint": "{count, plural, =0 {aucune ouverte} one {dont # urgente} other {dont # urgentes}}",
+      "expenses": "Dépenses {year}",
+      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}"
+    },
+    "engines": {
+      "title": "Heures moteur",
+      "noReading": "compteur inconnu",
+      "stale": "à mettre à jour",
+      "readAt": "relevé le {date}",
+      "addReading": "Relevé d'heures"
+    },
+    "upcoming": {
+      "title": "À faire prochainement",
+      "allChecklist": "Tous les points à traiter",
+      "allLogs": "Interventions ouvertes",
+      "emptyTitle": "Rien à faire dans les 30 prochains jours",
+      "emptyNext": "Prochaine échéance : {label}, dans {days} jours.",
+      "startTitle": "Votre carnet démarre avec {count} points",
+      "startIntro": "Aucun point n'a encore été réalisé. Trois étapes pour partir du bon pied :",
+      "startStep1": "Saisir les heures des moteurs",
+      "startStep2": "Vérifier les {count} lignes importées du carnet papier",
+      "startStep3": "Cocher ce qui est déjà fait dans la checklist",
+      "allChecklistCount": "Tous les points à traiter ({count})",
+      "allLogsCount": "Interventions ouvertes ({count})",
+      "emptyNextHours": "Prochaine échéance : {label}, dans {hours} h.",
+      "startStep1Action": "Saisir les heures",
+      "startStep2Action": "Vérifier",
+      "startStep3Action": "Ouvrir la checklist",
+      "startDismiss": "Masquer",
+      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}"
+    },
+    "categories": {
+      "title": "État des 8 systèmes",
+      "upToDate": "à jour",
+      "neverDone": "jamais fait",
+      "summary": "{count, plural, one {# point} other {# points}}",
+      "overdue": "{count, plural, one {# en retard} other {# en retard}}"
+    },
+    "recent": {
+      "title": "Dernières interventions",
+      "empty": "Aucune intervention terminée pour l'instant."
+    },
+    "recap": {
+      "expenses": "Dépenses {year}",
+      "expensesDetail": "Détail des dépenses",
+      "haulOut": "Sortie de l'eau",
+      "lastHaulOut": "Dernière : {date} — il y a {months} mois",
+      "noHaulOut": "Aucune sortie de l'eau enregistrée",
+      "lowStock": "{count, plural, one {# pièce sous le seuil} other {# pièces sous le seuil}}",
+      "stock": "Stock",
+      "expenses12m": "Dépenses, 12 derniers mois",
+      "noExpenses": "Aucune dépense sur les 12 derniers mois",
+      "other": "Autres",
+      "haulOutDetail": "Voir les sorties de l'eau",
+      "stockDetail": "Voir le stock",
+      "stockOk": "Aucune pièce sous le seuil"
+    },
+    "review": {
+      "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
+      "action": "Vérifier"
+    },
+    "markDone": "Fait",
+    "state": {
+      "overdue": "{count, plural, one {# point en retard} other {# points en retard}}",
+      "soon": "{count, plural, one {# point à faire bientôt} other {# points à faire bientôt}}",
+      "ok": "Tout est à jour",
+      "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}"
+    },
+    "banner": {
+      "noReadings": "Aucun relevé d'heures pour {engines}.",
+      "noReadingsAction": "Saisir"
+    }
+  },
+  "offline": {
+    "banner": "Hors ligne — consultation seule.",
+    "lastSync": "Données du {date} à {time}.",
+    "actionUnavailable": "Hors ligne — cette action nécessite le réseau.",
+    "backOnline": "De nouveau en ligne",
+    "refresh": "Actualiser",
+    "pendingWrites": "{count, plural, one {# modification non enregistrée} other {# modifications non enregistrées}}",
+    "retryLabel": "Hors ligne — réessayer"
+  },
+  "trash": {
+    "title": "Corbeille",
+    "description": "Les éléments supprimés restent 30 jours.",
+    "deletedOn": "Supprimé le {date} par {name}",
+    "purgeIn": "supprimé définitivement dans {days} jours",
+    "restore": "Restaurer",
+    "empty": "La corbeille est vide.",
+    "sections": {
+      "logs": "Interventions",
+      "purchases": "Achats",
+      "haulOuts": "Sorties de l'eau"
+    },
+    "restored": "Élément restauré",
+    "purgeNote": "La corbeille est purgée chaque nuit : au-delà de 30 jours, la suppression est définitive.",
+    "emptyDescription": "Les éléments supprimés y restent 30 jours.",
+    "haulOutLabel": "Sortie de l'eau du {date}"
+  },
+  "logs": {
+    "title": "Journal",
+    "emptyTitle": "Aucune intervention",
+    "emptyDescription": "Le journal garde la trace de tout ce qui est fait sur le bateau : vidanges, réparations, contrôles.",
+    "emptyFiltered": "Aucun résultat pour « {query} »",
+    "clearFilters": "Effacer les filtres",
+    "new": "Nouvelle intervention",
+    "byCrew": "Nous-mêmes",
+    "review": {
+      "badge": "À vérifier"
+    },
+    "tabs": {
+      "history": "Historique",
+      "planned": "Prévu",
+      "haulOuts": "Sorties de l'eau"
+    },
+    "search": "Rechercher un titre, une note",
+    "searchLabel": "Rechercher",
+    "filters": {
+      "category": "Catégorie",
+      "allCategories": "Toutes les catégories",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "review": "À vérifier {count}",
+      "contact": "Intervenant : {name}"
+    },
+    "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
+    "loadMore": "Charger plus",
+    "newRows": "{count, plural, one {# nouvelle intervention} other {# nouvelles interventions}}",
+    "emptyPlannedTitle": "Rien de prévu",
+    "emptyPlannedDescription": "Les interventions planifiées, en cours ou urgentes apparaissent ici jusqu'à leur réalisation.",
+    "haulOutsTab": "Les sorties de l'eau ont leur propre écran.",
+    "form": {
+      "newTitle": "Nouvelle intervention",
+      "editTitle": "Modifier l'intervention",
+      "title": "Titre",
+      "category": "Catégorie",
+      "status": "Statut",
+      "date": "Date",
+      "dateFuture": "Date dans le futur.",
+      "hours": "Heures moteur",
+      "hoursOpen": "Heures moteur",
+      "hoursHelp": "dernier : {hours} le {date}",
+      "hoursNone": "aucun relevé",
+      "hoursBelow": "Valeur inférieure au dernier relevé ({hours}).",
+      "takeLast": "= reprendre",
+      "cost": "Coût",
+      "by": "Réalisé par",
+      "notes": "Notes",
+      "more": "Plus de détails",
+      "equipment": "Équipement",
+      "noEquipment": "Aucun équipement",
+      "equipmentRemoved": "déposé",
+      "haulOut": "Sortie de l'eau",
+      "noHaulOut": "Aucune sortie de l'eau",
+      "suggestions": {
+        "label": "Titres déjà utilisés",
+        "occurrences": "{count, plural, one {# fois} other {# fois}}"
+      },
+      "items": {
+        "title": "Points de checklist concernés",
+        "help": "Cochez les points que cette intervention met à jour.",
+        "needHours": "Ce point se compte en heures : saisissez les heures de {engine}."
+      },
+      "draft": {
+        "banner": "Brouillon récupéré",
+        "resume": "Reprendre",
+        "discard": "Supprimer"
+      },
+      "saved": "Intervention enregistrée",
+      "savedWithReading": "Intervention enregistrée · Relevé {engine} {hours}",
+      "view": "Voir"
+    },
+    "detail": {
+      "fields": {
+        "date": "Date",
+        "status": "Statut",
+        "category": "Catégorie",
+        "cost": "Coût",
+        "by": "Réalisé par",
+        "equipment": "Équipement",
+        "haulOut": "Sortie de l'eau",
+        "notes": "Notes"
+      },
+      "sections": {
+        "hours": "Heures moteur relevées",
+        "completions": "Points de checklist cochés",
+        "purchases": "Achats liés"
+      },
+      "purchasesNote": "{count, plural, one {# achat lié} other {# achats liés}} · {amount}. Ils resteront dans les dépenses.",
+      "noCompletions": "Aucun point coché par cette intervention.",
+      "redo": "Refaire",
+      "reviewAction": "Vérifier cette ligne",
+      "reviewBanner": "Cette ligne vient du carnet papier : ses heures moteur attendent une vérification.",
+      "footer": "Créé par {createdBy} le {createdAt} · modifié par {updatedBy} le {updatedAt}",
+      "footerCreated": "Créé par {createdBy} le {createdAt}",
+      "unknownAuthor": "un membre",
+      "recurring": {
+        "action": "En faire un entretien récurrent",
+        "title": "En faire un entretien récurrent",
+        "description": "Crée un point de checklist « {title} » dans la catégorie de l'intervention, calé sur sa date.",
+        "interval": "Revient tous les",
+        "months": "{count} mois",
+        "hours": "Ou toutes les",
+        "hoursUnit": "h moteur",
+        "engine": "Moteur concerné",
+        "noEngine": "Aucun",
+        "confirm": "Créer le point",
+        "created": "Point de checklist créé · {title}",
+        "viewItem": "Voir le point"
+      },
+      "trash": {
+        "action": "Mettre à la corbeille",
+        "title": "Mettre cette intervention à la corbeille ?",
+        "description": "« {title} » restera 30 jours dans la corbeille. Les heures moteur qu'elle porte sont mises de côté et reviendront avec elle.",
+        "confirm": "Mettre à la corbeille",
+        "done": "Intervention mise à la corbeille",
+        "undo": "Annuler",
+        "restored": "Intervention restaurée"
+      }
+    }
+  },
+  "checklist": {
+    "title": "Checklist",
+    "markDone": "Fait",
+    "noActiveItems": "Aucun point actif",
+    "emptyTitle": "Aucun point dans cette catégorie",
+    "emptyDescription": "Ajoutez les points que vous suivez réellement sur ce bateau.",
+    "addItem": "Ajouter un point",
+    "upToDateTitle": "Tout est à jour",
+    "upToDateDescription": "Prochaine échéance : {label}, dans {days} jours.",
+    "views": {
+      "grid": "Par catégorie",
+      "todo": "À traiter"
+    },
+    "filters": {
+      "all": "Tout",
+      "overdue": "En retard",
+      "soon": "Bientôt",
+      "never": "Jamais fait",
+      "todo": "À traiter"
+    },
+    "card": {
+      "points": "{count, plural, one {# point} other {# points}}",
+      "overdue": "{count, plural, one {# en retard} other {# en retard}}",
+      "neverDone": "jamais fait",
+      "upToDate": "à jour",
+      "punctual": "{count, plural, one {# contrôle ponctuel} other {# contrôles ponctuels}}"
+    },
+    "todoEmpty": {
+      "title": "Rien à traiter",
+      "description": "Tous les points suivis sont à jour."
+    },
+    "neverHint": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}",
+    "setup": {
+      "banner": "Carnet neuf : aucun point n'a encore été renseigné. Trois étapes suffisent pour caler la file d'attente.",
+      "cta": "Recaler ma checklist"
+    },
+    "item": {
+      "done": "fait le {date}",
+      "doneBy": "fait le {date} par {name}",
+      "never": "jamais fait",
+      "next": "prochain le {date}",
+      "nextHours": "prochain à {hours}",
+      "estimated": "estimé",
+      "validUntil": "valide jusqu'au {date}",
+      "atHours": "à {hours}",
+      "steps": "Étapes",
+      "stepsProgress": "{done} / {total} faites",
+      "uncheckAll": "Tout décocher",
+      "noSteps": "Aucune étape détaillée.",
+      "addSteps": "Ajouter des étapes",
+      "history": "Historique",
+      "noHistory": "aucune réalisation enregistrée",
+      "showAll": "Voir les {count} réalisations",
+      "edit": "Modifier le point",
+      "disable": "Désactiver",
+      "enable": "Réactiver",
+      "disabledCount": "{count, plural, one {# point désactivé} other {# points désactivés}}",
+      "punctualGroup": "Contrôles ponctuels",
+      "redo": "Refaire",
+      "overdueBy": "{count, plural, one {# j de retard} other {# j de retard}}"
+    },
+    "complete": {
+      "title": "Marquer comme fait",
+      "date": "Date",
+      "by": "Réalisé par",
+      "me": "Moi",
+      "someoneElse": "Quelqu'un d'autre…",
+      "otherName": "Nom",
+      "hours": "Heures {engine}",
+      "hoursRequired": "Ce point se compte en heures moteur : saisissez le compteur.",
+      "takeLast": "= reprendre",
+      "validUntil": "Valide jusqu'au",
+      "validUntilHelp": "Date imprimée sur l'objet ou le document (radeau, fusées, extincteur, assurance).",
+      "note": "Note",
+      "lastDone": "Dernière réalisation : {date} par {name}",
+      "lastDoneHours": "Dernière réalisation : {date} par {name} à {hours}",
+      "firstTime": "Première réalisation enregistrée.",
+      "alreadyToday": "{name} a coché ce point aujourd'hui. Enregistrer quand même une seconde réalisation ?",
+      "saveAnyway": "Enregistrer quand même",
+      "saved": "Point coché · {label}",
+      "undo": "Annuler",
+      "undone": "Réalisation annulée",
+      "deleteTitle": "Supprimer cette réalisation ?",
+      "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle.",
+      "deleted": "Réalisation supprimée",
+      "addDetails": "+ Ajouter les détails"
+    },
+    "form": {
+      "new": "Nouveau point",
+      "edit": "Modifier le point",
+      "label": "Libellé",
+      "category": "Catégorie",
+      "change": "changer",
+      "interval": "À refaire tous les…",
+      "monthsSuffix": "mois",
+      "other": "Autre",
+      "none": "Aucun",
+      "noneHelp": "Contrôle ponctuel : le point sera « À faire » puis « OK » définitivement.",
+      "hours": "… ou toutes les",
+      "hoursSuffix": "h moteur",
+      "engine": "Moteur concerné",
+      "engineHelp": "Obligatoire si vous saisissez des heures.",
+      "noEngine": "— aucun —",
+      "description": "Description",
+      "steps": "Étapes détaillées",
+      "addStep": "Ajouter une étape",
+      "removeStep": "Retirer l'étape",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "anchor": "Dernière réalisation connue",
+      "anchorHelp": "Approximatif : sert à caler la première échéance.",
+      "duplicate": "Un point actif de cette catégorie porte déjà ce libellé.",
+      "saved": "Point enregistré",
+      "disableTitle": "Désactiver {label} ?",
+      "disableDescription": "Le point sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}.",
+      "disabled": "Point désactivé",
+      "enabled": "Point réactivé"
+    },
+    "wizard": {
+      "title": "Mise en route",
+      "intro": "Trois étapes, moins de cinq minutes : la file d'attente sera juste dès aujourd'hui.",
+      "stepOf": "Étape {step} / 3",
+      "step1": "Compteurs des moteurs",
+      "step1Help": "Le compteur actuel de chaque moteur. Laissez vide si vous ne le connaissez pas.",
+      "step2": "Points à suivre",
+      "step2Help": "Tout est coché : retirez ce que vous ne suivez pas sur ce bateau.",
+      "step3": "Dernière réalisation",
+      "step3Help": "Pour chaque catégorie, à quand remonte la dernière fois, en gros ? Vous affinerez point par point ensuite.",
+      "ages": {
+        "never": "Jamais",
+        "recent": "< 6 mois",
+        "year": "~1 an",
+        "old": "> 2 ans"
+      },
+      "allCategory": "Toute la catégorie",
+      "back": "Précédent",
+      "next": "Suivant",
+      "finish": "Terminer",
+      "done": "Checklist recalée",
+      "later": "Plus tard",
+      "kept": "{kept} / {total} points suivis",
+      "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
+    }
+  },
+  "validation": {
+    "required": "Champ obligatoire.",
+    "invalid": "Valeur invalide.",
+    "invalidNumber": "Saisissez un nombre.",
+    "tooLong": "Texte trop long.",
+    "tooBig": "Valeur trop grande.",
+    "tooSmall": "Valeur trop petite.",
+    "date_in_future": "Cette date est dans le futur.",
+    "same_category": "Choisissez une autre catégorie.",
+    "fieldsToFix": "{count, plural, one {# champ à corriger} other {# champs à corriger}}",
+    "next_due_after": "La date de validité doit être après la date de réalisation.",
+    "engine_required": "Choisissez le moteur concerné.",
+    "date_in_future_done": "Une intervention terminée ne peut pas être datée dans le futur. Choisissez « Planifié » ou une autre date."
+  },
+  "boatType": {
+    "catamaran": "Catamaran",
+    "trimaran": "Trimaran",
+    "monohull_sail": "Monocoque voile",
+    "motor": "Moteur",
+    "rib": "Semi-rigide",
+    "other": "Autre"
+  },
+  "boat": {
+    "title": "Bateau",
+    "tabs": {
+      "identity": "Identité",
+      "engines": "Moteurs",
+      "equipment": "Équipements"
+    },
+    "identity": {
+      "title": "Identité",
+      "edit": "Modifier la fiche",
+      "name": "Nom",
+      "type": "Type",
+      "builder": "Constructeur",
+      "model": "Modèle",
+      "hullNumber": "N° de coque",
+      "year": "Année",
+      "flag": "Pavillon",
+      "homePort": "Port d'attache",
+      "sailNumber": "N° de voile",
+      "characteristics": "Caractéristiques",
+      "lengthM": "Longueur",
+      "beamM": "Largeur",
+      "draftM": "Tirant d'eau",
+      "meters": "m",
+      "notes": "Notes",
+      "noNotes": "Aucune note.",
+      "saved": "Fiche du bateau enregistrée",
+      "template": "Modèle de checklist : {name}",
+      "noTemplate": "Aucun modèle de checklist"
+    }
+  },
+  "engines": {
+    "title": "Moteurs",
+    "empty": {
+      "title": "Aucun moteur",
+      "description": "Ajoutez les moteurs du bord pour suivre leurs heures et leurs échéances."
+    },
+    "add": "Ajouter un moteur",
+    "new": "Nouveau moteur",
+    "edit": "Modifier le moteur",
+    "inactive": "Désactivé",
+    "inactiveList": "{count, plural, one {# moteur désactivé} other {# moteurs désactivés}}",
+    "counter": "Compteur",
+    "unknownCounter": "compteur inconnu",
+    "readOn": "relevé le {date}",
+    "readBy": "par {name}",
+    "stale": "à mettre à jour",
+    "addReading": "Relevé",
+    "addReadingLong": "Relever les heures",
+    "fields": {
+      "label": "Nom",
+      "position": "Position",
+      "brand": "Marque",
+      "model": "Modèle",
+      "serial": "N° de série",
+      "installedAt": "Installé le",
+      "notes": "Notes"
+    },
+    "installedIn": "installé en {year}",
+    "serialShort": "série {serial}",
+    "linkedItems": "Points de checklist liés à ce moteur",
+    "noLinkedItems": "Aucun point de checklist lié à ce moteur.",
+    "generateItems": "Générer les points de checklist de ce moteur",
+    "generated": "Points de checklist générés",
+    "linkedCount": "{count, plural, one {# point lié} other {# points liés}}",
+    "readings": "Derniers relevés",
+    "allReadings": "Tous les relevés",
+    "noReadings": "Aucun relevé.",
+    "firstReading": "Premier relevé pour ce moteur.",
+    "logs": "Interventions sur ce moteur",
+    "noLogs": "Aucune intervention enregistrée avec les heures de ce moteur.",
+    "deactivate": "Désactiver ce moteur",
+    "deactivateTitle": "Désactiver {label} ?",
+    "deactivateDescription": "{count, plural, =0 {Aucun point de suivi n'est lié à ce moteur.} one {# point de suivi sera retiré de la checklist.} other {# points de suivi seront retirés de la checklist.}} Les relevés et l'historique sont conservés ; le moteur reste réactivable.",
+    "reactivate": "Réactiver ce moteur",
+    "deactivated": "Moteur désactivé",
+    "reactivated": "Moteur réactivé",
+    "saved": "Moteur enregistré",
+    "reading": {
+      "title": "Relevé d'heures",
+      "engine": "Moteur",
+      "hours": "Compteur",
+      "date": "Date",
+      "note": "Note",
+      "last": "Dernier : {hours} le {date}",
+      "delta": "+{hours} en {days, plural, one {# jour} other {# jours}}",
+      "deltaSameDay": "+{hours} le même jour",
+      "lower": "{value} est inférieur au dernier relevé ({last} le {date}).",
+      "counterReplaced": "Le compteur a été remplacé",
+      "counterReplacedNote": "Compteur remplacé",
+      "bigJump": "+{hours} depuis le {date} — êtes-vous sûr ?",
+      "saved": "Relevé enregistré · {engine} {hours}",
+      "edit": "Modifier le relevé",
+      "delete": "Supprimer le relevé",
+      "deleteTitle": "Supprimer ce relevé ?",
+      "deleteDescription": "Le relevé de {hours} du {date} sera supprimé. Les échéances en heures seront recalculées.",
+      "deleted": "Relevé supprimé",
+      "updated": "Relevé modifié",
+      "noEngine": "Aucun moteur actif : ajoutez d'abord un moteur."
+    },
+    "source": {
+      "manual": "manuel",
+      "maintenance_log": "intervention",
+      "checklist": "checklist",
+      "import": "import"
+    },
+    "importedHint": "issu du carnet papier"
+  },
+  "equipment": {
+    "title": "Équipements",
+    "add": "Ajouter un équipement",
+    "new": "Nouvel équipement",
+    "edit": "Modifier l'équipement",
+    "empty": {
+      "title": "Aucun équipement",
+      "description": "Listez ce qui est à bord : gréement, électronique, sécurité… chaque fiche garde son historique d'interventions."
+    },
+    "uncategorized": "Sans catégorie",
+    "count": "{count, plural, one {# équipement} other {# équipements}}",
+    "fields": {
+      "name": "Nom",
+      "category": "Catégorie",
+      "brand": "Marque",
+      "model": "Modèle",
+      "serial": "N° de série",
+      "quantity": "Quantité",
+      "installedAt": "Installé le",
+      "specs": "Caractéristiques",
+      "notes": "Notes"
+    },
+    "specKey": "Caractéristique",
+    "specValue": "Valeur",
+    "addSpec": "Ajouter une caractéristique",
+    "removeSpec": "Retirer la caractéristique",
+    "noSpecs": "Aucune caractéristique renseignée.",
+    "history": "Historique",
+    "noHistory": "Aucune intervention liée à cet équipement.",
+    "remove": "Déposer",
+    "removeTitle": "Déposer {name} ?",
+    "removeDescription": "L'équipement quitte l'inventaire à la date indiquée. Sa fiche et son historique restent consultables.",
+    "removedOn": "Déposé le {date}",
+    "removedAt": "Date de dépose",
+    "removedSection": "{count, plural, one {# équipement déposé} other {# équipements déposés}}",
+    "restore": "Remettre à bord",
+    "restored": "Équipement remis à bord",
+    "removed": "Équipement déposé",
+    "saved": "Équipement enregistré",
+    "installedOn": "installé le {date}",
+    "quantityShort": "× {count}"
+  },
+  "categories": {
+    "title": "Catégories",
+    "description": "Les systèmes du bateau. L'ordre est celui de la grille de checklist.",
+    "add": "Ajouter une catégorie",
+    "new": "Nouvelle catégorie",
+    "edit": "Modifier la catégorie",
+    "fields": {
+      "name": "Nom",
+      "color": "Couleur",
+      "icon": "Icône"
+    },
+    "customColor": "Autre couleur",
+    "lowContrast": "Cette couleur est peu lisible sur fond blanc (contraste {ratio}:1, minimum 3:1).",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "archive": "Archiver",
+    "archiveTitle": "Archiver {name} ?",
+    "archiveDescription": "{count, plural, =0 {Aucun point de checklist actif dans cette catégorie.} one {# point de checklist actif est dans cette catégorie.} other {# points de checklist actifs sont dans cette catégorie.}}",
+    "archiveItems": "Archiver aussi les points",
+    "moveItems": "Déplacer les points vers…",
+    "target": "Catégorie de destination",
+    "archived": "Catégorie archivée",
+    "archivedSection": "{count, plural, one {# catégorie archivée} other {# catégories archivées}}",
+    "restore": "Réactiver",
+    "restored": "Catégorie réactivée",
+    "saved": "Catégorie enregistrée",
+    "created": "Catégorie ajoutée",
+    "itemsCount": "{count, plural, one {# point} other {# points}}"
+  },
+  "settings": {
+    "title": "Paramètres du bateau",
+    "sections": {
+      "categories": "Catégories",
+      "export": "Export des données",
+      "report": "Rapport d'état",
+      "recalibrate": "Recaler ma checklist",
+      "import": "Reprise du carnet",
+      "transfer": "Transférer le bateau",
+      "danger": "Zone sensible"
+    },
+    "soon": "Disponible dans une prochaine étape.",
+    "export": {
+      "description": "Toutes les données du bateau en JSON et CSV, à tout moment.",
+      "guarantee": "Vos données vous appartiennent : l'export complet est disponible à tout moment, sans condition.",
+      "button": "Préparer l'export",
+      "generating": "Préparation…",
+      "json": "Tout le carnet (JSON)",
+      "interventions": "Interventions (CSV)",
+      "expenses": "Dépenses (CSV)"
+    },
+    "report": {
+      "description": "Un rapport imprimable de l'état du bateau : points en retard, dernières interventions, moteurs.",
+      "action": "Ouvrir le rapport d'état"
+    },
+    "recalibrate": {
+      "description": "Réglez les dernières réalisations connues pour que la file d'attente soit juste.",
+      "action": "Recaler ma checklist"
+    },
+    "import": {
+      "description": "Vérifiez les lignes importées du carnet papier en une seule fois.",
+      "action": "Vérifier les lignes importées"
+    },
+    "transfer": {
+      "description": "Cédez le bateau à son nouveau propriétaire : le carnet le suit.",
+      "warningTitle": "Ce qui part avec le bateau",
+      "warningDescription": "Tout le carnet : checklist et historique, interventions, relevés, achats et coûts, sorties de l'eau, intervenants, équipements. Le nouveau propriétaire verra tout, y compris les montants.",
+      "step1": "1. Exportez une copie pour vous",
+      "step1Help": "L'export ci-dessus vous garde une trace complète, même après avoir quitté le bateau.",
+      "step2": "2. Invitez le nouveau propriétaire",
+      "email": "Adresse e-mail du nouveau propriétaire",
+      "emailInvalid": "Adresse e-mail invalide.",
+      "invite": "Inviter comme propriétaire",
+      "invited": "Invitation envoyée à {email}.",
+      "expires": "expire le {date}",
+      "revoke": "Annuler",
+      "step3": "3. Quittez le bateau une fois l'invitation acceptée",
+      "step3Waiting": "Le bouton apparaîtra dès qu'un autre propriétaire aura rejoint le bateau.",
+      "step3Ready": "{count, plural, one {Un autre propriétaire est en place} other {# autres propriétaires sont en place}} : vous pouvez quitter le bateau.",
+      "leave": "Quitter le bateau",
+      "leaveTitle": "Quitter {name} ?",
+      "leaveDescription": "Vous perdez l'accès immédiatement. Les interventions que vous avez enregistrées restent dans le carnet.",
+      "membersLink": "Voir les membres"
+    },
+    "delete": {
+      "title": "Supprimer le bateau",
+      "description": "Supprime définitivement le bateau et tout son carnet : checklist, interventions, relevés, achats, photos. Cette action est irréversible.",
+      "button": "Supprimer ce bateau",
+      "confirmTitle": "Supprimer {name} ?",
+      "confirmDescription": "Tapez le nom du bateau pour confirmer. Tout son carnet sera supprimé pour tous les membres.",
+      "keyword": "Nom du bateau"
+    }
+  },
+  "install": {
+    "title": "Installer Xaman sur l'écran d'accueil",
+    "iosHint": "Dans Safari : Partager, puis « Sur l'écran d'accueil ».",
+    "androidHint": "L'application s'ouvre en plein écran, sans barre d'adresse.",
+    "otherHint": "Dans le menu du navigateur : « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+    "installed": "Xaman est déjà installé sur cet appareil.",
+    "install": "Installer",
+    "later": "Plus tard"
+  },
+  "contacts": {
+    "title": "Intervenants",
+    "new": "Nouvel intervenant",
+    "edit": "Modifier l'intervenant",
+    "search": "Rechercher un nom, une entreprise, une spécialité",
+    "emptyTitle": "Aucun intervenant",
+    "emptyDescription": "Le mécano, le voilier, le chantier : l'annuaire relie chaque intervention et chaque achat à la bonne personne, avec son téléphone à un tap.",
+    "noResult": "Aucun intervenant pour « {query} »",
+    "count": "{count, plural, =0 {Aucun intervenant} one {# intervenant} other {# intervenants}}",
+    "saved": "Intervenant enregistré",
+    "call": "Appeler",
+    "fields": {
+      "name": "Nom",
+      "specialty": "Spécialité",
+      "specialtyOther": "Précisez la spécialité",
+      "company": "Entreprise",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "address": "Adresse",
+      "notes": "Notes"
+    },
+    "specialties": {
+      "yard": "Chantier carénage",
+      "sailmaker": "Voilier",
+      "electronics": "Électronicien",
+      "engine": "Motoriste",
+      "rigger": "Gréeur",
+      "outboard": "Mécanicien hors-bord",
+      "chandlery": "Shipchandler",
+      "other": "Autre"
+    },
+    "picker": {
+      "crew": "Nous-mêmes",
+      "provider": "Un prestataire",
+      "placeholder": "Choisir un intervenant",
+      "add": "Nouvel intervenant",
+      "quickTitle": "Nouvel intervenant",
+      "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire."
+    },
+    "references": {
+      "logs": "Interventions",
+      "purchases": "Achats",
+      "haulOutsCount": "{count, plural, one {# sortie de l'eau avec ce chantier} other {# sorties de l'eau avec ce chantier}}",
+      "none": "Aucune intervention ni achat chez cet intervenant pour l'instant.",
+      "seeAll": "Voir tout"
+    },
+    "delete": {
+      "action": "Supprimer",
+      "title": "Supprimer {name} ?",
+      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} garderont leur historique mais perdront le lien vers cet intervenant. Cette suppression est définitive.",
+      "confirm": "Supprimer",
+      "done": "Intervenant supprimé"
+    }
+  },
+  "report": {
+    "title": "Rapport d'état",
+    "subtitle": "Établi le {date} depuis le carnet d'entretien Xaman",
+    "print": "Imprimer",
+    "printHint": "Sur iPad : Partager, puis Imprimer, pour obtenir un PDF.",
+    "showCosts": "Inclure les coûts",
+    "hideCosts": "Masquer les coûts",
+    "sections": {
+      "identity": "Identité",
+      "engines": "Moteurs et compteurs",
+      "systems": "État des systèmes",
+      "due": "Échéances des 12 prochains mois",
+      "logs": "Interventions des 12 derniers mois",
+      "haulOuts": "Sorties de l'eau",
+      "totals": "Récapitulatif"
+    },
+    "identity": {
+      "model": "Modèle",
+      "builder": "Constructeur",
+      "hull": "Numéro de coque",
+      "year": "Année",
+      "homePort": "Port d'attache",
+      "flag": "Pavillon",
+      "sail": "Numéro de voile",
+      "length": "Longueur"
+    },
+    "engines": {
+      "engine": "Moteur",
+      "brand": "Marque / modèle",
+      "hours": "Compteur",
+      "readAt": "Relevé le",
+      "noReading": "compteur inconnu",
+      "none": "Aucun moteur enregistré."
+    },
+    "systems": {
+      "system": "Système",
+      "points": "Points suivis",
+      "progress": "À jour",
+      "overdue": "En retard",
+      "never": "Jamais renseigné",
+      "neverDone": "jamais fait"
+    },
+    "due": {
+      "item": "Point",
+      "system": "Système",
+      "deadline": "Échéance",
+      "state": "État",
+      "hours": "{hours} h",
+      "none": "Aucune échéance dans les 12 prochains mois."
+    },
+    "logs": {
+      "date": "Date",
+      "title": "Intervention",
+      "system": "Système",
+      "by": "Réalisé par",
+      "cost": "Coût",
+      "crew": "Équipage",
+      "none": "Aucune intervention terminée sur les 12 derniers mois.",
+      "total": "Total des 12 derniers mois"
+    },
+    "haulOuts": {
+      "out": "Sortie",
+      "in": "Remise à l'eau",
+      "yard": "Chantier",
+      "works": "Travaux",
+      "cost": "Coût",
+      "inProgress": "en cours",
+      "none": "Aucune sortie de l'eau enregistrée."
+    },
+    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}"
+  },
+  "purchaseKind": {
+    "gas": "Gaz",
+    "part": "Pièce",
+    "service": "Prestation",
+    "other": "Autre"
+  },
+  "supplies": {
+    "title": "Dépenses",
+    "subtitle": "Ce que le bateau a coûté, et ce qui a été acheté.",
+    "tabs": {
+      "expenses": "Dépenses",
+      "purchases": "Achats",
+      "stock": "Stock"
+    },
+    "stock": {
+      "title": "Stock",
+      "soon": "Le stock arrive bientôt.",
+      "description": "Vous y tiendrez la liste des pièces à bord, leur quantité et leur seuil d'alerte."
+    },
+    "period": {
+      "label": "Période",
+      "all": "Toute la période",
+      "rolling12": "12 derniers mois",
+      "year": "Année civile",
+      "custom": "Personnalisée",
+      "from": "Du",
+      "to": "Au",
+      "range": "Du {from} au {to}"
+    },
+    "expenses": {
+      "title": "Dépenses",
+      "total": "Total de la période",
+      "lines": "{count, plural, =0 {aucune ligne} one {# ligne} other {# lignes}}",
+      "sources": {
+        "label": "Source",
+        "log": "Interventions",
+        "purchase": "Achats",
+        "haul_out": "Sorties de l'eau"
+      },
+      "sourceSingular": {
+        "log": "Intervention",
+        "purchase": "Achat",
+        "haul_out": "Sortie de l'eau"
+      },
+      "uncategorized": "Sans catégorie",
+      "byCategory": "Par catégorie",
+      "comparison": {
+        "label": "Période précédente",
+        "up": "La période en cours dépasse de {percent}",
+        "down": "La période en cours est inférieure de {percent}",
+        "flat": "La période en cours est au même niveau",
+        "none": "Aucune dépense sur la période précédente"
+      },
+      "cumulative": {
+        "label": "Cumul depuis l'origine",
+        "since": "Depuis le {date}",
+        "none": "Aucune dépense enregistrée"
+      },
+      "export": "Exporter en CSV",
+      "exporting": "Export en cours…",
+      "exported": "Export téléchargé",
+      "emptyTitle": "Aucune dépense sur cette période",
+      "emptyDescription": "Les coûts des interventions, les achats et les sorties de l'eau apparaissent ici dès qu'un montant est saisi.",
+      "emptyFiltered": "Aucune dépense pour ces filtres.",
+      "clearFilters": "Effacer les filtres",
+      "csv": {
+        "date": "Date",
+        "source": "Source",
+        "label": "Libellé",
+        "category": "Catégorie",
+        "amount": "Montant (EUR)",
+        "filename": "xaman-depenses-{from}-{to}.csv"
+      }
+    },
+    "purchases": {
+      "title": "Achats",
+      "new": "Nouvel achat",
+      "edit": "Modifier l'achat",
+      "saved": "Achat enregistré",
+      "count": "{count, plural, =0 {aucun achat} one {# achat} other {# achats}}",
+      "loadMore": "Charger plus",
+      "emptyTitle": "Aucun achat",
+      "emptyDescription": "Les achats gardent la trace de ce qui est entré à bord : gaz, pièces, prestations.",
+      "emptyFiltered": "Aucun achat pour ces filtres.",
+      "clearFilters": "Effacer les filtres",
+      "noSupplier": "Sans fournisseur",
+      "filters": {
+        "kind": "Type",
+        "category": "Catégorie",
+        "period": "Période",
+        "allKinds": "Tous les types",
+        "allCategories": "Toutes les catégories"
+      },
+      "review": {
+        "badge": "À vérifier",
+        "action": "Marquer comme vérifié",
+        "short": "Vérifier",
+        "done": "Achat vérifié",
+        "help": "Cette ligne vient du carnet papier : vérifiez le montant et la date."
+      },
+      "trash": {
+        "action": "Mettre à la corbeille",
+        "title": "Mettre cet achat à la corbeille ?",
+        "description": "L'achat quitte les listes et les dépenses. Il reste 30 jours dans la corbeille.",
+        "done": "Achat mis à la corbeille",
+        "restored": "Achat restauré"
+      },
+      "fields": {
+        "kind": "Type",
+        "designation": "Désignation",
+        "amount": "Montant",
+        "purchasedAt": "Date",
+        "category": "Catégorie",
+        "noCategory": "Sans catégorie",
+        "supplier": "Fournisseur",
+        "supplierName": "Nom du fournisseur",
+        "bottleType": "Type de bouteille",
+        "log": "Intervention liée",
+        "notes": "Notes"
+      },
+      "supplierNameHelp": "Le lieu ou l'enseigne, quand le fournisseur n'est pas dans l'annuaire.",
+      "noLog": "Aucune",
+      "logHelp": "Rattachez cet achat à une intervention du journal.",
+      "suggestions": "Déjà saisi"
+    },
+    "gas": {
+      "title": "Gaz",
+      "open": "Bouteille de gaz",
+      "dialogTitle": "Changement de bouteille de gaz",
+      "dialogHelp": "Le type et le fournisseur reprennent le dernier changement.",
+      "designation": "Bouteille de gaz",
+      "designationTyped": "Bouteille de gaz — {type}",
+      "bottleType": "Type de bouteille",
+      "otherType": "Autre type",
+      "otherTypeLabel": "Nom du type",
+      "previousChange": "Précédent changement : {date}",
+      "saved": "Bouteille enregistrée",
+      "savedSince": "{days} jours depuis la précédente",
+      "facts": {
+        "title": "Bouteilles de gaz",
+        "last": "Dernière bouteille il y a {days} j",
+        "lastToday": "Dernière bouteille aujourd'hui",
+        "lastDate": "le {date}",
+        "never": "Aucune bouteille enregistrée",
+        "neverHelp": "Enregistrez un changement : la moyenne se construit toute seule.",
+        "average": "Intervalle moyen : {days} j sur {count, plural, one {# intervalle} other {# intervalles}}",
+        "noAverage": "Intervalle moyen : disponible au deuxième changement",
+        "next": "Prochaine estimée vers le {date} (estimé)",
+        "noEstimate": "Estimation à partir de 3 intervalles",
+        "total": "Total dépensé : {amount}"
+      }
+    }
+  },
+  "haulOuts": {
+    "title": "Sorties de l'eau",
+    "subtitle": "Chaque carénage, ses travaux et les interventions rattachées.",
+    "new": "Nouvelle sortie de l'eau",
+    "edit": "Modifier la sortie de l'eau",
+    "saved": "Sortie de l'eau enregistrée",
+    "count": "{count, plural, =0 {aucune sortie} one {# sortie} other {# sorties}}",
+    "ashore": "À terre",
+    "ashoreSince": "À terre depuis {days, plural, one {# jour} other {# jours}}",
+    "duration": "{days, plural, one {# jour} other {# jours}} à terre",
+    "stillAshore": "Toujours à terre",
+    "dates": "Sortie {start} · remise à l'eau {end}",
+    "noYard": "Chantier non renseigné",
+    "emptyTitle": "Aucune sortie de l'eau",
+    "emptyDescription": "Une sortie de l'eau regroupe le chantier, les travaux et les interventions faites pendant le carénage.",
+    "fields": {
+      "startedAt": "Sortie",
+      "endedAt": "Remise à l'eau",
+      "yard": "Chantier",
+      "yardName": "Nom du chantier",
+      "works": "Travaux",
+      "cost": "Coût du chantier"
+    },
+    "endedHelp": "Laissez vide tant que le bateau est à terre.",
+    "yardNameHelp": "Le nom du chantier, quand il n'est pas dans l'annuaire.",
+    "worksHelp": "Ce qui a été fait pendant la sortie : carène, anodes, passe-coques…",
+    "noWorks": "Aucun travail décrit.",
+    "errors": {
+      "endBeforeStart": "La remise à l'eau doit être après la sortie."
+    },
+    "logs": {
+      "title": "Interventions pendant cette sortie",
+      "add": "Intervention pendant cette sortie",
+      "count": "{count, plural, =0 {aucune intervention} one {# intervention} other {# interventions}}",
+      "empty": "Aucune intervention rattachée pour l'instant."
+    },
+    "totals": {
+      "title": "Coût total de la sortie",
+      "yard": "Chantier",
+      "logs": "Interventions",
+      "total": "Total"
+    },
+    "trash": {
+      "action": "Mettre à la corbeille",
+      "title": "Mettre cette sortie de l'eau à la corbeille ?",
+      "description": "Les interventions rattachées restent dans le journal. La sortie reste 30 jours dans la corbeille.",
+      "done": "Sortie de l'eau mise à la corbeille",
+      "restored": "Sortie de l'eau restaurée"
+    }
+  },
+  "review": {
+    "title": "Vérifier les lignes importées",
+    "description": "Ces lignes viennent du carnet papier. Corrigez les dates et les heures, puis validez en une fois.",
+    "emptyTitle": "Rien à vérifier",
+    "emptyDescription": "Toutes les lignes reprises du carnet papier ont été vérifiées.",
+    "logsTitle": "Interventions à vérifier",
+    "purchasesTitle": "Achats à vérifier",
+    "columns": {
+      "date": "Date retenue",
+      "log": "Intervention",
+      "hours": "Heures moteur",
+      "designation": "Désignation",
+      "amount": "Montant"
+    },
+    "swap": "Intervertir {a} ↔ {b}",
+    "ignore": "ignorer",
+    "bookValue": "carnet {hours}",
+    "contextPrevious": "précédent : {hours} le {date}",
+    "contextNone": "aucun relevé validé avant",
+    "contextNext": "suivant en attente : {hours} le {date}",
+    "backwards": "En recul de {hours} par rapport au relevé précédent.",
+    "submit": "Valider {count, plural, one {# ligne} other {les # lignes}}",
+    "submitted": "{logs, plural, one {# ligne vérifiée} other {# lignes vérifiées}} · {readings, plural, one {# relevé créé} other {# relevés créés}}",
+    "backToLogs": "Voir le journal",
+    "onlyOne": "Vérification de cette ligne seulement.",
+    "allRows": "Vérifier toutes les lignes"
+  }
+}

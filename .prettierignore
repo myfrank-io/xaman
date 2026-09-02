@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+build
+coverage
+playwright-report
+test-results
+pnpm-lock.yaml
+public/sw.js
+supabase/.temp
+src/types/database.ts
+# Human-authored docs and seed data are kept verbatim
+docs
+seed
+*.md
+supabase/functions
+.claude

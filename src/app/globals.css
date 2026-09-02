@@ -1,0 +1,575 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================================
+   Xaman design tokens (audit/design-tokens.css, art-direction §3).
+   Every colour is hexadecimal and carries its measured WCAG ratio: contrast is
+   computed, not guessed. Three variants per semantic colour:
+     --x         fill / dot / bar        (>= 3:1 on light)
+     --x-fg      text + icon             (>= 5:1)
+     --x-on-dark text + icon on the navy header
+   `--x` is never a text colour.
+   Category colours live in the database (`boat_categories.color`); the
+   `--cat-*` tokens below are seed reference values (mockups, /dev/ui, fallback).
+   ========================================================================== */
+:root {
+  --radius: 0.625rem; /* 10 px - kept for shadcn */
+
+  /* --------------------------------------------------- neutrals (hue 215) */
+  --n-0: #ffffff; /* cards, sheets, fields                                  */
+  --n-25: #f7f9fb; /* application background        - 1.06:1 vs white       */
+  --n-50: #eff3f7; /* secondary surface, muted      - 1.12:1                */
+  --n-100: #e3e9f0; /* quiet separator              - 1.22:1                */
+  --n-200: #d2dae4; /* default border               - 1.41:1                */
+  --n-300: #b3becc; /* strong border, disabled      - 1.88:1                */
+  --n-400: #8a99ac; /* decorative icon, chevron     - 2.90:1                */
+  --n-500: #63748a; /* placeholder, tertiary text   - 4.78:1                */
+  --n-600: #4a5b72; /* secondary text               - 6.93:1                */
+  --n-700: #36465c; /* strong text                  - 9.60:1                */
+  --n-800: #1e3a5f; /* = navy-light                 - 11.50:1               */
+  --n-900: #142944; /*                              - 14.68:1               */
+  --n-950: #0c1b33; /* = navy, main ink             - 17.21:1               */
+
+  /* ------------------------------------------------------------- brand */
+  --navy: #0c1b33; /* header, ink, app icon                                 */
+  --navy-light: #1e3a5f; /* end of the header gradient                      */
+  --navy-deep: #081426; /* iOS status bar, navy shadow                      */
+  --brand-ink: #123152; /* primary button fill - white on it 13.23:1        */
+  --brass: #8a6a22; /* brand accent on light           - 5.04:1             */
+  --brass-light: #e3b879; /* brand accent on navy          - 9.34:1         */
+  /* Brass is a BRAND accent: logo, login screen, empty states, overlines on
+     dark. Never on data: never a status, a category or an alert. */
+
+  --header-gradient: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+
+  /* ------------------------------------------------------ surfaces / ink */
+  --background: #f7f9fb;
+  --foreground: #0c1b33; /* 16.31:1 on the background                       */
+  --surface: #ffffff;
+  --surface-2: #eff3f7;
+  --surface-sunken: #f7f9fb;
+  --ink-2: #4a5b72; /* secondary text     - 6.57:1 on the background        */
+  --ink-3: #63748a; /* meta, placeholder  - 4.53:1 on the background        */
+
+  --card: #ffffff;
+  --card-foreground: #0c1b33;
+  --popover: #ffffff;
+  --popover-foreground: #0c1b33;
+  --primary: #123152;
+  --primary-foreground: #ffffff;
+  --secondary: #eff3f7;
+  --secondary-foreground: #1e3a5f;
+  --muted: #eff3f7;
+  --muted-foreground: #4a5b72; /* 6.21:1 on --muted                         */
+  --accent: #e3e9f0;
+  --accent-foreground: #0c1b33;
+  --destructive: #c81e2b; /* white on it 5.71:1                             */
+  --destructive-foreground: #ffffff;
+  --border: #d2dae4;
+  --border-strong: #b3becc;
+  --input: #b3becc; /* field border, deliberately stronger than --border    */
+  --ring: #1d4ed8; /* focus - 6.70:1 on white                               */
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0c1b33;
+  --sidebar-primary: #123152;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e3e9f0;
+  --sidebar-accent-foreground: #0c1b33;
+  --sidebar-border: #d2dae4;
+  --sidebar-ring: #1d4ed8;
+
+  /* ------------------------------------------ surfaces laid on the header */
+  --on-navy: #ffffff; /* 17.21:1                                            */
+  --on-navy-2: #cbd6e4; /* secondary label   - 11.70:1                      */
+  --on-navy-3: #9bb0c8; /* meta              - 7.73:1                       */
+  --on-navy-surface: #1b2a45; /* opaque tile on the header                  */
+  --on-navy-surface-2: #24374f;
+  --on-navy-border: #35496a;
+
+  /* ------------------------------------ maintenance log statuses (SPEC 10) */
+  --status-planned: #2563eb; /* dot            - 5.17:1                     */
+  --status-planned-fg: #1d4ed8; /* text 6.70:1 / 5.66:1 on tint             */
+  --status-planned-tint: #e5ecfd;
+  --status-planned-border: #bed0f9;
+  --status-planned-on-dark: #8ab4ff; /* 8.24:1 navy / 5.51:1 navy-light     */
+
+  --status-in-progress: #d97706; /* 3.19:1 - dot, never text                */
+  --status-in-progress-fg: #94540a; /* 5.95:1 / 5.24:1 on tint              */
+  --status-in-progress-tint: #faefe1;
+  --status-in-progress-border: #f4d6b4;
+  --status-in-progress-on-dark: #f2b45c; /* 9.39:1 / 6.28:1                 */
+
+  --status-done: #16a34a; /* 3.30:1                                         */
+  --status-done-fg: #0f6b32; /* 6.63:1 / 5.80:1 on tint                     */
+  --status-done-tint: #e3f4e9;
+  --status-done-border: #b9e3c9;
+  --status-done-on-dark: #5cd68a; /* 9.38:1 / 6.27:1                        */
+
+  --status-urgent: #c81e2b; /* 5.71:1, white on it 5.71:1                   */
+  --status-urgent-fg: #b01823; /* 7.00:1 / 5.74:1 on tint                   */
+  --status-urgent-tint: #f8e4e6;
+  --status-urgent-border: #eebcbf;
+  --status-urgent-on-dark: #ff8a8a; /* 7.58:1 / 5.07:1                      */
+
+  /* ------------------------------------------ checklist states (SPEC 10) */
+  --state-never: #63748a; /* 4.78:1                                         */
+  --state-never-fg: #4a5b72; /* 6.93:1 / 5.96:1 on tint                     */
+  --state-never-tint: #eceef1;
+  --state-never-border: #d0d5dc;
+  --state-never-on-dark: #a7b6c9; /* 8.34:1 / 5.57:1                        */
+
+  --state-ok: #16a34a;
+  --state-ok-fg: #0f6b32;
+  --state-ok-tint: #e3f4e9;
+  --state-ok-border: #b9e3c9;
+  --state-ok-on-dark: #5cd68a;
+
+  --state-soon: #ea580c; /* 3.56:1 - redder than the amber                  */
+  --state-soon-fg: #b03b0b; /* 6.04:1 / 5.21:1 on tint                      */
+  --state-soon-tint: #fcebe2;
+  --state-soon-border: #f9cdb6;
+  --state-soon-on-dark: #ffa35c; /* 8.72:1 / 5.83:1                         */
+
+  --state-overdue: #c81e2b;
+  --state-overdue-fg: #b01823;
+  --state-overdue-tint: #f8e4e6;
+  --state-overdue-border: #eebcbf;
+  --state-overdue-on-dark: #ff8a8a;
+
+  /* --------------------------------------------------- system feedback */
+  --info: #2563eb;
+  --info-fg: #1d4ed8;
+  --info-tint: #e5ecfd;
+  --info-border: #bed0f9;
+  --warning: #ea580c;
+  --warning-fg: #b03b0b;
+  --warning-tint: #fcebe2;
+  --warning-border: #f9cdb6;
+  --danger: #c81e2b;
+  --danger-fg: #b01823;
+  --danger-tint: #f8e4e6;
+  --danger-border: #eebcbf;
+  --success: #16a34a;
+  --success-fg: #0f6b32;
+  --success-tint: #e3f4e9;
+  --success-border: #b9e3c9;
+
+  /* ------------------------------- categories: seed reference values */
+  --cat-engines: #d97706; /* Moteurs                     - 3.19:1          */
+  --cat-daggerboards-rudders: #0284c7; /* Dérives & Safrans  - 4.10:1      */
+  --cat-sails-rigging: #a21caf; /* Voiles & Gréement         - 6.32:1      */
+  --cat-hull-deck: #52606f; /* Coque & Pont                  - 6.44:1      */
+  --cat-electronics-nav: #1d4ed8; /* Électronique / Nav      - 6.70:1      */
+  --cat-energy: #a16207; /* Énergie                          - 4.92:1      */
+  --cat-plumbing-systems: #0f766e; /* Hydraulique / Circuits - 5.47:1      */
+  --cat-safety: #c81e2b; /* Sécurité                         - 5.71:1      */
+  --cat-fallback: #63748a; /* category without a colour                     */
+
+  /* ------------------------------------------------------- typography */
+  --font-family-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-family-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --fs-overline: 0.6875rem;
+  --lh-overline: 1rem; /* 11 / 16 */
+  --fs-caption: 0.8125rem;
+  --lh-caption: 1.125rem; /* 13 / 18 */
+  --fs-label: 0.875rem;
+  --lh-label: 1.25rem; /* 14 / 20 */
+  --fs-body: 1rem;
+  --lh-body: 1.5rem; /* 16 / 24 */
+  --fs-body-lg: 1.0625rem;
+  --lh-body-lg: 1.625rem; /* 17 / 26 */
+  --fs-h3: 1.0625rem;
+  --lh-h3: 1.5rem; /* 17 / 24 */
+  --fs-h2: 1.1875rem;
+  --lh-h2: 1.625rem; /* 19 / 26 */
+  --fs-h1: 1.5rem;
+  --lh-h1: 1.875rem; /* 24 / 30 */
+  --fs-display: 1.75rem;
+  --lh-display: 2.125rem; /* 28 / 34 */
+  --fs-num-sm: 1.0625rem; /* 17 - inline figure  */
+  --fs-num-md: 1.5rem; /* 24 - card figure      */
+  --fs-num-lg: 2rem; /* 32 - stat card          */
+
+  /* --------------------------------------------------------- motion */
+  --duration-instant: 90ms; /* press feedback                        */
+  --duration-fast: 140ms; /* tint, toggle, check                     */
+  --duration-normal: 200ms; /* dialog, sheet                         */
+  --duration-slow: 320ms; /* progress bar                            */
+}
+
+/* ============================================================================
+   Dark mode - optional, not shipped in V1.
+   The background becomes the brand navy: at night it is the same app.
+   ========================================================================== */
+.dark {
+  --background: #0b1626;
+  --foreground: #e8edf4;
+  --surface: #12203a;
+  --surface-2: #1a2b47;
+  --surface-sunken: #0e1c31;
+  --ink-2: #a7b6c9;
+  --ink-3: #8496ac;
+
+  --card: #12203a;
+  --card-foreground: #e8edf4;
+  --popover: #16263f;
+  --popover-foreground: #e8edf4;
+  --primary: #e8edf4;
+  --primary-foreground: #0c1b33;
+  --secondary: #1a2b47;
+  --secondary-foreground: #e8edf4;
+  --muted: #1a2b47;
+  --muted-foreground: #a7b6c9;
+  --accent: #22344f;
+  --accent-foreground: #e8edf4;
+  --destructive: #ff8a8a;
+  --destructive-foreground: #0c1b33;
+  --border: #27394f;
+  --border-strong: #35496a;
+  --input: #35496a;
+  --ring: #8ab4ff;
+
+  --sidebar: #0e1c31;
+  --sidebar-foreground: #e8edf4;
+  --sidebar-primary: #e8edf4;
+  --sidebar-primary-foreground: #0c1b33;
+  --sidebar-accent: #22344f;
+  --sidebar-accent-foreground: #e8edf4;
+  --sidebar-border: #27394f;
+  --sidebar-ring: #8ab4ff;
+
+  /* In dark mode `-fg` takes the `-on-dark` value: one single set of calls. */
+  --status-planned-fg: #8ab4ff;
+  --status-planned-tint: #16294a;
+  --status-planned-border: #2b4478;
+  --status-in-progress-fg: #f2b45c;
+  --status-in-progress-tint: #2e2413;
+  --status-in-progress-border: #6b4e1c;
+  --status-done-fg: #5cd68a;
+  --status-done-tint: #122d1e;
+  --status-done-border: #1e5c39;
+  --status-urgent-fg: #ff8a8a;
+  --status-urgent-tint: #34161a;
+  --status-urgent-border: #6e2229;
+  --state-never-fg: #a7b6c9;
+  --state-never-tint: #1c2739;
+  --state-never-border: #35496a;
+  --state-ok-fg: #5cd68a;
+  --state-ok-tint: #122d1e;
+  --state-ok-border: #1e5c39;
+  --state-soon-fg: #ffa35c;
+  --state-soon-tint: #33210f;
+  --state-soon-border: #74461b;
+  --state-overdue-fg: #ff8a8a;
+  --state-overdue-tint: #34161a;
+  --state-overdue-border: #6e2229;
+  --info-fg: #8ab4ff;
+  --info-tint: #16294a;
+  --warning-fg: #ffa35c;
+  --warning-tint: #33210f;
+  --danger-fg: #ff8a8a;
+  --danger-tint: #34161a;
+  --success-fg: #5cd68a;
+  --success-tint: #122d1e;
+}
+
+/* ============================================================================
+   Static scales (radii, type, shadows, easing, gauges)
+   ========================================================================== */
+@theme {
+  --radius-xs: 0.25rem; /*  4 px - square dot, tiny chip                    */
+  --radius-sm: 0.375rem; /*  6 px - checkbox, dense badge                   */
+  --radius-md: 0.5rem; /*  8 px - badge                                     */
+  --radius-lg: 0.625rem; /* 10 px - button, field                           */
+  --radius-xl: 0.875rem; /* 14 px - card                                    */
+  --radius-2xl: 1.25rem; /* 20 px - sheet, dialog                           */
+
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+
+  --text-overline: var(--fs-overline);
+  --text-overline--line-height: var(--lh-overline);
+  --text-overline--letter-spacing: 0.08em;
+  --text-overline--font-weight: 600;
+
+  --text-caption: var(--fs-caption);
+  --text-caption--line-height: var(--lh-caption);
+
+  --text-label: var(--fs-label);
+  --text-label--line-height: var(--lh-label);
+  --text-label--font-weight: 500;
+
+  --text-body: var(--fs-body);
+  --text-body--line-height: var(--lh-body);
+
+  --text-body-lg: var(--fs-body-lg);
+  --text-body-lg--line-height: var(--lh-body-lg);
+
+  --text-h3: var(--fs-h3);
+  --text-h3--line-height: var(--lh-h3);
+  --text-h3--font-weight: 600;
+
+  --text-h2: var(--fs-h2);
+  --text-h2--line-height: var(--lh-h2);
+  --text-h2--font-weight: 600;
+
+  --text-h1: var(--fs-h1);
+  --text-h1--line-height: var(--lh-h1);
+  --text-h1--letter-spacing: -0.015em;
+  --text-h1--font-weight: 600;
+
+  --text-display: var(--fs-display);
+  --text-display--line-height: var(--lh-display);
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 600;
+
+  --text-num-sm: var(--fs-num-sm);
+  --text-num-md: var(--fs-num-md);
+  --text-num-lg: var(--fs-num-lg);
+
+  /* In full sun the shadow disappears: it never carries the separation of a
+     surface on its own. Every raised surface also has a border. */
+  --shadow-xs: 0 1px 1px rgb(12 27 51 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(12 27 51 / 0.06), 0 1px 1px rgb(12 27 51 / 0.04);
+  --shadow-md: 0 2px 8px rgb(12 27 51 / 0.08), 0 1px 2px rgb(12 27 51 / 0.05);
+  --shadow-lg: 0 12px 32px rgb(12 27 51 / 0.16);
+  --shadow-xl: 0 24px 64px rgb(12 27 51 / 0.24);
+  --shadow-fab: 0 6px 16px rgb(12 27 51 / 0.26);
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --spacing-tap: 2.75rem; /* 44 px - minimum touch target     */
+  --spacing-tap-comfort: 3rem; /* 48 px - wet fingers         */
+  --spacing-row: 3.5rem; /* 56 px - list row                  */
+  --spacing-row-checklist: 4rem; /* 64 px - checklist row     */
+  --spacing-sidebar: 16rem; /* 256 px                         */
+  --spacing-tabbar: 3.5rem; /* 56 px + safe area              */
+  --spacing-header: 3.5rem; /* 56 px                          */
+}
+
+/* ============================================================================
+   Colours exposed to Tailwind (inline: dark mode stays driven by :root/.dark)
+   ========================================================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-navy: var(--navy);
+  --color-navy-light: var(--navy-light);
+  --color-navy-deep: var(--navy-deep);
+  --color-brand-ink: var(--brand-ink);
+  --color-brass: var(--brass);
+  --color-brass-light: var(--brass-light);
+
+  --color-on-navy: var(--on-navy);
+  --color-on-navy-2: var(--on-navy-2);
+  --color-on-navy-3: var(--on-navy-3);
+  --color-on-navy-surface: var(--on-navy-surface);
+  --color-on-navy-surface-2: var(--on-navy-surface-2);
+  --color-on-navy-border: var(--on-navy-border);
+
+  --color-n-0: var(--n-0);
+  --color-n-25: var(--n-25);
+  --color-n-50: var(--n-50);
+  --color-n-100: var(--n-100);
+  --color-n-200: var(--n-200);
+  --color-n-300: var(--n-300);
+  --color-n-400: var(--n-400);
+  --color-n-500: var(--n-500);
+  --color-n-600: var(--n-600);
+  --color-n-700: var(--n-700);
+  --color-n-800: var(--n-800);
+  --color-n-900: var(--n-900);
+  --color-n-950: var(--n-950);
+
+  --color-status-planned: var(--status-planned);
+  --color-status-planned-fg: var(--status-planned-fg);
+  --color-status-planned-tint: var(--status-planned-tint);
+  --color-status-planned-border: var(--status-planned-border);
+  --color-status-planned-on-dark: var(--status-planned-on-dark);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-in-progress-fg: var(--status-in-progress-fg);
+  --color-status-in-progress-tint: var(--status-in-progress-tint);
+  --color-status-in-progress-border: var(--status-in-progress-border);
+  --color-status-in-progress-on-dark: var(--status-in-progress-on-dark);
+  --color-status-done: var(--status-done);
+  --color-status-done-fg: var(--status-done-fg);
+  --color-status-done-tint: var(--status-done-tint);
+  --color-status-done-border: var(--status-done-border);
+  --color-status-done-on-dark: var(--status-done-on-dark);
+  --color-status-urgent: var(--status-urgent);
+  --color-status-urgent-fg: var(--status-urgent-fg);
+  --color-status-urgent-tint: var(--status-urgent-tint);
+  --color-status-urgent-border: var(--status-urgent-border);
+  --color-status-urgent-on-dark: var(--status-urgent-on-dark);
+
+  --color-state-never: var(--state-never);
+  --color-state-never-fg: var(--state-never-fg);
+  --color-state-never-tint: var(--state-never-tint);
+  --color-state-never-border: var(--state-never-border);
+  --color-state-never-on-dark: var(--state-never-on-dark);
+  --color-state-ok: var(--state-ok);
+  --color-state-ok-fg: var(--state-ok-fg);
+  --color-state-ok-tint: var(--state-ok-tint);
+  --color-state-ok-border: var(--state-ok-border);
+  --color-state-ok-on-dark: var(--state-ok-on-dark);
+  --color-state-soon: var(--state-soon);
+  --color-state-soon-fg: var(--state-soon-fg);
+  --color-state-soon-tint: var(--state-soon-tint);
+  --color-state-soon-border: var(--state-soon-border);
+  --color-state-soon-on-dark: var(--state-soon-on-dark);
+  --color-state-overdue: var(--state-overdue);
+  --color-state-overdue-fg: var(--state-overdue-fg);
+  --color-state-overdue-tint: var(--state-overdue-tint);
+  --color-state-overdue-border: var(--state-overdue-border);
+  --color-state-overdue-on-dark: var(--state-overdue-on-dark);
+
+  --color-info: var(--info);
+  --color-info-fg: var(--info-fg);
+  --color-info-tint: var(--info-tint);
+  --color-info-border: var(--info-border);
+  --color-warning: var(--warning);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-tint: var(--warning-tint);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-tint: var(--danger-tint);
+  --color-danger-border: var(--danger-border);
+  --color-success: var(--success);
+  --color-success-fg: var(--success-fg);
+  --color-success-tint: var(--success-tint);
+  --color-success-border: var(--success-border);
+
+  --color-cat-fallback: var(--cat-fallback);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    /* iOS Safari: prevent text-size inflation and rubber-band overscroll in standalone mode */
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ============================================================================
+   Xaman utilities
+   ========================================================================== */
+
+@utility bg-header-gradient {
+  background-image: var(--header-gradient);
+}
+
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Figures aligned in a column: engine hours, amounts, counters.
+   Put it on every displayed number, otherwise columns dance. */
+@utility num {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings:
+    "tnum" 1,
+    "lnum" 1;
+}
+
+/* Press feedback. `-webkit-tap-highlight-color` is neutralised in @layer base:
+   without this utility the app feels dead under the finger. */
+@utility pressable {
+  transition:
+    transform var(--duration-instant) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+  &:active {
+    transform: scale(0.975);
+  }
+}
+
+/* Same intent, no transform: for rows and chips where a scale would shift the
+   layout. Darkens the surface by ~6 % for 90 ms. */
+@utility tap-feedback {
+  transition: background-color var(--duration-instant) var(--ease-out);
+  &:active {
+    background-color: color-mix(in oklab, currentColor 6%, transparent);
+  }
+}
+
+/* Category colour injected from the database:
+   `style={{ ['--cat']: category.color }}` then `class="cat-scope"`.
+   color-mix() is supported by Safari from iPadOS 16.2. */
+@utility cat-scope {
+  --cat-tint: color-mix(in oklab, var(--cat) 12%, white);
+  --cat-border: color-mix(in oklab, var(--cat) 32%, white);
+  --cat-on-dark: color-mix(in oklab, var(--cat) 60%, white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable {
+    transition: background-color var(--duration-fast) linear;
+  }
+  .pressable:active {
+    transform: none;
+  }
+}
+
+/* Height reserved by the bottom tab bar (below lg): sticky form action bars sit above it. */
+:root {
+  --bottom-nav-height: calc(var(--spacing-tabbar) + env(safe-area-inset-bottom));
+}
+@media (min-width: 64rem) {
+  :root {
+    --bottom-nav-height: 0px;
+  }
+}
