@@ -33,6 +33,7 @@ export function dbErrorKey(error: PostgrestError | { code?: string; message: str
   const code = error.code ?? "";
   const message = error.message ?? "";
   if (code === "42501" || /row-level security/i.test(message)) return "errors.forbidden";
+  if (message.includes("date_in_future")) return "errors.date_in_future";
   if (code === "23505") return "errors.duplicate";
   if (code === "23503") return "errors.reference";
   if (code === "23514" || code === "22023") return "errors.invalid";
@@ -45,6 +46,7 @@ export function dbErrorKey(error: PostgrestError | { code?: string; message: str
       "invitation_expired",
       "invitation_email_mismatch",
       "engine_hours_required",
+      "engine_in_use",
       "template_not_found",
       "log_not_found",
     ];
