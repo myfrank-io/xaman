@@ -125,3 +125,11 @@ export function newEquipmentPath(boatId: string, categoryId?: string): string {
 export function editEquipmentPath(boatId: string, equipmentId: string): string {
   return `${equipmentPath(boatId, equipmentId)}/edit`;
 }
+
+export function editChecklistItemPath(boatId: string, categoryId: string, itemId: string): string {
+  return `${categoryPath(boatId, categoryId)}/${itemId}/edit`;
+}
+
+export function checklistSetupPath(boatId: string): string {
+  return `${boatPath(boatId, "checklist")}/setup`;
+}

@@ -31,7 +31,6 @@ export function InvitationsList({
   invitations: InvitationRow[];
 }) {
   const t = useTranslations("members");
-  const te = useTranslations();
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();

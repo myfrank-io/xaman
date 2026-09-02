@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { parseDecimal } from "@/lib/numbers";
 
 export type NumericFieldProps = Omit<
-  React.ComponentProps<"input">,
-  "type" | "value" | "defaultValue"
+  React.ComponentProps<typeof Input>,
+  "type" | "value" | "defaultValue" | "align" | "suffix"
 > & {
   value?: string;
   defaultValue?: string;

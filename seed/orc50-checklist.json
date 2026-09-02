@@ -170,7 +170,9 @@
         { "external_ref": "handheld-vhf", "label": "VHF portable : batterie, test", "interval_months": 6, "source": "proposal", "actions": [] },
         { "external_ref": "lifelines", "label": "Lignes de vie, bouée fer à cheval, lampes flash, filières", "interval_months": 6, "source": "proposal", "actions": [] },
         { "external_ref": "first-aid", "label": "Trousse de secours : dates, contenu", "interval_months": 12, "source": "proposal", "actions": [] },
-        { "external_ref": "gas-co-alarms", "label": "Détecteurs gaz / CO / fumée : test, piles", "interval_months": 6, "source": "proposal", "actions": [] }
+        { "external_ref": "gas-co-alarms", "label": "Détecteurs gaz / CO / fumée : test, piles", "interval_months": 6, "source": "proposal", "actions": [] },
+        { "external_ref": "insurance", "label": "Assurance du bateau : renouvellement (date de validité)", "interval_months": 12, "source": "proposal", "actions": ["Vérifier la date d'échéance et les garanties (navigation, zone, équipage)", "Enregistrer la nouvelle date de validité au cochage"] },
+        { "external_ref": "safety-file", "label": "Dossier de sécurité et armement : contrôle (date de validité)", "interval_months": 12, "source": "proposal", "actions": ["Passer en revue l'armement obligatoire de la catégorie de navigation", "Vérifier les dates de péremption de chaque élément", "Ranger le dossier à bord (acte de francisation, assurance, certificats)"] }
       ]
     }
   ]
