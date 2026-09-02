@@ -43,30 +43,59 @@ Un bateau = un dossier unique (fiche technique, journal des interventions, check
 
 Trois convictions qui structurent le produit :
 
-1. **Checklists par modèle de bateau.** Un ORC 50 n'a pas les mêmes points de contrôle qu'un First 36. Xaman fournit des checklists pré-remplies par constructeur/modèle, avec les actions détaillées pas à pas, que l'utilisateur complète avec ses propres points. C'est le principal différenciateur face aux concurrents (qui fournissent des checklists génériques ou vides).
+1. **Checklists par modèle de bateau.** Un ORC 50 n'a pas les mêmes points de contrôle qu'un First 36. Xaman fournit des checklists pré-remplies par constructeur/modèle, avec les actions détaillées pas à pas, que l'utilisateur complète avec ses propres points. C'est le principal différenciateur face aux concurrents : ceux qui pré-remplissent le font par type de bateau ou par équipement générique, jamais au modèle exact avec les gestes détaillés (voir §3).
 2. **Multi-acteurs natif.** Un pro invité voit ce qu'il doit voir et enregistre ses interventions directement dans le journal du bateau. Demain : un loueur gère sa flotte, un locataire coche la checklist de départ, un club suit ses bateaux, un chantier publie la checklist officielle de son modèle.
 3. **Utilisable à bord.** iPad en plein soleil, doigts mouillés, connexion Starlink intermittente : gros boutons, contraste élevé, saisie en moins de 30 secondes, lecture possible sans réseau.
 
 ## 3. Positionnement concurrentiel
 
-Deux concurrents identifiés à ce jour (analyse du 2 sept. 2026, sites publics) :
+> Réécrit le 2 sept. 2026 à partir du benchmark consolidé (`docs/AUDIT.md`, source « benchmark »). La version initiale de cette section affirmait qu'il n'existait que deux concurrents (VesselFile, BoatMatey) et qu'« aucun n'est en français » : c'était faux. Les prix sont ceux affichés publiquement à cette date ; les mentions « à vérifier » n'ont pas pu être reconfirmées (fiches de stores inaccessibles).
 
-| | **VesselFile** (vesselfile.com) | **BoatMatey** (boatmatey.com) | **Xaman** |
+### 3.1 Le marché
+
+Le marché du carnet d'entretien nautique compte **au moins douze acteurs pertinents, dont cinq francophones**. Il se lit en quatre segments qui n'ont ni les mêmes acheteurs ni les mêmes prix :
+
+| Segment | Acteurs | Prix d'entrée | Ce qu'il faut en retenir |
 |---|---|---|---|
-| Cible | Propriétaires ; chantiers/mécanos ; flottes (tier Business) | Propriétaires (voile, moteur, day-boats) | Propriétaires **et** tout acteur autour du bateau |
-| Journal d'entretien | Oui, heures par moteur, rappels (date ou heures, « premier des deux ») | Oui, multi-moteurs, échéances | Oui, multi-moteurs, heures par moteur, échéances date **et** heures |
-| Checklists | Personnalisables (pré-départ, saisonnières) ; checklists de service en premium | Non mis en avant | **Pré-remplies par modèle (ORC 50 en premier), actions détaillées, points personnalisés, progression par système** |
-| Équipements / fiche technique | Oui | Partiel | Oui, structurée par système, seedée depuis la STB constructeur |
-| Consommables / pièces | Stock avec seuils de réappro | Équipements de sécurité avec dates d'expiration | Achats, gaz, stock simple avec seuil, dépenses ventilées |
-| Sorties de l'eau | Via journal | Rappels haul-out | Module dédié (chantier, travaux, durée, coût) |
-| Intervenants | Contacts | — | Annuaire par bateau, lié aux interventions et achats |
-| Partage / rôles | Viewer/éditeur, co-propriétaires, mécanos (premium) ; transfert à la vente | Export / partage | Rôles par bateau dès le gratuit ; rôles métier (loueur, locataire, club, constructeur) prévus |
-| Plateformes | Web, iOS, Android | Web, iOS, Android | PWA (iPad-first), installable, cache de lecture |
-| Langue / marché | Anglais, US | Anglais, UK | **Français d'abord**, Méditerranée, puis anglais |
-| Prix | Gratuit (limité en fichiers) ; Premium ~12 $/an ; Business sur devis | Freemium, essai gratuit | Gratuit pour Xaman ; modèle à définir après validation |
-| Propriété des données | Export garanti même après résiliation | Export | Export JSON/CSV complet à tout moment (V1) |
+| Superyacht / PMS professionnel | Seahub, Nauticoncept (B2B), BoatOn Book flotte | 1 500–3 000 $/an et plus, devis, 3–10 k€/an | Vivier de patterns (ordres de travail, procédures, rôles), pas un concurrent |
+| Prosumer / conformité | Vessel Vanguard, Yacht Manager App | 299 $/an, formules | Templates par type de bateau, rôles, hors ligne |
+| **Plaisancier exigeant — zone Xaman** | **Ready4Sea**, **BoatOn Book**, **Boatwise**, VesselFile, BoatMatey | **< 30 €/an**, **4,99 €/mois**, **49 €/an**, freemium | Encombré mais mal servi : généralistes, anglophones ou orientés flotte |
+| Grand public / gratuit | Eloyot, YachtWave, Boatlogger, TheBoatApp, Seanapps (Bénéteau) | Gratuit + option | Diagnostic, logbook, télémétrie constructeur |
+| **Le statu quo** | Carnet papier (ex. Nautilog), Excel / Google Sheets, Notes, mémoire | ~0 € | **≈ 90 % du parc. C'est le concurrent réel.** |
 
-Enseignements : les deux concurrents sont solides sur le journal et les rappels ; aucun ne propose de checklists par modèle avec actions détaillées, aucun n'est en français, aucun ne modélise les acteurs au-delà propriétaire / mécano / flotte. Xaman doit être **au moins aussi bon sur le journal** (table stakes) et **clairement meilleur sur les checklists et le multi-acteurs**.
+Trois noms cités dans la commande initiale n'existent pas sous cette forme : « Sailwise » (le produit réel est **Boatwise**), « PropellerPro » (Propeller est une plateforme de location) et « Nautilog » (un carnet **papier**, pas une application).
+
+### 3.2 Les cinq acteurs à connaître
+
+| | **Ready4Sea** (FR) | **BoatOn Book** (FR) | **Boatwise** (EU, EN) | **Eloyot** (FR) | **Seanapps** (Bénéteau, FR) | **Xaman** |
+|---|---|---|---|---|---|---|
+| Cible | Plaisanciers voile et moteur ; depuis 2025 aussi voitures, camping-cars, maisons, piscines | Du plaisancier aux flottes pro (GMAO) | « Independent boat owners » | Plaisanciers, usage achat / vente / assurance | Propriétaires de bateaux Bénéteau (boîtier connecté) | Propriétaires et copropriétaires de voiliers de voyage, entretien à deux mains |
+| Journal d'entretien | Oui, interventions rattachées au plan | Oui, échéance calculée, alertes J-30 / J-7 | Oui, l'historique se construit tâche par tâche | Oui, interventions en quelques clics | Préconisations issues des capteurs | Oui, une seule saisie < 30 s, heures moteur auto-relevées |
+| Heures moteur | Relevés manuels par « unit » | Présentes dans la logique d'échéance (à vérifier) | **Absentes** (éliminatoire pour un catamaran bimoteur) | Non | **Automatiques** (NMEA 2000 / horamètre) | Par moteur, relevé indépendant ou depuis une intervention |
+| Échéances | Date, calendrier synchronisable | Date, algorithme de prochaine échéance | Date, documents à expiration, alerte **avant** | Non (diagnostic à un instant T) | Temps réel capteurs | Date **ou** heures, premier atteint, **affiché en clair** |
+| Checklists / référentiel | **Base de modèles** de bateaux et d'équipements → plan d'entretien (granularité : générique + équipement) | Inventaire par équipement | **Jeu de départ par type** de bateau | ~50 points génériques avec fiches pédagogiques d'expert | ~35 points de contrôle = capteurs | **Modèle exact** (ORC 50) + **actions détaillées** rédigées par un praticien, progression par système |
+| Stock / dépenses | Partiel | Stock avec seuils, budget dépenses et revenus | Pièces avec alerte stock bas, coûts par tâche | Photos et factures | — | Achats, gaz, stock simple avec seuil, dépenses ventilées |
+| Partage / rôles | Peu mis en avant | **3 rôles** : Marin, Propriétaire (**lecture seule**), Prestataire (tâches assignées) | Non mis en avant | Non | Concessionnaire | **Propriétaire auteur, pro invité** restreint et révocable, appliqué en base (RLS) |
+| Plateformes | iOS, Android, web ; pensé téléphone | Web, tablette, mobile, temps réel, **hors ligne** | Web | iOS, Android | iOS, Android + boîtier | PWA iPad-first, temps réel, lecture hors ligne (saisie hors ligne V2) |
+| Langue | Français | Français | Anglais | Français | Français | **Français** |
+| Prix | **< 30 €/an**, version gratuite | **4,99 €/mois** (≈ 60 €/an), sans engagement | **8 €/mois ou 49 €/an**, essai 14 j | Gratuit + Eloyot+ (rapport) | App gratuite, kit Retrofit (prix à vérifier) | Gratuit pour Xaman ; modèle à définir |
+| Données | À vérifier | À vérifier | À vérifier | Rapport PDF | Liées au boîtier | **Export JSON/CSV complet, garanti et affiché** |
+
+VesselFile (US) et BoatMatey (UK) restent des références solides sur le journal et les rappels (BoatMatey a un module haul-out ; VesselFile un transfert à la vente), mais elles sont anglophones et leurs tarifs premium n'ont pas pu être reconfirmés.
+
+### 3.3 Ce que cela change pour Xaman
+
+1. **Le concurrent réel est le papier et le tableur.** Les retours de forums convergent : une app « trop sophistiquée perd la valeur d'un outil quick and dirty », et « construire la base de données demande un effort significatif ». **Le coût d'amorçage est le premier tueur de ces produits, pas le manque de fonctions.** D'où la promesse : le bateau arrive **déjà rempli** avec son modèle exact.
+2. **« Premier atteint » (date ou heures) est un table stake**, pas une innovation : Mercury, MaintainX, Drivvo le font. Ce qui est rarement bien fait, et que Xaman soigne, c'est **l'afficher en clair** (« 15/03 ou 780 h, au premier atteint — reste 42 j / 61 h »).
+3. **Les checklists par modèle sont partiellement occupées** (Ready4Sea revendique une base de modèles ; Boatwise et Yacht Manager ont des templates par type). Le différenciateur défendable est **le modèle exact + les actions détaillées pas à pas**, que personne ne fait sur les modèles de niche.
+4. **Le multi-acteurs existe partout** (BoatOn a trois rôles, Nauticoncept relie technicien / concession / propriétaire). Ce qui n'existe pas en grand public : un **propriétaire auteur principal** (BoatOn le met en lecture seule), un **pro invité vraiment contraint** (lit tout, écrit ses lignes, ne supprime rien, ne voit pas les membres) et une **révocation qui laisse l'intervention dans le journal**. C'est un argument de confiance, à énoncer comme une promesse.
+5. **Ne jamais se positionner sur « l'état du bateau »** (terrain de Seanapps et de la télémétrie), mais sur **« la mémoire des interventions et le partage entre ceux qui entretiennent »**.
+6. **La dispersion fonctionnelle est le piège documenté du secteur** (Ready4Sea couvre désormais les piscines). Xaman occupe la place laissée libre : **un bateau, à bord, à deux.**
+7. **Les prix du marché plafonnent l'ambition tarifaire** : < 30 €/an (Ready4Sea), 49 €/an (Boatwise), 60 €/an (BoatOn). Toute offre payante future doit se situer dans cette fourchette et ne jamais faire payer le partage.
+
+**Pitch.** Xaman est le carnet d'entretien partagé des voiliers de voyage : le bateau arrive déjà rempli avec son modèle exact, une intervention se saisit en moins de trente secondes sur un iPad mouillé, l'associé voit la ligne apparaître en direct, le mécano invité ne peut rien effacer, et les données s'exportent en un clic, toujours.
+
+**À vérifier avant toute décision de pricing** (bloquant) : les tarifs exacts de VesselFile, BoatMatey, Ready4Sea Standard/Premium et Seanapps ; la granularité réelle de la base de modèles Ready4Sea (modèle exact ou catégorie) ; les avis de stores FR.
 
 ## 4. Utilisateurs et rôles
 

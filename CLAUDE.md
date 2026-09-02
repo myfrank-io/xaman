@@ -6,6 +6,7 @@ Carnet d'entretien numérique et partagé pour bateaux. PWA iPad-first. Premier 
 - `docs/SPEC.md` — cahier des charges : vision, rôles, périmètre MoSCoW, parcours, exigences, architecture, design.
 - `docs/DATA-MODEL.md` — schéma Postgres, RLS, vues, triggers. **Source de vérité du schéma.**
 - `docs/BACKLOG.md` — épics et tickets ordonnés avec DoD. Mettre à jour les cases `[ ] / [~] / [x]` au fil de l'eau.
+- `docs/AUDIT.md` — audit consolidé du 2 septembre 2026 et décisions D-xx (modèle de suivi, navigation, DA) ; **prime sur SPEC/DATA-MODEL pour les points qu'il tranche**.
 - `docs/DECISIONS.md` — journal des décisions produit ; y ajouter une ligne à chaque arbitrage.
 - `seed/` — données Xaman (bateau, checklist ORC 50, historique du carnet papier).
 - `KICKOFF.md` — procédure de démarrage du projet (infra via MCP), à exécuter une seule fois.
@@ -42,11 +43,14 @@ pnpm lint · pnpm typecheck · pnpm test · pnpm test:e2e · pnpm build
 8. **Logique de checklist en base** (vue `checklist_item_status`) ; la copie TS `src/lib/checklist-status.ts` sert à l'optimistic UI et doit rester à parité (test dédié).
 9. **Soft delete** (`deleted_at`) pour interventions, achats, sorties d'eau ; jamais de `delete` physique depuis l'UI sur ces tables.
 10. **Pas de dépendance lourde sans raison** : pas de lib de charts en V1, pas de state manager global (TanStack Query + URL state suffisent), pas d'ORM (supabase-js + types générés).
+11. **Toute création est idempotente** : UUID généré à l'ouverture du formulaire, Server Action en `upsert` sur la clé primaire, bouton occupé dès le premier tap (double tap = une seule ligne).
+12. **Couleur = tokens de `globals.css`** : une couleur de remplissage (`--x`) n'est jamais une couleur de texte (`--x-fg`) ; les couleurs de catégories (base) ne circulent jamais seules (icône + libellé) et ne colorent jamais un texte ; le laiton est réservé à la marque.
+13. **Formulaires tactiles** : jamais `type="number"` (`inputMode` + `NumericField`), dates = puces + roulette native (`DateField`), catégories = chips, prestataire = `ContactPicker`, un seul « + » par écran, jamais de saisie perdue (brouillon, formulaire conservé en cas d'échec, corbeille + Annuler).
 
 ## Conventions de code
 - Composants : `PascalCase.tsx`, un composant par fichier, Server Components par défaut, `"use client"` seulement si nécessaire.
 - Données : lectures via hooks `src/lib/queries/use-*.ts` (TanStack Query + client Supabase navigateur) ; écritures via Server Actions `src/lib/actions/*.ts` (`"use server"`, zod, client Supabase serveur, `revalidatePath` + invalidation query côté client).
-- Routes : `src/app/(app)/boats/[boatId]/…` ; le layout de `[boatId]` charge le bateau + le rôle de l'utilisateur et les expose via un contexte (`useBoat()`).
+- Routes : `src/app/(app)/boats/[boatId]/…` ; le layout de `[boatId]` charge le bateau + le rôle de l'utilisateur et les expose via un contexte (`useBoat()`). Navigation V1 : 4 onglets (Tableau de bord, Checklist, Journal, Bateau), feuille « Plus », menu compte — voir `AUDIT.md D8`. Chemins construits uniquement via `src/lib/queries/boat-routes.ts`.
 - Rôles côté UI : helper `can(role, 'write' | 'contribute' | 'manageMembers' | 'deleteBoat')` dans `src/lib/permissions.ts`, miroir des fonctions SQL (`write` = owner/editor, couvre aussi la mise à la corbeille et l'export ; `contribute` = + pro sur ses propres lignes ; `manageMembers` et `deleteBoat` = owner). L'admin plateforme est traité comme owner.
 - Authentification : code OTP à 6 chiffres saisi dans l'app (mode principal), lien magique en secours ; jamais de mot de passe.
 - Dates : `date-fns` avec locale `fr` ; stockage `yyyy-MM-dd` pour les `date`.
