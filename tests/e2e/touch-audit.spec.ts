@@ -16,6 +16,10 @@ const PAGES = [
   "/dev/ui/boat/engine-form",
   "/dev/ui/boat/equipment-form",
   "/dev/ui/boat/settings",
+  "/dev/ui/supplies",
+  "/dev/ui/haul-outs",
+  "/dev/ui/logs",
+  "/dev/ui/review",
 ];
 
 const MIN_TARGET = 44;

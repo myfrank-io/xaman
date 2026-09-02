@@ -31,7 +31,7 @@ export function ChecklistMatches({
   if (items.length === 0) return null;
 
   return (
-    <fieldset className="flex flex-col gap-2">
+    <fieldset className="flex min-w-0 flex-col gap-2">
       <legend className="text-label font-semibold text-ink-2">{t("title")}</legend>
       <p className="mb-1 text-caption text-ink-3">{t("help")}</p>
       <ul className="overflow-hidden rounded-lg border border-border bg-surface">

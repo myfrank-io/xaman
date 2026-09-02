@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 import { devUiEnabled } from "@/lib/dev-ui";
 
+import { DevShell } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 
 const DEV_BOAT_ID = "00000000-0000-4000-8000-000000000000";
@@ -163,34 +164,36 @@ export default async function DevChecklistPage() {
   if (!devUiEnabled()) notFound();
   const t = await getTranslations("checklist");
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-10 p-6">
-      <PageHeader title={t("title")} />
-      <ChecklistGrid boatId={DEV_BOAT_ID} categories={PROGRESS} />
-      <SectionCard title={t("filters.todo")} bare>
-        <TodoList
+    <DevShell>
+      <div className="flex flex-col gap-10">
+        <PageHeader title={t("title")} />
+        <ChecklistGrid boatId={DEV_BOAT_ID} categories={PROGRESS} />
+        <SectionCard title={t("filters.todo")} bare>
+          <TodoList
+            boatId={DEV_BOAT_ID}
+            rows={ROWS}
+            filter="all"
+            members={MEMBERS}
+            currentUserId="u-xav"
+            currentUserName="Xavier Marin"
+            canContribute
+          />
+        </SectionCard>
+        <CategoryItems
           boatId={DEV_BOAT_ID}
+          category={{ id: SAILS.id, name: SAILS.name, color: SAILS.color, icon: SAILS.icon }}
           rows={ROWS}
-          filter="all"
+          completions={COMPLETIONS}
+          disabledItems={[{ id: "d1", label: "Spi symétrique (vendu)" }]}
+          progress={0.85}
           members={MEMBERS}
           currentUserId="u-xav"
           currentUserName="Xavier Marin"
+          canWrite
           canContribute
+          filter="all"
         />
-      </SectionCard>
-      <CategoryItems
-        boatId={DEV_BOAT_ID}
-        category={{ id: SAILS.id, name: SAILS.name, color: SAILS.color, icon: SAILS.icon }}
-        rows={ROWS}
-        completions={COMPLETIONS}
-        disabledItems={[{ id: "d1", label: "Spi symétrique (vendu)" }]}
-        progress={0.85}
-        members={MEMBERS}
-        currentUserId="u-xav"
-        currentUserName="Xavier Marin"
-        canWrite
-        canContribute
-        filter="all"
-      />
-    </div>
+      </div>
+    </DevShell>
   );
 }
