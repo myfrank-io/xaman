@@ -1017,5 +1017,208 @@
       "none": "Aucune sortie de l'eau enregistrée."
     },
     "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}"
+  },
+  "purchaseKind": {
+    "gas": "Gaz",
+    "part": "Pièce",
+    "service": "Prestation",
+    "other": "Autre"
+  },
+  "supplies": {
+    "title": "Dépenses",
+    "subtitle": "Ce que le bateau a coûté, et ce qui a été acheté.",
+    "tabs": {
+      "expenses": "Dépenses",
+      "purchases": "Achats",
+      "stock": "Stock"
+    },
+    "stock": {
+      "title": "Stock",
+      "soon": "Le stock arrive bientôt.",
+      "description": "Vous y tiendrez la liste des pièces à bord, leur quantité et leur seuil d'alerte."
+    },
+    "period": {
+      "label": "Période",
+      "all": "Toute la période",
+      "rolling12": "12 derniers mois",
+      "year": "Année civile",
+      "custom": "Personnalisée",
+      "from": "Du",
+      "to": "Au",
+      "range": "Du {from} au {to}"
+    },
+    "expenses": {
+      "title": "Dépenses",
+      "total": "Total de la période",
+      "lines": "{count, plural, =0 {aucune ligne} one {# ligne} other {# lignes}}",
+      "sources": {
+        "label": "Source",
+        "log": "Interventions",
+        "purchase": "Achats",
+        "haul_out": "Sorties de l'eau"
+      },
+      "sourceSingular": {
+        "log": "Intervention",
+        "purchase": "Achat",
+        "haul_out": "Sortie de l'eau"
+      },
+      "uncategorized": "Sans catégorie",
+      "byCategory": "Par catégorie",
+      "comparison": {
+        "label": "Période précédente",
+        "up": "La période en cours dépasse de {percent}",
+        "down": "La période en cours est inférieure de {percent}",
+        "flat": "La période en cours est au même niveau",
+        "none": "Aucune dépense sur la période précédente"
+      },
+      "cumulative": {
+        "label": "Cumul depuis l'origine",
+        "since": "Depuis le {date}",
+        "none": "Aucune dépense enregistrée"
+      },
+      "export": "Exporter en CSV",
+      "exporting": "Export en cours…",
+      "exported": "Export téléchargé",
+      "emptyTitle": "Aucune dépense sur cette période",
+      "emptyDescription": "Les coûts des interventions, les achats et les sorties de l'eau apparaissent ici dès qu'un montant est saisi.",
+      "emptyFiltered": "Aucune dépense pour ces filtres.",
+      "clearFilters": "Effacer les filtres",
+      "csv": {
+        "date": "Date",
+        "source": "Source",
+        "label": "Libellé",
+        "category": "Catégorie",
+        "amount": "Montant (EUR)",
+        "filename": "xaman-depenses-{from}-{to}.csv"
+      }
+    },
+    "purchases": {
+      "title": "Achats",
+      "new": "Nouvel achat",
+      "edit": "Modifier l'achat",
+      "saved": "Achat enregistré",
+      "count": "{count, plural, =0 {aucun achat} one {# achat} other {# achats}}",
+      "loadMore": "Charger plus",
+      "emptyTitle": "Aucun achat",
+      "emptyDescription": "Les achats gardent la trace de ce qui est entré à bord : gaz, pièces, prestations.",
+      "emptyFiltered": "Aucun achat pour ces filtres.",
+      "clearFilters": "Effacer les filtres",
+      "noSupplier": "Sans fournisseur",
+      "filters": {
+        "kind": "Type",
+        "category": "Catégorie",
+        "period": "Période",
+        "allKinds": "Tous les types",
+        "allCategories": "Toutes les catégories"
+      },
+      "review": {
+        "badge": "À vérifier",
+        "action": "Marquer comme vérifié",
+        "short": "Vérifier",
+        "done": "Achat vérifié",
+        "help": "Cette ligne vient du carnet papier : vérifiez le montant et la date."
+      },
+      "trash": {
+        "action": "Mettre à la corbeille",
+        "title": "Mettre cet achat à la corbeille ?",
+        "description": "L'achat quitte les listes et les dépenses. Il reste 30 jours dans la corbeille.",
+        "done": "Achat mis à la corbeille",
+        "restored": "Achat restauré"
+      },
+      "fields": {
+        "kind": "Type",
+        "designation": "Désignation",
+        "amount": "Montant",
+        "purchasedAt": "Date",
+        "category": "Catégorie",
+        "noCategory": "Sans catégorie",
+        "supplier": "Fournisseur",
+        "supplierName": "Nom du fournisseur",
+        "bottleType": "Type de bouteille",
+        "log": "Intervention liée",
+        "notes": "Notes"
+      },
+      "supplierNameHelp": "Le lieu ou l'enseigne, quand le fournisseur n'est pas dans l'annuaire.",
+      "noLog": "Aucune",
+      "logHelp": "Rattachez cet achat à une intervention du journal.",
+      "suggestions": "Déjà saisi"
+    },
+    "gas": {
+      "title": "Gaz",
+      "open": "Bouteille de gaz",
+      "dialogTitle": "Changement de bouteille de gaz",
+      "dialogHelp": "Le type et le fournisseur reprennent le dernier changement.",
+      "designation": "Bouteille de gaz",
+      "designationTyped": "Bouteille de gaz — {type}",
+      "bottleType": "Type de bouteille",
+      "otherType": "Autre type",
+      "otherTypeLabel": "Nom du type",
+      "previousChange": "Précédent changement : {date}",
+      "saved": "Bouteille enregistrée",
+      "savedSince": "{days} jours depuis la précédente",
+      "facts": {
+        "title": "Bouteilles de gaz",
+        "last": "Dernière bouteille il y a {days} j",
+        "lastToday": "Dernière bouteille aujourd'hui",
+        "lastDate": "le {date}",
+        "never": "Aucune bouteille enregistrée",
+        "neverHelp": "Enregistrez un changement : la moyenne se construit toute seule.",
+        "average": "Intervalle moyen : {days} j sur {count, plural, one {# intervalle} other {# intervalles}}",
+        "noAverage": "Intervalle moyen : disponible au deuxième changement",
+        "next": "Prochaine estimée vers le {date} (estimé)",
+        "noEstimate": "Estimation à partir de 3 intervalles",
+        "total": "Total dépensé : {amount}"
+      }
+    }
+  },
+  "haulOuts": {
+    "title": "Sorties de l'eau",
+    "subtitle": "Chaque carénage, ses travaux et les interventions rattachées.",
+    "new": "Nouvelle sortie de l'eau",
+    "edit": "Modifier la sortie de l'eau",
+    "saved": "Sortie de l'eau enregistrée",
+    "count": "{count, plural, =0 {aucune sortie} one {# sortie} other {# sorties}}",
+    "ashore": "À terre",
+    "ashoreSince": "À terre depuis {days, plural, one {# jour} other {# jours}}",
+    "duration": "{days, plural, one {# jour} other {# jours}} à terre",
+    "stillAshore": "Toujours à terre",
+    "dates": "Sortie {start} · remise à l'eau {end}",
+    "noYard": "Chantier non renseigné",
+    "emptyTitle": "Aucune sortie de l'eau",
+    "emptyDescription": "Une sortie de l'eau regroupe le chantier, les travaux et les interventions faites pendant le carénage.",
+    "fields": {
+      "startedAt": "Sortie",
+      "endedAt": "Remise à l'eau",
+      "yard": "Chantier",
+      "yardName": "Nom du chantier",
+      "works": "Travaux",
+      "cost": "Coût du chantier"
+    },
+    "endedHelp": "Laissez vide tant que le bateau est à terre.",
+    "yardNameHelp": "Le nom du chantier, quand il n'est pas dans l'annuaire.",
+    "worksHelp": "Ce qui a été fait pendant la sortie : carène, anodes, passe-coques…",
+    "noWorks": "Aucun travail décrit.",
+    "errors": {
+      "endBeforeStart": "La remise à l'eau doit être après la sortie."
+    },
+    "logs": {
+      "title": "Interventions pendant cette sortie",
+      "add": "Intervention pendant cette sortie",
+      "count": "{count, plural, =0 {aucune intervention} one {# intervention} other {# interventions}}",
+      "empty": "Aucune intervention rattachée pour l'instant."
+    },
+    "totals": {
+      "title": "Coût total de la sortie",
+      "yard": "Chantier",
+      "logs": "Interventions",
+      "total": "Total"
+    },
+    "trash": {
+      "action": "Mettre à la corbeille",
+      "title": "Mettre cette sortie de l'eau à la corbeille ?",
+      "description": "Les interventions rattachées restent dans le journal. La sortie reste 30 jours dans la corbeille.",
+      "done": "Sortie de l'eau mise à la corbeille",
+      "restored": "Sortie de l'eau restaurée"
+    }
   }
 }

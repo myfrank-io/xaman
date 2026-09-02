@@ -25,6 +25,7 @@ import {
   newContactPath,
   newHaulOutPath,
   newLogPath,
+  newPurchasePath,
   suppliesPath,
 } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ function entryHref(key: CreateKey, boatId: string): string {
     case "gas":
       return suppliesPath(boatId, "gas");
     case "purchase":
-      return suppliesPath(boatId, "purchases");
+      return newPurchasePath(boatId);
     case "haulOut":
       return newHaulOutPath(boatId);
   }
@@ -95,7 +96,10 @@ export function PrimaryActionSheet({
     (["trash", "members", "settings"].includes(segments[0] ?? "") ||
       (segments[0] === "logs" && segments.length > 1) ||
       (segments[0] === "checklist" && segments.length > 2) ||
-      (segments[0] === "contacts" && segments.length > 1));
+      (segments[0] === "contacts" && segments.length > 1) ||
+      // Haul-out sheet and purchase form: each carries its own creation control.
+      (segments[0] === "haul-outs" && segments.length > 1) ||
+      (segments[0] === "supplies" && segments.length > 1));
 
   // Direct target when the screen has one obvious object.
   let directHref: string | null = null;
@@ -105,6 +109,13 @@ export function PrimaryActionSheet({
   }
   if (segments[0] === "contacts" && segments.length === 1 && role !== "pro") {
     directHref = newContactPath(boatId);
+  }
+  // « Dépenses » creates a purchase, « Sorties de l'eau » a haul-out: one obvious object each.
+  if (segments[0] === "supplies" && segments.length === 1 && role !== "pro") {
+    directHref = newPurchasePath(boatId);
+  }
+  if (segments[0] === "haul-outs" && segments.length === 1 && role !== "pro") {
+    directHref = newHaulOutPath(boatId);
   }
 
   const keys = role === "pro" ? PRO_KEYS : ALL_KEYS;
