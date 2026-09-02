@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PlusIcon } from "lucide-react";
 
 import { BoatProvider } from "@/components/boat/BoatProvider";
+import { RealtimeBridge } from "@/components/boat/RealtimeBridge";
 import { AppShell } from "@/components/layout/AppShell";
 import type { NavItem, NavKey } from "@/components/layout/nav";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export default async function BoatLayout({
 
   return (
     <BoatProvider boat={boat} role={boatRole}>
+      <RealtimeBridge boatId={boat.id} />
       <AppShell
         boatName={boat.name}
         boatSubtitle={[boat.builder, boat.model].filter(Boolean).join(" ")}

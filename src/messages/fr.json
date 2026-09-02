@@ -139,5 +139,22 @@
       "title": "Vous n'avez pas encore de bateau",
       "description": "Demandez une invitation au propriétaire du bateau : vous recevrez un e-mail avec un lien pour le rejoindre."
     }
+  },
+  "errors": {
+    "unknown": "Une erreur est survenue. Réessayez.",
+    "forbidden": "Vous n'avez pas le droit de faire cette action sur ce bateau.",
+    "duplicate": "Cet élément existe déjà.",
+    "reference": "Cet élément est lié à d'autres données et ne peut pas être modifié ainsi.",
+    "invalid": "Certains champs sont invalides.",
+    "offline": "Vous êtes hors ligne : la modification sera possible au retour du réseau.",
+    "last_owner": "Un bateau doit garder au moins un propriétaire. Nommez d'abord un autre propriétaire.",
+    "invitation_not_found": "Cette invitation n'existe pas.",
+    "invitation_accepted": "Cette invitation a déjà été utilisée.",
+    "invitation_revoked": "Cette invitation a été annulée.",
+    "invitation_expired": "Cette invitation a expiré. Demandez-en une nouvelle.",
+    "invitation_email_mismatch": "Cette invitation a été envoyée à une autre adresse e-mail. Connectez-vous avec l'adresse qui l'a reçue.",
+    "engine_hours_required": "Les heures moteur sont obligatoires pour ce point.",
+    "template_not_found": "Modèle de checklist introuvable.",
+    "log_not_found": "Intervention introuvable."
   }
 }
