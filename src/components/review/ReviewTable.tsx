@@ -62,36 +62,38 @@ export function ReviewTable({
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
 
-  const [logState, setLogState] = useState<Record<string, LogState>>(() =>
-    Object.fromEntries(
-      logs.map((log) => [
-        log.id,
-        {
-          performedAt: log.performedAt,
-          hours: Object.fromEntries(
-            log.hours.map((entry) => [entry.engineId, numberToInput(entry.bookHours)]),
-          ),
-          ignored: {},
-        },
-      ]),
+  // The state is seeded from the paper values; a row that appears later (another device
+  // importing more lines) falls back on its own values instead of crashing on a missing key.
+  const initialLog = (log: ReviewLog): LogState => ({
+    performedAt: log.performedAt,
+    hours: Object.fromEntries(
+      log.hours.map((entry) => [entry.engineId, numberToInput(entry.bookHours)]),
     ),
+    ignored: {},
+  });
+  const initialPurchase = (purchase: ReviewPurchase): PurchaseState => ({
+    purchasedAt: purchase.purchasedAt,
+    designation: purchase.designation,
+    amount: numberToInput(purchase.amount),
+    keep: true,
+  });
+
+  const [logState, setLogState] = useState<Record<string, LogState>>(() =>
+    Object.fromEntries(logs.map((log) => [log.id, initialLog(log)])),
   );
   const [purchaseState, setPurchaseState] = useState<Record<string, PurchaseState>>(() =>
-    Object.fromEntries(
-      purchases.map((purchase) => [
-        purchase.id,
-        {
-          purchasedAt: purchase.purchasedAt,
-          designation: purchase.designation,
-          amount: numberToInput(purchase.amount),
-          keep: true,
-        },
-      ]),
-    ),
+    Object.fromEntries(purchases.map((purchase) => [purchase.id, initialPurchase(purchase)])),
   );
 
+  const stateOf = (log: ReviewLog): LogState => logState[log.id] ?? initialLog(log);
+  const stateOfPurchase = (purchase: ReviewPurchase): PurchaseState =>
+    purchaseState[purchase.id] ?? initialPurchase(purchase);
+
   function patchLog(id: string, patch: Partial<LogState>) {
-    setLogState((state) => ({ ...state, [id]: { ...state[id]!, ...patch } }));
+    setLogState((state) => {
+      const current = state[id] ?? initialLog(logs.find((log) => log.id === id)!);
+      return { ...state, [id]: { ...current, ...patch } };
+    });
   }
 
   function submit(event: React.FormEvent) {
@@ -101,7 +103,7 @@ export function ReviewTable({
       const result = await submitReview({
         boatId,
         logs: logs.map((log) => {
-          const state = logState[log.id]!;
+          const state = stateOf(log);
           return {
             logId: log.id,
             performedAt: state.performedAt,
@@ -114,9 +116,9 @@ export function ReviewTable({
           };
         }),
         purchases: purchases
-          .filter((purchase) => purchaseState[purchase.id]?.keep)
+          .filter((purchase) => stateOfPurchase(purchase).keep)
           .map((purchase) => {
-            const state = purchaseState[purchase.id]!;
+            const state = stateOfPurchase(purchase);
             return {
               purchaseId: purchase.id,
               purchasedAt: state.purchasedAt,
@@ -204,7 +206,7 @@ export function ReviewTable({
               </thead>
               <tbody>
                 {logs.map((log) => {
-                  const state = logState[log.id]!;
+                  const state = stateOf(log);
                   return (
                     <tr key={log.id} className="border-b border-border align-top last:border-b-0">
                       <td className="px-4 py-4">
@@ -289,11 +291,11 @@ export function ReviewTable({
               </thead>
               <tbody>
                 {purchases.map((purchase) => {
-                  const state = purchaseState[purchase.id]!;
+                  const state = stateOfPurchase(purchase);
                   const patch = (next: Partial<PurchaseState>) =>
                     setPurchaseState((current) => ({
                       ...current,
-                      [purchase.id]: { ...current[purchase.id]!, ...next },
+                      [purchase.id]: { ...(current[purchase.id] ?? state), ...next },
                     }));
                   return (
                     <tr key={purchase.id} className="border-b border-border last:border-b-0">
@@ -354,7 +356,7 @@ export function ReviewTable({
           {pending
             ? tc("saving")
             : t("submit", {
-                count: logs.length + purchases.filter((row) => purchaseState[row.id]?.keep).length,
+                count: logs.length + purchases.filter((row) => stateOfPurchase(row).keep).length,
               })}
         </Button>
       </div>
