@@ -155,6 +155,98 @@
     "invitation_email_mismatch": "Cette invitation a été envoyée à une autre adresse e-mail. Connectez-vous avec l'adresse qui l'a reçue.",
     "engine_hours_required": "Les heures moteur sont obligatoires pour ce point.",
     "template_not_found": "Modèle de checklist introuvable.",
-    "log_not_found": "Intervention introuvable."
+    "log_not_found": "Intervention introuvable.",
+    "invitation_email": "L'invitation est enregistrée mais l'e-mail n'a pas pu être envoyé. Vérifiez l'adresse ou réessayez."
+  },
+  "members": {
+    "title": "Membres",
+    "subtitle": "Qui a accès au carnet de ce bateau, et avec quels droits.",
+    "you": "(vous)",
+    "roleLabel": "Rôle",
+    "roleUpdated": "Rôle mis à jour.",
+    "removed": "Membre retiré. Ses interventions restent dans le journal.",
+    "remove": "Retirer",
+    "validUntil": "Accès jusqu'au {date}",
+    "list": {
+      "title": "{count, plural, one {# membre} other {# membres}}"
+    },
+    "roles": {
+      "owner": "Propriétaire",
+      "editor": "Éditeur",
+      "pro": "Professionnel",
+      "viewer": "Lecteur",
+      "renter": "Locataire"
+    },
+    "roleHelp": {
+      "owner": "Tout, y compris la gestion des membres et la suppression du bateau.",
+      "editor": "Toutes les données du bateau, sans la gestion des membres.",
+      "pro": "Lit tout, enregistre ses propres interventions et cochages, ne supprime rien, ne voit pas les membres.",
+      "viewer": "Lecture seule."
+    },
+    "removeDialog": {
+      "title": "Retirer {name} ?",
+      "description": "La personne perd l'accès au bateau immédiatement. Les interventions qu'elle a enregistrées restent dans le journal."
+    },
+    "invite": {
+      "button": "Inviter",
+      "title": "Inviter une personne",
+      "description": "Elle recevra un e-mail avec un lien valable 14 jours, puis se connectera par code.",
+      "email": "Adresse e-mail",
+      "submit": "Envoyer l'invitation",
+      "sent": "Invitation envoyée à {email}.",
+      "proTitle": "Ce que verra ce professionnel",
+      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions resteront dans le journal."
+    },
+    "invitations": {
+      "title": "Invitations en attente",
+      "expires": "expire le {date}",
+      "expired": "expirée",
+      "revoke": "Annuler",
+      "revoked": "Invitation annulée.",
+      "status": {
+        "pending": "En attente",
+        "expired": "Expirée",
+        "accepted": "Acceptée",
+        "revoked": "Annulée"
+      }
+    }
+  },
+  "invite": {
+    "title": "Invitation",
+    "summary": "{inviter} vous invite en tant que {role}.",
+    "signInHint": "Connectez-vous avec l'adresse {email} pour rejoindre le bateau.",
+    "accept": "Rejoindre {boat}",
+    "invalid": {
+      "title": "Invitation introuvable",
+      "description": "Ce lien n'est pas valable. Demandez une nouvelle invitation au propriétaire du bateau."
+    },
+    "mismatch": {
+      "title": "Ce n'est pas la bonne adresse",
+      "description": "Vous êtes connecté avec {current} mais l'invitation a été envoyée à {invited}. Déconnectez-vous puis reconnectez-vous avec cette adresse."
+    },
+    "status": {
+      "accepted": "Cette invitation a déjà été acceptée.",
+      "revoked": "Cette invitation a été annulée.",
+      "expired": "Cette invitation a expiré. Demandez-en une nouvelle."
+    }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "identity": "Identité",
+    "fullName": "Nom affiché",
+    "locale": "Langue",
+    "locales": {
+      "fr": "Français"
+    },
+    "saved": "Profil enregistré.",
+    "delete": {
+      "title": "Supprimer mon compte",
+      "description": "Votre compte est supprimé définitivement. Les interventions et cochages que vous avez enregistrés restent dans les carnets des bateaux. Si vous êtes le seul propriétaire d'un bateau, nommez d'abord un autre propriétaire.",
+      "button": "Supprimer mon compte",
+      "dialogTitle": "Confirmer la suppression",
+      "dialogDescription": "Cette action est irréversible. Tapez {keyword} pour confirmer.",
+      "confirmLabel": "Confirmation",
+      "keyword": "SUPPRIMER"
+    }
   }
 }
