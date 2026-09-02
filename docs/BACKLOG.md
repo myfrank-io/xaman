@@ -40,7 +40,7 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 ## E3 — Journal des interventions
 
-- [ ] **E3-1 (M, 1)** Migration : vues `maintenance_logs_view` et `maintenance_logs_trash_view` (`security_invoker`), fonction `purge_trash`, trigger `sync_log_readings_date`.
+- [x] **E3-1 (M, 1)** Migration : vues `maintenance_logs_view` et `maintenance_logs_trash_view` (`security_invoker`), fonction `purge_trash`, trigger `sync_log_readings_date`.
 - [ ] **E3-2 (M, 3)** Liste `/boats/[boatId]/logs` : cards (titre, badge catégorie coloré, badge statut, date, coût, prestataire, badge « À vérifier »), tri date desc, **filtres** catégorie + statut (multi-sélection, persistés dans l'URL), **recherche** texte (debounce, trigram), pagination infinie. État vide illustré.
 - [ ] **E3-3 (M, 3)** Formulaire création/édition (`react-hook-form` + zod partagé avec la Server Action) : titre avec suggestions des titres existants, catégorie (obligatoire), statut, priorité, date, prochaine échéance, **un champ heures par moteur actif** pré-rempli avec les heures courantes, coût, prestataire (select annuaire + « Nous-mêmes »), notes. À l'enregistrement : upsert log + upsert `engine_hour_readings` sur `(maintenance_log_id, engine_id)` (source `maintenance_log`). Optimistic UI.
 - [ ] **E3-4 (M, 2)** Détail `/logs/[logId]` : toutes les infos, heures moteur, pièces jointes (E10-1), achats liés, cochages de checklist liés, sortie de l'eau liée, boutons Modifier / Dupliquer (E10-3) / Mettre à la corbeille.
@@ -50,8 +50,8 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 ## E4 — Checklist d'entretien
 
-- [ ] **E4-1 (M, 2)** Migration : fonction `apply_checklist_template` (idempotente, `p_engine_id`), triggers `check_completion_hours` et `sync_engine_hours_from_completion`, vues `checklist_item_status` et `checklist_category_progress` (`security_invoker`, `make_interval`, `nullif`). Tests SQL (pgTAP ou Vitest) sur la vue avec le jeu de cas `tests/fixtures/checklist-status-cases.json` (jamais fait / mois seul / heures seul / les deux / compteur inconnu / sans intervalle / fins de mois).
-- [ ] **E4-2 (M, 2)** `src/lib/checklist-status.ts` : même logique en TS (`date-fns/addMonths`) + test de parité avec la vue sur le même jeu de cas.
+- [x] **E4-1 (M, 2)** Migration : fonction `apply_checklist_template` (idempotente, `p_engine_id`), triggers `check_completion_hours` et `sync_engine_hours_from_completion`, vues `checklist_item_status` et `checklist_category_progress` (`security_invoker`, `make_interval`, `nullif`). Tests SQL (pgTAP ou Vitest) sur la vue avec le jeu de cas `tests/fixtures/checklist-status-cases.json` (jamais fait / mois seul / heures seul / les deux / compteur inconnu / sans intervalle / fins de mois).
+- [x] **E4-2 (M, 2)** `src/lib/checklist-status.ts` : même logique en TS (`date-fns/addMonths`) + test de parité avec la vue sur le même jeu de cas.
 - [ ] **E4-3 (M, 3)** Écran catégories `/boats/[boatId]/checklist` : grille des catégories actives (couleur, icône, barre de progression ou « — », compteur retard), tri par retard desc puis ordre.
 - [ ] **E4-4 (M, 3)** Écran points `/checklist/[categoryId]` : liste triée (en retard → bientôt → à faire → ok), chaque ligne : libellé, intervalle, dernière réalisation (date, qui), état coloré, bouton **Fait**. Tap sur la ligne → détail déroulé : description, **actions détaillées** (étapes), historique des réalisations. Filtre « À traiter » (= tout sauf OK). Mention « compteur inconnu » si le moteur lié n'a aucun relevé.
 - [ ] **E4-5 (M, 2)** Dialogue « Fait » : date (défaut aujourd'hui), qui (membres + texte libre), heures moteur si `engine_id` (pré-remplies, **obligatoires** si intervalle en heures), note → `checklist_completions` (+ relevé d'heures par trigger). Optimistic UI, la barre de progression se met à jour.

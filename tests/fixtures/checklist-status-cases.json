@@ -1,0 +1,290 @@
+[
+  {
+    "name": "never done",
+    "today": "2026-09-02",
+    "lastCompletedAt": null,
+    "intervalMonths": 6,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": null,
+      "dueHours": null,
+      "daysRemaining": null,
+      "hoursRemaining": null,
+      "state": "never"
+    }
+  },
+  {
+    "name": "months only, ok",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-06-01",
+    "intervalMonths": 6,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2026-12-01",
+      "dueHours": null,
+      "daysRemaining": 90,
+      "hoursRemaining": null,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "months only, soon (30 days)",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-04-02",
+    "intervalMonths": 6,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2026-10-02",
+      "dueHours": null,
+      "daysRemaining": 30,
+      "hoursRemaining": null,
+      "state": "soon"
+    }
+  },
+  {
+    "name": "months only, due today is soon",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-03-02",
+    "intervalMonths": 6,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2026-09-02",
+      "dueHours": null,
+      "daysRemaining": 0,
+      "hoursRemaining": null,
+      "state": "soon"
+    }
+  },
+  {
+    "name": "months only, overdue",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2025-01-15",
+    "intervalMonths": 12,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2026-01-15",
+      "dueHours": null,
+      "daysRemaining": -230,
+      "hoursRemaining": null,
+      "state": "overdue"
+    }
+  },
+  {
+    "name": "hours only, ok",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-01-01",
+    "intervalMonths": null,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": 600,
+    "expected": {
+      "dueAt": null,
+      "dueHours": 750,
+      "daysRemaining": null,
+      "hoursRemaining": 150,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "hours only, soon (25 h)",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-01-01",
+    "intervalMonths": null,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": 725,
+    "expected": {
+      "dueAt": null,
+      "dueHours": 750,
+      "daysRemaining": null,
+      "hoursRemaining": 25,
+      "state": "soon"
+    }
+  },
+  {
+    "name": "hours only, overdue",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-01-01",
+    "intervalMonths": null,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": 760.5,
+    "expected": {
+      "dueAt": null,
+      "dueHours": 750,
+      "daysRemaining": null,
+      "hoursRemaining": -10.5,
+      "state": "overdue"
+    }
+  },
+  {
+    "name": "both: hours reached first",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-06-01",
+    "intervalMonths": 12,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": 751,
+    "expected": {
+      "dueAt": "2027-06-01",
+      "dueHours": 750,
+      "daysRemaining": 272,
+      "hoursRemaining": -1,
+      "state": "overdue"
+    }
+  },
+  {
+    "name": "both: date reached first",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2025-08-01",
+    "intervalMonths": 12,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": 520,
+    "expected": {
+      "dueAt": "2026-08-01",
+      "dueHours": 750,
+      "daysRemaining": -32,
+      "hoursRemaining": 230,
+      "state": "overdue"
+    }
+  },
+  {
+    "name": "both: neither reached, soon by hours",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-06-01",
+    "intervalMonths": 12,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": 730,
+    "expected": {
+      "dueAt": "2027-06-01",
+      "dueHours": 750,
+      "daysRemaining": 272,
+      "hoursRemaining": 20,
+      "state": "soon"
+    }
+  },
+  {
+    "name": "unknown counter: hour deadline ignored",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-06-01",
+    "intervalMonths": 12,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2027-06-01",
+      "dueHours": 750,
+      "daysRemaining": 272,
+      "hoursRemaining": null,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "unknown counter, hours only: ok until a reading exists",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-06-01",
+    "intervalMonths": null,
+    "lastEngineHours": 500,
+    "intervalHours": 250,
+    "currentHours": null,
+    "expected": {
+      "dueAt": null,
+      "dueHours": 750,
+      "daysRemaining": null,
+      "hoursRemaining": null,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "no interval, done once: ok forever",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2024-01-01",
+    "intervalMonths": null,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": null,
+      "dueHours": null,
+      "daysRemaining": null,
+      "hoursRemaining": null,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "end of month: 31/01 + 1 month = 28/02",
+    "today": "2026-02-10",
+    "lastCompletedAt": "2026-01-31",
+    "intervalMonths": 1,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2026-02-28",
+      "dueHours": null,
+      "daysRemaining": 18,
+      "hoursRemaining": null,
+      "state": "soon"
+    }
+  },
+  {
+    "name": "end of month: 31/08 + 6 months = 28/02",
+    "today": "2026-09-02",
+    "lastCompletedAt": "2026-08-31",
+    "intervalMonths": 6,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2027-02-28",
+      "dueHours": null,
+      "daysRemaining": 179,
+      "hoursRemaining": null,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "leap year: 29/02/2024 + 12 months = 28/02/2025",
+    "today": "2025-01-01",
+    "lastCompletedAt": "2024-02-29",
+    "intervalMonths": 12,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2025-02-28",
+      "dueHours": null,
+      "daysRemaining": 58,
+      "hoursRemaining": null,
+      "state": "ok"
+    }
+  },
+  {
+    "name": "leap year: 31/01/2024 + 1 month = 29/02/2024",
+    "today": "2024-02-01",
+    "lastCompletedAt": "2024-01-31",
+    "intervalMonths": 1,
+    "lastEngineHours": null,
+    "intervalHours": null,
+    "currentHours": null,
+    "expected": {
+      "dueAt": "2024-02-29",
+      "dueHours": null,
+      "daysRemaining": 28,
+      "hoursRemaining": null,
+      "state": "soon"
+    }
+  }
+]

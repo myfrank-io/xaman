@@ -580,3 +580,15 @@ Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `ch
 - Index supplémentaires sur `boat_id` (+ FK fréquentes) de toutes les tables métier, pour les politiques RLS et les listes ; index partiels sur `maintenance_logs.haul_out_id`, `checklist_items.engine_id`, `checklist_completions.maintenance_log_id`, `purchases.maintenance_log_id`.
 - Trigger `on_auth_user_email_updated` : synchronise `profiles.email` quand l'e-mail change dans `auth.users` ; `handle_new_user` lit `full_name` / `avatar_url` dans `raw_user_meta_data` (renseignés par le seed via `inviteUserByEmail`).
 - Supabase fournit Postgres 17 ; la validation locale sans Docker se fait sur Postgres 16 avec `tests/support/supabase-shim.sql` (aucune fonctionnalité spécifique à la 17 n'est utilisée).
+
+## 11. Notes d'implémentation (migration `0003_logic.sql`)
+- La logique d'état est isolée dans la fonction pure `checklist_compute_status(last_completed_at, interval_months, last_engine_hours, interval_hours, current_hours, today)` (type `checklist_state`), utilisée par la vue `checklist_item_status` avec `current_date` et testée en parité avec `src/lib/checklist-status.ts` sur `tests/fixtures/checklist-status-cases.json` (18 cas dont fins de mois et années bissextiles).
+- `checklist_item_status` expose en plus `last_completion_id`, `last_note`, `current_hours` ; `last_completed_by_name` = texte libre si renseigné, sinon nom (ou e-mail) du profil.
+- `checklist_category_progress` expose aussi `name`, `color`, `icon`, `sort_order` de la catégorie (une seule requête pour la grille).
+- `maintenance_logs_view` ajoute `category_is_active`, `created_by_name`, `purchases_count` ; `maintenance_logs_trash_view` expose `deleted_by` (= `updated_by`) et son nom.
+- `expenses_by_category` ajoute `category_color` et `label` (titre / désignation / chantier).
+- `apply_checklist_template` : `security definer`, réservé à `can_write_boat` ; les catégories existantes ne sont pas écrasées (seul `template_category_id` est relié) ; les points existants sont conservés (`on conflict do nothing`) ; `external_ref` d'un point par moteur = `item_ref:engine_ref` (id du moteur si `external_ref` absent).
+- `mark_log_reviewed` : `security definer`, réservé à `can_write_boat` ; clés de `pending_engine_hours` = uuid de moteurs du bateau (sinon erreur) ; relevés `source = 'import'` datés de `performed_at`.
+- `sync_engine_hours_from_completion` est `security definer` : il est aussi déclenché par la cascade `on delete set null` quand une intervention est supprimée par un autre membre que l'auteur du cochage.
+- `purge_trash()` n'est exécutable que par `service_role` ; planifiée par `pg_cron` (`xaman-purge-trash`, 03:15 UTC) uniquement si l'extension est disponible.
+- `anon` n'a plus aucun privilège sur le schéma `public` (y compris par défaut sur les objets futurs) : seules les fonctions explicitement accordées (`get_invitation_preview`) lui sont accessibles.

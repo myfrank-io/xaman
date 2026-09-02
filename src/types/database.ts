@@ -57,6 +57,13 @@ export type Database = {
             foreignKeyName: "attachments_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "attachments_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -123,6 +130,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "boat_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
           {
             foreignKeyName: "boat_categories_boat_id_fkey"
             columns: ["boat_id"]
@@ -208,6 +222,13 @@ export type Database = {
             foreignKeyName: "boat_invitations_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "boat_invitations_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -252,6 +273,13 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "boat_members_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
           {
             foreignKeyName: "boat_members_boat_id_fkey"
             columns: ["boat_id"]
@@ -430,7 +458,21 @@ export type Database = {
             foreignKeyName: "checklist_completions_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_item_status"
             referencedColumns: ["id"]
           },
           {
@@ -459,6 +501,20 @@ export type Database = {
             columns: ["maintenance_log_id"]
             isOneToOne: false
             referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_trash_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_view"
             referencedColumns: ["id"]
           },
           {
@@ -536,6 +592,13 @@ export type Database = {
             foreignKeyName: "checklist_items_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "checklist_items_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -545,6 +608,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "checklist_items_created_by_fkey"
@@ -790,6 +860,13 @@ export type Database = {
             foreignKeyName: "contacts_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "contacts_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -860,6 +937,13 @@ export type Database = {
             foreignKeyName: "engine_hour_readings_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -869,6 +953,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "checklist_completions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_checklist_completion_id_fkey"
+            columns: ["checklist_completion_id"]
+            isOneToOne: true
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["last_completion_id"]
           },
           {
             foreignKeyName: "engine_hour_readings_created_by_fkey"
@@ -889,6 +980,20 @@ export type Database = {
             columns: ["maintenance_log_id"]
             isOneToOne: false
             referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_trash_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_view"
             referencedColumns: ["id"]
           },
           {
@@ -956,6 +1061,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "engines_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
           {
             foreignKeyName: "engines_boat_id_fkey"
             columns: ["boat_id"]
@@ -1042,6 +1154,13 @@ export type Database = {
             foreignKeyName: "equipment_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "equipment_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -1051,6 +1170,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "equipment_created_by_fkey"
@@ -1124,6 +1250,13 @@ export type Database = {
           yard_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "haul_outs_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
           {
             foreignKeyName: "haul_outs_boat_id_fkey"
             columns: ["boat_id"]
@@ -1229,6 +1362,13 @@ export type Database = {
             foreignKeyName: "maintenance_logs_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -1238,6 +1378,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "maintenance_logs_contact_id_fkey"
@@ -1403,6 +1550,13 @@ export type Database = {
             foreignKeyName: "parts_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "parts_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -1412,6 +1566,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "parts_created_by_fkey"
@@ -1547,6 +1708,13 @@ export type Database = {
             foreignKeyName: "purchases_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "purchases_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -1556,6 +1724,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "purchases_created_by_fkey"
@@ -1569,6 +1744,20 @@ export type Database = {
             columns: ["maintenance_log_id"]
             isOneToOne: false
             referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_trash_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_view"
             referencedColumns: ["id"]
           },
           {
@@ -1596,10 +1785,402 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      boat_dashboard_stats: {
+        Row: {
+          boat_id: string | null
+          in_progress_logs: number | null
+          last_haul_out_at: string | null
+          low_stock_parts: number | null
+          months_since_haul_out: number | null
+          overdue_items: number | null
+          planned_logs: number | null
+          soon_items: number | null
+          urgent_logs: number | null
+          ytd_expenses: number | null
+        }
+        Insert: {
+          boat_id?: string | null
+          in_progress_logs?: never
+          last_haul_out_at?: never
+          low_stock_parts?: never
+          months_since_haul_out?: never
+          overdue_items?: never
+          planned_logs?: never
+          soon_items?: never
+          urgent_logs?: never
+          ytd_expenses?: never
+        }
+        Update: {
+          boat_id?: string | null
+          in_progress_logs?: never
+          last_haul_out_at?: never
+          low_stock_parts?: never
+          months_since_haul_out?: never
+          overdue_items?: never
+          planned_logs?: never
+          soon_items?: never
+          urgent_logs?: never
+          ytd_expenses?: never
+        }
+        Relationships: []
+      }
+      boat_invitations_safe: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          boat_id: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          id: string | null
+          invited_by: string | null
+          invited_by_name: string | null
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["boat_role"] | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boat_invitations_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boat_invitations_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "boat_invitations_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boat_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_category_progress: {
+        Row: {
+          boat_id: string | null
+          category_id: string | null
+          color: string | null
+          icon: string | null
+          name: string | null
+          never_count: number | null
+          ok_count: number | null
+          overdue_count: number | null
+          progress: number | null
+          soon_count: number | null
+          sort_order: number | null
+          total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boat_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "boat_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_item_status: {
+        Row: {
+          actions: Json | null
+          boat_id: string | null
+          category_id: string | null
+          current_hours: number | null
+          days_remaining: number | null
+          description: string | null
+          due_at: string | null
+          due_hours: number | null
+          engine_id: string | null
+          hours_remaining: number | null
+          id: string | null
+          interval_hours: number | null
+          interval_months: number | null
+          label: string | null
+          last_completed_at: string | null
+          last_completed_by: string | null
+          last_completed_by_name: string | null
+          last_completion_id: string | null
+          last_engine_hours: number | null
+          last_note: string | null
+          sort_order: number | null
+          source: Database["public"]["Enums"]["checklist_item_source"] | null
+          status: Database["public"]["Enums"]["checklist_state"] | null
+          template_item_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_completions_completed_by_fkey"
+            columns: ["last_completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "checklist_items_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "boat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "checklist_items_engine_id_fkey"
+            columns: ["engine_id"]
+            isOneToOne: false
+            referencedRelation: "engines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_template_item_id_fkey"
+            columns: ["template_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_template_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engine_current_hours: {
+        Row: {
+          boat_id: string | null
+          engine_id: string | null
+          hours: number | null
+          read_at: string | null
+          reading_id: string | null
+          source: Database["public"]["Enums"]["hour_reading_source"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engine_hour_readings_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_engine_id_fkey"
+            columns: ["engine_id"]
+            isOneToOne: false
+            referencedRelation: "engines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses_by_category: {
+        Row: {
+          amount: number | null
+          boat_id: string | null
+          category_color: string | null
+          category_id: string | null
+          category_name: string | null
+          currency: string | null
+          date: string | null
+          entity_id: string | null
+          label: string | null
+          purchase_kind: Database["public"]["Enums"]["purchase_kind"] | null
+          source: string | null
+        }
+        Relationships: []
+      }
+      maintenance_logs_trash_view: {
+        Row: {
+          boat_id: string | null
+          category_color: string | null
+          category_id: string | null
+          category_name: string | null
+          cost: number | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_by_name: string | null
+          id: string | null
+          performed_at: string | null
+          status: Database["public"]["Enums"]["log_status"] | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_logs_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "boat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_updated_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_logs_view: {
+        Row: {
+          attachments_count: number | null
+          boat_id: string | null
+          category_color: string | null
+          category_id: string | null
+          category_is_active: boolean | null
+          category_name: string | null
+          completions_count: number | null
+          contact_id: string | null
+          contact_name: string | null
+          cost: number | null
+          created_at: string | null
+          created_by: string | null
+          created_by_name: string | null
+          currency: string | null
+          engine_hours: Json | null
+          external_ref: string | null
+          haul_out_id: string | null
+          id: string | null
+          needs_review: boolean | null
+          next_due_at: string | null
+          notes: string | null
+          pending_engine_hours: Json | null
+          performed_at: string | null
+          priority: Database["public"]["Enums"]["log_priority"] | null
+          purchases_count: number | null
+          status: Database["public"]["Enums"]["log_status"] | null
+          title: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_logs_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "boat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_haul_out_id_fkey"
+            columns: ["haul_out_id"]
+            isOneToOne: false
+            referencedRelation: "haul_outs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      apply_checklist_template: {
+        Args: { p_boat_id: string; p_engine_id?: string; p_template_id: string }
+        Returns: undefined
+      }
       boat_id_from_storage_path: { Args: { p_name: string }; Returns: string }
       boat_role: {
         Args: { p_boat_id: string }
@@ -1607,6 +2188,17 @@ export type Database = {
       }
       can_contribute_boat: { Args: { p_boat_id: string }; Returns: boolean }
       can_write_boat: { Args: { p_boat_id: string }; Returns: boolean }
+      checklist_compute_status: {
+        Args: {
+          p_current_hours: number
+          p_interval_hours: number
+          p_interval_months: number
+          p_last_completed_at: string
+          p_last_engine_hours: number
+          p_today?: string
+        }
+        Returns: Record<string, unknown>
+      }
       get_invitation_preview: {
         Args: { p_token: string }
         Returns: {
@@ -1620,6 +2212,11 @@ export type Database = {
       is_boat_member: { Args: { p_boat_id: string }; Returns: boolean }
       is_boat_owner: { Args: { p_boat_id: string }; Returns: boolean }
       is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      mark_log_reviewed: {
+        Args: { p_hours_override?: Json; p_log_id: string }
+        Returns: undefined
+      }
+      purge_trash: { Args: Record<PropertyKey, never>; Returns: number }
       shares_boat_with: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
@@ -1639,6 +2236,7 @@ export type Database = {
         | "rib"
         | "other"
       checklist_item_source: "template" | "custom"
+      checklist_state: "never" | "ok" | "soon" | "overdue"
       engine_position: "port" | "starboard" | "center" | "outboard"
       hour_reading_source: "manual" | "maintenance_log" | "checklist" | "import"
       log_priority: "low" | "normal" | "high"
@@ -1796,6 +2394,7 @@ export const Constants = {
         "other",
       ],
       checklist_item_source: ["template", "custom"],
+      checklist_state: ["never", "ok", "soon", "overdue"],
       engine_position: ["port", "starboard", "center", "outboard"],
       hour_reading_source: ["manual", "maintenance_log", "checklist", "import"],
       log_priority: ["low", "normal", "high"],
