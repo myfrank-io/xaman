@@ -436,7 +436,16 @@
     "deletedOn": "Supprimé le {date} par {name}",
     "purgeIn": "supprimé définitivement dans {days} jours",
     "restore": "Restaurer",
-    "empty": "La corbeille est vide."
+    "empty": "La corbeille est vide.",
+    "sections": {
+      "logs": "Interventions",
+      "purchases": "Achats",
+      "haulOuts": "Sorties de l'eau"
+    },
+    "restored": "Élément restauré",
+    "purgeNote": "La corbeille est purgée chaque nuit : au-delà de 30 jours, la suppression est définitive.",
+    "emptyDescription": "Les éléments supprimés y restent 30 jours.",
+    "haulOutLabel": "Sortie de l'eau du {date}"
   },
   "logs": {
     "title": "Journal",
@@ -448,6 +457,116 @@
     "byCrew": "Nous-mêmes",
     "review": {
       "badge": "À vérifier"
+    },
+    "tabs": {
+      "history": "Historique",
+      "planned": "Prévu",
+      "haulOuts": "Sorties de l'eau"
+    },
+    "search": "Rechercher un titre, une note",
+    "searchLabel": "Rechercher",
+    "filters": {
+      "category": "Catégorie",
+      "allCategories": "Toutes les catégories",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "review": "À vérifier {count}",
+      "contact": "Intervenant : {name}"
+    },
+    "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
+    "loadMore": "Charger plus",
+    "newRows": "{count, plural, one {# nouvelle intervention} other {# nouvelles interventions}}",
+    "emptyPlannedTitle": "Rien de prévu",
+    "emptyPlannedDescription": "Les interventions planifiées, en cours ou urgentes apparaissent ici jusqu'à leur réalisation.",
+    "haulOutsTab": "Les sorties de l'eau ont leur propre écran.",
+    "form": {
+      "newTitle": "Nouvelle intervention",
+      "editTitle": "Modifier l'intervention",
+      "title": "Titre",
+      "category": "Catégorie",
+      "status": "Statut",
+      "date": "Date",
+      "dateFuture": "Date dans le futur.",
+      "hours": "Heures moteur",
+      "hoursOpen": "Heures moteur",
+      "hoursHelp": "dernier : {hours} le {date}",
+      "hoursNone": "aucun relevé",
+      "hoursBelow": "Valeur inférieure au dernier relevé ({hours}).",
+      "takeLast": "= reprendre",
+      "cost": "Coût",
+      "by": "Réalisé par",
+      "notes": "Notes",
+      "more": "Plus de détails",
+      "equipment": "Équipement",
+      "noEquipment": "Aucun équipement",
+      "equipmentRemoved": "déposé",
+      "haulOut": "Sortie de l'eau",
+      "noHaulOut": "Aucune sortie de l'eau",
+      "suggestions": {
+        "label": "Titres déjà utilisés",
+        "occurrences": "{count, plural, one {# fois} other {# fois}}"
+      },
+      "items": {
+        "title": "Points de checklist concernés",
+        "help": "Cochez les points que cette intervention met à jour.",
+        "needHours": "Ce point se compte en heures : saisissez les heures de {engine}."
+      },
+      "draft": {
+        "banner": "Brouillon récupéré",
+        "resume": "Reprendre",
+        "discard": "Supprimer"
+      },
+      "saved": "Intervention enregistrée",
+      "savedWithReading": "Intervention enregistrée · Relevé {engine} {hours}",
+      "view": "Voir"
+    },
+    "detail": {
+      "fields": {
+        "date": "Date",
+        "status": "Statut",
+        "category": "Catégorie",
+        "cost": "Coût",
+        "by": "Réalisé par",
+        "equipment": "Équipement",
+        "haulOut": "Sortie de l'eau",
+        "notes": "Notes"
+      },
+      "sections": {
+        "hours": "Heures moteur relevées",
+        "completions": "Points de checklist cochés",
+        "purchases": "Achats liés"
+      },
+      "purchasesNote": "{count, plural, one {# achat lié} other {# achats liés}} · {amount}. Ils resteront dans les dépenses.",
+      "noCompletions": "Aucun point coché par cette intervention.",
+      "redo": "Refaire",
+      "reviewAction": "Vérifier cette ligne",
+      "reviewBanner": "Cette ligne vient du carnet papier : ses heures moteur attendent une vérification.",
+      "footer": "Créé par {createdBy} le {createdAt} · modifié par {updatedBy} le {updatedAt}",
+      "footerCreated": "Créé par {createdBy} le {createdAt}",
+      "unknownAuthor": "un membre",
+      "recurring": {
+        "action": "En faire un entretien récurrent",
+        "title": "En faire un entretien récurrent",
+        "description": "Crée un point de checklist « {title} » dans la catégorie de l'intervention, calé sur sa date.",
+        "interval": "Revient tous les",
+        "months": "{count} mois",
+        "hours": "Ou toutes les",
+        "hoursUnit": "h moteur",
+        "engine": "Moteur concerné",
+        "noEngine": "Aucun",
+        "confirm": "Créer le point",
+        "created": "Point de checklist créé · {title}",
+        "viewItem": "Voir le point"
+      },
+      "trash": {
+        "action": "Mettre à la corbeille",
+        "title": "Mettre cette intervention à la corbeille ?",
+        "description": "« {title} » restera 30 jours dans la corbeille. Les heures moteur qu'elle porte sont mises de côté et reviendront avec elle.",
+        "confirm": "Mettre à la corbeille",
+        "done": "Intervention mise à la corbeille",
+        "undo": "Annuler",
+        "restored": "Intervention restaurée"
+      }
     }
   },
   "checklist": {
@@ -534,7 +653,8 @@
       "undone": "Réalisation annulée",
       "deleteTitle": "Supprimer cette réalisation ?",
       "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle.",
-      "deleted": "Réalisation supprimée"
+      "deleted": "Réalisation supprimée",
+      "addDetails": "+ Ajouter les détails"
     },
     "form": {
       "new": "Nouveau point",
@@ -604,7 +724,8 @@
     "same_category": "Choisissez une autre catégorie.",
     "fieldsToFix": "{count, plural, one {# champ à corriger} other {# champs à corriger}}",
     "next_due_after": "La date de validité doit être après la date de réalisation.",
-    "engine_required": "Choisissez le moteur concerné."
+    "engine_required": "Choisissez le moteur concerné.",
+    "date_in_future_done": "Une intervention terminée ne peut pas être datée dans le futur. Choisissez « Planifié » ou une autre date."
   },
   "boatType": {
     "catamaran": "Catamaran",
@@ -891,5 +1012,32 @@
       "confirm": "Supprimer",
       "done": "Intervenant supprimé"
     }
+  },
+  "review": {
+    "title": "Vérifier les lignes importées",
+    "description": "Ces lignes viennent du carnet papier. Corrigez les dates et les heures, puis validez en une fois.",
+    "emptyTitle": "Rien à vérifier",
+    "emptyDescription": "Toutes les lignes reprises du carnet papier ont été vérifiées.",
+    "logsTitle": "Interventions à vérifier",
+    "purchasesTitle": "Achats à vérifier",
+    "columns": {
+      "date": "Date retenue",
+      "log": "Intervention",
+      "hours": "Heures moteur",
+      "designation": "Désignation",
+      "amount": "Montant"
+    },
+    "swap": "Intervertir {a} ↔ {b}",
+    "ignore": "ignorer",
+    "bookValue": "carnet {hours}",
+    "contextPrevious": "précédent : {hours} le {date}",
+    "contextNone": "aucun relevé validé avant",
+    "contextNext": "suivant en attente : {hours} le {date}",
+    "backwards": "En recul de {hours} par rapport au relevé précédent.",
+    "submit": "Valider {count, plural, one {# ligne} other {les # lignes}}",
+    "submitted": "{logs, plural, one {# ligne vérifiée} other {# lignes vérifiées}} · {readings, plural, one {# relevé créé} other {# relevés créés}}",
+    "backToLogs": "Voir le journal",
+    "onlyOne": "Vérification de cette ligne seulement.",
+    "allRows": "Vérifier toutes les lignes"
   }
 }

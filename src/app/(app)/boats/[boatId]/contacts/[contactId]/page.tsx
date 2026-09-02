@@ -11,7 +11,13 @@ import { SectionCard } from "@/components/common/SectionCard";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
-import { boatPath, editContactPath, logsPath, suppliesPath } from "@/lib/queries/boat-routes";
+import {
+  boatPath,
+  editContactPath,
+  logPath,
+  logsPath,
+  suppliesPath,
+} from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 const REFERENCE_LIMIT = 10;
@@ -157,7 +163,7 @@ export default async function ContactPage({
                   <span className="num text-caption text-ink-2">{formatCurrency(log.cost)}</span>
                 ) : null
               }
-              href={logsPath(boatId)}
+              href={log.id ? logPath(boatId, log.id) : logsPath(boatId)}
             />
           ))}
         </SectionCard>

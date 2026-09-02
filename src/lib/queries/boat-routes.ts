@@ -59,6 +59,14 @@ export function logsPath(
   return withQuery(boatPath(boatId, "logs"), query);
 }
 
+/** « Reprise du carnet » (E3-7): the guided review of the imported rows. */
+export function logsReviewPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`${boatPath(boatId, "logs")}/review`, query);
+}
+
 export function categoryPath(boatId: string, categoryId: string): string {
   return `${boatPath(boatId, "checklist")}/${categoryId}`;
 }
