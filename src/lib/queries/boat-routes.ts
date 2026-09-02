@@ -102,11 +102,33 @@ export function newHaulOutPath(boatId: string): string {
   return `${boatPath(boatId, "haulOuts")}/new`;
 }
 
+export function editHaulOutPath(boatId: string, haulOutId: string): string {
+  return `${haulOutPath(boatId, haulOutId)}/edit`;
+}
+
+/**
+ * `gas` is not a tab of its own (E5-1): it opens the purchases tab filtered on
+ * `kind=gas` with the bottle dialog, which is what the « + » sheet links to.
+ */
+export type SuppliesTab = "expenses" | "purchases" | "gas" | "stock";
+
 export function suppliesPath(
   boatId: string,
-  tab?: "purchases" | "gas" | "stock" | "expenses",
+  tab?: SuppliesTab,
+  query?: Record<string, string | number | undefined>,
 ): string {
-  return withQuery(boatPath(boatId, "supplies"), tab ? { tab } : undefined);
+  return withQuery(boatPath(boatId, "supplies"), { ...query, tab });
+}
+
+export function newPurchasePath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`${boatPath(boatId, "supplies")}/purchases/new`, query);
+}
+
+export function editPurchasePath(boatId: string, purchaseId: string): string {
+  return `${boatPath(boatId, "supplies")}/purchases/${purchaseId}/edit`;
 }
 
 export function boatTabPath(boatId: string, tab?: "identity" | "engines" | "equipment"): string {
