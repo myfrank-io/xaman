@@ -39,12 +39,24 @@ alter default privileges in schema storage grant all on functions to anon, authe
 
 -- auth.users (subset of the real table)
 create table if not exists auth.users (
-  id                 uuid primary key default gen_random_uuid(),
-  email              text unique,
-  raw_user_meta_data jsonb not null default '{}'::jsonb,
-  raw_app_meta_data  jsonb not null default '{}'::jsonb,
-  created_at         timestamptz not null default now(),
-  updated_at         timestamptz not null default now()
+  id                     uuid primary key default gen_random_uuid(),
+  instance_id            uuid,
+  aud                    text,
+  role                   text,
+  email                  text unique,
+  encrypted_password     text,
+  email_confirmed_at     timestamptz,
+  last_sign_in_at        timestamptz,
+  raw_user_meta_data     jsonb not null default '{}'::jsonb,
+  raw_app_meta_data      jsonb not null default '{}'::jsonb,
+  confirmation_token     text,
+  recovery_token         text,
+  email_change_token_new text,
+  email_change           text,
+  is_sso_user            boolean not null default false,
+  is_anonymous           boolean not null default false,
+  created_at             timestamptz not null default now(),
+  updated_at             timestamptz not null default now()
 );
 grant all on auth.users to supabase_auth_admin, service_role;
 
