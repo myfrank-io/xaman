@@ -104,3 +104,24 @@ export function suppliesPath(
 export function boatTabPath(boatId: string, tab?: "identity" | "engines" | "equipment"): string {
   return withQuery(boatPath(boatId, "boat"), tab ? { tab } : undefined);
 }
+
+export function newEnginePath(boatId: string): string {
+  return `${boatPath(boatId, "boat")}/engines/new`;
+}
+
+export function editEnginePath(boatId: string, engineId: string): string {
+  return `${enginePath(boatId, engineId)}/edit`;
+}
+
+// Engines tab with the hour reading dialog already open (« + » sheet entry).
+export function hourReadingPath(boatId: string): string {
+  return withQuery(boatPath(boatId, "boat"), { tab: "engines", reading: 1 });
+}
+
+export function newEquipmentPath(boatId: string, categoryId?: string): string {
+  return withQuery(`${boatPath(boatId, "boat")}/equipment/new`, { category: categoryId });
+}
+
+export function editEquipmentPath(boatId: string, equipmentId: string): string {
+  return `${equipmentPath(boatId, equipmentId)}/edit`;
+}

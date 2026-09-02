@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { BoatRole } from "@/lib/permissions";
 import {
-  boatTabPath,
+  hourReadingPath,
   newChecklistItemPath,
   newHaulOutPath,
   newLogPath,
@@ -51,7 +51,7 @@ function entryHref(key: CreateKey, boatId: string): string {
     case "log":
       return newLogPath(boatId);
     case "hourReading":
-      return boatTabPath(boatId, "engines");
+      return hourReadingPath(boatId);
     case "gas":
       return suppliesPath(boatId, "gas");
     case "purchase":
