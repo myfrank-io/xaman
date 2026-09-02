@@ -2294,12 +2294,44 @@ export type Database = {
       is_boat_member: { Args: { p_boat_id: string }; Returns: boolean }
       is_boat_owner: { Args: { p_boat_id: string }; Returns: boolean }
       is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      log_title_suggestions: {
+        Args: { p_boat_id: string; p_query: string }
+        Returns: {
+          category_id: string
+          engine_id: string
+          last_performed_at: string
+          occurrences: number
+          title: string
+        }[]
+      }
       mark_log_reviewed: {
         Args: { p_hours_override?: Json; p_log_id: string }
         Returns: undefined
       }
       purge_trash: { Args: Record<PropertyKey, never>; Returns: number }
       shares_boat_with: { Args: { p_user_id: string }; Returns: boolean }
+      suggest_checklist_items: {
+        Args: { p_boat_id: string; p_category_id: string; p_title: string }
+        Returns: {
+          category_id: string
+          current_hours: number
+          days_remaining: number
+          due_at: string
+          due_hours: number
+          engine_id: string
+          engine_label: string
+          hours_remaining: number
+          id: string
+          interval_hours: number
+          interval_months: number
+          label: string
+          last_completed_at: string
+          last_engine_hours: number
+          score: number
+          status: Database["public"]["Enums"]["checklist_state"]
+        }[]
+      }
+      text_fold: { Args: { p_text: string }; Returns: string }
     }
     Enums: {
       attachment_entity:
