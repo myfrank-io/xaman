@@ -1,3 +1,4 @@
+import type { StockItem } from "@/components/supplies/StockList";
 import type { ContactOption } from "@/components/contacts/specialties";
 import type { GasDefaults } from "@/components/supplies/GasBottleDialog";
 import type { ExpensesData } from "@/components/supplies/ExpensesTab";
@@ -189,4 +190,73 @@ export const SAMPLE_DESIGNATIONS = [
   "Filtres à huile Yanmar",
   "Anodes de rechange",
   "Huile moteur 15W40",
+];
+
+/** Stock tab (E5-4): two lines under the threshold, one never counted, one without threshold. */
+export const SAMPLE_PARTS: StockItem[] = [
+  {
+    id: "part-1",
+    name: "Filtre à huile Yanmar",
+    reference: "119305-35170",
+    quantity: 1,
+    minQuantity: 2,
+    unit: "pc",
+    location: "Coffre moteur BB",
+    categoryName: "Moteurs",
+    categoryColor: "#D97706",
+    supplierName: "Motoriste Yanmar",
+    checkedAt: "2026-03-06",
+  },
+  {
+    id: "part-2",
+    name: "Turbine pompe eau de mer",
+    reference: "129470-42530",
+    quantity: 2,
+    minQuantity: 1,
+    unit: "pc",
+    location: "Coffre moteur SB",
+    categoryName: "Moteurs",
+    categoryColor: "#D97706",
+    supplierName: null,
+    checkedAt: "2026-08-20",
+  },
+  {
+    id: "part-3",
+    name: "Anodes d'embase",
+    reference: null,
+    quantity: 0,
+    minQuantity: 2,
+    unit: "jeu",
+    location: "Cabine avant BB",
+    categoryName: "Coque & Pont",
+    categoryColor: "#52606F",
+    supplierName: null,
+    checkedAt: null,
+  },
+  {
+    id: "part-4",
+    name: "Manilles inox 8 mm",
+    reference: null,
+    quantity: 6,
+    minQuantity: 0,
+    unit: "pc",
+    location: "Boîte accastillage",
+    categoryName: "Voiles & Gréement",
+    categoryColor: "#A21CAF",
+    supplierName: null,
+    checkedAt: "2025-11-02",
+  },
+  {
+    id: "part-5",
+    name: "Cordage 8 mm",
+    reference: null,
+    quantity: 25,
+    minQuantity: 10,
+    unit: "m",
+    location: "Coffre cockpit",
+    categoryName: null,
+    categoryColor: null,
+    supplierName: null,
+    checkedAt: "2026-07-15",
+  },
 ];

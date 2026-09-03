@@ -232,7 +232,8 @@
     "boat_name_mismatch": "Le nom saisi ne correspond pas au nom du bateau.",
     "engine_in_use": "Ce moteur a des relevés ou des points de checklist : désactivez-le plutôt.",
     "date_in_future": "Cette date est dans le futur.",
-    "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus."
+    "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus.",
+    "part_not_found": "Cette pièce n'existe plus."
   },
   "members": {
     "title": "Membres",
@@ -1155,8 +1156,56 @@
     },
     "stock": {
       "title": "Stock",
-      "soon": "Le stock arrive bientôt.",
-      "description": "Vous y tiendrez la liste des pièces à bord, leur quantité et leur seuil d'alerte."
+      "new": "Ajouter une pièce",
+      "edit": "Modifier la pièce",
+      "saved": "Pièce enregistrée.",
+      "emptyTitle": "Aucune pièce en stock",
+      "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
+      "emptyFiltered": "Aucune pièce sous le seuil",
+      "showAll": "Voir toutes les pièces",
+      "filters": {
+        "label": "Afficher",
+        "all": "Toutes ({count})",
+        "low": "Sous le seuil ({count})"
+      },
+      "low": "Sous le seuil",
+      "threshold": "seuil {min}",
+      "noThreshold": "sans seuil",
+      "checked": {
+        "never": "jamais vérifié",
+        "thisMonth": "vérifié ce mois-ci",
+        "monthsAgo": "vérifié il y a {count} mois"
+      },
+      "increment": "Ajouter 1 : {name}",
+      "decrement": "Retirer 1 : {name}",
+      "fields": {
+        "name": "Désignation",
+        "reference": "Référence",
+        "quantity": "Quantité",
+        "unit": "Unité",
+        "minQuantity": "Seuil d'alerte",
+        "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
+        "location": "Emplacement à bord",
+        "category": "Catégorie",
+        "noCategory": "Sans catégorie",
+        "supplier": "Fournisseur",
+        "noSupplier": "Aucun fournisseur",
+        "notes": "Notes"
+      },
+      "units": {
+        "pc": "pc",
+        "m": "m",
+        "l": "L",
+        "kg": "kg",
+        "jeu": "jeu"
+      },
+      "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
+      "delete": {
+        "action": "Supprimer la pièce",
+        "title": "Supprimer « {name} » ?",
+        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
+        "done": "Pièce supprimée."
+      }
     },
     "period": {
       "label": "Période",

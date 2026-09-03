@@ -1,14 +1,13 @@
 import { notFound } from "next/navigation";
-import { ConstructionIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ExpensesTab, type ExpensesData } from "@/components/supplies/ExpensesTab";
 import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
 import { PurchaseFilters } from "@/components/supplies/PurchaseFilters";
 import { PurchaseList, type PurchaseListItem } from "@/components/supplies/PurchaseList";
+import { StockList, type StockItem } from "@/components/supplies/StockList";
 import { SuppliesTabs, type SuppliesView } from "@/components/supplies/SuppliesTabs";
 import {
   isExpensePeriod,
@@ -18,6 +17,7 @@ import {
   type ExpenseRow,
 } from "@/lib/expenses";
 import { gasFacts } from "@/lib/gas";
+import { applyStockFilter, countLowStock, sortStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
 import {
   isPurchaseKind,
@@ -41,6 +41,7 @@ type SearchParams = {
   to?: string;
   source?: string;
   limit?: string;
+  low?: string;
 };
 
 /**
@@ -103,11 +104,7 @@ export default async function SuppliesPage({
           categoryRefs={categories ?? []}
         />
       ) : (
-        <EmptyState
-          icon={<ConstructionIcon aria-hidden />}
-          title={t("stock.soon")}
-          description={t("stock.description")}
-        />
+        <StockSection boatId={boatId} query={query} canWrite={canWrite} categories={categoryList} />
       )}
     </div>
   );
@@ -313,5 +310,65 @@ async function PurchasesSection({
         moreHref={moreHref}
       />
     </div>
+  );
+}
+
+async function StockSection({
+  boatId,
+  query,
+  canWrite,
+  categories,
+}: {
+  boatId: string;
+  query: SearchParams;
+  canWrite: boolean;
+  categories: { id: string; name: string; color: string; icon: string | null }[];
+}) {
+  const supabase = await createClient();
+  const filter: StockFilter = query.low === "1" ? "low" : "all";
+
+  const [{ data: rows }, { data: contacts }] = await Promise.all([
+    supabase
+      .from("parts")
+      .select(
+        "id, name, reference, quantity, min_quantity, unit, location, category_id, supplier_contact_id, checked_at",
+      )
+      .eq("boat_id", boatId)
+      .order("name"),
+    supabase.from("contacts").select("id, name").eq("boat_id", boatId),
+  ]);
+
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
+  const contactNames = new Map((contacts ?? []).map((contact) => [contact.id, contact.name]));
+  const all: StockItem[] = sortStock(
+    (rows ?? []).map((row) => {
+      const category = row.category_id ? categoryById.get(row.category_id) : undefined;
+      return {
+        id: row.id,
+        name: row.name,
+        reference: row.reference,
+        quantity: row.quantity,
+        minQuantity: row.min_quantity,
+        unit: row.unit,
+        location: row.location,
+        categoryName: category?.name ?? null,
+        categoryColor: category?.color ?? null,
+        supplierName: row.supplier_contact_id
+          ? (contactNames.get(row.supplier_contact_id) ?? null)
+          : null,
+        checkedAt: row.checked_at,
+      };
+    }),
+  );
+
+  return (
+    <StockList
+      boatId={boatId}
+      parts={applyStockFilter(all, filter)}
+      canWrite={canWrite}
+      filter={filter}
+      lowCount={countLowStock(all)}
+      totalCount={all.length}
+    />
   );
 }

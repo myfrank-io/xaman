@@ -49,6 +49,7 @@ export function dbErrorKey(error: PostgrestError | { code?: string; message: str
       "engine_in_use",
       "template_not_found",
       "log_not_found",
+      "part_not_found",
     ];
     const hit = known.find((k) => message.includes(k));
     if (hit) return `errors.${hit}`;

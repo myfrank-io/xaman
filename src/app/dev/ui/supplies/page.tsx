@@ -1,15 +1,18 @@
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
+import { PartForm } from "@/components/supplies/PartForm";
 import { ExpensesTab } from "@/components/supplies/ExpensesTab";
 import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
 import { PurchaseFilters } from "@/components/supplies/PurchaseFilters";
 import { PurchaseForm } from "@/components/supplies/PurchaseForm";
 import { PurchaseList } from "@/components/supplies/PurchaseList";
+import { StockList } from "@/components/supplies/StockList";
 import { SuppliesTabs } from "@/components/supplies/SuppliesTabs";
 import { EXPENSE_SOURCES, resolveRange } from "@/lib/expenses";
 import { gasFacts } from "@/lib/gas";
+import { countLowStock } from "@/lib/parts";
 
 import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import {
@@ -20,6 +23,7 @@ import {
   SAMPLE_GAS_DEFAULTS,
   SAMPLE_GAS_PURCHASES,
   SAMPLE_LOGS,
+  SAMPLE_PARTS,
   SAMPLE_PURCHASES,
   SAMPLE_SUPPLY_CATEGORIES,
 } from "./sample";
@@ -89,6 +93,18 @@ export default async function DevSuppliesPage({
           />
         </div>
 
+        <div className="flex flex-col gap-6">
+          <SuppliesTabs boatId={DEV_BOAT_ID} active="stock" />
+          <StockList
+            boatId={DEV_BOAT_ID}
+            parts={SAMPLE_PARTS}
+            canWrite
+            filter="all"
+            lowCount={countLowStock(SAMPLE_PARTS)}
+            totalCount={SAMPLE_PARTS.length}
+          />
+        </div>
+
         <div className="border-t border-border pt-8">
           <PurchaseForm
             boatId={DEV_BOAT_ID}
@@ -97,6 +113,15 @@ export default async function DevSuppliesPage({
             contacts={SAMPLE_CONTACTS}
             logs={SAMPLE_LOGS}
             suggestions={SAMPLE_DESIGNATIONS}
+          />
+        </div>
+
+        <div className="border-t border-border pt-8">
+          <PartForm
+            boatId={DEV_BOAT_ID}
+            part={null}
+            categories={SAMPLE_SUPPLY_CATEGORIES}
+            contacts={SAMPLE_CONTACTS}
           />
         </div>
       </div>

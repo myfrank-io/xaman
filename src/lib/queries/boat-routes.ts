@@ -144,6 +144,15 @@ export function editPurchasePath(boatId: string, purchaseId: string): string {
   return `${boatPath(boatId, "supplies")}/purchases/${purchaseId}/edit`;
 }
 
+// Stock of spare parts (E5-4): the third tab of Dépenses, a page per part.
+export function newPartPath(boatId: string): string {
+  return `${boatPath(boatId, "supplies")}/parts/new`;
+}
+
+export function editPartPath(boatId: string, partId: string): string {
+  return `${boatPath(boatId, "supplies")}/parts/${partId}/edit`;
+}
+
 export function boatTabPath(boatId: string, tab?: "identity" | "engines" | "equipment"): string {
   return withQuery(boatPath(boatId, "boat"), tab ? { tab } : undefined);
 }
