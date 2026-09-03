@@ -47,12 +47,21 @@ export function ListRow({
   className,
 }: ListRowProps) {
   const rule = categoryColor ? <CategoryBar color={categoryColor} className="my-2" /> : null;
+  /**
+   * Mobile-first: the title owns the row, and the badge and the trailing value drop underneath
+   * it on a phone rather than competing with it.
+   *
+   * Measured at 360 px before this: the badge (96 px) and the trailing value (106 px) were both
+   * `shrink-0`, so with the gaps they claimed 242 px of a 210 px row and the title — the only
+   * part that says what the line IS — was rendered **zero pixels wide**. Three columns do not
+   * fit on a phone; from `sm` they do, and the original layout comes back.
+   */
   const content = (
     <>
       {/* Fixed left column from `sm` so the titles line up down the list. */}
-      {lead ? <div className="flex shrink-0 items-center sm:w-26">{lead}</div> : null}
-      <div className="min-w-0 flex-1">
-        <div className="line-clamp-2 text-body font-medium text-foreground sm:truncate">
+      {lead ? <div className="hidden shrink-0 items-center sm:flex sm:w-26">{lead}</div> : null}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="line-clamp-2 text-body font-medium [overflow-wrap:anywhere] text-foreground sm:truncate">
           {title}
         </div>
         {meta ? (
@@ -60,8 +69,16 @@ export function ListRow({
             {meta}
           </div>
         ) : null}
+        {lead || trailing ? (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 sm:hidden">
+            {lead}
+            {trailing}
+          </div>
+        ) : null}
       </div>
-      {trailing ? <div className="max-w-28 shrink-0 text-right">{trailing}</div> : null}
+      {trailing ? (
+        <div className="hidden max-w-28 shrink-0 text-right sm:block">{trailing}</div>
+      ) : null}
     </>
   );
   const chevron =
