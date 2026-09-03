@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { BoatIdentity } from "@/components/boat/BoatIdentity";
-import { BOAT_TABS, BoatTabs, type BoatTab } from "@/components/boat/BoatTabs";
+import { BoatTabs } from "@/components/boat/BoatTabs";
+import { isBoatTab, type BoatTab } from "@/components/boat/tabs";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab";
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
@@ -98,8 +99,8 @@ export default async function BoatPage({
     removedAt: item.removed_at,
   }));
 
-  const activeTab: BoatTab = BOAT_TABS.includes(tab as BoatTab)
-    ? (tab as BoatTab)
+  const activeTab: BoatTab = isBoatTab(tab)
+    ? tab
     : engineRows.some((engine) => engine.isActive)
       ? "engines"
       : "identity";
