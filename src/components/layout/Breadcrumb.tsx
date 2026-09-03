@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronRightIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -17,8 +17,10 @@ import { buildTrail } from "@/components/layout/breadcrumb-trail";
  */
 export function Breadcrumb({ boatId }: { boatId: string }) {
   const pathname = usePathname();
+  // The import screen names its list in `?entity=`, not in the path (see IMPORT_SECTIONS).
+  const entity = useSearchParams().get("entity");
   const t = useTranslations("nav");
-  const crumbs = buildTrail(pathname, boatId);
+  const crumbs = buildTrail(pathname, boatId, entity);
   if (crumbs.length === 0) return null;
 
   return (

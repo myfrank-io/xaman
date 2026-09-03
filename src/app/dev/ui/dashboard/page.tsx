@@ -205,7 +205,7 @@ export default async function DevDashboardPage() {
     >
       <div className="flex flex-col gap-6">
         {/* 1 — dark header: identity, 4 tiles, engine strip */}
-        <header className="-mx-4 -mt-4 bg-header-gradient px-4 pt-5 pb-4 text-on-navy sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-5">
+        <header className="-mx-4 bg-header-gradient px-4 pt-5 pb-4 text-on-navy sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 lg:pt-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-h1">Xaman</p>

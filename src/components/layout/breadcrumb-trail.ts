@@ -1,4 +1,5 @@
 import type { NavKey } from "@/components/layout/nav";
+import { isImportEntity, type ImportEntity } from "@/lib/import/entities";
 import {
   BOAT_ROUTES,
   boatPath,
@@ -53,7 +54,29 @@ type Section = {
  * naming it would put a link to nowhere in the middle of the trail. Its sections (Dépenses,
  * Intervenants, Corbeille) open their own trail instead, exactly like a tab does.
  */
-function sectionOf(segment: string, boatId: string): Section | null {
+/**
+ * The import screen has no place of its own in the menu: it belongs to the list its `?entity=`
+ * names. The path does not carry that, the query string does — so both the trail and the menu
+ * read it from there, and « Importer des relevés » says « Bateau › Moteurs › Importer » with
+ * Bateau lit in the menu, instead of standing alone with nothing selected anywhere.
+ */
+export const IMPORT_SECTIONS: Record<ImportEntity, { nav: NavKey; group?: CrumbStep }> = {
+  logs: { nav: "logs" },
+  purchases: { nav: "supplies" },
+  contacts: { nav: "contacts" },
+  completions: { nav: "checklist" },
+  equipment: { nav: "boat", group: "equipment" },
+  parts: { nav: "boat", group: "parts" },
+  readings: { nav: "boat", group: "engines" },
+};
+
+export function importSection(
+  entity: string | null | undefined,
+): { nav: NavKey; group?: CrumbStep } | null {
+  return isImportEntity(entity) ? IMPORT_SECTIONS[entity] : null;
+}
+
+function sectionOf(segment: string, boatId: string, entity?: string | null): Section | null {
   const nav = (Object.keys(BOAT_ROUTES) as NavKey[]).find((key) => BOAT_ROUTES[key] === segment);
   // « Sorties de l'eau » left the menu (D9): it is the third tab of the Journal, and that tab
   // is the only way in — so the Journal opens its trail.
@@ -65,9 +88,12 @@ function sectionOf(segment: string, boatId: string): Section | null {
   if (segment === "report") {
     return { crumb: { key: "crumbs.report", href: reportPath(boatId) }, parent: "settings" };
   }
-  // …the import opens from the list named by `?entity=`, which the path does not carry: it
-  // stands alone rather than pointing at one of the three lists at random.
-  if (segment === "import") return { crumb: { key: "crumbs.import" } };
+  // …and the import belongs to the list its `?entity=` names.
+  if (segment === "import") {
+    const owner = importSection(entity);
+    if (!owner) return { crumb: { key: "crumbs.import" } };
+    return { crumb: { key: "crumbs.import" }, parent: owner.nav };
+  }
   return null;
 }
 
@@ -114,18 +140,25 @@ function groupOf(section: NavKey | undefined, segment: string, boatId: string): 
  * A crumb that links, links to a screen that exists: never a bare `/boat/engines`, and no
  * « Fiche » for a record the app only ever edits.
  */
-export function buildTrail(pathname: string, boatId: string): Crumb[] {
+export function buildTrail(pathname: string, boatId: string, entity?: string | null): Crumb[] {
   const prefix = `/boats/${boatId}`;
   if (pathname !== prefix && !pathname.startsWith(`${prefix}/`)) return [];
   const segments = pathname.slice(prefix.length).split("/").filter(Boolean);
   const head = segments[0];
   // `/boats/<id>` serves no screen of its own: nothing to name.
   if (!head) return [];
-  const section = sectionOf(head, boatId);
+  const section = sectionOf(head, boatId, entity);
   if (!section) return [];
 
   const crumbs: Crumb[] = [];
   if (section.parent) crumbs.push({ key: section.parent, href: boatPath(boatId, section.parent) });
+  // An import of engine readings or of the stock lands inside a tab of Bateau, not at its root:
+  // the trail names that tab, so the way back is the list the file is going into.
+  if (head === "import") {
+    const owner = importSection(entity);
+    const group = owner?.group ? groupOf(owner.nav, owner.group, boatId) : null;
+    if (group) crumbs.push({ key: group.key, href: group.href });
+  }
   crumbs.push(section.crumb);
 
   let group: Group | null = null;

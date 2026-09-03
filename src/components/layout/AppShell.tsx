@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
 import { BottomTabs } from "@/components/layout/BottomTabs";
@@ -50,14 +50,20 @@ export async function AppShell({
       >
         {t("skipToContent")}
       </a>
-      <Sidebar
-        boatName={boatName}
-        boatSubtitle={boatSubtitle}
-        items={nav}
-        primaryAction={at("sidebar-action", primaryAction)}
-        accountMenu={at("sidebar-account", accountMenu)}
-        className="hidden lg:flex print:hidden"
-      />
+      {/* The menu and the trail read the query string to place the import screen, which has no
+          route of its own (D43). `useSearchParams` needs a boundary it can defer behind on a
+          statically rendered page — every screen of the app is dynamic, so nothing is ever
+          deferred there; only the `/dev/ui` mocks, which are prerendered, hydrate their nav. */}
+      <Suspense fallback={null}>
+        <Sidebar
+          boatName={boatName}
+          boatSubtitle={boatSubtitle}
+          items={nav}
+          primaryAction={at("sidebar-action", primaryAction)}
+          accountMenu={at("sidebar-account", accountMenu)}
+          className="hidden lg:flex print:hidden"
+        />
+      </Suspense>
       <TopBar
         boatName={boatName}
         boatSubtitle={boatSubtitle}
@@ -71,14 +77,20 @@ export async function AppShell({
         tabIndex={-1}
         className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-10 lg:pb-16 print:max-w-none print:gap-0 print:p-0"
       >
-        {boatId ? <Breadcrumb boatId={boatId} /> : null}
+        {boatId ? (
+          <Suspense fallback={null}>
+            <Breadcrumb boatId={boatId} />
+          </Suspense>
+        ) : null}
         {children}
       </main>
-      <BottomTabs
-        items={nav}
-        accountMenu={at("sheet-account", accountMenu)}
-        className="lg:hidden print:hidden"
-      />
+      <Suspense fallback={null}>
+        <BottomTabs
+          items={nav}
+          accountMenu={at("sheet-account", accountMenu)}
+          className="lg:hidden print:hidden"
+        />
+      </Suspense>
     </div>
   );
 }

@@ -167,7 +167,7 @@ export default async function DevChecklistPage() {
     <DevShell>
       <div className="flex flex-col gap-10">
         <PageHeader title={t("title")} />
-        <ChecklistGrid boatId={DEV_BOAT_ID} categories={PROGRESS} />
+        <ChecklistGrid boatId={DEV_BOAT_ID} categories={PROGRESS} stock={{ total: 12, low: 3 }} />
         <SectionCard title={t("filters.todo")} bare>
           <TodoList
             boatId={DEV_BOAT_ID}
