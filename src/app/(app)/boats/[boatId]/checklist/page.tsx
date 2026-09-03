@@ -10,11 +10,19 @@ import { toChecklistRow } from "@/components/checklist/rows";
 import { PlusIcon } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
+import { RestockChecklist } from "@/components/parts/RestockChecklist";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
-import { checklistSetupPath, importPath, newChecklistItemPath } from "@/lib/queries/boat-routes";
+import {
+  checklistSetupPath,
+  importPath,
+  newChecklistItemPath,
+  stockPath,
+} from "@/lib/queries/boat-routes";
 import { completionContext } from "@/lib/queries/completion-context";
+import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { createClient } from "@/lib/supabase/server";
 
 const FILTERS: TodoFilter[] = ["all", "overdue", "soon", "never"];
@@ -29,7 +37,7 @@ export default async function ChecklistPage({
 }) {
   const [{ boatId }, { view, filter }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
-  const [{ data: role }, { data: progress }, { data: status }, { data: engines }, { data: parts }] =
+  const [{ data: role }, { data: progress }, { data: status }, { data: engines }, stockItems] =
     await Promise.all([
       supabase.rpc("boat_role", { p_boat_id: boatId }),
       supabase
@@ -43,12 +51,10 @@ export default async function ChecklistPage({
         .eq("boat_id", boatId)
         .in("status", ["overdue", "soon", "never"]),
       supabase.from("engines").select("id, label").eq("boat_id", boatId),
-      // The stock closes the grid: what is aboard, and what is under its threshold (D43).
-      supabase
-        .from("parts")
-        .select("quantity, min_quantity")
-        .eq("boat_id", boatId)
-        .is("deleted_at", null),
+      // The stock closes the grid: what is aboard, and what is under its threshold (D43). The
+      // low lines also feed the « À racheter » checklist above the grid (D61) — one read, one
+      // source of truth, so the card and the list can never disagree.
+      loadStockItems(supabase, boatId),
     ]);
   if (!role) notFound();
   const boatRole = role as BoatRole;
@@ -73,13 +79,8 @@ export default async function ChecklistPage({
   // Always shown, empty stock included: the card is also the way in. Hiding it on a boat with
   // no part yet left « pièces détachées » nowhere to be found from here — reported at the
   // tiller — and that is exactly the boat that most needs the door (D43).
-  const partRows = parts ?? [];
-  const stock = {
-    total: partRows.length,
-    low: partRows.filter(
-      (part) => (part.min_quantity ?? 0) > 0 && (part.quantity ?? 0) <= (part.min_quantity ?? 0),
-    ).length,
-  };
+  const lowParts = toRestockList(stockItems);
+  const stock = { total: stockItems.length, low: lowParts.length };
 
   const totalInterval = categories.reduce((sum, category) => sum + category.total, 0);
   const neverRecorded = categories.reduce((sum, category) => sum + category.neverRecorded, 0);
@@ -96,6 +97,7 @@ export default async function ChecklistPage({
 
   const t = await getTranslations("checklist");
   const ti = await getTranslations("import");
+  const tr = await getTranslations("restock");
 
   return (
     <div className="flex flex-col gap-6">
@@ -134,7 +136,27 @@ export default async function ChecklistPage({
       ) : null}
       <ChecklistViewTabs boatId={boatId} view={activeView} todoCount={todoCount} />
       {activeView === "grid" ? (
-        <ChecklistGrid boatId={boatId} categories={categories} stock={stock} />
+        <>
+          {/* « À racheter » before the systems (D61): the spare parts to buy back sit where the
+              eye already is when planning the work — a checklist derived from the stock, ticked
+              off as the parts come aboard, never a second list to keep. */}
+          {lowParts.length > 0 ? (
+            <SectionCard
+              title={tr("title")}
+              actionHref={stockPath(boatId)}
+              actionLabel={tr("seeStock")}
+              footer={tr("subtitle")}
+              bare
+            >
+              <RestockChecklist
+                boatId={boatId}
+                parts={lowParts}
+                canWrite={can(boatRole, "write")}
+              />
+            </SectionCard>
+          ) : null}
+          <ChecklistGrid boatId={boatId} categories={categories} stock={stock} />
+        </>
       ) : (
         <TodoList
           boatId={boatId}

@@ -5,9 +5,9 @@ import { BoatTabs } from "@/components/boat/BoatTabs";
 import { isBoatTab, type BoatTab } from "@/components/boat/tabs";
 import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab";
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
-import type { StockItem } from "@/components/parts/StockList";
-import { applyStockFilter, countLowStock, sortStock, type StockFilter } from "@/lib/parts";
+import { applyStockFilter, countLowStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -31,8 +31,7 @@ export default async function BoatPage({
     { data: linkedItems },
     { data: equipment },
     { data: categories },
-    { data: parts },
-    { data: partContacts },
+    allParts,
   ] = await Promise.all([
     supabase.from("boats").select("*").eq("id", boatId).maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
@@ -61,16 +60,9 @@ export default async function BoatPage({
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
-    // The spare-parts stock lives in this tab now (D34): read it with the equipment.
-    supabase
-      .from("parts")
-      .select(
-        "id, name, reference, quantity, min_quantity, unit, location, category_id, supplier_contact_id, checked_at",
-      )
-      .eq("boat_id", boatId)
-      .is("deleted_at", null)
-      .order("name"),
-    supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null),
+    // The spare-parts stock lives in this tab now (D34): read it with the equipment, enriched
+    // with its system and supplier names by the shared loader the checklist screen uses too.
+    loadStockItems(supabase, boatId),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -114,28 +106,6 @@ export default async function BoatPage({
     removedAt: item.removed_at,
   }));
 
-  const categoryById = new Map((categories ?? []).map((category) => [category.id, category]));
-  const partContactNames = new Map((partContacts ?? []).map((row) => [row.id, row.name]));
-  const allParts: StockItem[] = sortStock(
-    (parts ?? []).map((row) => {
-      const category = row.category_id ? categoryById.get(row.category_id) : undefined;
-      return {
-        id: row.id,
-        name: row.name,
-        reference: row.reference,
-        quantity: row.quantity,
-        minQuantity: row.min_quantity,
-        unit: row.unit,
-        location: row.location,
-        categoryName: category?.name ?? null,
-        categoryColor: category?.color ?? null,
-        supplierName: row.supplier_contact_id
-          ? (partContactNames.get(row.supplier_contact_id) ?? null)
-          : null,
-        checkedAt: row.checked_at,
-      };
-    }),
-  );
   const stockFilter: StockFilter = low === "1" ? "low" : "all";
 
   // `?tab=identity` still arrives from an old link: it now lands on the default list, with
@@ -174,6 +144,7 @@ export default async function BoatPage({
           categories={categories ?? []}
           stock={{
             parts: applyStockFilter(allParts, stockFilter),
+            lowParts: toRestockList(allParts),
             filter: stockFilter,
             lowCount: countLowStock(allParts),
             totalCount: allParts.length,
