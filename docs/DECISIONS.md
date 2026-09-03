@@ -572,7 +572,7 @@ délibérément l'équipement de côté, au motif qu'un équipement s'archive (s
 supprime pas. C'est vrai d'une pièce réelle ; ça n'offre aucune sortie pour une faute de frappe.
 Les pièces détachées avaient fait exactement ce pas en 0012.
 
-**Décision.** L'équipement reçoit le même traitement (migration `0013_equipment_trash.sql`), et
+**Décision.** L'équipement reçoit le même traitement (migration `0014_equipment_trash.sql`), et
 garde « Déposer » à côté pour le cas réel. Deux colonnes, deux sens :
 
 - `removed_at` (« Déposé le ») = la pièce quitte physiquement le bateau, sa fiche et son

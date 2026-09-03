@@ -1,4 +1,4 @@
--- 0013_equipment_trash.sql — « on ne peut supprimer aucun équipement ».
+-- 0014_equipment_trash.sql — « on ne peut supprimer aucun équipement ».
 --
 -- Reported from the boat: a piece of equipment created by mistake (a « Test ») could not be
 -- deleted. The equipment sheet only offered « Déposer » — set `removed_at`, which takes the

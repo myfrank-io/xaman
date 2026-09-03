@@ -1545,7 +1545,7 @@ describe("trash for parts and contacts (0012)", () => {
   });
 });
 
-describe("trash for equipment (0013)", () => {
+describe("trash for equipment (0014)", () => {
   const EQUIP = "00000000-0000-0000-0000-00000000f001";
 
   it("owner and editor may trash and restore; pro, viewer and stranger may not", async () => {
