@@ -174,7 +174,7 @@ export function editPartPath(boatId: string, partId: string): string {
 /** Import screen of a list (E12-2): one screen, the entity in the query. */
 export function importPath(
   boatId: string,
-  entity: "logs" | "purchases" | "contacts" | "equipment" | "parts",
+  entity: "logs" | "purchases" | "contacts" | "equipment" | "parts" | "completions" | "readings",
 ): string {
   return withQuery(`/boats/${boatId}/import`, { entity });
 }

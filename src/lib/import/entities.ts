@@ -1,5 +1,5 @@
 import { normaliseHeader, type FieldDescriptor } from "@/lib/import/mapping";
-import { parseDecimal } from "@/lib/numbers";
+import { addDays, parseDecimal, roundTo, toIsoDate } from "@/lib/numbers";
 
 /**
  * What can be imported, and how a row of a spreadsheet becomes a row of the database (E12-3).
@@ -8,7 +8,15 @@ import { parseDecimal } from "@/lib/numbers";
  * natural key used to recognise a line already present. Everything else — parsing, mapping,
  * validation, writing — is shared by every entity.
  */
-export const IMPORT_ENTITIES = ["logs", "purchases", "contacts", "equipment", "parts"] as const;
+export const IMPORT_ENTITIES = [
+  "logs",
+  "purchases",
+  "contacts",
+  "equipment",
+  "parts",
+  "completions",
+  "readings",
+] as const;
 export type ImportEntity = (typeof IMPORT_ENTITIES)[number];
 
 export function isImportEntity(value: string | null | undefined): value is ImportEntity {
@@ -73,13 +81,20 @@ export function cellPurchaseKind(
 export type EntityDescriptor = {
   key: ImportEntity;
   /** Table written, used by the Server Action. */
-  table: "contacts" | "equipment" | "parts" | "maintenance_logs" | "purchases";
+  table:
+    | "contacts"
+    | "equipment"
+    | "parts"
+    | "maintenance_logs"
+    | "purchases"
+    | "checklist_completions"
+    | "engine_hour_readings";
   fields: FieldDescriptor[];
   /**
    * Recognises a line already on the boat, so re-importing a corrected sheet corrects it
    * instead of duplicating it. Empty string = always a new row.
    */
-  naturalKey: (row: ImportRow) => string;
+  naturalKey: (row: ImportRow, match?: ImportMatcher) => string;
   /** Columns read back from the table to recognise the rows already there. */
   keyColumns: string;
   /** The same key, built from a row that is already in the database. */
@@ -90,6 +105,11 @@ export type EntityDescriptor = {
   softDeleted?: boolean;
   /** Reads the boat's contacts, to turn a provider's name into a link. */
   matchesContacts?: boolean;
+  /**
+   * What the boat has to be read before the file can be understood (E12-4): a spreadsheet
+   * names a checklist point or an engine in a person's own words, never by id.
+   */
+  catalog?: "checklist" | "engines";
 };
 
 /** `text(value)`, but folded the way a header is, for comparing two names. */
@@ -106,6 +126,141 @@ function fold(value: unknown): string {
 function datedKey(reference: string | null, label: string, date: string | null): string {
   if (reference) return `ref:${fold(reference)}`;
   return `${fold(label)}@${date ?? ""}`;
+}
+
+/**
+ * What the boat already carries, so a line naming a checklist point or an engine in a
+ * person's own words can find it (E12-4). Read once by the Server Action and by the import
+ * screen, so the count announced before the write is the count actually written.
+ */
+export type ImportCatalog = {
+  /** Checklist points; `intervalHours` says whether the point is followed in engine hours. */
+  items?: { id: string; label: string; intervalHours: number | null }[];
+  /** Engines of the boat, named by their label — and by their position when it is unique. */
+  engines?: { id: string; label: string; position: string }[];
+  /** Readings already recorded, so a counter that goes backwards is spotted. */
+  readings?: { engineId: string; readAt: string; hours: number }[];
+};
+
+/** A checklist point resolved from a name, with what the database will demand of it. */
+export type ChecklistTarget = { id: string; intervalHours: number | null };
+
+/** Two rows sharing a name cannot be told apart: the line is refused, never attached at random. */
+export const AMBIGUOUS = "ambiguous" as const;
+/** Objects on purpose, so the sentinel can never be mistaken for a resolved id. */
+type Resolved<T extends object> = T | null | typeof AMBIGUOUS;
+
+export type ImportMatcher = {
+  /** The checklist point a name designates, `null` when the boat has none. */
+  item: (label: string) => Resolved<ChecklistTarget>;
+  /** The engine a name designates, `null` when the boat has none. */
+  engine: (label: string) => Resolved<{ id: string }>;
+  /**
+   * Highest counter value known for this engine on or before `date` — the boat's readings
+   * and the lines of the same file already accepted. A reading below it goes backwards.
+   */
+  hoursOn: (engineId: string, date: string) => number | null;
+  /** Records an accepted line, so the rest of the file is compared to it too. */
+  remember: (engineId: string, date: string, hours: number) => void;
+};
+
+/** French spellings of an engine position, used only while a single engine holds it. */
+const POSITION_ALIASES: Record<string, string[]> = {
+  port: ["babord", "bb", "port", "moteur babord"],
+  starboard: ["tribord", "td", "tb", "starboard", "moteur tribord"],
+  center: ["central", "centre", "center", "moteur central"],
+  outboard: ["hors-bord", "horsbord", "outboard", "annexe"],
+};
+
+/**
+ * What every list cuts its subject to before it reaches a natural key or a column
+ * (`buildDatabaseRow`). The matcher has to cut the same way, or the preview would accept a
+ * long name that the write then fails to resolve.
+ */
+export const IMPORT_NAME_MAX = 120;
+
+/** `name → value`, folded like a header; a name held by two rows resolves to AMBIGUOUS. */
+function nameIndex<T extends object>(rows: { name: string; value: T }[]): Map<string, Resolved<T>> {
+  const index = new Map<string, Resolved<T>>();
+  for (const row of rows) {
+    const key = fold(row.name);
+    if (key === "") continue;
+    index.set(key, index.has(key) ? AMBIGUOUS : row.value);
+  }
+  return index;
+}
+
+export function createMatcher(catalog: ImportCatalog = {}): ImportMatcher {
+  // A checklist label may run to 160 characters (`upsertChecklistItemSchema`), and the engine
+  // cuts every subject to IMPORT_NAME_MAX before it reaches a key. So a long point is indexed
+  // twice, under its label and under the cut the file will carry — otherwise « Vidange huile
+  // moteur (filtre, joint, contrôle du niveau à froid) — Moteur bâbord » would be refused as
+  // unknown for being too long, which is not a reason anyone can act on.
+  const items = nameIndex(
+    (catalog.items ?? []).flatMap((item) => {
+      const value = { id: item.id, intervalHours: item.intervalHours };
+      const cut = item.label.slice(0, IMPORT_NAME_MAX);
+      const entry = { name: item.label, value };
+      return cut === item.label ? [entry] : [entry, { name: cut, value }];
+    }),
+  );
+
+  const engines = nameIndex(
+    (catalog.engines ?? []).map((engine) => ({ name: engine.label, value: { id: engine.id } })),
+  );
+  // « Bâbord » finds the port engine — but only while a single engine holds that position,
+  // and never over a label someone actually wrote.
+  const byPosition = new Map<string, string[]>();
+  for (const engine of catalog.engines ?? []) {
+    byPosition.set(engine.position, [...(byPosition.get(engine.position) ?? []), engine.id]);
+  }
+  for (const [position, ids] of byPosition) {
+    const only = ids.length === 1 ? ids[0] : undefined;
+    if (only === undefined) continue;
+    for (const alias of POSITION_ALIASES[position] ?? []) {
+      const key = fold(alias);
+      if (!engines.has(key)) engines.set(key, { id: only });
+    }
+  }
+
+  // Per engine, every reading known: the floor a later line may not fall below.
+  const readings = new Map<string, { readAt: string; hours: number }[]>();
+  for (const reading of catalog.readings ?? []) {
+    readings.set(reading.engineId, [
+      ...(readings.get(reading.engineId) ?? []),
+      { readAt: reading.readAt, hours: reading.hours },
+    ]);
+  }
+
+  return {
+    item: (label) => items.get(fold(label)) ?? null,
+    engine: (label) => engines.get(fold(label)) ?? null,
+    hoursOn: (engineId, date) => {
+      let highest: number | null = null;
+      for (const reading of readings.get(engineId) ?? []) {
+        if (reading.readAt > date) continue;
+        if (highest === null || reading.hours > highest) highest = reading.hours;
+      }
+      return highest;
+    },
+    remember: (engineId, date, hours) => {
+      readings.set(engineId, [...(readings.get(engineId) ?? []), { readAt: date, hours }]);
+    },
+  };
+}
+
+/**
+ * Adds an accepted line to the matcher, so the next lines of the same file are read against
+ * it. Called by the preview and by the write right after `rejectionReason` returned null: a
+ * sheet of 300 readings must be caught contradicting itself on line 200, not only the boat.
+ */
+export function rememberRow(entity: ImportEntity, row: ImportRow, match: ImportMatcher): void {
+  if (entity !== "readings") return;
+  const engine = match.engine(row.name ?? "");
+  const date = cellDate(row.date);
+  const hours = cellNumber(row.hours);
+  if (engine === null || engine === AMBIGUOUS || date === null || hours === null) return;
+  match.remember(engine.id, date, roundTo(hours, 1));
 }
 
 const NOTES: FieldDescriptor = {
@@ -374,7 +529,141 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
       { ...NOTES, sample: "Compatible D2-75" },
     ],
   },
+  /**
+   * Points de checklist déjà faits (E12-4). A completion is the same event when it names the
+   * same point on the same day, so the key is the *resolved* point id and the date — never
+   * the wording, which two lines of the same file spell two ways.
+   */
+  completions: {
+    key: "completions",
+    table: "checklist_completions",
+    catalog: "checklist",
+    keyColumns: "id, checklist_item_id, completed_at",
+    existingKey: (row) =>
+      datedKey(null, String(row.checklist_item_id ?? ""), asDate(row.completed_at)),
+    naturalKey: (row, match) => {
+      const item = match?.item(row.name ?? "");
+      if (!item || item === AMBIGUOUS) return "";
+      return datedKey(null, item.id, cellDate(row.date));
+    },
+    fields: [
+      {
+        key: "name",
+        label: "Point de checklist",
+        required: true,
+        aliases: [
+          "point",
+          "controle",
+          "contrôle",
+          "intitule",
+          "intitulé",
+          "libelle",
+          "libellé",
+          "tache",
+          "tâche",
+          "operation",
+          "opération",
+        ],
+        help: "Le nom d'un point de la checklist du bateau, aux accents et à la casse près. Un nom inconnu est refusé, jamais rattaché au hasard.",
+        // « Tout ce tableau, c'est la vidange » : un point, beaucoup de dates.
+        allowDefault: true,
+        sample: "Vidange huile moteur — Bâbord",
+      },
+      {
+        key: "date",
+        label: "Fait le",
+        required: true,
+        aliases: ["date", "date realisation", "réalisé le", "realise le", "jour"],
+        sample: "14/06/2026",
+      },
+      {
+        key: "hours",
+        label: "Heures moteur",
+        aliases: ["heures", "compteur", "h moteur", "heures moteur", "horametre", "horamètre"],
+        help: "Obligatoire pour un point suivi en heures ; elle devient aussi un relevé du compteur.",
+        sample: "1250",
+      },
+      {
+        key: "by",
+        label: "Fait par",
+        aliases: ["par", "realise par", "réalisé par", "intervenant", "operateur", "opérateur"],
+        help: "Recopié tel quel : l'import ne devine pas quel compte de l'équipage il désigne.",
+        allowDefault: true,
+        sample: "Xavier",
+      },
+      {
+        key: "nextDate",
+        label: "Valide jusqu'au",
+        aliases: [
+          "valide jusqu au",
+          "echeance",
+          "échéance",
+          "expire le",
+          "peremption",
+          "péremption",
+        ],
+        help: "Date imprimée sur l'objet (radeau, fusées, extincteurs) ; elle l'emporte sur l'intervalle.",
+        sample: "14/06/2029",
+      },
+      { ...NOTES, key: "note", sample: "Huile 15W40, filtre neuf." },
+    ],
+  },
+  /**
+   * Relevés d'heures (E12-4). One counter value per engine and per day: two lines of the same
+   * day are one reading corrected, and a re-import corrects instead of piling up.
+   */
+  readings: {
+    key: "readings",
+    table: "engine_hour_readings",
+    catalog: "engines",
+    keyColumns: "id, engine_id, read_at, maintenance_log_id, checklist_completion_id",
+    // A reading derived from an intervention or from a completion belongs to it (D5): the
+    // trash parks and rebuilds it. An import must never take it over — it stays unmatched.
+    existingKey: (row) =>
+      row.maintenance_log_id || row.checklist_completion_id
+        ? ""
+        : datedKey(null, String(row.engine_id ?? ""), asDate(row.read_at)),
+    naturalKey: (row, match) => {
+      const engine = match?.engine(row.name ?? "");
+      if (!engine || engine === AMBIGUOUS) return "";
+      return datedKey(null, engine.id, cellDate(row.date));
+    },
+    fields: [
+      {
+        key: "name",
+        label: "Moteur",
+        required: true,
+        aliases: ["engine", "moteur", "nom du moteur"],
+        help: "Le nom d'un moteur du bateau ; « bâbord » et « tribord » sont compris.",
+        // A logbook of one engine names it in its title, not on every line.
+        allowDefault: true,
+        sample: "Moteur bâbord",
+      },
+      {
+        key: "date",
+        label: "Relevé le",
+        required: true,
+        aliases: ["date", "date releve", "date relevé", "jour"],
+        sample: "14/06/2026",
+      },
+      {
+        key: "hours",
+        label: "Heures",
+        required: true,
+        aliases: ["compteur", "heures moteur", "h", "horametre", "horamètre", "index"],
+        sample: "1250,5",
+      },
+      { ...NOTES, key: "note", sample: "Relevé au départ de Lorient." },
+    ],
+  },
 };
+
+/** A `date` column of Postgres comes back as a string through PostgREST, as a Date through pg. */
+function asDate(value: unknown): string | null {
+  if (typeof value === "string") return value.slice(0, 10);
+  if (value instanceof Date) return toIsoDate(value);
+  return null;
+}
 
 export function descriptorOf(entity: ImportEntity): EntityDescriptor {
   return ENTITY_DESCRIPTORS[entity];
@@ -387,8 +676,15 @@ const EMAIL = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
  * Server Action so the screen can announce « 2 refusées » before the write and name the same
  * reason afterwards — a count that changes between the two would be worse than no count.
  */
-export function rejectionReason(entity: ImportEntity, row: ImportRow): string | null {
-  if (!cellText(row.name, 120)) return "import.errors.noName";
+export function rejectionReason(
+  entity: ImportEntity,
+  row: ImportRow,
+  /** Required by the two lists matched by name (E12-4); ignored by the others. */
+  match?: ImportMatcher,
+): string | null {
+  if (entity === "completions") return completionReason(row, match);
+  if (entity === "readings") return readingReason(row, match);
+  if (!cellText(row.name, IMPORT_NAME_MAX)) return "import.errors.noName";
   if (entity === "contacts") {
     if (!cellText(row.specialty, 60)) return "import.errors.noSpecialty";
     const email = cellText(row.email, 160);
@@ -409,6 +705,77 @@ export function rejectionReason(entity: ImportEntity, row: ImportRow): string | 
       return "import.errors.badAmount";
     }
   }
+  return null;
+}
+
+/** `numeric(8,1)` would take more, but a counter that reads 100 000 h is a typo (D: engines). */
+export const IMPORT_HOURS_MAX = 99_999.9;
+
+/** A completion and a reading are refused in the future: the database refuses them too (D17). */
+function futureDate(date: string): boolean {
+  return date > addDays(toIsoDate(), 1);
+}
+
+/**
+ * A completed checklist point (E12-4). The point is found by its name; a name the boat does
+ * not carry — or carries twice — is refused and listed, never attached to a neighbour. Engine
+ * hours are demanded exactly where the database demands them: on a point followed in hours
+ * (`check_completion_hours` would otherwise raise `engine_hours_required` and take
+ * the whole batch down with it).
+ */
+function completionReason(row: ImportRow, match?: ImportMatcher): string | null {
+  const label = cellText(row.name, IMPORT_NAME_MAX);
+  if (!label) return "import.errors.noItem";
+  const item = match?.item(label) ?? null;
+  if (item === AMBIGUOUS) return "import.errors.ambiguousItem";
+  if (!item) return "import.errors.unknownItem";
+
+  if ((row.date ?? "").trim() === "") return "import.errors.noDate";
+  const date = cellDate(row.date);
+  if (date === null) return "import.errors.badDate";
+  if (futureDate(date)) return "import.errors.futureDate";
+
+  const hours = (row.hours ?? "").trim();
+  if (hours === "" && item.intervalHours !== null) return "import.errors.noEngineHours";
+  if (hours !== "") {
+    const value = cellNumber(hours);
+    if (value === null || value < 0 || value > IMPORT_HOURS_MAX) return "import.errors.badHours";
+  }
+
+  const next = (row.nextDate ?? "").trim();
+  if (next !== "") {
+    const nextDate = cellDate(next);
+    if (nextDate === null) return "import.errors.badDate";
+    // `checklist_completions_next_due_after_completed` (0004) rejects the rest.
+    if (nextDate <= date) return "import.errors.badDueDate";
+  }
+  return null;
+}
+
+/**
+ * An engine hour reading (E12-4). The counter only goes up: a value below what the boat — or
+ * an earlier line of the same file — already knows for that engine on or before that day is
+ * refused rather than written. A counter really replaced is declared on the engine's own
+ * screen (D12), where it stamps `counter_reset_at`; a spreadsheet cannot decide that.
+ */
+function readingReason(row: ImportRow, match?: ImportMatcher): string | null {
+  const label = cellText(row.name, IMPORT_NAME_MAX);
+  if (!label) return "import.errors.noEngine";
+  const engine = match?.engine(label) ?? null;
+  if (engine === AMBIGUOUS) return "import.errors.ambiguousEngine";
+  if (!engine) return "import.errors.unknownEngine";
+
+  if ((row.date ?? "").trim() === "") return "import.errors.noDate";
+  const date = cellDate(row.date);
+  if (date === null) return "import.errors.badDate";
+  if (futureDate(date)) return "import.errors.futureDate";
+
+  if ((row.hours ?? "").trim() === "") return "import.errors.noHours";
+  const hours = cellNumber(row.hours);
+  if (hours === null || hours < 0 || hours > IMPORT_HOURS_MAX) return "import.errors.badHours";
+
+  const known = match?.hoursOn(engine.id, date) ?? null;
+  if (known !== null && roundTo(hours, 1) < known) return "import.errors.hoursBackwards";
   return null;
 }
 
@@ -442,6 +809,11 @@ export type RowContext = {
   categoryId: string | null;
   /** A provider's name → the id of a contact of the boat, or null. */
   contactId: (name: string) => string | null;
+  /**
+   * Resolves the checklist point or the engine a line names (E12-4). `rejectionReason` has
+   * already refused the lines that resolve to nothing, so here it always finds one.
+   */
+  match?: ImportMatcher;
 };
 
 /**
@@ -457,22 +829,55 @@ export function buildDatabaseRow(
   row: ImportRow,
   context: RowContext,
 ): Record<string, unknown> {
-  const name = cellText(row.name, 120) ?? "";
+  const name = cellText(row.name, IMPORT_NAME_MAX) ?? "";
   const notes = cellText(row.notes, 2000);
-  // Each table names its subject differently: `name`, `title`, `designation`.
+  // Each table names its subject differently: `name`, `title`, `designation` — and its free
+  // text `notes` or `note`, so the column is named by the branch, never by this base.
   const base = {
     id: context.id,
     boat_id: context.boatId,
-    notes,
     updated_by: context.userId,
     ...(context.isNew ? { created_by: context.userId } : {}),
     ...(ENTITY_DESCRIPTORS[entity].needsReview ? { needs_review: true } : {}),
   };
 
+  if (entity === "completions") {
+    const item = context.match?.item(name);
+    const hours = cellNumber(row.hours);
+    return {
+      ...base,
+      checklist_item_id: item && item !== AMBIGUOUS ? item.id : null,
+      completed_at: cellDate(row.date),
+      // The person who did the work is copied as written: guessing which account of the crew
+      // a paper logbook meant would put a name on someone who was not there.
+      completed_by: null,
+      completed_by_name: cellText(row.by, 120),
+      engine_hours: hours === null ? null : roundTo(Math.max(0, hours), 1),
+      next_due_at: cellDate(row.nextDate),
+      note: cellText(row.note, 2000),
+    };
+  }
+
+  if (entity === "readings") {
+    const engine = context.match?.engine(name);
+    const hours = cellNumber(row.hours) ?? 0;
+    return {
+      ...base,
+      engine_id: engine && engine !== AMBIGUOUS ? engine.id : null,
+      hours: roundTo(Math.max(0, hours), 1),
+      read_at: cellDate(row.date),
+      // The enum has carried an `import` value since 0001: a counter typed by hand and one
+      // read off a spreadsheet are not the same claim.
+      source: "import",
+      note: cellText(row.note, 500),
+    };
+  }
+
   if (entity === "contacts") {
     return {
       ...base,
       name,
+      notes,
       specialty: cellText(row.specialty, 60),
       company: cellText(row.company, 120),
       phone: cellText(row.phone, 40),
@@ -486,6 +891,7 @@ export function buildDatabaseRow(
     return {
       ...base,
       name,
+      notes,
       category_id: context.categoryId,
       brand: cellText(row.brand, 80),
       model: cellText(row.model, 80),
@@ -501,6 +907,7 @@ export function buildDatabaseRow(
     return {
       ...base,
       name,
+      notes,
       reference: cellText(row.reference, 80),
       quantity: quantity === null ? 0 : Math.max(0, quantity),
       min_quantity: minQuantity === null ? 0 : Math.max(0, minQuantity),
@@ -534,6 +941,7 @@ export function buildDatabaseRow(
   return {
     ...base,
     designation: name,
+    notes,
     purchased_at: cellDate(row.date),
     amount: cellNumber(row.amount),
     kind: cellPurchaseKind(row.kind),
