@@ -524,3 +524,16 @@ l'objection au bouton mort ne s'y applique pas.
 Règle générale qui en sort : **le silence n'est pas une réponse acceptable pour une capacité
 absente.** Si l'application ne peut pas faire quelque chose sur cet appareil, elle le dit à
 l'endroit où on la cherche.
+## 2026-09-03 — Rafraîchissement visuel (moins « vibe-code », plus premium)
+
+Passe de direction artistique sur l'app existante, sans toucher au fonctionnel ni au responsive
+(une session parallèle traite le mobile). Le socle de tokens et de contrastes mesurés est
+conservé ; seules la finition et l'identité changent.
+
+| Date | Question | Décision | Raison |
+|---|---|---|---|
+| 2026-09-03 | Polices (révision du 2026-09-02) | **Manrope** pour toute l'UI et les chiffres, **Fraunces** pour la couche d'affichage (titres `text-h1`, nom du bateau, états vides, connexion, rapport) ; les deux auto-hébergées par `next/font` (aucune dépendance Google au runtime, PWA hors-ligne intacte) | La pile système était le principal signal « outil généré » ; une vraie typographie (grotesque de précision + serif éditorial pour la marque) transforme la perception sans coût réseau. Les chiffres (`text-display`) restent en sans : jamais de serif sur une donnée |
+| 2026-09-03 | Fond | Papier chaud (`--background #f6f5f1`, `--surface-2` réchauffé) sous des cartes blanches, au lieu du gris froid | Évoque le carnet / la carte marine ; se distingue du gris Tailwind par défaut, la carte blanche ressort en instrument |
+| 2026-09-03 | Anneau de focus | Azur marin (`--ring #1b5e96`) au lieu du bleu framework `#1d4ed8` | Le bleu par défaut est un marqueur « non designé » ; l'azur appartient à la palette |
+| 2026-09-03 | Badges de statut/état (révision de la règle DA « le plein = action requise ») | **Un seul langage teinté** : tous les badges (y compris En retard, Bientôt, Urgent) passent en teinte + `-fg` + liseré + icône, plus aucun aplat rouge/orange | Le mur d'aplats lisait « tableau de bord en alarme » ; la teinte garde l'instrument calme et reste lisible au soleil (contrastes `-fg`/`-border` mesurés), l'icône et le libellé portent le sens sans la couleur seule. Idem pour les pastilles de comptage (`Badge variant="danger"` ajouté) |
+| 2026-09-03 | Signature d'en-tête | Filet laiton (`brass-rule`) au bas de tout bandeau navy + dégradé multi-arrêt plus profond | Le « trait doré » d'une couverture de carnet ; détail de marque discret, jamais une alerte (respecte « le laiton ne porte jamais de donnée ») |

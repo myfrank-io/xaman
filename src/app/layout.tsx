@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { installPromptCapture } from "@/components/pwa/install-prompt-capture";
@@ -6,6 +7,26 @@ import { PwaProvider } from "@/components/pwa/PwaProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
+
+// The workhorse: every label, figure and field. Manrope carries the data layer — open,
+// even, excellent tabular figures for engine hours and amounts, legible at 16 px in full sun.
+// Self-hosted by next/font (no runtime Google dependency), so the PWA reads the same offline.
+const sans = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans-var",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+// The brand voice: only the display layer — the wordmark, the big screen titles, the empty
+// states, the login. Fraunces is the logbook's soul over Manrope's instrument precision;
+// `font-optical-sizing: auto` keeps it elegant at size and sturdy at rest.
+const display = Fraunces({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-display-var",
+  style: ["normal", "italic"],
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("app");
@@ -37,7 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
 
   return (
-    <html lang={locale} className="h-full antialiased">
+    <html lang={locale} className={`${sans.variable} ${display.variable} h-full antialiased`}>
       <head>
         {/* Inline and first: Chrome fires `beforeinstallprompt` once, before hydration. */}
         <script dangerouslySetInnerHTML={{ __html: installPromptCapture }} />
