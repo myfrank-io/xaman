@@ -264,6 +264,7 @@ export function ImportWizard({
   const pasteId = `import-paste-${entity}`;
   const defaultFields = useMemo(() => fields.filter((field) => field.allowDefault), [fields]);
   const tc = useTranslations("contacts.specialties");
+  const tCommon = useTranslations("common");
   /**
    * A trade is chosen, not spelled (D44): the seven built-ins plus every trade this boat
    * already uses, and « Autre » to name a new one — the same list the contact form offers,
@@ -645,6 +646,9 @@ export function ImportWizard({
           <section className="flex flex-col gap-3">
             <h2 className="text-h2">{t("steps.preview")}</h2>
             <p className="text-body">{t("preview.plan", plan)}</p>
+            {/* Seven columns cannot fit 328 px and stay a table, so it scrolls — and a table that
+                scrolls without saying so reads as a table with three columns (F9). */}
+            <p className="text-caption text-ink-3 sm:hidden">{tCommon("scrollTable")}</p>
             <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
               <table className="w-full border-collapse text-caption">
                 <thead>
@@ -653,7 +657,7 @@ export function ImportWizard({
                       {t("preview.state")}
                     </th>
                     {previewFields.map((field) => (
-                      <th key={field.key} className="px-3 py-2 font-medium whitespace-nowrap">
+                      <th key={field.key} className="px-3 py-2 font-medium sm:whitespace-nowrap">
                         {field.label}
                       </th>
                     ))}
@@ -689,7 +693,7 @@ export function ImportWizard({
                           </div>
                         </td>
                         {previewFields.map((field) => (
-                          <td key={field.key} className="px-3 py-2 whitespace-nowrap text-ink-2">
+                          <td key={field.key} className="px-3 py-2 text-ink-2 sm:whitespace-nowrap">
                             {values[field.key] || "—"}
                           </td>
                         ))}

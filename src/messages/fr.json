@@ -49,7 +49,8 @@
       "created": "Créé par {name} le {date}",
       "updated": "modifié par {name} le {date}",
       "unknown": "un membre"
-    }
+    },
+    "scrollTable": "Faites glisser le tableau pour voir toutes les colonnes."
   },
   "nav": {
     "dashboard": "Tableau de bord",
