@@ -85,6 +85,10 @@ const PREVIEWS: { href: string; label: string }[] = [
   { href: "/dev/ui/profile", label: "Mon compte" },
   { href: "/dev/ui/reset-password", label: "Nouveau mot de passe" },
   { href: "/dev/ui/install", label: "Installer l'application" },
+  { href: "/dev/ui/dialogs?d=complete", label: "Dialogue · marquer comme fait" },
+  { href: "/dev/ui/dialogs?d=hours", label: "Dialogue · relevé de compteur" },
+  { href: "/dev/ui/dialogs?d=contact", label: "Dialogue · nouveau prestataire" },
+  { href: "/dev/ui/supplies?dialog=1", label: "Dialogue · bouteille de gaz" },
 ];
 
 function Section({

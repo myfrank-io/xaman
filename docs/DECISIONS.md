@@ -266,3 +266,46 @@ une date d'installation vieille de plusieurs années ou une échéance future, e
 inutiles, au pire des valeurs invalides (« valide jusqu'au » exige une date postérieure à la
 réalisation). La règle vise le cas courant — « quand l'as-tu fait » — et il est respecté. Les
 deux cellules de date de la table de relecture restent nues pour la même raison de place.
+
+## 2026-09-03 — D50 : `beforeinstallprompt` est capturé avant l'hydratation
+
+**Question.** « Le PWA ne fonctionne plus sur mac et sur mobile, ça ne télécharge rien, ça dit
+juste : dans le menu du navigateur… mais il ne s'est rien passé. »
+
+Chrome n'émet `beforeinstallprompt` qu'une fois, peu après le chargement, et jamais de nouveau
+pour ce chargement de page. L'écouteur vivait dans `useInstallPrompt`, monté par `AccountMenu` —
+un composant client qui n'existe qu'à l'intérieur d'un bateau, et qui monte après l'hydratation.
+Sur la page d'accueil, personne n'écoutait ; ailleurs, l'événement arrivait presque toujours
+avant l'écouteur. Il était perdu, le dialogue tombait sur son texte de repli, et le bouton
+« Installer » n'apparaissait jamais. Le service worker de production est sain (122 entrées
+préchargées, un gestionnaire `fetch`, aucune maquette `/dev/ui`) : ce n'était pas lui.
+
+**Décision.** Un script inline dans le `<head>` du layout racine écoute dès l'analyse du HTML,
+gare l'événement sur `window` et l'annonce ; le hook le relit au montage et à l'annonce.
+`install()` efface aussi la copie garée, l'événement étant à usage unique.
+`tests/e2e/install-prompt.spec.ts` déclenche l'événement avant l'hydratation et vérifie que le
+bouton revient — il échoue si l'on retire le script.
+
+Le texte de repli disait « dans le menu du navigateur », ce qui ne mène nulle part sur un Chrome
+de bureau. Il nomme maintenant l'icône d'installation de la barre d'adresse, et ajoute la raison
+la plus fréquente d'un refus silencieux du navigateur : **l'application est déjà installée**.
+
+## 2026-09-03 — D51 : les dialogues entrent dans l'audit, un à la fois
+
+**Question.** Un dialogue est fermé au chargement. L'audit tactile ouvre une URL et mesure ce
+qu'il trouve : il n'avait donc jamais vu l'intérieur d'un seul — alors que ce sont les surfaces
+les plus denses de l'application (une date, un compteur, un sélecteur et une note dans une
+boîte qui doit tenir au-dessus du clavier d'un téléphone), « Marquer comme fait » en tête.
+
+**Décision.** `/dev/ui/dialogs?d=…` en ouvre exactement un — plusieurs empilés se recouvriraient
+et fausseraient la mesure. Cinq entrées dans l'audit (`complete`, `hours`, `edit-reading`,
+`contact`, `recurring`) plus `/dev/ui/supplies?dialog=1` pour la bouteille de gaz, dont la
+couture `defaultOpen` existait déjà sans que l'audit s'en serve.
+
+Vérifié en plus des règles : à 320 × 568, les cinq dialogues tiennent dans l'écran et leur
+bouton « Enregistrer » est atteignable. Un dialogue plus haut que l'écran dont on ne peut pas
+atteindre le bouton est inutilisable, et aucune des règles de l'audit ne l'aurait dit.
+
+**Restent sans preview**, et c'est assumé : `/invite/[token]` (une alerte et un bouton) et la
+fiche d'un prestataire (`PageHeader`, `SectionCard`, `ListRow`) — leurs primitives sont toutes
+auditées ailleurs, seule la composition ne l'est pas, et elle est en lecture seule.

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { installPromptCapture } from "@/components/pwa/install-prompt-capture";
 import { PwaProvider } from "@/components/pwa/PwaProvider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -37,6 +38,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} className="h-full antialiased">
+      <head>
+        {/* Inline and first: Chrome fires `beforeinstallprompt` once, before hydration. */}
+        <script dangerouslySetInnerHTML={{ __html: installPromptCapture }} />
+      </head>
       <body className="flex min-h-full min-w-0 flex-col font-sans">
         <NextIntlClientProvider>
           <PwaProvider>{children}</PwaProvider>

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { INSTALL_PROMPT_EVENT, INSTALL_PROMPT_KEY } from "@/components/pwa/install-prompt-capture";
+
 const SESSIONS_KEY = "xaman.pwa.sessions";
 const COUNTED_KEY = "xaman.pwa.counted";
 const DISMISSED_KEY = "xaman.pwa.installDismissedUntil";
@@ -13,6 +15,14 @@ type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
+
+/** What the inline capture in the document head parked for us (see install-prompt-capture). */
+function parkedPrompt(): BeforeInstallPromptEvent | null {
+  return (
+    ((window as unknown as Record<string, unknown>)[INSTALL_PROMPT_KEY] as
+      BeforeInstallPromptEvent | undefined) ?? null
+  );
+}
 
 export type InstallState = {
   /** false until the browser has been inspected (server render, first paint). */
@@ -60,7 +70,17 @@ export function useInstallPrompt() {
       } catch {
         // storage blocked (private mode): behave as a first session
       }
-      setState((current) => ({ ...current, ready: true, standalone, ios, sessions, dismissed }));
+      setState((current) => ({
+        ...current,
+        ready: true,
+        standalone,
+        ios,
+        sessions,
+        dismissed,
+        // The event has almost always fired before this component mounts, so read it rather
+        // than wait for it.
+        promptEvent: current.promptEvent ?? parkedPrompt(),
+      }));
     }
     inspect();
 
@@ -68,12 +88,16 @@ export function useInstallPrompt() {
       event.preventDefault();
       setState((current) => ({ ...current, promptEvent: event as BeforeInstallPromptEvent }));
     };
+    // Re-read after the inline capture announces one: it can arrive after this mount too.
+    const onParked = () => setState((current) => ({ ...current, promptEvent: parkedPrompt() }));
     const onInstalled = () =>
       setState((current) => ({ ...current, standalone: true, promptEvent: null }));
     window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener(INSTALL_PROMPT_EVENT, onParked);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener(INSTALL_PROMPT_EVENT, onParked);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
@@ -83,6 +107,9 @@ export function useInstallPrompt() {
     if (!event) return false;
     await event.prompt();
     const choice = await event.userChoice;
+    // The event is single-use: drop the parked copy as well, or reopening the dialog would
+    // offer a button that can no longer prompt.
+    (window as unknown as Record<string, unknown>)[INSTALL_PROMPT_KEY] = null;
     setState((current) => ({ ...current, promptEvent: null }));
     return choice.outcome === "accepted";
   }, [state.promptEvent]);
