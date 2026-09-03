@@ -28,6 +28,7 @@ export async function DevShell({ children }: { children: React.ReactNode }) {
   );
   return (
     <AppShell
+      boatId={DEV_BOAT_ID}
       boatName="Xaman"
       boatSubtitle="Marsaudon Composites ORC 50"
       nav={nav}

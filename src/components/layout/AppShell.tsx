@@ -2,12 +2,14 @@ import { Fragment } from "react";
 import { getTranslations } from "next-intl/server";
 
 import { BottomTabs } from "@/components/layout/BottomTabs";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import type { NavItem } from "@/components/layout/nav";
 
 // Application frame: sidebar from `lg` (iPad landscape, Mac), top bar + bottom tabs below.
 export async function AppShell({
+  boatId,
   boatName,
   boatSubtitle,
   nav,
@@ -16,6 +18,8 @@ export async function AppShell({
   banner,
   children,
 }: {
+  /** When given, the trail under the header is built from the URL (E12 UX, fil d'Ariane). */
+  boatId?: string;
   boatName: string;
   boatSubtitle?: string;
   nav: NavItem[];
@@ -65,8 +69,9 @@ export async function AppShell({
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto w-full max-w-6xl px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-8 lg:pb-12 print:max-w-none print:p-0"
+        className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-10 lg:pb-16 print:max-w-none print:gap-0 print:p-0"
       >
+        {boatId ? <Breadcrumb boatId={boatId} /> : null}
         {children}
       </main>
       <BottomTabs

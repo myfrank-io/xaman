@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
-import { equipmentPath, newEquipmentPath } from "@/lib/queries/boat-routes";
+import { equipmentPath, importPath, newEquipmentPath } from "@/lib/queries/boat-routes";
 
 export type EquipmentSummary = {
   id: string;
@@ -55,6 +55,7 @@ export function EquipmentTab({
   canWrite: boolean;
 }) {
   const t = useTranslations("equipment");
+  const ti = useTranslations("import");
   const active = items.filter((item) => !item.removedAt);
   const removed = items.filter((item) => item.removedAt);
   const quantityLabel = (count: number) => t("quantityShort", { count });
@@ -78,9 +79,14 @@ export function EquipmentTab({
       <div className="flex items-center justify-between gap-3">
         <p className="text-body text-ink-2">{t("count", { count: active.length })}</p>
         {canWrite ? (
-          <Button asChild variant="outline">
-            <Link href={newEquipmentPath(boatId) as Route}>{t("add")}</Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline">
+              <Link href={importPath(boatId, "equipment") as Route}>{ti("action")}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={newEquipmentPath(boatId) as Route}>{t("add")}</Link>
+            </Button>
+          </div>
         ) : null}
       </div>
       {groups.length === 0 ? (

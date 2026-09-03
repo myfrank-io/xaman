@@ -20,6 +20,8 @@ const PAGES = [
   "/dev/ui/haul-outs",
   "/dev/ui/logs",
   "/dev/ui/review",
+  "/dev/ui/import",
+  "/dev/ui/install",
 ];
 
 const MIN_TARGET = 44;
@@ -36,17 +38,20 @@ type Offender = {
 
 async function audit(
   page: Page,
-): Promise<{ controls: Offender[]; fields: Offender[]; overflow: number }> {
+): Promise<{ controls: Offender[]; fields: Offender[]; clipped: Offender[]; overflow: number }> {
   return page.evaluate(
     ({ minTarget, minFont }) => {
       const visible = (el: Element) => {
         const rect = el.getBoundingClientRect();
         const style = getComputedStyle(el);
+        // A control clipped to a pixel is visually hidden on purpose — a file input opened by
+        // a real button, a screen-reader-only field. Nobody aims a finger at it.
         return (
-          rect.width > 0 &&
-          rect.height > 0 &&
+          rect.width > 1 &&
+          rect.height > 1 &&
           style.visibility !== "hidden" &&
-          style.display !== "none"
+          style.display !== "none" &&
+          !el.closest("[hidden]")
         );
       };
       const describe = (el: Element): Offender => {
@@ -84,8 +89,23 @@ async function audit(
           return rect.height < minTarget - 0.5 || fontSize < minFont;
         })
         .map((el) => ({ ...describe(el), fontSize: parseFloat(getComputedStyle(el).fontSize) }));
+      // A label wider than the button that paints it: « Sorties de l'eau » spilling out of its
+      // pill was reported from the boat. Ellipsised and visually hidden labels are exempt.
+      const clipped = [
+        ...document.querySelectorAll(
+          'button, [data-slot="toggle-group-item"], [data-slot="tabs-trigger"], a[data-slot="button"]',
+        ),
+      ]
+        .filter((el) => {
+          const rect = el.getBoundingClientRect();
+          if (rect.width < 2 || rect.height < 2) return false;
+          const style = getComputedStyle(el);
+          if (style.textOverflow === "ellipsis" || style.overflow === "hidden") return false;
+          return el.scrollWidth > Math.ceil(rect.width) + 2;
+        })
+        .map(describe);
       const overflow = document.documentElement.scrollWidth - window.innerWidth;
-      return { controls, fields, overflow };
+      return { controls, fields, clipped, overflow };
     },
     { minTarget: MIN_TARGET, minFont: MIN_FONT },
   );
@@ -111,6 +131,10 @@ for (const path of PAGES) {
     expect(
       result.controls,
       `${path} controls under ${MIN_TARGET}px: ${JSON.stringify(result.controls)}`,
+    ).toEqual([]);
+    expect(
+      result.clipped,
+      `${path} labels wider than their button: ${JSON.stringify(result.clipped)}`,
     ).toEqual([]);
     expect(
       result.fields,

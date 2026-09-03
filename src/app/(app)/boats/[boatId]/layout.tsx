@@ -89,6 +89,7 @@ export default async function BoatLayout({
     <BoatProvider boat={boat} role={boatRole}>
       <RealtimeBridge boatId={boat.id} />
       <AppShell
+        boatId={boatId}
         boatName={boat.name}
         boatSubtitle={[boat.builder, boat.model].filter(Boolean).join(" ")}
         nav={nav}

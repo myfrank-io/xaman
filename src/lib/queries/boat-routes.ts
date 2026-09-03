@@ -153,6 +153,11 @@ export function editPartPath(boatId: string, partId: string): string {
   return `${boatPath(boatId, "supplies")}/parts/${partId}/edit`;
 }
 
+/** Import screen of a list (E12-2): one screen, the entity in the query. */
+export function importPath(boatId: string, entity: "contacts" | "equipment" | "parts"): string {
+  return withQuery(`/boats/${boatId}/import`, { entity });
+}
+
 export function boatTabPath(boatId: string, tab?: "identity" | "engines" | "equipment"): string {
   return withQuery(boatPath(boatId, "boat"), tab ? { tab } : undefined);
 }

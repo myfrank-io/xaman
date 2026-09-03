@@ -112,3 +112,22 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 | J3 — Le carnet est remplacé | L5 + L6 | Vidange saisie en < 45 s, carnet papier repris, dépenses lisibles |
 | J4 — MVP complet | L7 | Rapport d'état, export, hors ligne, e-mail hebdomadaire, E2E et QA iPad — critères `SPEC.md §11` |
 | J5 — Confort | L8 | Photos, stock, mise en production complète |
+
+## E12 — Import de données (« ne jamais tout retaper »)
+
+Règle produit : partout où l'app stocke une liste, on doit pouvoir l'importer. Un moteur unique, un descripteur par entité.
+
+- [x] **E12-1 (M, 2)** Moteur d'import : analyse `.csv` / `.tsv` / collage Excel, détection du séparateur, correspondance automatique des colonnes par en-tête (accents et casse ignorés), aperçu des 10 premières lignes, validation zod ligne à ligne, upsert idempotent sur la clé naturelle, rapport « N créées · M mises à jour · K refusées » avec motifs et export CSV des refus.
+- [x] **E12-2 (M, 1)** Écran `/boats/[boatId]/import` + entrée « Importer » sur chaque liste concernée.
+- [x] **E12-3 (M, 1)** Descripteurs : contacts, équipements, pièces en stock.
+- [ ] **E12-4 (S, 1)** Descripteurs : points de checklist, achats / dépenses, interventions du journal, relevés d'heures.
+- [ ] **E12-5 (S, 1)** Fichiers `.xlsx` (analyseur chargé à la demande, hors du bundle principal).
+- [ ] **E12-6 (S, 1)** Contacts depuis une fiche `.vcf` (carnet d'adresses iOS / Android exporté).
+- [ ] **E12-7 (C, 1)** Modèle vierge téléchargeable par entité (les bons en-têtes, une ligne d'exemple).
+
+## E13 — Reprises d'interface signalées à l'usage
+
+- [x] **E13-1** Dialogue d'installation : la barre d'actions collante recouvrait le texte sur un écran court ; elle suit désormais le contenu. Page `/dev/ui/install` ajoutée pour le mettre sous l'audit tactile.
+- [x] **E13-2** Fil d'Ariane sous l'en-tête, déduit de l'URL (`buildTrail`), pour remonter un flux sans repasser par le menu de gauche.
+- [x] **E13-3** Respiration : marges hautes et basses de la zone de contenu augmentées (`pt-6 / lg:pt-10`, bas `8rem / 4rem`).
+- [x] **E13-4** Libellés de boutons rognés : une puce ne rétrécit plus sous son texte (`grow basis-auto` + plancher 44 px) et un groupe passe à la ligne. L'audit tactile échoue désormais sur tout libellé plus large que son bouton.
