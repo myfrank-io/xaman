@@ -100,7 +100,7 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 ## Retirés ou reportés (voir `AUDIT.md §3.4`)
 
 - E4-8 export PDF de catégorie → remplacé par E9-2b · E10-2 sélecteur de bateau → reporté (un seul bateau) · E10-3 → fusionné dans E3-4 · E10-5 → fusionné dans E2-2 · E3-6 → fusionné dans E3-3 / E3-3b.
-- **E11 — V1.1 / V2 (ne pas démarrer sans validation)** : E11-2 graphique des heures · E11-3 onboarding public (derrière une bibliothèque de modèles) · E11-4 offline-first · E11-5 organisations / `renter` · E11-6 modèles publiés par les constructeurs et versionnage · E11-7 relevés automatiques (Victron / NMEA) · lien de partage lecture seule du rapport · import assisté du carnet papier (photo → saisie guidée) · historique par équipement enrichi.
+- **E11 — V1.1 / V2 (ne pas démarrer sans validation)** : E11-2 graphique des heures · ~~E11-3 onboarding public (derrière une bibliothèque de modèles)~~ **livré le 2026-09-03 (D63)** : `/boats/new`, `create_boat` (`0015`), trois modèles génériques (`0016`) · E11-4 offline-first · E11-5 organisations / `renter` · E11-6 modèles publiés par les constructeurs et versionnage · E11-7 relevés automatiques (Victron / NMEA) · lien de partage lecture seule du rapport · import assisté du carnet papier (photo → saisie guidée) · historique par équipement enrichi.
 
 ---
 

@@ -7,7 +7,7 @@ Format : date · question · décision · raison. Claude Code ajoute une ligne �
 | 2026-09-02 | Stack | Next.js + Supabase + Vercel, PWA | iPad Safari en priorité, multi-tenant par RLS, MCP Supabase/Vercel déjà connectés, pas de serveur à maintenir |
 | 2026-09-02 | Portée multi-acteurs V1 | Modèle multi-bateaux / organisations dès la V1, UI limitée à un bateau et 4 rôles (owner, editor, pro, viewer) | Éviter une refonte du schéma en V2 sans alourdir le MVP |
 | 2026-09-02 | Offline | V1 = cache de lecture + écritures en ligne ; offline-first en V2 | Starlink à bord ; l'offline-first double la complexité (sync, conflits) |
-| 2026-09-02 | Inscription publique | Pas de création libre de bateau en V1 ; l'admin plateforme crée les bateaux et invite | Un seul bateau au lancement, réduit la surface (onboarding, abus) |
+| 2026-09-02 | Inscription publique | ~~Pas de création libre de bateau en V1 ; l'admin plateforme crée les bateaux et invite~~ — **renversée le 2026-09-03, voir D63** | Un seul bateau au lancement, réduit la surface (onboarding, abus) |
 | 2026-09-02 | Statut « Urgent » | Conservé comme statut d'intervention (conforme au briefing), pas comme drapeau séparé | Fidélité au briefing ; à rediscuter avec Xav si gênant (question ouverte §13-5) |
 | 2026-09-02 | Stock de pièces | Stock simple (quantité, seuil, emplacement, +/−) dans le MVP ; inventaire avancé exclu | Le briefing liste le stock en must-have et « gestion des stocks » en hors-scope : on prend la version simple |
 | 2026-09-02 | Bouteilles de gaz | Importées et gérées comme achats (`purchases.kind = gas`) avec vue dédiée, pas comme interventions | Un changement de bouteille est un achat consommable, pas un entretien ; permet le calcul de consommation |
@@ -590,3 +590,73 @@ que pour une intervention (`LogActions`). `maintenance_logs.equipment_id` étant
 `tests/unit/rls.test.ts` couvre l'équipement supprimé comme les pièces : qui peut le mettre à la
 corbeille et le restaurer, sa lisibilité par tout membre, la purge à 30 jours, et l'historique
 préservé après purge.
+
+## 2026-09-03 — D63 : un compte sans bateau ajoute le sien (renversement du 2026-09-02)
+
+**Question.** « Quand je crée un compte sans avoir été invité, évidemment que je dois ajouter mon
+bateau. » Quelqu'un qui s'inscrivait sans invitation atterrissait sur `/boats`, lisait « Vous
+n'avez pas encore de bateau. Demandez une invitation au propriétaire du bateau » et n'avait aucun
+geste possible. Ni bouton, ni route, ni Server Action : la création d'un bateau n'existait nulle
+part dans `src/`.
+
+**Constat.** Ce n'était pas un oubli, c'était **la décision du 2026-09-02** (« Inscription
+publique : pas de création libre de bateau en V1 ; l'admin plateforme crée les bateaux et
+invite », `SPEC.md §4.3`, `boats_insert with check (is_platform_admin())`). Elle était juste
+quand il y avait un bateau et un propriétaire, et que le seul risque était d'ouvrir une surface
+d'abus pour rien. Elle est devenue le premier mur de l'application.
+
+Deux garde-fous justifiaient cette décision, et ils sont réels — ce sont eux qu'il fallait garder
+en ouvrant la porte :
+
+1. **« Un bateau a toujours au moins un owner »** (`DATA-MODEL.md §3.5`). L'ouvrir naïvement était
+   d'ailleurs impossible : `boat_members_insert` exige `is_boat_owner(boat_id)`, donc après un
+   simple `insert into boats` le créateur ne pouvait pas s'inscrire lui-même. Il aurait obtenu un
+   bateau invisible (`boats_select` = `is_boat_member(id)`) que personne n'aurait pu rattraper.
+2. **« Ne pas faire : création libre de bateaux sans modèle »** (`AUDIT.md §2`). Le produit promet
+   un bateau *déjà rempli* ; un carnet vide est exactement le coût d'amorçage qui tue ces
+   applications (`AUDIT.md §0.2`).
+
+**Décision.** La table `boats` **reste fermée** en insertion. La création passe par une seule
+fonction `security definer`, `create_boat(p_boat_id, p_name, p_template_id, p_engines)`
+(`0015_boat_onboarding.sql`), qui écrit le bateau, la ligne `boat_members` en `owner`, les moteurs
+et la checklist **dans la même transaction**. Les deux garde-fous deviennent donc des invariants
+de base et non des règles d'écran : un bateau ne peut littéralement pas naître sans owner, ni sans
+modèle (`p_template_id` est obligatoire et doit être `is_public`). Le plafond de 20 bateaux
+possédés remplace la protection anti-abus que « seul l'admin crée » offrait gratuitement.
+
+**Conséquence : les modèles génériques passent de « reporté » à bloquant.** Rendre le modèle
+obligatoire ne tient que s'il y en a toujours un à choisir. Or il n'en existait qu'un —
+« ORC 50 — Marsaudon Composites » — chargé par `pnpm seed:xaman`, qui porte les données de Xaman
+et ne tourne jamais en production : **le registre y était vide**. `0016_generic_templates.sql`
+livre donc les trois modèles que `AUDIT.md §3.4` avait reportés (catamaran, monocoque, moteur :
+7 à 8 systèmes, 64 à 70 points, actions pas à pas sur la douzaine de gestes où les étapes sont
+l'essentiel). Ils sont générés depuis `seed/generic-checklists.json` par
+`scripts/gen-template-migration.mjs`, et `tests/unit/template-migration.test.ts` échoue si les
+deux divergent.
+
+**L'écran : trois réponses, pas un formulaire.** `/boats/new` demande un nom, un modèle et le
+nombre de moteurs — et rien d'autre :
+
+- **Pas de champ « type de bateau », pas de champ « constructeur ».** Le modèle les porte déjà ;
+  `create_boat` les recopie. Poser une question dont la réponse est connue est précisément l'étape
+  qui fait abandonner un onboarding. L'identité reste modifiable sur l'écran Bateau — un trimaran
+  qui prend le modèle catamaran est enregistré `catamaran` et se corrige en un tap.
+- **Le nombre de moteurs est demandé ici, et nulle part ailleurs.**
+  `apply_checklist_template` ne duplique un point `engine_scope <> 'none'` que pour les moteurs
+  qui **existent déjà**, et ce sont eux qui portent tous les intervalles en heures. Un bateau créé
+  sans ses moteurs ouvre sur une checklist sans « Vidange huile ». C'est une bascule pré-réglée
+  par le modèle (multicoque → 2, sinon 1), donc zéro tap dans le cas courant.
+- **Coût de l'acte : 3 taps** (choisir le modèle = 2, « Créer le carnet » = 1), la frappe du nom
+  non comptée, comme dans `AUDIT.md §7.3`.
+
+`/boats` sans bateau **redirige** vers cet écran au lieu d'afficher une salle d'attente ; l'écran
+rappelle en une ligne qu'une invitation reçue par e-mail ajoute directement au bateau de
+quelqu'un d'autre. Le sélecteur de bateaux et le menu compte portent « Ajouter un bateau » — seule
+porte vers un deuxième carnet, puisque `/boats` redirige tant qu'il n'y en a qu'un.
+
+**Ce qui n'a pas changé.** Aucune politique RLS n'est assouplie. `boats_insert` reste
+`is_platform_admin()` et `tests/unit/rls.test.ts` continue de le vérifier ; ce qui est neuf, c'est
+la porte à côté, avec ses propres refus (bateau d'autrui, modèle inexistant, nom vide, moteur
+malformé, `anon`), tous couverts. L'assistant de mise en route (E4-9) reste le pas suivant : la
+création pose les points et leur ancrage `current_date` (D1), le tableau de bord du jour 1 est
+donc vide **et honnête**, et le bloc « carnet neuf » emmène vers le calage.

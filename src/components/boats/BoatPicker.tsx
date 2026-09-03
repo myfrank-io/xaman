@@ -1,11 +1,13 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { SailboatIcon } from "lucide-react";
+import { PlusIcon, SailboatIcon } from "lucide-react";
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
-import { XamanLogotype } from "@/components/brand/XamanLogotype";
+import { BoatsShell } from "@/components/boats/BoatsShell";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
+import { NEW_BOAT_PATH } from "@/lib/queries/boat-routes";
 
 export type PickableBoat = {
   id: string;
@@ -15,8 +17,12 @@ export type PickableBoat = {
 };
 
 /**
- * The screen between signing in and a boat (E1-3, E10-2) — for anyone who keeps more than one,
- * and the waiting room for someone invited who has not been added yet.
+ * The screen between signing in and a boat (E1-3, E10-2) — for anyone who keeps more than one.
+ *
+ * It is no longer the waiting room it used to be: someone with no boat is sent straight to
+ * « Ajouter mon bateau » by the page around it (D63), so the empty state here is only reached
+ * from the gallery. The row that opens a second carnet sits at the end of the list, where the
+ * eye already is after reading it, rather than as a button competing with the boats.
  *
  * It lives in a component rather than in the page so `/dev/ui/boats` shows this exact markup:
  * the page around it redirects when there is a single boat, which is the common case, so the
@@ -24,55 +30,61 @@ export type PickableBoat = {
  */
 export async function BoatPicker({ boats }: { boats: PickableBoat[] }) {
   const t = await getTranslations("boats");
-  const ta = await getTranslations("app");
 
   return (
-    <main className="flex min-h-dvh flex-col">
-      <header className="bg-header-gradient px-4 safe-pt-8 pb-10 text-on-navy sm:px-6">
-        <div className="mx-auto w-full max-w-2xl">
-          <p className="text-overline text-brass-light uppercase">{ta("eyebrow")}</p>
-          <XamanLogotype className="mt-3 h-9" />
-          <h1 className="mt-5 text-h1">{t("title")}</h1>
-        </div>
-      </header>
-      <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-8 sm:px-6">
-        {boats.length > 0 ? (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {boats.map((boat) => (
-              // A grid item defaults to `min-width: auto`, so without this the track grows to
-              // the longest yard name and the card runs off the screen.
-              <li key={boat.id} className="min-w-0">
-                <Link
-                  href={`/boats/${boat.id}/dashboard` as Route}
-                  className="flex min-h-20 items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent sm:gap-4"
-                >
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-header-gradient text-white">
-                    <SailboatIcon className="size-6" />
+    <BoatsShell title={t("title")}>
+      {boats.length > 0 ? (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {boats.map((boat) => (
+            // A grid item defaults to `min-width: auto`, so without this the track grows to
+            // the longest yard name and the card runs off the screen.
+            <li key={boat.id} className="min-w-0">
+              <Link
+                href={`/boats/${boat.id}/dashboard` as Route}
+                className="flex min-h-20 items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent sm:gap-4"
+              >
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-header-gradient text-white">
+                  <SailboatIcon className="size-6" />
+                </span>
+                {/* `flex` matters: `min-w-0` does nothing on an inline box, so the two
+                    truncating lines below sized themselves to their text and pushed the card
+                    129 px past a 320 px screen — invisibly, since the page clips overflow. */}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-lg font-semibold">{boat.name}</span>
+                  <span className="truncate text-sm text-muted-foreground">
+                    {[boat.builder, boat.model].filter(Boolean).join(" ")}
                   </span>
-                  {/* `flex` matters: `min-w-0` does nothing on an inline box, so the two
-                      truncating lines below sized themselves to their text and pushed the card
-                      129 px past a 320 px screen — invisibly, since the page clips overflow. */}
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate text-lg font-semibold">{boat.name}</span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {[boat.builder, boat.model].filter(Boolean).join(" ")}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState
-            icon={<SailboatIcon />}
-            title={t("none.title")}
-            description={t("none.description")}
-          />
-        )}
-        <div className="mt-auto flex justify-end pt-4">
-          <SignOutButton />
-        </div>
-      </section>
-    </main>
+                </span>
+              </Link>
+            </li>
+          ))}
+          <li className="min-w-0">
+            <Link
+              href={NEW_BOAT_PATH as Route}
+              className="flex min-h-20 items-center gap-3 rounded-xl border border-border-strong tap-feedback bg-surface-2 p-4 text-ink-2 transition-colors sm:gap-4"
+            >
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-surface">
+                <PlusIcon className="size-6" />
+              </span>
+              <span className="min-w-0 truncate text-label font-medium">{t("new.add")}</span>
+            </Link>
+          </li>
+        </ul>
+      ) : (
+        <EmptyState
+          icon={<SailboatIcon />}
+          title={t("none.title")}
+          description={t("none.description")}
+          action={
+            <Button asChild size="lg">
+              <Link href={NEW_BOAT_PATH as Route}>{t("new.add")}</Link>
+            </Button>
+          }
+        />
+      )}
+      <div className="mt-auto flex justify-end pt-4">
+        <SignOutButton />
+      </div>
+    </BoatsShell>
   );
 }

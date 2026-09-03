@@ -390,6 +390,13 @@ export type Database = {
             foreignKeyName: "boats_checklist_template_id_fkey"
             columns: ["checklist_template_id"]
             isOneToOne: false
+            referencedRelation: "checklist_template_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "boats_checklist_template_id_fkey"
+            columns: ["checklist_template_id"]
+            isOneToOne: false
             referencedRelation: "checklist_templates"
             referencedColumns: ["id"]
           },
@@ -699,6 +706,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "checklist_template_categories_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_template_catalog"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "checklist_template_categories_template_id_fkey"
             columns: ["template_id"]
@@ -2050,6 +2064,42 @@ export type Database = {
           },
         ]
       }
+      checklist_template_catalog: {
+        Row: {
+          boat_type: Database["public"]["Enums"]["boat_type"] | null
+          builder: string | null
+          category_count: number | null
+          external_ref: string | null
+          id: string | null
+          item_count: number | null
+          model: string | null
+          name: string | null
+          version: number | null
+        }
+        Insert: {
+          boat_type?: Database["public"]["Enums"]["boat_type"] | null
+          builder?: string | null
+          category_count?: never
+          external_ref?: string | null
+          id?: string | null
+          item_count?: never
+          model?: string | null
+          name?: string | null
+          version?: number | null
+        }
+        Update: {
+          boat_type?: Database["public"]["Enums"]["boat_type"] | null
+          builder?: string | null
+          category_count?: never
+          external_ref?: string | null
+          id?: string | null
+          item_count?: never
+          model?: string | null
+          name?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       engine_current_hours: {
         Row: {
           boat_id: string | null
@@ -2302,6 +2352,15 @@ export type Database = {
           p_today?: string
         }
         Returns: Record<string, unknown>
+      }
+      create_boat: {
+        Args: {
+          p_boat_id: string
+          p_engines?: Json
+          p_name: string
+          p_template_id: string
+        }
+        Returns: string
       }
       enqueue_weekly_digest: {
         Args: Record<PropertyKey, never>

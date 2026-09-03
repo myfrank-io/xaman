@@ -82,6 +82,7 @@ const PREVIEWS: { href: string; label: string }[] = [
   { href: "/dev/ui/import", label: "Import" },
   { href: "/dev/ui/review", label: "Relecture" },
   { href: "/dev/ui/boats", label: "Choix du bateau" },
+  { href: "/dev/ui/boats/new", label: "Ajouter mon bateau" },
   { href: "/dev/ui/profile", label: "Mon compte" },
   { href: "/dev/ui/reset-password", label: "Nouveau mot de passe" },
   { href: "/dev/ui/install", label: "Installer l'application" },
