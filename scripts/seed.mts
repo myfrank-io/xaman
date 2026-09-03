@@ -499,7 +499,7 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
         client,
         `insert into public.contacts (boat_id, name, company, specialty, phone, email, address, notes, external_ref, created_by, updated_by)
          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
-         on conflict (boat_id, external_ref) do update set specialty = excluded.specialty,
+         on conflict (boat_id, external_ref) where deleted_at is null do update set specialty = excluded.specialty,
            name = case when public.contacts.name like '%(à compléter)' then excluded.name else public.contacts.name end,
            phone = coalesce(public.contacts.phone, excluded.phone), email = coalesce(public.contacts.email, excluded.email)
          returning id`,

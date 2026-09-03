@@ -7,12 +7,16 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { undoToast } from "@/components/common/UndoToast";
 import { Button } from "@/components/ui/button";
-import { deleteContact } from "@/lib/actions/contacts";
+import { trashContact, untrashContact } from "@/lib/actions/contacts";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatPath } from "@/lib/queries/boat-routes";
 
-// Physical delete with the reference counts in the question (DATA-MODEL §3.11).
+/**
+ * « Mettre à la corbeille » a provider (D41). The reference counts stay in the question: they
+ * are what the person is really deciding about, and until the purge those links are all kept.
+ */
 export function DeleteContactButton({
   boatId,
   contactId,
@@ -25,6 +29,7 @@ export function DeleteContactButton({
   references: { logs: number; purchases: number; haulOuts: number };
 }) {
   const t = useTranslations("contacts.delete");
+  const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -32,13 +37,26 @@ export function DeleteContactButton({
 
   function confirm() {
     startTransition(async () => {
-      const result = await deleteContact({ boatId, contactId });
+      const result = await trashContact({ boatId, contactId });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
       setOpen(false);
-      toast.success(t("done"));
+      undoToast({
+        message: t("done"),
+        undoLabel: tc("undo"),
+        onUndo: () => {
+          void untrashContact({ boatId, contactId }).then((restored) => {
+            if (!restored.ok) {
+              toast.error(errorMessage(restored.error));
+              return;
+            }
+            toast.success(t("restored"));
+            router.refresh();
+          });
+        },
+      });
       router.push(boatPath(boatId, "contacts") as Parameters<typeof router.push>[0]);
       router.refresh();
     });

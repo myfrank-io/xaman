@@ -27,9 +27,13 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { importRows } from "@/lib/actions/import";
 import {
   cellText,
+  createMatcher,
   descriptorOf,
   IMPORT_MAX_ROWS,
+  IMPORT_NAME_MAX,
   rejectionReason,
+  rememberRow,
+  type ImportCatalog,
   type ImportEntity,
   type ImportReport,
 } from "@/lib/import/entities";
@@ -93,6 +97,7 @@ export function ImportWizard({
   backHref,
   backLabel,
   existingKeys = [],
+  catalog,
   initialText,
 }: {
   boatId: string;
@@ -101,6 +106,11 @@ export function ImportWizard({
   backLabel: string;
   /** Natural keys already on the boat: what tells a creation from an update before the write. */
   existingKeys?: string[];
+  /**
+   * The checklist points and the engines a line may name (E12-4), so the preview refuses
+   * exactly what the write will refuse.
+   */
+  catalog?: ImportCatalog;
   /** Preloaded cells, for the design gallery. */
   initialText?: string;
 }) {
@@ -272,15 +282,22 @@ export function ImportWizard({
    */
   const outcomes = useMemo<Outcome[]>(() => {
     const seen = new Set(existingKeys);
+    // Built here, not once for the screen: the matcher takes in the lines already read, so a
+    // recomputation must start again from what the boat carries and nothing else.
+    const match = createMatcher(catalog);
     return mappedRows.map((values) => {
-      const reason = rejectionReason(entity, values);
+      const reason = rejectionReason(entity, values, match);
       if (reason) return { kind: "rejected", reason };
-      const key = descriptor.naturalKey({ ...values, name: cellText(values.name, 120) ?? "" });
+      rememberRow(entity, values, match);
+      const key = descriptor.naturalKey(
+        { ...values, name: cellText(values.name, IMPORT_NAME_MAX) ?? "" },
+        match,
+      );
       if (seen.has(key)) return { kind: "updated", reason: null };
       seen.add(key);
       return { kind: "created", reason: null };
     });
-  }, [mappedRows, entity, descriptor, existingKeys]);
+  }, [mappedRows, entity, descriptor, existingKeys, catalog]);
 
   const plan = useMemo(
     () => ({

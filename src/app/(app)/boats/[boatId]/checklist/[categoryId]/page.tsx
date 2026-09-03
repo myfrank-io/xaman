@@ -69,7 +69,7 @@ export default async function CategoryPage({
     ? await supabase
         .from("checklist_completions")
         .select(
-          "id, checklist_item_id, completed_at, completed_by_name, engine_hours, next_due_at, note, created_by, created_at, profiles!checklist_completions_completed_by_fkey(full_name, email)",
+          "id, checklist_item_id, completed_at, completed_by_name, engine_hours, next_due_at, note, maintenance_log_id, created_by, created_at, profiles!checklist_completions_completed_by_fkey(full_name, email)",
         )
         .in("checklist_item_id", itemIds)
         .order("completed_at", { ascending: false })
@@ -88,6 +88,7 @@ export default async function CategoryPage({
     engineHours: completion.engine_hours,
     nextDueAt: completion.next_due_at,
     note: completion.note,
+    maintenanceLogId: completion.maintenance_log_id,
     createdBy: completion.created_by,
     createdAt: completion.created_at,
   }));

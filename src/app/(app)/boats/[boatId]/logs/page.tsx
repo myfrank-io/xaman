@@ -11,6 +11,7 @@ import { LogsToolbar, type LogsFilters } from "@/components/logs/LogsToolbar";
 import { firstParam } from "@/components/logs/log-form-values";
 import { toLogRow } from "@/components/logs/rows";
 import { Button } from "@/components/ui/button";
+import { NO_MATCH_ID, STOCK_FILTER } from "@/lib/logs-filters";
 import { can, type BoatRole } from "@/lib/permissions";
 import {
   boatPath,
@@ -83,7 +84,24 @@ export default async function LogsPage({
     .eq("boat_id", boatId);
   if (tab === "history") rowsQuery = rowsQuery.eq("status", "done");
   else rowsQuery = rowsQuery.in("status", [...OPEN_STATUSES]);
-  if (filters.category) rowsQuery = rowsQuery.eq("category_id", filters.category);
+  // « Stock » sits in the category list beside the boat's systems, but it is not one: an
+  // intervention is filed under a system, never under a part. What it means here is the only
+  // link the model actually carries — the jobs that consumed something from the stock, through
+  // a purchase attached to both the intervention and the part.
+  if (filters.category === STOCK_FILTER) {
+    const { data: fromStock } = await supabase
+      .from("purchases")
+      .select("maintenance_log_id")
+      .eq("boat_id", boatId)
+      .is("deleted_at", null)
+      .not("part_id", "is", null)
+      .not("maintenance_log_id", "is", null);
+    const ids = [...new Set((fromStock ?? []).map((row) => row.maintenance_log_id as string))];
+    // No purchase drawn from the stock: the filter must return nothing, not everything.
+    rowsQuery = rowsQuery.in("id", ids.length > 0 ? ids : [NO_MATCH_ID]);
+  } else if (filters.category) {
+    rowsQuery = rowsQuery.eq("category_id", filters.category);
+  }
   if (isLogStatus(filters.status)) rowsQuery = rowsQuery.eq("status", filters.status);
   if (filters.review) rowsQuery = rowsQuery.eq("needs_review", true);
   if (filters.contact) rowsQuery = rowsQuery.eq("contact_id", filters.contact);
@@ -150,7 +168,7 @@ export default async function LogsPage({
           It wraps under the title on a phone rather than shrinking below 44 px. */}
       <PageHeader
         title={t("title")}
-        subtitle={t("results", { count: total })}
+        subtitle={filtered ? t("results", { count: total }) : t("subtitle")}
         actions={
           canContribute ? (
             <>

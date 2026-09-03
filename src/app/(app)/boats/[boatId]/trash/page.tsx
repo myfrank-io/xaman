@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ListRow } from "@/components/common/ListRow";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
+import { PurgeButton } from "@/components/trash/PurgeButton";
 import { RestoreButton, type TrashKind } from "@/components/trash/RestoreButton";
 import { formatCurrency, formatDate, toDate } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
@@ -38,8 +39,14 @@ function daysLeft(deletedAt: string): number {
 }
 
 /**
- * Corbeille (E3-5): interventions, achats and sorties de l'eau soft-deleted less than 30 days
- * ago. The toast that carried « Annuler » is gone by now — this screen is the real safety net.
+ * Corbeille (E3-5, widened by D40 / D41): everything the app can remove and that holds the
+ * boat's history or its inventory — interventions, achats, sorties de l'eau, pièces de stock,
+ * intervenants and documents — soft-deleted less than 30 days ago. The toast that carried
+ * « Annuler » is gone by now; this screen is the real safety net.
+ *
+ * What is deliberately absent: a system, a point de checklist, a moteur and un équipement are
+ * archived rather than deleted and come back from their own screen; removing a member is not
+ * deleting data, and their interventions stay in the logbook.
  */
 export default async function TrashPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
@@ -49,7 +56,14 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
   if (!can(role as BoatRole, "write")) notFound();
 
   const since = retentionCutoff();
-  const [{ data: logs }, { data: purchases }, { data: haulOuts }] = await Promise.all([
+  const [
+    { data: logs },
+    { data: purchases },
+    { data: haulOuts },
+    { data: parts },
+    { data: contacts },
+    { data: attachments },
+  ] = await Promise.all([
     supabase
       .from("maintenance_logs_trash_view")
       .select("id, title, performed_at, cost, category_color, deleted_at, deleted_by_name")
@@ -65,6 +79,27 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
     supabase
       .from("haul_outs")
       .select("id, started_at, yard_name, cost, deleted_at")
+      .eq("boat_id", boatId)
+      .not("deleted_at", "is", null)
+      .gt("deleted_at", since)
+      .order("deleted_at", { ascending: false }),
+    supabase
+      .from("parts")
+      .select("id, name, reference, quantity, unit, location, deleted_at")
+      .eq("boat_id", boatId)
+      .not("deleted_at", "is", null)
+      .gt("deleted_at", since)
+      .order("deleted_at", { ascending: false }),
+    supabase
+      .from("contacts")
+      .select("id, name, specialty, company, deleted_at")
+      .eq("boat_id", boatId)
+      .not("deleted_at", "is", null)
+      .gt("deleted_at", since)
+      .order("deleted_at", { ascending: false }),
+    supabase
+      .from("attachments")
+      .select("id, file_name, caption, entity_type, deleted_at")
       .eq("boat_id", boatId)
       .not("deleted_at", "is", null)
       .gt("deleted_at", since)
@@ -98,11 +133,48 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
     deletedAt: row.deleted_at ?? "",
     deletedByName: null,
   }));
+  const partEntries: TrashEntry[] = (parts ?? []).map((row) => ({
+    id: row.id,
+    title: row.name,
+    meta: [t("partQuantity", { quantity: row.quantity, unit: row.unit }), row.location]
+      .filter(Boolean)
+      .join(" · "),
+    amount: null,
+    deletedAt: row.deleted_at ?? "",
+    deletedByName: null,
+  }));
+  const contactEntries: TrashEntry[] = (contacts ?? []).map((row) => ({
+    id: row.id,
+    title: row.name,
+    meta: [row.specialty, row.company].filter(Boolean).join(" · "),
+    amount: null,
+    deletedAt: row.deleted_at ?? "",
+    deletedByName: null,
+  }));
+  // V1 only hangs documents off an intervention or a purchase; the other enum values are
+  // reserved (DATA-MODEL §3.19) and get the generic label rather than the wrong one.
+  const attachmentEntries: TrashEntry[] = (attachments ?? []).map((row) => ({
+    id: row.id,
+    title: row.caption ?? row.file_name,
+    meta: t(
+      `attachmentOwner.${
+        row.entity_type === "maintenance_log" || row.entity_type === "purchase"
+          ? row.entity_type
+          : "other"
+      }`,
+    ),
+    amount: null,
+    deletedAt: row.deleted_at ?? "",
+    deletedByName: null,
+  }));
 
   const sections: { key: TrashKind; title: string; entries: TrashEntry[] }[] = [
     { key: "log", title: t("sections.logs"), entries: logEntries },
     { key: "purchase", title: t("sections.purchases"), entries: purchaseEntries },
     { key: "haulOut", title: t("sections.haulOuts"), entries: haulOutEntries },
+    { key: "part", title: t("sections.parts"), entries: partEntries },
+    { key: "contact", title: t("sections.contacts"), entries: contactEntries },
+    { key: "attachment", title: t("sections.attachments"), entries: attachmentEntries },
   ];
   const total = sections.reduce((sum, section) => sum + section.entries.length, 0);
 
@@ -113,6 +185,8 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
       {total === 0 ? (
         <EmptyState icon={<Trash2Icon />} title={t("empty")} description={t("emptyDescription")} />
       ) : (
+        // Only the sections that hold something: six empty headings would bury the one line
+        // the person came here for.
         sections
           .filter((section) => section.entries.length > 0)
           .map((section) => (
@@ -146,7 +220,17 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
                       </span>
                     ) : null
                   }
-                  action={<RestoreButton boatId={boatId} id={entry.id} kind={section.key} />}
+                  action={
+                    <div className="flex items-center gap-1">
+                      <RestoreButton boatId={boatId} id={entry.id} kind={section.key} />
+                      <PurgeButton
+                        boatId={boatId}
+                        id={entry.id}
+                        kind={section.key}
+                        label={entry.title}
+                      />
+                    </div>
+                  }
                 />
               ))}
             </SectionCard>

@@ -38,6 +38,7 @@ export async function purchaseFormContext(
         .from("contacts")
         .select("id, name, specialty, company, phone")
         .eq("boat_id", boatId)
+        .is("deleted_at", null)
         .order("name"),
       supabase
         .from("maintenance_logs")

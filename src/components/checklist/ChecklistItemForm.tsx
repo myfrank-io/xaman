@@ -26,7 +26,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { setChecklistItemActive, upsertChecklistItem } from "@/lib/actions/checklist";
 import { todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { categoryPath } from "@/lib/queries/boat-routes";
+import { categoryPath, checklistPath } from "@/lib/queries/boat-routes";
 import { INTERVAL_MONTH_PRESETS, upsertChecklistItemSchema } from "@/lib/schemas/checklist";
 
 export type ChecklistItemFormValues = {
@@ -190,7 +190,10 @@ export function ChecklistItemForm({
     });
   }
 
-  const backHref = categoryPath(boatId, item?.categoryId ?? defaultCategoryId);
+  // No category yet (opened from the checklist root): « Annuler » goes back to the checklist,
+  // not to `/checklist/` with an empty segment.
+  const parentId = item?.categoryId ?? defaultCategoryId;
+  const backHref = parentId ? categoryPath(boatId, parentId) : checklistPath(boatId);
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">

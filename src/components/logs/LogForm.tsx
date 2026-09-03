@@ -178,6 +178,7 @@ export function LogForm({
   const [detailsOpen, setDetailsOpen] = useState(
     Boolean(defaultValues.equipmentId || defaultValues.haulOutId),
   );
+  const filledHours = hourValues.filter((row) => row.hours.trim() !== "").length;
   const [focusEngineId, setFocusEngineId] = useState<string | null>(null);
   const titleMatches = useTitleSuggestions(boatId, titleFocused ? title : "");
   // Suggestions are kept with the question they answer, so a stale list is never displayed and
@@ -461,24 +462,40 @@ export function LogForm({
         </Field>
       </div>
 
+      {/* One control opens AND closes the readings: the button that revealed them is where the
+          hand goes back to. Collapsed with values already typed, it says how many, because a
+          reading that will be saved must never be invisible (rule 13). */}
       {engines.length > 0 ? (
-        hoursOpen ? (
-          <EngineHoursSection
-            engines={engines}
-            values={hourValues.map((row) => row.hours)}
-            focusEngineId={focusEngineId}
-            onValueChange={(index, raw) =>
-              form.setValue(`engineHours.${index}.hours`, raw, { shouldDirty: true })
-            }
-          />
-        ) : (
-          <div>
-            <Button type="button" variant="outline" onClick={() => setHoursOpen(true)}>
-              <GaugeIcon />
-              {t("hoursOpen")}
-            </Button>
-          </div>
-        )
+        <div className="flex flex-col gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="self-start"
+            aria-expanded={hoursOpen}
+            aria-controls="log-engine-hours"
+            onClick={() => setHoursOpen((open) => !open)}
+          >
+            {hoursOpen ? <ChevronDownIcon /> : <GaugeIcon />}
+            {t("hoursOpen")}
+            {!hoursOpen && filledHours > 0 ? (
+              <span className="text-caption font-normal text-ink-2">
+                {t("hoursKept", { count: filledHours })}
+              </span>
+            ) : null}
+          </Button>
+          {hoursOpen ? (
+            <div id="log-engine-hours">
+              <EngineHoursSection
+                engines={engines}
+                values={hourValues.map((row) => row.hours)}
+                focusEngineId={focusEngineId}
+                onValueChange={(index, raw) =>
+                  form.setValue(`engineHours.${index}.hours`, raw, { shouldDirty: true })
+                }
+              />
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="grid gap-5 sm:grid-cols-2">

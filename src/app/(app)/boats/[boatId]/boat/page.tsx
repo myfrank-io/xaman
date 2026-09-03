@@ -68,8 +68,9 @@ export default async function BoatPage({
         "id, name, reference, quantity, min_quantity, unit, location, category_id, supplier_contact_id, checked_at",
       )
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("name"),
-    supabase.from("contacts").select("id, name").eq("boat_id", boatId),
+    supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -139,11 +140,8 @@ export default async function BoatPage({
 
   // `?tab=identity` still arrives from an old link: it now lands on the default list, with
   // the identity right above it (D37).
-  const activeTab: BoatTab = isBoatTab(tab)
-    ? tab
-    : engineRows.some((engine) => engine.isActive)
-      ? "engines"
-      : "equipment";
+  // Équipements is the default (D39); an explicit `?tab=` still wins.
+  const activeTab: BoatTab = isBoatTab(tab) ? tab : "equipment";
 
   return (
     <div className="flex flex-col gap-6">

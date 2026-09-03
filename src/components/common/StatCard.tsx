@@ -33,6 +33,23 @@ const darkToneClasses: Record<NonNullable<StatCardProps["tone"]>, string> = {
   success: "text-state-ok-on-dark",
 };
 
+/**
+ * Type size for a figure, from how long it actually is.
+ *
+ * Measured against the NARROWEST tile the grid produces, 137 px of content on an iPad in
+ * landscape: 32 px fits nine characters and 24 px fits eleven. Sized for the widest tile
+ * instead, « 128 400,00 € » wrapped there — and a French amount separates its thousands with
+ * a narrow NO-BREAK space, so the only place a wrap can land is between two digits, which
+ * reads as a different number. Better one size down than a figure broken in half.
+ */
+function figureSize(value: React.ReactNode): string {
+  if (typeof value !== "string" && typeof value !== "number") return "text-num-lg";
+  const length = String(value).length;
+  if (length > 11) return "text-num-sm";
+  if (length > 9) return "text-num-md";
+  return "text-num-lg";
+}
+
 // Dark variant is an opaque tile (`--on-navy-surface`), never `bg-white/10 backdrop-blur`:
 // a translucent tile's contrast depends on the gradient pixel behind it (art-direction §7.6).
 export function StatCard({
@@ -63,7 +80,13 @@ export function StatCard({
       </div>
       <div
         className={cn(
-          "mt-1 num text-num-lg leading-tight font-semibold",
+          "mt-1 num leading-tight font-semibold",
+          // The figure sizes itself to its own length. A count is two characters and wants the
+          // deck display; a year of expenses is « 128 400,00 € » and at 32 px it ran straight
+          // out of the tile — reported from the boat. Wrapping is the last resort rather than
+          // the first: an amount cut in half misinforms, an amount on two lines only looks odd.
+          figureSize(value),
+          "[overflow-wrap:anywhere]",
           dark ? darkToneClasses[tone] : toneClasses[tone],
         )}
       >

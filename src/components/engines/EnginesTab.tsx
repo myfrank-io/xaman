@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate, formatHours, toDate } from "@/lib/format";
-import { boatTabPath, enginePath, newEnginePath } from "@/lib/queries/boat-routes";
+import { boatTabPath, enginePath, importPath, newEnginePath } from "@/lib/queries/boat-routes";
 import type { EnginePosition } from "@/lib/schemas/engines";
 import { cn } from "@/lib/utils";
 
@@ -140,6 +140,7 @@ export function EnginesTab({
   openReading?: boolean;
 }) {
   const t = useTranslations("engines");
+  const ti = useTranslations("import");
   const router = useRouter();
   const active = engines.filter((engine) => engine.isActive);
   const inactive = engines.filter((engine) => !engine.isActive);
@@ -166,7 +167,11 @@ export function EnginesTab({
   return (
     <div className="flex flex-col gap-6">
       {canWrite ? (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* Reprendre un carnet d'heures commence ici, à côté de l'acte du quotidien (E12-4). */}
+          <Button asChild variant="outline">
+            <Link href={importPath(boatId, "readings") as Route}>{ti("action")}</Link>
+          </Button>
           <Button asChild variant="outline">
             <Link href={newEnginePath(boatId) as Route}>{t("add")}</Link>
           </Button>

@@ -41,6 +41,7 @@ import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import {
   checklistPath,
   editChecklistItemPath,
+  logPath,
   newChecklistItemPath,
 } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,8 @@ export type CompletionRow = {
   note: string | null;
   createdBy: string | null;
   createdAt: string;
+  /** The intervention this completion wrote, when it wrote one: the way back to the history. */
+  maintenanceLogId?: string | null;
 };
 
 export type DisabledItem = { id: string; label: string };
@@ -148,6 +151,7 @@ export function CategoryItems({
         engineHours: completion.engineHours,
         nextDueAt: completion.nextDueAt,
         note: null,
+        maintenanceLogId: null,
         createdBy: currentUserId,
         createdAt: new Date().toISOString(),
       },
@@ -234,7 +238,18 @@ export function CategoryItems({
                 <ul className="flex flex-col">
                   {shown.map((completion) => (
                     <li key={completion.id} className="flex min-h-11 items-center gap-3 text-body">
-                      <span className="num">{formatDate(completion.completedAt)}</span>
+                      {/* The date leads back to the intervention this completion wrote, so the
+                          plan and the history are one tap apart in both directions. */}
+                      {completion.maintenanceLogId ? (
+                        <Link
+                          href={logPath(boatId, completion.maintenanceLogId) as Route}
+                          className="shrink-0 num underline underline-offset-4"
+                        >
+                          {formatDate(completion.completedAt)}
+                        </Link>
+                      ) : (
+                        <span className="shrink-0 num">{formatDate(completion.completedAt)}</span>
+                      )}
                       <span className="min-w-0 flex-1 truncate text-ink-2">
                         {[
                           completion.completedByName,

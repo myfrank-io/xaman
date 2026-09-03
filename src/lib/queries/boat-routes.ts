@@ -79,8 +79,13 @@ export function categoryPath(boatId: string, categoryId: string): string {
   return `${boatPath(boatId, "checklist")}/${categoryId}`;
 }
 
-export function newChecklistItemPath(boatId: string, categoryId: string): string {
-  return `${categoryPath(boatId, categoryId)}/new`;
+/**
+ * A new checklist point. Without a category the form asks for one itself (A9); with one, it
+ * arrives pre-selected.
+ */
+export function newChecklistItemPath(boatId: string, categoryId?: string): string {
+  const base = boatPath(boatId, "checklist");
+  return categoryId ? `${base}/${categoryId}/new` : `${base}/new`;
 }
 
 export function checklistPath(
@@ -174,7 +179,7 @@ export function editPartPath(boatId: string, partId: string): string {
 /** Import screen of a list (E12-2): one screen, the entity in the query. */
 export function importPath(
   boatId: string,
-  entity: "logs" | "purchases" | "contacts" | "equipment" | "parts",
+  entity: "logs" | "purchases" | "contacts" | "equipment" | "parts" | "completions" | "readings",
 ): string {
   return withQuery(`/boats/${boatId}/import`, { entity });
 }

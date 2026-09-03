@@ -581,12 +581,29 @@
     "sections": {
       "logs": "Interventions",
       "purchases": "Achats",
-      "haulOuts": "Sorties de l'eau"
+      "haulOuts": "Sorties de l'eau",
+      "parts": "Pièces détachées",
+      "contacts": "Intervenants",
+      "attachments": "Photos et documents"
     },
     "restored": "Élément restauré",
     "purgeNote": "La corbeille est purgée chaque nuit : au-delà de 30 jours, la suppression est définitive.",
     "emptyDescription": "Les éléments supprimés y restent 30 jours.",
-    "haulOutLabel": "Sortie de l'eau du {date}"
+    "haulOutLabel": "Sortie de l'eau du {date}",
+    "partQuantity": "{quantity} {unit} en stock",
+    "attachmentOwner": {
+      "maintenance_log": "Document d'une intervention",
+      "purchase": "Document d'un achat",
+      "other": "Document du bateau"
+    },
+    "purge": {
+      "action": "Supprimer définitivement : {label}",
+      "title": "Supprimer définitivement « {label} » ?",
+      "description": "Cette ligne ne sera plus récupérable. Sans rien faire, elle disparaîtra d'elle-même au bout de 30 jours.",
+      "descriptionContact": "Cet intervenant ne sera plus récupérable, et les interventions, achats et sorties de l'eau qui le mentionnent perdront le lien vers sa fiche. Ils gardent tout le reste de leur historique.",
+      "confirm": "Supprimer définitivement",
+      "done": "Supprimé définitivement"
+    }
   },
   "logs": {
     "title": "Interventions",
@@ -612,7 +629,8 @@
       "status": "Statut",
       "allStatuses": "Tous les statuts",
       "review": "À vérifier {count}",
-      "contact": "Intervenant : {name}"
+      "contact": "Intervenant : {name}",
+      "fromStock": "Stock (pièces utilisées)"
     },
     "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
     "loadMore": "Charger plus",
@@ -662,7 +680,8 @@
       "view": "Voir",
       "attachments": "Photos et documents",
       "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
-      "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants."
+      "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants.",
+      "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}"
     },
     "detail": {
       "fields": {
@@ -712,7 +731,8 @@
         "restored": "Intervention restaurée"
       }
     },
-    "attachments": "{count, plural, one {# document joint} other {# documents joints}}"
+    "attachments": "{count, plural, one {# document joint} other {# documents joints}}",
+    "subtitle": "Ce qui a été fait à bord. Une intervention peut valider des points de la checklist."
   },
   "checklist": {
     "title": "Checklist",
@@ -797,7 +817,7 @@
       "undo": "Annuler",
       "undone": "Réalisation annulée",
       "deleteTitle": "Supprimer cette réalisation ?",
-      "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle.",
+      "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle. Cette suppression est définitive : elle ne passe pas par la corbeille.",
       "deleted": "Réalisation supprimée",
       "addDetails": "+ Ajouter les détails"
     },
@@ -828,7 +848,7 @@
       "duplicate": "Un point actif de cette catégorie porte déjà ce libellé.",
       "saved": "Point enregistré",
       "disableTitle": "Désactiver {label} ?",
-      "disableDescription": "Le point sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}.",
+      "disableDescription": "Le point sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}. Rien n'est supprimé : vous pourrez le réactiver.",
       "disabled": "Point désactivé",
       "enabled": "Point réactivé"
     },
@@ -856,7 +876,8 @@
       "later": "Plus tard",
       "kept": "{kept} / {total} points suivis",
       "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
-    }
+    },
+    "subtitle": "Ce qui doit être fait, et quand. Cocher un point écrit l'intervention."
   },
   "validation": {
     "required": "Champ obligatoire.",
@@ -977,7 +998,7 @@
       "edit": "Modifier le relevé",
       "delete": "Supprimer le relevé",
       "deleteTitle": "Supprimer ce relevé ?",
-      "deleteDescription": "Le relevé de {hours} du {date} sera supprimé. Les échéances en heures seront recalculées.",
+      "deleteDescription": "Le relevé de {hours} du {date} sera supprimé. Les échéances en heures seront recalculées. Cette suppression est définitive : elle ne passe pas par la corbeille.",
       "deleted": "Relevé supprimé",
       "updated": "Relevé modifié",
       "noEngine": "Aucun moteur actif : ajoutez d'abord un moteur."
@@ -1021,7 +1042,7 @@
     "noHistory": "Aucune intervention liée à cet équipement.",
     "remove": "Déposer",
     "removeTitle": "Déposer {name} ?",
-    "removeDescription": "L'équipement quitte l'inventaire à la date indiquée. Sa fiche et son historique restent consultables.",
+    "removeDescription": "L'équipement quitte l'inventaire à la date indiquée. Sa fiche et son historique restent consultables, et vous pourrez le remettre à bord.",
     "removedOn": "Déposé le {date}",
     "removedAt": "Date de dépose",
     "removedSection": "{count, plural, one {# équipement déposé} other {# équipements déposés}}",
@@ -1078,10 +1099,11 @@
       },
       "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
       "delete": {
-        "action": "Supprimer la pièce",
-        "title": "Supprimer « {name} » ?",
-        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
-        "done": "Pièce supprimée."
+        "action": "Mettre à la corbeille",
+        "title": "Mettre « {name} » à la corbeille ?",
+        "description": "La ligne quitte le stock et reste 30 jours dans la corbeille, où vous pouvez la restaurer. Les achats qui la mentionnent sont conservés.",
+        "done": "Pièce mise à la corbeille",
+        "restored": "Pièce restaurée"
       }
     },
     "stockSection": "Pièces détachées",
@@ -1107,7 +1129,7 @@
     "moveDown": "Descendre",
     "archive": "Archiver",
     "archiveTitle": "Archiver {name} ?",
-    "archiveDescription": "{count, plural, =0 {Aucun point de checklist actif dans cette catégorie.} one {# point de checklist actif est dans cette catégorie.} other {# points de checklist actifs sont dans cette catégorie.}}",
+    "archiveDescription": "{count, plural, =0 {Aucun point de checklist actif dans cette catégorie.} one {# point de checklist actif est dans cette catégorie.} other {# points de checklist actifs sont dans cette catégorie.}} Rien n'est supprimé : la catégorie passe dans les archives, d'où vous pouvez la réactiver.",
     "archiveItems": "Archiver aussi les points",
     "moveItems": "Déplacer les points vers…",
     "target": "Catégorie de destination",
@@ -1238,11 +1260,12 @@
       "seeAll": "Voir tout"
     },
     "delete": {
-      "action": "Supprimer",
-      "title": "Supprimer {name} ?",
-      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} garderont leur historique mais perdront le lien vers cet intervenant. Cette suppression est définitive.",
-      "confirm": "Supprimer",
-      "done": "Intervenant supprimé"
+      "action": "Mettre à la corbeille",
+      "title": "Mettre {name} à la corbeille ?",
+      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} gardent leur historique et le lien vers cet intervenant. Il quitte l'annuaire et reste 30 jours dans la corbeille, où vous pouvez le restaurer.",
+      "confirm": "Mettre à la corbeille",
+      "done": "Intervenant mis à la corbeille",
+      "restored": "Intervenant restauré"
     }
   },
   "report": {
@@ -1606,7 +1629,9 @@
       "equipment": "Voir les équipements",
       "parts": "Voir le stock",
       "logs": "Retour aux interventions",
-      "purchases": "Retour aux achats"
+      "purchases": "Retour aux achats",
+      "completions": "Retour à la checklist",
+      "readings": "Retour aux moteurs"
     },
     "errors": {
       "empty": "Le tableau est vide.",
@@ -1629,7 +1654,19 @@
       "noDate": "Date manquante",
       "noAmount": "Montant manquant",
       "badAmount": "Montant illisible (attendu 42,90)",
-      "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous."
+      "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous.",
+      "futureDate": "Date dans le futur",
+      "noItem": "Point de checklist manquant",
+      "unknownItem": "Aucun point de la checklist de ce bateau ne porte ce nom",
+      "ambiguousItem": "Plusieurs points portent ce nom : précisez lequel dans le fichier",
+      "noEngine": "Moteur manquant",
+      "unknownEngine": "Aucun moteur de ce bateau ne porte ce nom",
+      "ambiguousEngine": "Plusieurs moteurs portent ce nom : précisez lequel dans le fichier",
+      "noEngineHours": "Heures moteur manquantes : ce point se suit en heures",
+      "noHours": "Heures manquantes",
+      "badHours": "Heures illisibles ou hors limites (attendu 1250,5)",
+      "hoursBackwards": "Compteur en baisse par rapport à un relevé antérieur. Corrigez la valeur, ou déclarez le remplacement du compteur sur la fiche du moteur.",
+      "badDueDate": "« Valide jusqu'au » doit être après la date de réalisation"
     },
     "entities": {
       "contacts": {
@@ -1656,6 +1693,16 @@
         "title": "Importer des achats",
         "help": "Une ligne par achat ou par facture. Le libellé, la date et le montant sont obligatoires. Un relevé bancaire ou un export comptable s'importe tel quel ; la colonne « Référence », si votre fichier en a une, évite les doublons d'un import à l'autre.",
         "placeholder": "Achat\tAcheté le\tMontant\tType\tFournisseur\nFiltre à huile Volvo\t02/06/2026\t42,90\tPièce\tAccastillage Diffusion"
+      },
+      "completions": {
+        "title": "Importer des points de checklist faits",
+        "help": "Une ligne par point coché. La colonne « Point de checklist » est rapprochée des points de ce bateau par leur nom, accents et majuscules ignorés : un nom inconnu ou porté par deux points est refusé et listé, jamais rattaché au hasard. La date est obligatoire ; les heures moteur le sont pour un point suivi en heures, et deviennent alors un relevé du compteur.",
+        "placeholder": "Point de checklist\tFait le\tHeures moteur\tFait par\nVidange huile moteur — Bâbord\t14/06/2026\t1250\tXavier"
+      },
+      "readings": {
+        "title": "Importer des relevés d'heures",
+        "help": "Une ligne par relevé de compteur. La colonne « Moteur » est rapprochée des moteurs de ce bateau par leur nom (« bâbord » et « tribord » sont compris) ; un nom inconnu est refusé. Un compteur ne fait que monter : une valeur inférieure à un relevé antérieur est refusée — si le compteur a réellement été remplacé, déclarez-le sur la fiche du moteur avant d'importer.",
+        "placeholder": "Moteur\tRelevé le\tHeures\nMoteur bâbord\t14/06/2026\t1250,5"
       }
     }
   },

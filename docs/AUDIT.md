@@ -162,5 +162,5 @@ Un « tap » = un contact de doigt sur un contrôle. La frappe du titre, identiq
 
 ### 7.5 Ce qui reste ouvert
 
-- Le « + » de la racine Checklist ne crée toujours pas de point de checklist (A9) : un point exige une catégorie et la racine n'en désigne aucune. Le chemin reste catégorie → « Ajouter un point ».
+- ~~Le « + » de la racine Checklist ne crée pas de point (A9)~~ **fermé le 2026-09-03** : la catégorie est devenue un champ du formulaire au lieu d'une condition d'ouverture. `/checklist/new` s'ouvre depuis la racine et demande la catégorie ; arriver depuis une catégorie la présélectionne toujours.
 - Les sous-titres dynamiques de la feuille (`hints` : dernier relevé, dernière bouteille) sont toujours calculables mais jamais passés par la mise en page : les sous-titres fixes couvrent désormais l'intervention, la dépense et la sortie de l'eau.

@@ -24,6 +24,8 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
         .eq("boat_id", boatId)
         .is("deleted_at", null)
         .order("started_at", { ascending: false }),
+      // Not filtered on deleted_at on purpose: this map only turns a yard_contact_id into a
+      // name, and a haul-out must keep the name of a yard someone trashed afterwards.
       supabase.from("contacts").select("id, name").eq("boat_id", boatId),
       supabase
         .from("maintenance_logs")

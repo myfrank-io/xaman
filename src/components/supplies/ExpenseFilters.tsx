@@ -19,7 +19,12 @@ import {
 import { suppliesPath } from "@/lib/queries/boat-routes";
 import { VISIBLE_PURCHASE_KINDS, type PurchaseKind } from "@/lib/schemas/purchases";
 
-const ALL = "";
+/**
+ * « Tout » needs a value of its own, and it must not be the empty string: Radix reads an empty
+ * value as « nothing selected », so the chip could never light up and the whole group looked
+ * dead — reported from the boat. The URL still carries nothing when this is the choice.
+ */
+const ALL = "all";
 /** Neutral grey for « toutes les catégories »: never a category colour standing alone. */
 const ALL_COLOR = "#8A99AC";
 

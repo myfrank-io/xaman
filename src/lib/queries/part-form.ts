@@ -25,6 +25,7 @@ export async function partFormContext(
       .from("contacts")
       .select("id, name, specialty, company, phone")
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("name"),
   ]);
   return { categories: categories ?? [], contacts: contacts ?? [] };

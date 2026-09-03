@@ -2,13 +2,32 @@ import { CONTACT_SPECIALTIES, type ContactSpecialty } from "@/lib/schemas/contac
 
 export type SpecialtyLabel = (key: ContactSpecialty) => string;
 
-// The closed list without « Autre », as French labels (the column stores the label).
-export function specialtyOptions(label: SpecialtyLabel): string[] {
-  return CONTACT_SPECIALTIES.filter((key) => key !== "other").map((key) => label(key));
+/**
+ * The chips offered for a trade: the built-in list, plus every trade this boat already uses.
+ *
+ * The seven built-ins cover a French yard; the eighth is whatever this boat needs. Typing it
+ * once under « Autre » used to help only that one contact — it is now a chip for the next,
+ * which is what « adding a category » means here, with no table and no settings screen.
+ */
+export function specialtyOptions(label: SpecialtyLabel, used: string[] = []): string[] {
+  const builtIn = CONTACT_SPECIALTIES.filter((key) => key !== "other").map((key) => label(key));
+  const seen = new Set(builtIn.map(normalise));
+  const extra: string[] = [];
+  for (const value of used) {
+    const trimmed = value.trim();
+    if (trimmed === "" || seen.has(normalise(trimmed))) continue;
+    seen.add(normalise(trimmed));
+    extra.push(trimmed);
+  }
+  return [...builtIn, ...extra.sort((a, b) => a.localeCompare(b, "fr"))];
 }
 
-export function isListedSpecialty(value: string, label: SpecialtyLabel): boolean {
-  return specialtyOptions(label).includes(value);
+export function isListedSpecialty(
+  value: string,
+  label: SpecialtyLabel,
+  used: string[] = [],
+): boolean {
+  return specialtyOptions(label, used).includes(value);
 }
 
 export type ContactOption = {
