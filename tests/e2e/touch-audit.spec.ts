@@ -7,6 +7,11 @@ import { expect, test, type Page } from "@playwright/test";
  * library is covered without a database.
  */
 const PAGES = [
+  // Public pages: the home page and the four ways in are the first thing anyone touches.
+  "/",
+  "/login",
+  "/signup",
+  "/forgot-password",
   "/dev/ui",
   "/dev/ui/dashboard",
   "/dev/ui/contacts",

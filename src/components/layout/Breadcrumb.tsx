@@ -11,7 +11,9 @@ import { buildTrail } from "@/components/layout/breadcrumb-trail";
 /**
  * Trail under the header (« Journal › Fiche › Modifier »), built from the URL so every screen
  * has one without a line of its own. It answers the question the left menu cannot: how do I
- * step back up this flow — the menu restarts it, the trail resumes it.
+ * step back up this flow — the menu restarts it, the trail resumes it. It opens on the section
+ * of the menu the screen belongs to, so a screen three levels deep still says which of the
+ * four tabs it hangs from.
  */
 export function Breadcrumb({ boatId }: { boatId: string }) {
   const pathname = usePathname();
@@ -21,6 +23,7 @@ export function Breadcrumb({ boatId }: { boatId: string }) {
 
   return (
     <nav aria-label={t("crumbs.label")} className="min-w-0">
+      {/* Wraps onto a second line rather than scrolling: a 390 px phone never overflows. */}
       <ol className="-my-2 flex min-w-0 flex-wrap items-center gap-x-1 text-caption text-ink-2">
         {crumbs.map((crumb, index) => (
           <li key={`${crumb.key}-${index}`} className="flex min-w-0 items-center gap-1">
@@ -31,16 +34,17 @@ export function Breadcrumb({ boatId }: { boatId: string }) {
               // 44 px of vertical room: a trail nobody can tap is decoration (ux-flows §6.4).
               <Link
                 href={crumb.href as Route}
-                className="inline-flex min-h-11 items-center rounded-md tap-feedback px-1 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                className="inline-flex min-h-11 min-w-0 items-center rounded-md tap-feedback px-1 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
-                {t(crumb.key)}
+                <span className="truncate">{t(crumb.key)}</span>
               </Link>
             ) : (
               <span
-                aria-current="page"
-                className="inline-flex min-h-11 items-center px-1 font-medium text-foreground"
+                // Only the last crumb is the page: buildTrail leaves it, and it alone, unlinked.
+                aria-current={index === crumbs.length - 1 ? "page" : undefined}
+                className="inline-flex min-h-11 min-w-0 items-center px-1 font-medium text-foreground"
               >
-                {t(crumb.key)}
+                <span className="truncate">{t(crumb.key)}</span>
               </span>
             )}
           </li>

@@ -183,7 +183,7 @@
   },
   "auth": {
     "title": "Connexion",
-    "subtitle": "Sans mot de passe : recevez un code par e-mail et saisissez-le ici.",
+    "subtitle": "Entrez votre mot de passe, ou recevez un code par e-mail.",
     "email": {
       "label": "Adresse e-mail",
       "placeholder": "prenom@exemple.fr",
@@ -205,7 +205,78 @@
       "noAccount": "Aucun compte n'existe pour cette adresse. Demandez une invitation au propriétaire du bateau.",
       "code": "Code incorrect ou expiré.",
       "link": "Ce lien de connexion n'est plus valable. Demandez un nouveau code.",
-      "hint": "Vérifiez l'adresse saisie, ou demandez un nouveau code."
+      "hint": "Vérifiez l'adresse saisie, ou demandez un nouveau code.",
+      "credentials": "Adresse e-mail ou mot de passe incorrect.",
+      "unconfirmed": "Ce compte n'est pas encore confirmé. Ouvrez l'e-mail que nous vous avons envoyé.",
+      "rateLimited": "Trop de tentatives. Attendez une minute avant de réessayer.",
+      "unexpected": "La connexion a échoué. Réessayez dans un instant."
+    },
+    "modes": {
+      "label": "Comment vous connecter",
+      "password": "Mot de passe",
+      "code": "Code par e-mail"
+    },
+    "password": {
+      "label": "Mot de passe",
+      "placeholder": "Votre mot de passe",
+      "submit": "Se connecter",
+      "show": "Afficher le mot de passe",
+      "hide": "Masquer le mot de passe",
+      "forgot": "Mot de passe oublié ?",
+      "noAccount": "Pas encore de compte ?",
+      "createAccount": "Créer un compte"
+    },
+    "signup": {
+      "title": "Créer un compte",
+      "subtitle": "Deux minutes, et le carnet de votre bateau est ouvert.",
+      "name": "Nom et prénom",
+      "namePlaceholder": "Xavier Chauvin",
+      "password": "Mot de passe",
+      "passwordHelp": "Au moins 8 caractères.",
+      "confirm": "Confirmer le mot de passe",
+      "submit": "Créer mon compte",
+      "haveAccount": "J'ai déjà un compte",
+      "signIn": "Se connecter",
+      "legal": "En créant un compte, vous acceptez que vos données d'entretien soient conservées pour vous et pour les personnes que vous invitez.",
+      "checkEmail": {
+        "title": "Vérifiez votre boîte mail",
+        "description": "Un e-mail de confirmation vient de partir vers {email}. Ouvrez-le pour activer votre compte, puis revenez vous connecter.",
+        "spam": "Rien reçu ? Regardez dans les courriers indésirables."
+      },
+      "errors": {
+        "taken": "Un compte existe déjà pour cette adresse. Connectez-vous plutôt.",
+        "weak": "Ce mot de passe est trop court ou trop courant. Choisissez-en un autre.",
+        "mismatch": "Les deux mots de passe ne sont pas identiques.",
+        "nameRequired": "Indiquez votre nom, il apparaîtra sur ce que vous notez.",
+        "failed": "La création du compte a échoué. Réessayez dans un instant."
+      }
+    },
+    "forgot": {
+      "title": "Mot de passe oublié",
+      "subtitle": "Indiquez votre adresse : nous vous envoyons un lien pour en choisir un nouveau.",
+      "submit": "Recevoir le lien",
+      "back": "Revenir à la connexion",
+      "sent": {
+        "title": "Lien envoyé",
+        "description": "Si un compte existe pour {email}, un lien de réinitialisation vient d'y être envoyé. Il est valable une heure."
+      }
+    },
+    "reset": {
+      "title": "Choisir un nouveau mot de passe",
+      "subtitle": "Votre lien est valide. Choisissez le mot de passe que vous utiliserez désormais.",
+      "password": "Nouveau mot de passe",
+      "confirm": "Confirmer le mot de passe",
+      "submit": "Enregistrer le mot de passe",
+      "done": "Mot de passe modifié. Vous êtes connecté.",
+      "expired": {
+        "title": "Ce lien n'est plus valable",
+        "description": "Les liens expirent au bout d'une heure. Demandez-en un nouveau.",
+        "action": "Demander un nouveau lien"
+      },
+      "errors": {
+        "weak": "Ce mot de passe est trop court ou trop courant. Choisissez-en un autre.",
+        "failed": "Le mot de passe n'a pas pu être modifié. Redemandez un lien."
+      }
     }
   },
   "boats": {
@@ -1509,6 +1580,90 @@
         "help": "Une ligne par pièce. Quantité et seuil d'alerte acceptent la virgule ; une pièce déjà présente sous la même désignation est mise à jour.",
         "placeholder": "Désignation\tRéférence\tQuantité\tSeuil\tEmplacement\nFiltre à huile\t119305-35170\t2\t2\tCoffre moteur"
       }
+    }
+  },
+  "marketing": {
+    "nav": {
+      "login": "Se connecter",
+      "signup": "Créer un compte",
+      "home": "Xaman, accueil"
+    },
+    "hero": {
+      "eyebrow": "Carnet d'entretien pour bateaux",
+      "title": "Le carnet d'entretien de votre bateau, partagé et toujours à jour.",
+      "subtitle": "Notez ce que vous faites à bord, suivez les échéances, retrouvez les factures. Vous, votre équipage et votre chantier voyez la même chose.",
+      "primary": "Créer un compte",
+      "secondary": "Se connecter",
+      "note": "Utilisable depuis Safari sur iPad, installable sur l'écran d'accueil."
+    },
+    "preview": {
+      "caption": "Le tableau de bord d'un ORC 50",
+      "boat": "Xaman · Marsaudon ORC 50",
+      "overdue": "En retard",
+      "soon": "Bientôt",
+      "ok": "À jour",
+      "lineOne": "Vidange moteur bâbord",
+      "lineOneMeta": "Dépassée de 12 h moteur",
+      "lineTwo": "Contrôle du gréement dormant",
+      "lineTwoMeta": "Dans 3 semaines",
+      "lineThree": "Anodes de safran",
+      "lineThreeMeta": "Faite le 14 juin"
+    },
+    "problem": {
+      "title": "Le carnet papier reste au bateau. Sa mémoire aussi.",
+      "body": "Une vidange notée sur un carnet resté à bord, une facture perdue dans une boîte mail, une échéance dont personne ne se souvient : l'entretien d'un bateau se joue sur des détails que personne ne peut retenir seul."
+    },
+    "features": {
+      "title": "Ce que fait Xaman",
+      "log": {
+        "title": "Chaque intervention notée en trente secondes",
+        "body": "Ce que vous avez fait, quand, par qui, pour combien — avec la photo et la facture attachées."
+      },
+      "checklist": {
+        "title": "Les échéances arrivent avant la panne",
+        "body": "Une checklist par système, calée sur vos heures moteur et sur le calendrier. Vous voyez ce qui est en retard, d'un coup d'œil."
+      },
+      "shared": {
+        "title": "Le même carnet pour tout l'équipage",
+        "body": "Le propriétaire, l'associé, le skipper, le chantier : chacun avec ses droits, sur la même page."
+      },
+      "money": {
+        "title": "Ce que coûte vraiment le bateau",
+        "body": "Achats, gasoil, gaz, sorties d'eau. Par poste et par saison, sans tableur à tenir."
+      },
+      "offline": {
+        "title": "Fonctionne au mouillage, sans réseau",
+        "body": "Ce que vous notez hors couverture reste sur l'iPad et part tout seul dès que le réseau revient."
+      },
+      "imports": {
+        "title": "Vos données actuelles entrent telles quelles",
+        "body": "Un tableur, un carnet d'adresses, vos factures : tout s'importe. Rien à retaper à la main."
+      }
+    },
+    "how": {
+      "title": "Comment ça marche",
+      "one": {
+        "title": "Créez votre compte",
+        "body": "Une adresse e-mail, un mot de passe. Rien d'autre à installer."
+      },
+      "two": {
+        "title": "Décrivez le bateau",
+        "body": "Modèle, moteurs, équipements. Ou importez l'inventaire que vous avez déjà."
+      },
+      "three": {
+        "title": "Notez au fil de l'eau",
+        "body": "Chaque intervention, chaque achat. Le carnet se construit tout seul et se partage."
+      }
+    },
+    "cta": {
+      "title": "Ouvrez le carnet de votre bateau",
+      "body": "Quelques minutes pour le mettre en route, et la mémoire du bateau cesse de dépendre d'une seule personne.",
+      "button": "Créer un compte",
+      "secondary": "J'ai déjà un compte"
+    },
+    "footer": {
+      "tagline": "Carnet d'entretien numérique et partagé pour bateaux.",
+      "rights": "Xaman"
     }
   }
 }

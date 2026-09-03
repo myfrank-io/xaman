@@ -2,29 +2,25 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { AuthShell } from "@/components/auth/AuthShell";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { SignupForm } from "@/components/auth/SignupForm";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("auth");
+  const t = await getTranslations("auth.signup");
   return { title: t("title") };
 }
 
-export default async function LoginPage({
+export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; email?: string }>;
+  searchParams: Promise<{ next?: string }>;
 }) {
   const params = await searchParams;
-  const t = await getTranslations("auth");
+  const t = await getTranslations("auth.signup");
   const next = params.next && params.next.startsWith("/") ? params.next : "/boats";
 
   return (
     <AuthShell title={t("title")} subtitle={t("subtitle")}>
-      <LoginForm
-        next={next}
-        initialEmail={params.email ?? ""}
-        linkError={params.error === "link"}
-      />
+      <SignupForm next={next} />
     </AuthShell>
   );
 }
