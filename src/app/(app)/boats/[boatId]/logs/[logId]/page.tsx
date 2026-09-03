@@ -6,6 +6,7 @@ import type { LogStatus } from "@/components/common/StatusBadge";
 import { parseEngineHours } from "@/components/logs/rows";
 import { formatDate } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
+import { listAttachments } from "@/lib/queries/attachments";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -39,6 +40,7 @@ export default async function LogPage({
     { data: contact },
     { data: updatedBy },
     { data: categories },
+    attachments,
   ] = await Promise.all([
     supabase
       .from("checklist_completions")
@@ -63,6 +65,9 @@ export default async function LogPage({
       ? supabase.from("profiles").select("full_name, email").eq("id", log.updated_by).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from("boat_categories").select("id, name, color, icon").eq("boat_id", boatId),
+    // Documents of the intervention with their signed URLs (E10-1); a Storage hiccup must not
+    // take the whole sheet down, so it degrades to an empty gallery.
+    listAttachments(supabase, boatId, { type: "maintenance_log", id: logId }).catch(() => []),
   ]);
 
   const canWrite = can(boatRole, "write");
@@ -118,6 +123,7 @@ export default async function LogPage({
       engineHours={engineHours}
       completions={linked}
       purchases={purchases ?? []}
+      attachments={attachments}
       actions={
         canEdit ? (
           <LogActions

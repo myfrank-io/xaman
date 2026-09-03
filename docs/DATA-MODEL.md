@@ -409,19 +409,25 @@ Index : `(checklist_item_id, completed_at desc)`.
 
 Durée = `ended_at - started_at` (calculée). Interventions liées : `maintenance_logs.haul_out_id` (FK nullable ajoutée sur `maintenance_logs`, on delete set null).
 
-### 3.19 `attachments` (Should)
+### 3.19 `attachments` (Should — livrée par `0011`, E10-1)
 
 | Colonne | Type | Contraintes | Notes |
 |---|---|---|---|
-| id | uuid | PK | |
+| id | uuid | PK | tiré côté client avant l'envoi (règle 5) ; l'upsert le rejoue (règle 11) |
 | boat_id | uuid | FK boats on delete cascade | |
-| entity_type | attachment_entity | not null | |
-| entity_id | uuid | not null | pas de FK (polymorphe) ; nettoyage par trigger sur suppression de l'entité |
-| storage_path | text | not null | `boats/{boat_id}/{entity_type}/{entity_id}/{uuid}.{ext}` dans le bucket `boat-files` |
-| file_name | text | not null | |
-| mime_type | text | not null | |
-| size_bytes | int | not null, check ≤ 10 Mo | |
+| entity_type | attachment_entity | not null | V1 n'écrit que `maintenance_log` et `purchase` ; `equipment`, `haul_out`, `boat`, `checklist_completion` sont réservés à la V1.1 |
+| entity_id | uuid | not null | pas de FK (polymorphe) ; intégrité assurée par `attachments_owner_guard()`, nettoyage par `cleanup_attachments()` |
+| storage_path | text | not null, unique, check `boat_id_from_storage_path(storage_path) is not distinct from boat_id` | `boats/{boat_id}/{entity_type}/{entity_id}/{attachment_id}.{ext}` dans le bucket `boat-files` ; le nom du fichier d'origine n'entre jamais dans la clé de l'objet |
+| file_name | text | not null | nom d'origine, affiché sous la vignette |
+| mime_type | text | not null, check `= 'application/pdf' or like 'image/%'` | |
+| size_bytes | int | not null, check ≤ 10 Mo | mesuré **après** réduction navigateur |
+| caption | text | check ≤ 200 caractères | légende sous la vignette |
+| deleted_at | timestamptz | null | corbeille (règle 9) ; l'objet Storage est conservé pour qu'« Annuler » rende le document |
 | created_by / updated_by / created_at / updated_at | | | |
+
+Index : `attachments_entity_idx (boat_id, entity_type, entity_id)`, `attachments_owner_live_idx` (même clé, `where deleted_at is null`), `attachments_storage_path_key` (unique).
+
+La contrainte `attachments_path_boat` est écrite avec `is not distinct from` et non `=` : un chemin malformé renvoie `null`, et un `check` accepte `null` — un `photo.jpg` sans préfixe serait passé.
 
 ## 4. Fonctions et triggers
 
@@ -489,7 +495,14 @@ create function purge_trash() returns int ...;
 --  sync_engine_hours_from_completion() : after insert/update sur checklist_completions — upsert engine_hour_readings
 --                                    (source 'checklist') si engine_hours non null ET maintenance_log_id null.
 --  sync_log_readings_date()        : after update of performed_at sur maintenance_logs — aligne read_at des relevés liés.
---  cleanup_attachments()           : after delete sur les entités porteuses — supprime attachments + objets Storage.
+--  attachments_owner_guard()       : before insert/update sur attachments — ce qu'une FK ferait pour un
+--                                    propriétaire polymorphe : la ligne (entity_type, entity_id) doit exister
+--                                    ET porter le même boat_id. security invoker : on ne peut joindre un
+--                                    document qu'à une ligne qu'on a le droit de lire.
+--  cleanup_attachments()           : after delete sur les entités porteuses (maintenance_logs, purchases,
+--                                    equipment, haul_outs, checklist_completions) — supprime les lignes
+--                                    attachments. Les objets Storage sont retirés par l'app (Server Action
+--                                    de suppression définitive) : SQL ne sait pas effacer le blob.
 ```
 
 ## 5. Politiques RLS (résumé)
@@ -500,7 +513,7 @@ RLS **activée sur toutes les tables**. Modèle général pour une table métier
 |---|---|
 | select | `is_boat_member(boat_id)` |
 | insert | `can_write_boat(boat_id)` — ou, pour `maintenance_logs`, `checklist_completions`, `engine_hour_readings`, `attachments` : `can_contribute_boat(boat_id) and created_by = auth.uid()` |
-| update | `can_write_boat(boat_id)` — ou, pour les mêmes quatre tables : `using (boat_role(boat_id) = 'pro' and created_by = auth.uid())` **`with check (deleted_at is null)`** sur `maintenance_logs` (un pro ne peut pas mettre à la corbeille) |
+| update | `can_write_boat(boat_id)` — ou, pour les mêmes quatre tables : `using (boat_role(boat_id) = 'pro' and created_by = auth.uid())` **`with check (deleted_at is null)`** sur `maintenance_logs` et, depuis `0011`, sur `attachments` (un pro ne peut pas mettre à la corbeille, même ce qu'il a ajouté) |
 | delete | `can_write_boat(boat_id)` (les pro ne suppriment pas, même leurs lignes) |
 
 Les tables sans contribution `pro` (`purchases`, `parts`, `haul_outs`, `contacts`, `equipment`, `engines`, `boat_categories`, `checklist_items`) suivent strictement `can_write_boat` pour insert/update/delete.
@@ -512,7 +525,7 @@ Cas particuliers :
 - `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.
 - `organizations*` : V1, select/write `is_platform_admin()` uniquement.
-- Storage bucket `boat-files` (privé) : policies sur le préfixe `boats/{boat_id}/` avec les mêmes fonctions (select membre ; insert contribute ; delete write).
+- Storage bucket `boat-files` (privé) : policies sur le préfixe `boats/{boat_id}/` avec les mêmes fonctions (select membre ; insert contribute ; delete write). Depuis `0011` le bucket porte aussi `file_size_limit = 10 Mo` et `allowed_mime_types = {image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf}` : un client cassé ne peut pas écrire ce que la table refuserait. Les URL sont **signées** (1 h), jamais publiques.
 - Vues : toutes en `security_invoker = true` ; elles n'ont pas de politique propre, la RLS des tables s'applique.
 
 Tests obligatoires (Vitest + client Supabase avec **5 utilisateurs de test** : owner, editor, pro, viewer, non-membre, créés par `supabase/seed.sql`) : pour chaque table **et chaque vue**, vérifier select/insert/update/delete selon la matrice `SPEC.md §4.3`, y compris : un pro ne peut pas `update ... set deleted_at`, un non-membre ne lit rien via les vues, `token` illisible même pour l'owner. Voir BACKLOG E1-6.
@@ -649,13 +662,14 @@ Colonnes : `rank, kind ('log'|'item'), id, title, category_id, category_name, ca
 ### 12.7 Couleurs de catégories
 Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards_rudders #0284C7`, `sails_rigging #A21CAF`, `hull_deck #52606F`, `electronics_nav #1D4ED8`, `energy #A16207`, `plumbing_systems #0F766E`, `safety #C81E2B` ; `engines #D97706` inchangé. La migration ne met à jour, par `external_ref`, que les `checklist_template_categories` / `boat_categories` **portant encore l'ancienne couleur exacte** : un choix fait par l'utilisateur n'est jamais écrasé. `seed/orc50-checklist.json` porte les nouvelles valeurs et gagne le point `haul-out` « Carénage / sortie de l'eau » (18 mois, catégorie Coque & Pont) qui fait entrer les sorties de l'eau dans le modèle unique (D9).
 
-## 13. Notes d'implémentation — `0005_journal.sql`, `0007_invitation_privacy.sql`, `0008_weekly_digest.sql`, `0009_function_privileges.sql`, `0010_parts_stock.sql`
+## 13. Notes d'implémentation — `0005_journal.sql`, `0007_invitation_privacy.sql`, `0008_weekly_digest.sql`, `0009_function_privileges.sql`, `0010_parts_stock.sql`, `0011_attachments.sql`
 
 - **0005** : trois fonctions `security invoker` en lecture seule (la RLS de l'appelant s'applique) : `text_fold(text)` (minuscules + repli des accents par `translate`, `immutable`, pas d'extension `unaccent`), `log_title_suggestions(p_boat_id, p_query)` (≤ 5 titres distincts du bateau contenant la requête repliée via `strpos`, 2 caractères minimum, avec la catégorie du dernier journal et le moteur le plus fréquent), `suggest_checklist_items(p_boat_id, p_category_id, p_title)` (≤ 5 points actifs de la catégorie dont `greatest(similarity, strict_word_similarity)` — calculé sur le libellé **sans** le suffixe « — Moteur » — dépasse 0,5, avec leur statut d'échéance). Grants `authenticated` + `service_role`.
 - **0007** : `get_invitation_preview(p_token)` renvoie désormais l'adresse invitée **masquée** (`x•••@domaine`) ; la page publique `/invite/[token]` ne pré-remplit plus le formulaire de connexion et `accept_invitation` reste la seule vérification exacte de l'adresse (D29).
 - **0008** : `weekly_digest_payload()` (security definer, `service_role` seulement) agrège par bateau les destinataires owner/editor actifs, les points en retard et bientôt (`checklist_item_status`) et les interventions planifiées / en cours / urgentes à 30 jours ; `enqueue_weekly_digest()` appelle l'Edge Function `weekly-digest` via `net.http_post` avec l'URL et la clé lues dans Vault (`xaman_digest_url`, `xaman_digest_key`) ; planification `pg_cron` « vendredi 06:30 UTC » quand l'extension existe (rien en local). L'envoi passe par Resend (secrets de la fonction : `RESEND_API_KEY`, `DIGEST_FROM`, `APP_URL`).
 
 - **0009** : les privilèges par défaut de Supabase donnent `EXECUTE` à `anon` à la création de chaque fonction, et `revoke … from public` ne retire pas ce grant explicite. La migration retire `EXECUTE` à `PUBLIC` et `anon` sur **toutes** les fonctions de `public` (sauf `get_invitation_preview` et `boat_id_from_storage_path`, points d'entrée anonymes voulus), et à `authenticated` sur les fonctions trigger et les fonctions réservées au service (`purge_trash`, `weekly_digest_payload`, `enqueue_weekly_digest`) ; privilèges par défaut ajustés pour les fonctions futures. Toute nouvelle fonction doit garder cette règle (conseillers Supabase 0028 / 0029).
+- **0011** : pièces jointes (E10-1). La table, ses politiques et le bucket existaient depuis `0001` / `0002` ; la migration ajoute `caption` et `deleted_at`, lie le chemin de stockage au bateau par contrainte, restreint les types, remplace la politique `attachments_update` par la forme exacte de `maintenance_logs_update` (le `deleted_at is null` du pro), ajoute `attachments_owner_guard()` et `cleanup_attachments()`, retire les documents à la corbeille de `maintenance_logs_view.attachments_count` (le trombone du journal) et durcit le bucket. Les deux fonctions sont des triggers : `EXECUTE` retiré à `PUBLIC`, `anon` et `authenticated` (règle de `0009`).
 - **0010** : `parts.checked_at` (date de la dernière vérification) et `adjust_part_quantity(p_part_id, p_delta)` : +/− atomique depuis la liste (`quantity = greatest(0, quantity + delta)`, `checked_at = current_date`), `security invoker` donc soumis à la politique `parts_update` (owner / editor) ; delta nul refusé (`invalid_delta`), ligne inaccessible → `part_not_found`. Les pièces n'ont pas de corbeille : suppression physique après confirmation (D10, donnée déclarative).
 
 ### Conseillers de sécurité Supabase — avertissements acceptés

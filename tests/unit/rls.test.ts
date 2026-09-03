@@ -579,6 +579,170 @@ describe("storage bucket boat-files", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// Attachments (migration 0011_attachments.sql, E10-1)
+// ---------------------------------------------------------------------------------------------
+const ATT_OWNER = "00000000-0000-0000-0000-000000008001";
+const ATT_PRO = "00000000-0000-0000-0000-000000008002";
+const PURCHASE = "00000000-0000-0000-0000-000000007001";
+
+describe("attachments (E10-1)", () => {
+  const pathFor = (owner: string, entity: string, id: string, file: string) =>
+    `boats/${owner}/${entity}/${id}/${file}`;
+
+  const attach = (
+    u: User,
+    createdBy: string,
+    opts: {
+      boatId?: string;
+      entity?: string;
+      entityId?: string;
+      path?: string;
+      mime?: string;
+      bytes?: number;
+    } = {},
+  ) => {
+    const boat = opts.boatId ?? BOAT;
+    const entity = opts.entity ?? "maintenance_log";
+    const entityId = opts.entityId ?? LOG_OWNER;
+    return run(
+      u,
+      `insert into public.attachments
+         (boat_id, entity_type, entity_id, storage_path, file_name, mime_type, size_bytes, created_by)
+       values ($1, $2::public.attachment_entity, $3, $4, 'doc', $5, $6, $7)`,
+      [
+        boat,
+        entity,
+        entityId,
+        opts.path ?? pathFor(boat, entity, entityId, `${crypto.randomUUID()}.jpg`),
+        opts.mime ?? "image/jpeg",
+        opts.bytes ?? 2048,
+        createdBy,
+      ],
+    );
+  };
+
+  it("every member reads the documents of the boat; outsiders and anon read none", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      expect(await count(U[role], "attachments", "boat_id = $1", [BOAT]), role).toBe(2);
+    }
+    expect(await count(U.stranger, "attachments", "boat_id = $1", [BOAT])).toBe(0);
+    expect(await count(null, "attachments")).toBe(-1);
+  });
+
+  it("insert: owner/editor anywhere, a pro only as themselves, viewer and outsiders never", async () => {
+    expect((await attach(U.owner, U.owner.id)).ok, "owner").toBe(true);
+    expect((await attach(U.editor, U.editor.id)).ok, "editor").toBe(true);
+    expect((await attach(U.admin, U.admin.id)).ok, "admin").toBe(true);
+    expect((await attach(U.pro, U.pro.id, { entityId: LOG_PRO })).ok, "pro on their row").toBe(
+      true,
+    );
+    expect((await attach(U.pro, U.owner.id)).ok, "pro under another name").toBe(false);
+    expect((await attach(U.viewer, U.viewer.id)).ok, "viewer").toBe(false);
+    expect((await attach(U.stranger, U.stranger.id)).ok, "stranger").toBe(false);
+    expect((await attach(U.owner, U.owner.id, { entity: "purchase", entityId: PURCHASE })).ok).toBe(
+      true,
+    );
+  });
+
+  it("the storage path must resolve to the row's own boat", async () => {
+    const crossed = await attach(U.owner, U.owner.id, {
+      path: pathFor(BOAT2, "maintenance_log", LOG_OWNER, "x.jpg"),
+    });
+    expect(crossed.ok).toBe(false);
+    if (!crossed.ok) expect(crossed.message).toContain("attachments_path_boat");
+    const loose = await attach(U.owner, U.owner.id, { path: "photo.jpg" });
+    expect(loose.ok).toBe(false);
+  });
+
+  it("only images and PDF, 10 Mo at most", async () => {
+    expect((await attach(U.owner, U.owner.id, { mime: "application/pdf" })).ok).toBe(true);
+    expect((await attach(U.owner, U.owner.id, { mime: "application/zip" })).ok).toBe(false);
+    expect((await attach(U.owner, U.owner.id, { bytes: 10 * 1024 * 1024 + 1 })).ok).toBe(false);
+  });
+
+  it("the owner of the document must exist and be on the same boat", async () => {
+    const missing = await attach(U.owner, U.owner.id, {
+      entityId: "00000000-0000-0000-0000-0000000099ff",
+    });
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(missing.message).toContain("attachment_owner_not_found");
+
+    // The other boat's intervention exists, but this member cannot even see it.
+    const foreign = await attach(U.owner, U.owner.id, {
+      entityId: "00000000-0000-0000-0000-000000002101",
+    });
+    expect(foreign.ok).toBe(false);
+  });
+
+  it("update: owner/editor edit any legend, a pro only their own", async () => {
+    const caption = (u: User, id: string) =>
+      run(u, "update public.attachments set caption = 'Légende' where id = $1", [id]);
+    expect(await caption(U.owner, ATT_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await caption(U.editor, ATT_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await caption(U.pro, ATT_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await caption(U.pro, ATT_OWNER)).toEqual({ ok: true, rowCount: 0 });
+    expect(await caption(U.viewer, ATT_OWNER)).toEqual({ ok: true, rowCount: 0 });
+    expect(await caption(U.stranger, ATT_OWNER)).toEqual({ ok: true, rowCount: 0 });
+  });
+
+  it("soft delete: owner/editor only — a pro cannot trash even their own document", async () => {
+    const trash = (u: User, id: string) =>
+      run(u, "update public.attachments set deleted_at = now() where id = $1", [id]);
+    const pro = await trash(U.pro, ATT_PRO);
+    expect(pro.ok).toBe(false);
+    if (!pro.ok) expect(pro.code).toBe("42501");
+    expect(await trash(U.owner, ATT_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await trash(U.editor, ATT_OWNER)).toEqual({ ok: true, rowCount: 1 });
+    expect(await trash(U.viewer, ATT_OWNER)).toEqual({ ok: true, rowCount: 0 });
+  });
+
+  it("hard delete: owner/editor only, and a purged intervention takes its documents with it", async () => {
+    expect(await run(U.pro, "delete from public.attachments where id = $1", [ATT_PRO])).toEqual({
+      ok: true,
+      rowCount: 0,
+    });
+    expect(await run(U.viewer, "delete from public.attachments where id = $1", [ATT_PRO])).toEqual({
+      ok: true,
+      rowCount: 0,
+    });
+    expect(await run(U.owner, "delete from public.attachments where id = $1", [ATT_PRO])).toEqual({
+      ok: true,
+      rowCount: 1,
+    });
+
+    const cascaded = await as(U.owner, async (c) => {
+      await c.query("delete from public.maintenance_logs where id = $1", [LOG_OWNER]);
+      const res = await c.query("select count(*)::int as n from public.attachments where id = $1", [
+        ATT_OWNER,
+      ]);
+      return Number(res.rows[0]?.n);
+    });
+    expect(cascaded).toBe(0);
+  });
+
+  it("maintenance_logs_view: the paperclip counts only the documents that are not trashed", async () => {
+    const countFor = (u: User) =>
+      as(u, async (c) => {
+        const res = await c.query(
+          "select attachments_count from public.maintenance_logs_view where id = $1",
+          [LOG_OWNER],
+        );
+        return Number(res.rows[0]?.attachments_count);
+      });
+    expect(await countFor(U.owner)).toBe(1);
+    const afterTrash = await as(U.owner, async (c) => {
+      await c.query("update public.attachments set deleted_at = now() where id = $1", [ATT_OWNER]);
+      const res = await c.query(
+        "select attachments_count from public.maintenance_logs_view where id = $1",
+        [LOG_OWNER],
+      );
+      return Number(res.rows[0]?.attachments_count);
+    });
+    expect(afterTrash).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Tracking model (migration 0004_tracking.sql, docs/AUDIT.md §3.1)
 // ---------------------------------------------------------------------------------------------
 const COMPLETION_OWNER = "00000000-0000-0000-0000-000000004001";

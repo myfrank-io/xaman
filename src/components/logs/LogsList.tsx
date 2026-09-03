@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowUpIcon, PaperclipIcon } from "lucide-react";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
@@ -93,6 +93,18 @@ export function LogsList({ boatId, rows }: { boatId: string; rows: LogRow[] }) {
               <span className="truncate">{row.categoryName ?? ""}</span>
               <StatusBadge status={row.status} size="sm" />
               <span className="truncate">{row.contactName ?? t("byCrew")}</span>
+              {row.attachmentsCount > 0 ? (
+                /* No colour of its own (rule 12): the paperclip says « il y a la facture ». */
+                <span className="flex shrink-0 items-center gap-0.5 text-ink-2">
+                  <PaperclipIcon className="size-3.5" aria-hidden />
+                  <span className="num" aria-hidden>
+                    {row.attachmentsCount}
+                  </span>
+                  <span className="sr-only">
+                    {t("attachments", { count: row.attachmentsCount })}
+                  </span>
+                </span>
+              ) : null}
               {row.needsReview ? (
                 <Badge
                   size="sm"

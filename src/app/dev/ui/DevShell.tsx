@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AppShell } from "@/components/layout/AppShell";
 import { PrimaryActionSheet } from "@/components/layout/PrimaryActionSheet";
@@ -27,21 +28,25 @@ export async function DevShell({ children }: { children: React.ReactNode }) {
     }),
   );
   return (
-    <AppShell
-      boatId={DEV_BOAT_ID}
-      boatName="Xaman"
-      boatSubtitle="Marsaudon Composites ORC 50"
-      nav={nav}
-      primaryAction={<PrimaryActionSheet boatId={DEV_BOAT_ID} role="owner" />}
-      accountMenu={
-        <AccountMenu
-          boatId={DEV_BOAT_ID}
-          role="owner"
-          user={{ name: "Xavier Marin", email: "xavier@example.com" }}
-        />
-      }
-    >
-      {children}
-    </AppShell>
+    // Same providers as the real app: the preview pages mount components that read through
+    // TanStack Query. Without Supabase configured those queries never run (E10-1).
+    <QueryProvider>
+      <AppShell
+        boatId={DEV_BOAT_ID}
+        boatName="Xaman"
+        boatSubtitle="Marsaudon Composites ORC 50"
+        nav={nav}
+        primaryAction={<PrimaryActionSheet boatId={DEV_BOAT_ID} role="owner" />}
+        accountMenu={
+          <AccountMenu
+            boatId={DEV_BOAT_ID}
+            role="owner"
+            user={{ name: "Xavier Marin", email: "xavier@example.com" }}
+          />
+        }
+      >
+        {children}
+      </AppShell>
+    </QueryProvider>
   );
 }
