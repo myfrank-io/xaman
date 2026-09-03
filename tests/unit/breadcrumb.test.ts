@@ -129,17 +129,17 @@ const ALL_PATHS = [
 describe("buildTrail", () => {
   it("names the section on its own root, as the current page and not as a link", () => {
     expect(at("/logs")).toEqual([{ key: "logs" }]);
-    expect(labels(at("/logs"))).toEqual(["Journal"]);
+    expect(labels(at("/logs"))).toEqual(["Interventions"]);
     expect(labels(at("/checklist"))).toEqual(["Checklist"]);
     expect(labels(at("/boat"))).toEqual(["Bateau"]);
-    expect(current(at("/logs"))).toEqual(["Journal"]);
+    expect(current(at("/logs"))).toEqual(["Interventions"]);
   });
 
   it("gives the dashboard its own crumb and opens no other trail with it", () => {
     expect(at("/dashboard")).toEqual([{ key: "dashboard" }]);
     expect(labels(at("/dashboard"))).toEqual(["Tableau de bord"]);
     // The home of the boat is a tab, one tap away: it never prefixes another section.
-    expect(labels(at("/logs/new"))).toEqual(["Journal", "Nouveau"]);
+    expect(labels(at("/logs/new"))).toEqual(["Interventions", "Nouveau"]);
   });
 
   it("names the section and the step of a creation screen", () => {
@@ -152,7 +152,7 @@ describe("buildTrail", () => {
       { key: "logs", href: path("/logs") },
       { key: "crumbs.record" },
     ]);
-    expect(labels(at(`/logs/${LOG}`))).toEqual(["Journal", "Fiche"]);
+    expect(labels(at(`/logs/${LOG}`))).toEqual(["Interventions", "Fiche"]);
     expect(current(at(`/logs/${LOG}`))).toEqual(["Fiche"]);
 
     expect(at(`/logs/${LOG}/edit`)).toEqual([
@@ -205,7 +205,7 @@ describe("buildTrail", () => {
   it("hangs the haul-outs off the Journal, the tab they are reached from (D9)", () => {
     expect(at("/haul-outs")).toEqual([{ key: "logs", href: path("/logs") }, { key: "haulOuts" }]);
     expect(labels(at(`/haul-outs/${HAUL_OUT}/edit`))).toEqual([
-      "Journal",
+      "Interventions",
       "Sorties de l'eau",
       "Fiche",
       "Modifier",
@@ -224,7 +224,7 @@ describe("buildTrail", () => {
     // The report opens from the settings; the import from the list in `?entity=`, unknown here.
     expect(labels(at("/report"))).toEqual(["Paramètres", "Rapport"]);
     expect(at("/import")).toEqual([{ key: "crumbs.import" }]);
-    expect(labels(at("/logs/review"))).toEqual(["Journal", "Reprise du carnet"]);
+    expect(labels(at("/logs/review"))).toEqual(["Interventions", "Reprise du carnet"]);
     expect(labels(at("/checklist/setup"))).toEqual(["Checklist", "Mise en route"]);
   });
 
