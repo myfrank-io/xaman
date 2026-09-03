@@ -63,7 +63,10 @@ export function RestoreButton({
       }
     >
       {pending ? <Spinner /> : <Undo2Icon />}
-      {t("restore")}
+      {/* The word costs 90 px, and on a 360 px row that is 90 px the title does not get — it was
+          left with 110 px and broke « Remplaceme / nt ». The icon carries the meaning on a
+          phone, the label comes back from `sm`, and the accessible name is there either way. */}
+      <span className="sr-only sm:not-sr-only">{t("restore")}</span>
     </Button>
   );
 }

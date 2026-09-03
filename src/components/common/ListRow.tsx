@@ -61,7 +61,7 @@ export function ListRow({
       {/* Fixed left column from `sm` so the titles line up down the list. */}
       {lead ? <div className="hidden shrink-0 items-center sm:flex sm:w-26">{lead}</div> : null}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="line-clamp-2 text-body font-medium [overflow-wrap:anywhere] text-foreground sm:truncate">
+        <div className="line-clamp-2 text-body font-medium break-words text-foreground sm:truncate">
           {title}
         </div>
         {meta ? (
