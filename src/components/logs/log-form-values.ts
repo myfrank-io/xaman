@@ -41,7 +41,11 @@ export type LogFormPrefill = {
   checklistItemIds?: string[];
   contactId?: string;
   equipmentId?: string;
-  /** « + Ajouter les détails » from an hour-based point: open the hours block at once. */
+  /**
+   * Open the hours block at once: « + Ajouter les détails » from an hour-based point, or the
+   * act started from an engine sheet. The fields stay empty and the title keeps the focus —
+   * nothing steals the first keystroke.
+   */
   expandHours?: boolean;
 };
 

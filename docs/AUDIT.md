@@ -104,3 +104,63 @@ Voir `BACKLOG.md` (lots L0 → L8). Principe : **démontrer le suivi avant la sa
 - Activation : événements de suivi saisis par semaine et par bateau (cochages + interventions + relevés).
 - Budget d'interaction (critères d'acceptation E2E) : vidange avec heures ≤ 7 taps / < 45 s ; cocher un point sans heures ≤ 3 taps / < 10 s ; relevé d'heures ≤ 3 taps / < 15 s.
 - Vérité de l'état : aucun compteur « 0 h » (toujours « compteur inconnu »), aucune ligne douteuse masquée (badge « À vérifier »).
+
+---
+
+## 7. Audit des flux d'ajout et refonte (3 septembre 2026)
+
+> Déclencheur : « le *Ajouter* ici il n'est pas très instinctif ; il faut que ce soit hyper simple d'ajouter les activités liées au bateau, le gros étant les interventions, qui sont dures à trouver. » Audit mené sur l'application réelle (serveur de dev + Playwright, galerie `/dev/ui`), captures dans `docs/audit/add-flows/{before,after}` aux trois viewports. Cette section **prime** sur §3.2 pour les points qu'elle modifie (D8, D10, D19, D20, E5-1) ; les renversements sont journalisés dans `DECISIONS.md`.
+
+### 7.1 Ce que l'audit a trouvé
+
+| # | Constat | Preuve |
+|---|---|---|
+| A1 | **L'acte dominant n'a pas de nom à l'écran.** Le seul contrôle toujours présent dit « Ajouter » — jamais *quoi*. | `create.title = "Ajouter"`, `common.add` sur les deux placements |
+| A2 | **Il est là où l'œil arrive en dernier.** En 1024×768 le bouton est à `y = 662` sur 768, dans le pied de la sidebar, entre la navigation et le bloc compte — la zone « réglages ». | mesure Playwright |
+| A3 | **En portrait et sur téléphone, il n'a aucun libellé** : un glyphe « + » de 44 × 44 en haut à droite (`y = 6`), seul repère de création au-dessus de la ligne de flottaison. | mesure 768×1024 et 390×844 |
+| A4 | **Une taxonomie avant la première frappe.** La feuille impose de choisir entre cinq noms d'entités (Intervention · Relevé d'heures moteur · Bouteille de gaz · Achat · Sortie de l'eau) dans notre vocabulaire, pas celui du bord. | feuille ouverte, 3 viewports |
+| A5 | **L'écran Journal n'offrait rien.** Aucune action dans la page : titre, onglets, recherche, filtres — et c'est tout. Le seul chemin était le « + » du cadre, dans le coin. | capture `before/logs-*` ; décision « aucun « + » dans l'en-tête de /logs » |
+| A6 | **Les écrans qui nomment déjà le sujet n'offrent pas l'acte.** Fiche moteur et fiche équipement listent les interventions mais n'en créent aucune ; leur « + » ouvre la même feuille générique et aboutit à un formulaire vide. | `EngineSheet`, `EquipmentSheet` |
+| A7 | **Les états vides constatent au lieu d'inviter.** « Aucune intervention terminée pour l'instant. », « Aucune intervention enregistrée avec les heures de ce moteur. » — phrases sans bouton. | tableau de bord, fiche moteur, fiche équipement |
+| A8 | **Sur téléphone, aucun « Fait » n'est au-dessus de la ligne de flottaison** : la file d'attente commence à `y = 917` pour 844 de haut. | mesure 390×844 |
+| A9 | **Le « + » de la Checklist ne crée pas de point de checklist** : la feuille propose cinq actes, aucun n'est l'objet de l'écran. Un point ne se crée que depuis une catégorie. | `PrimaryActionSheet`, `create.checklistItem` jamais utilisé |
+| A10 | **Le rangement suit l'ordre de construction, pas le sens** : le stock de pièces (des objets à bord) vivait dans Dépenses (de l'argent) ; Dépenses et Achats étaient deux listes de la même chose ; l'identité du bateau était un onglet à égalité avec les listes. | signalé par l'utilisateur, confirmé écran par écran |
+
+### 7.2 Ce qui a été décidé
+
+1. **Nommer l'acte, pas l'entité.** Le contrôle primaire dit « Noter une intervention » et mène directement au formulaire. « Noter autre chose » ouvre la feuille des quatre autres actes, dont le titre devient « Qu'est-ce que vous notez ? ». Plus aucun « Ajouter » orphelin : chaque écran dont l'objet est évident nomme cet objet (« Ajouter un point », « Ajouter un intervenant », « Ajouter une dépense », « Nouvelle sortie de l'eau »).
+2. **L'intervention est le défaut de tout ajout générique** ; le reste est à un tap de plus, sans régression de compte pour ces quatre actes.
+3. **Un contrôle nommé par viewport.** À partir de `lg` la sidebar porte le libellé complet ; en dessous, le tableau de bord porte un bouton nommé pleine largeur, au-dessus de la ligne de flottaison aux trois viewports, et l'en-tête compact garde deux carrés de 44 px (carnet + « + »).
+4. **L'écran Interventions porte son action en haut à droite** ; le « + » du cadre s'efface sur cet écran — un écran, un chemin.
+5. **L'acte part d'où l'on est.** Fiche moteur et fiche équipement portent « Noter une intervention » : le formulaire arrive avec la catégorie choisie (et le bloc des heures ouvert pour un moteur), sans voler le focus du titre.
+6. **Le formulaire dit l'acte** : titre « Noter une intervention », champ « Qu'avez-vous fait ? » avec exemple, avant tout le reste.
+7. **Le rangement suit le sens** (D33, D34, D37) : Bateau = ce que le bateau *est* (identité en tête, moteurs, équipements **et** pièces détachées) ; Dépenses = l'argent, une seule liste dont chaque ligne pointe vers ce qu'elle a payé ; les interventions = le travail.
+
+### 7.3 Coût de l'acte, avant / après
+
+Un « tap » = un contact de doigt sur un contrôle. La frappe du titre, identique avant et après, n'est pas comptée. Départ à froid = ouverture de l'app, qui atterrit sur le tableau de bord.
+
+| Parcours | Avant | Après |
+|---|:--:|:--:|
+| **Noter une intervention, départ à froid** (1024×768) | **4** — « + Ajouter » · « Intervention » · chip catégorie · Enregistrer | **3** — « Noter une intervention » · chip · Enregistrer |
+| **Noter une intervention, départ à froid** (768×1024 et 390×844) | **4** — glyphe « + » · « Intervention » · chip · Enregistrer | **3** — « Noter une intervention » (bouton nommé du tableau de bord) · chip · Enregistrer |
+| Depuis l'écran Interventions | **4** (aucune action dans la page) | **3** |
+| Depuis la fiche d'un moteur | **6** | **4** (catégorie et bloc d'heures pré-remplis) |
+| Depuis la fiche d'un équipement | **6** | **4** |
+| Relevé d'heures depuis le tableau de bord | 1 (bande moteur) / 2 (feuille) | inchangé |
+| Achat, gaz, sortie de l'eau depuis le tableau de bord | 2 | 2 |
+| Cocher un point de checklist | 2 | inchangé |
+| Créer une pièce de rechange | 4 (Plus · Dépenses · onglet Stock · Ajouter) | 4 (Bateau · Équipements · Pièces détachées · Ajouter) — onglet principal au lieu d'une feuille secondaire |
+
+### 7.4 Visible sans défilement (mesuré)
+
+| Écran / contrôle | 1024×768 | 768×1024 | 390×844 |
+|---|:--:|:--:|:--:|
+| Avant — « + Ajouter » | oui, `y = 662` (pied de sidebar) | oui, glyphe `y = 6` | oui, glyphe `y = 6` |
+| Après — « Noter une intervention » | oui, `y = 612` (sidebar, libellé complet) | oui, `y = 531` (bouton nommé) + glyphe `y = 6` | oui, `y ≈ 600` (bouton nommé) + glyphe `y = 6` |
+| Après — action de l'écran Interventions | oui (en-tête de page) | oui | oui, même ligne que le titre |
+
+### 7.5 Ce qui reste ouvert
+
+- Le « + » de la racine Checklist ne crée toujours pas de point de checklist (A9) : un point exige une catégorie et la racine n'en désigne aucune. Le chemin reste catégorie → « Ajouter un point ».
+- Les sous-titres dynamiques de la feuille (`hints` : dernier relevé, dernière bouteille) sont toujours calculables mais jamais passés par la mise en page : les sous-titres fixes couvrent désormais l'intervention, la dépense et la sortie de l'eau.

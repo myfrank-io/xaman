@@ -128,10 +128,10 @@ export function editHaulOutPath(boatId: string, haulOutId: string): string {
 }
 
 /**
- * `gas` is not a tab of its own (E5-1): it opens the purchases tab filtered on
- * `kind=gas` with the bottle dialog, which is what the « + » sheet links to.
+ * Dépenses is one list (D33): interventions, purchases and haul-outs together. `gas` is not
+ * a tab but the bottle shortcut — the same list filtered on `kind=gas`, dialog open.
  */
-export type SuppliesTab = "expenses" | "purchases" | "gas" | "stock";
+export type SuppliesTab = "gas";
 
 export function suppliesPath(
   boatId: string,
@@ -152,22 +152,39 @@ export function editPurchasePath(boatId: string, purchaseId: string): string {
   return `${boatPath(boatId, "supplies")}/purchases/${purchaseId}/edit`;
 }
 
-// Stock of spare parts (E5-4): the third tab of Dépenses, a page per part.
+/**
+ * Stock of spare parts (D34): an inventory of things aboard, so it lives inside the
+ * Équipements tab of Bateau — not under Dépenses, which holds money only.
+ */
+export function stockPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return boatTabPath(boatId, "equipment", query);
+}
+
 export function newPartPath(boatId: string): string {
-  return `${boatPath(boatId, "supplies")}/parts/new`;
+  return `${boatPath(boatId, "boat")}/parts/new`;
 }
 
 export function editPartPath(boatId: string, partId: string): string {
-  return `${boatPath(boatId, "supplies")}/parts/${partId}/edit`;
+  return `${boatPath(boatId, "boat")}/parts/${partId}/edit`;
 }
 
 /** Import screen of a list (E12-2): one screen, the entity in the query. */
-export function importPath(boatId: string, entity: "contacts" | "equipment" | "parts"): string {
+export function importPath(
+  boatId: string,
+  entity: "logs" | "purchases" | "contacts" | "equipment" | "parts",
+): string {
   return withQuery(`/boats/${boatId}/import`, { entity });
 }
 
-export function boatTabPath(boatId: string, tab?: "identity" | "engines" | "equipment"): string {
-  return withQuery(boatPath(boatId, "boat"), tab ? { tab } : undefined);
+export function boatTabPath(
+  boatId: string,
+  tab?: "identity" | "engines" | "equipment",
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(boatPath(boatId, "boat"), { ...query, tab });
 }
 
 export function newEnginePath(boatId: string): string {

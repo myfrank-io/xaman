@@ -8,14 +8,17 @@ import { PackageIcon } from "lucide-react";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ListRow } from "@/components/common/ListRow";
+import { StockList, type StockItem } from "@/components/parts/StockList";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
+import type { StockFilter } from "@/lib/parts";
 import { equipmentPath, importPath, newEquipmentPath } from "@/lib/queries/boat-routes";
 
 export type EquipmentSummary = {
@@ -36,22 +39,43 @@ export type CategorySummary = {
   icon: string | null;
 };
 
+/** Everything the stock section needs, read by the page and handed down as plain props. */
+export type StockData = {
+  parts: StockItem[];
+  filter: StockFilter;
+  lowCount: number;
+  totalCount: number;
+};
+
+const STOCK_KEY = "__stock";
+
 function meta(item: EquipmentSummary, quantityLabel: (count: number) => string): string {
   const parts = [item.brand, item.model].filter(Boolean) as string[];
   if (item.quantity > 1) parts.push(quantityLabel(item.quantity));
   return parts.join(" · ");
 }
 
-// Equipment tab (E2-3): one accordion per category, rows lead to the equipment sheet.
+/**
+ * Équipements (E2-3, D34): what the boat carries. One accordion per category, plus the
+ * spare-parts stock as a section of its own — an inventory of things aboard belongs here,
+ * next to the equipment, not under Dépenses which holds money only.
+ *
+ * Every section starts **closed** (D36): thirty-six pieces of equipment used to open as one
+ * long scroll; closed, the whole inventory fits on one screen and opening one is a deliberate
+ * act. Nothing is remembered between visits — the screen always looks the same on arrival —
+ * and a single section opens by itself, since there is then nothing to choose between.
+ */
 export function EquipmentTab({
   boatId,
   items,
   categories,
+  stock,
   canWrite,
 }: {
   boatId: string;
   items: EquipmentSummary[];
   categories: CategorySummary[];
+  stock: StockData;
   canWrite: boolean;
 }) {
   const t = useTranslations("equipment");
@@ -74,10 +98,24 @@ export function EquipmentTab({
     groups.push({ key: "none", name: t("uncategorized"), color: null, items: uncategorized });
   }
 
+  // The stock is one more section, always last: the equipment is the answer to « qu'y a-t-il
+  // à bord », the spares are the answer to « qu'ai-je en réserve ».
+  const sectionCount = groups.length + 1;
+  const openByDefault = sectionCount === 1 ? [groups[0]?.key ?? STOCK_KEY] : [];
+  const empty = groups.length === 0 && stock.totalCount === 0;
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-body text-ink-2">{t("count", { count: active.length })}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-body text-ink-2">
+          {t("count", { count: active.length })}
+          {stock.totalCount > 0 ? (
+            <>
+              {" · "}
+              {t("stockCount", { count: stock.totalCount })}
+            </>
+          ) : null}
+        </p>
         {canWrite ? (
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline">
@@ -89,7 +127,8 @@ export function EquipmentTab({
           </div>
         ) : null}
       </div>
-      {groups.length === 0 ? (
+
+      {empty ? (
         <EmptyState
           icon={<PackageIcon />}
           title={t("empty.title")}
@@ -105,7 +144,7 @@ export function EquipmentTab({
       ) : (
         <Accordion
           type="multiple"
-          defaultValue={groups.map((group) => group.key)}
+          defaultValue={openByDefault}
           className="rounded-xl border border-border bg-surface px-4"
         >
           {groups.map((group) => (
@@ -131,8 +170,38 @@ export function EquipmentTab({
               </AccordionContent>
             </AccordionItem>
           ))}
+          <AccordionItem value={STOCK_KEY}>
+            <AccordionTrigger>
+              <span className="flex min-w-0 items-center gap-2">
+                <PackageIcon className="size-4 shrink-0 text-ink-2" aria-hidden />
+                <span className="truncate">{t("stockSection")}</span>
+                <span className="num text-caption font-medium text-ink-3">{stock.totalCount}</span>
+                {/* Visible on the closed row: « sous le seuil » means « à racheter ». */}
+                {stock.lowCount > 0 ? (
+                  <Badge
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 border-state-overdue-border bg-state-overdue-tint text-state-overdue-fg"
+                  >
+                    {t("stockLow", { count: stock.lowCount })}
+                  </Badge>
+                ) : null}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <StockList
+                boatId={boatId}
+                parts={stock.parts}
+                canWrite={canWrite}
+                filter={stock.filter}
+                lowCount={stock.lowCount}
+                totalCount={stock.totalCount}
+              />
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       )}
+
       {removed.length > 0 ? (
         <Accordion
           type="single"

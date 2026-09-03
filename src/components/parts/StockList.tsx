@@ -18,7 +18,7 @@ import { adjustPartQuantity } from "@/lib/actions/parts";
 import { formatNumber } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { isLowStock, monthsSinceCheck, STOCK_FILTERS, type StockFilter } from "@/lib/parts";
-import { editPartPath, importPath, newPartPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { editPartPath, importPath, newPartPath, stockPath } from "@/lib/queries/boat-routes";
 
 /** Neutral grey when a line has no system: a category colour never travels alone (rule 12). */
 const NO_CATEGORY_COLOR = "#8A99AC";
@@ -38,9 +38,10 @@ export type StockItem = {
 };
 
 /**
- * Stock of spare parts (E5-4, D10): one flat list — quantity, name, system, place on board,
- * threshold, when it was last counted — with + / − on the line and « Sous le seuil » in red
- * because it means « à racheter ». The filter lives in the URL like every other list.
+ * Stock of spare parts (E5-4, D10, D34): one flat list — quantity, name, system, place on
+ * board, threshold, when it was last counted — with + / − on the line and « Sous le seuil » in
+ * red because it means « à racheter ». It lives inside Bateau › Équipements: a spare part is a
+ * thing aboard, not a cost. The filter lives in the URL like every other list.
  */
 export function StockList({
   boatId,
@@ -57,9 +58,9 @@ export function StockList({
   lowCount: number;
   totalCount: number;
 }) {
-  const t = useTranslations("supplies.stock");
+  const t = useTranslations("equipment.stock");
   const ti = useTranslations("import");
-  const tu = useTranslations("supplies.stock.units");
+  const tu = useTranslations("equipment.stock.units");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -96,7 +97,7 @@ export function StockList({
   }
 
   function setFilter(next: StockFilter) {
-    router.replace(suppliesPath(boatId, "stock", { low: next === "low" ? 1 : undefined }) as Route);
+    router.replace(stockPath(boatId, { low: next === "low" ? 1 : undefined }) as Route);
   }
 
   const counts: Record<StockFilter, number> = { all: totalCount, low: lowCount };
@@ -164,7 +165,7 @@ export function StockList({
           title={t("emptyFiltered")}
           action={
             <Button asChild variant="outline">
-              <Link href={suppliesPath(boatId, "stock") as Route}>{t("showAll")}</Link>
+              <Link href={stockPath(boatId) as Route}>{t("showAll")}</Link>
             </Button>
           }
         />

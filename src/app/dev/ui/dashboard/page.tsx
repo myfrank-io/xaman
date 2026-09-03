@@ -1,3 +1,5 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ChevronRightIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
@@ -175,6 +177,7 @@ export default async function DevDashboardPage() {
   const tc = await getTranslations("common");
   const td = await getTranslations("dev");
   const tl = await getTranslations("logs");
+  const tcreate = await getTranslations("create");
 
   const keys: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
   const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2, trash: 4 };
@@ -249,6 +252,16 @@ export default async function DevDashboardPage() {
 
           <EngineStrip boatId={DEV_BOAT_ID} engines={ENGINES} canContribute canWrite />
         </header>
+
+        {/* 2 bis — the dominant act, named, below `lg` (D35) */}
+        <div className="lg:hidden">
+          <Button asChild size="xl" className="w-full sm:w-auto">
+            <Link href={`/boats/${DEV_BOAT_ID}/logs/new` as Route}>
+              <PlusIcon />
+              {tcreate("primary")}
+            </Link>
+          </Button>
+        </div>
 
         {/* 2 — contextual banner (a single one, by priority) */}
         <Alert variant="warning" className="items-center">

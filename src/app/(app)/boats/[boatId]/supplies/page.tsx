@@ -1,32 +1,28 @@
-import { notFound } from "next/navigation";
+import type { Route } from "next";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { UploadIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
+import { Button } from "@/components/ui/button";
 import { ExpensesTab, type ExpensesData } from "@/components/supplies/ExpensesTab";
+import type { ExpenseLine } from "@/components/supplies/ExpenseLines";
 import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
-import { PurchaseFilters } from "@/components/supplies/PurchaseFilters";
-import { PurchaseList, type PurchaseListItem } from "@/components/supplies/PurchaseList";
-import { StockList, type StockItem } from "@/components/supplies/StockList";
-import { SuppliesTabs, type SuppliesView } from "@/components/supplies/SuppliesTabs";
 import {
   isExpensePeriod,
   parseSources,
   previousRange,
   resolveRange,
   type ExpenseRow,
+  type ExpenseSource,
 } from "@/lib/expenses";
 import { gasFacts } from "@/lib/gas";
-import { applyStockFilter, countLowStock, sortStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
-import {
-  isPurchaseKind,
-  isPurchasePeriod,
-  parsePurchaseLimit,
-  PURCHASE_PAGE_SIZE,
-  resolvePurchaseRange,
-} from "@/lib/purchases";
-import { suppliesPath } from "@/lib/queries/boat-routes";
+import { isPurchaseKind, parsePurchaseLimit, PURCHASE_PAGE_SIZE } from "@/lib/purchases";
+import { importPath, stockPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { purchaseKindLabelKey, type PurchaseKind } from "@/lib/schemas/purchases";
 import { createClient } from "@/lib/supabase/server";
 
 /** Category of the gas bottle in the ORC 50 seed, used when no gas line exists yet. */
@@ -45,9 +41,11 @@ type SearchParams = {
 };
 
 /**
- * Dépenses (E5-1): three tabs in the URL — Dépenses (default), Achats, Stock. Gas is not a
- * fourth tab but a filter of Achats plus a quick dialog (`?tab=gas`), which is where the
- * app's « + » sheet lands.
+ * Dépenses (E5-1, D33): money only, and **one** list — the cost of an intervention, a
+ * purchase, a haul-out, each line pointing at what it paid for. « Achats » is no longer a
+ * separate view: a purchase IS an expense. Gas is not a tab either but the bottle shortcut
+ * (`?tab=gas`), which is where the app's « + » sheet lands. The spare-parts stock left this
+ * screen for Bateau › Équipements (D34): it is an inventory of things, not a cost.
  */
 export default async function SuppliesPage({
   params,
@@ -57,8 +55,25 @@ export default async function SuppliesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ boatId }, query] = await Promise.all([params, searchParams]);
-  const supabase = await createClient();
 
+  // Links already sent, and any installed PWA, still carry the old tabs.
+  if (query.tab === "stock") {
+    redirect(stockPath(boatId, { low: query.low === "1" ? 1 : undefined }) as Route);
+  }
+  if (query.tab === "purchases" || query.tab === "expenses") {
+    redirect(
+      suppliesPath(boatId, undefined, {
+        kind: query.kind,
+        category: query.category,
+        period: query.period,
+        from: query.from,
+        to: query.to,
+        source: query.source,
+      }) as Route,
+    );
+  }
+
+  const supabase = await createClient();
   const [{ data: role }, { data: categories }] = await Promise.all([
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase
@@ -77,191 +92,148 @@ export default async function SuppliesPage({
     icon: category.icon,
   }));
 
-  // `?tab=gas` is the « + » sheet entry: the purchases tab, filtered, dialog open.
+  // `?tab=gas` is the « + » sheet entry: the same list filtered on gas, dialog open.
   const gasEntry = query.tab === "gas";
-  const tab: SuppliesView =
-    gasEntry || query.tab === "purchases"
-      ? "purchases"
-      : query.tab === "stock"
-        ? "stock"
-        : "expenses";
-
-  const t = await getTranslations("supplies");
-
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-      <SuppliesTabs boatId={boatId} active={tab} />
-      {tab === "expenses" ? (
-        <ExpensesSection boatId={boatId} query={query} />
-      ) : tab === "purchases" ? (
-        <PurchasesSection
-          boatId={boatId}
-          query={query}
-          gasEntry={gasEntry}
-          canWrite={canWrite}
-          categories={categoryList}
-          categoryRefs={categories ?? []}
-        />
-      ) : (
-        <StockSection boatId={boatId} query={query} canWrite={canWrite} categories={categoryList} />
-      )}
-    </div>
-  );
-}
-
-async function ExpensesSection({ boatId, query }: { boatId: string; query: SearchParams }) {
-  const supabase = await createClient();
-  const period = isExpensePeriod(query.period) ? query.period : "rolling12";
+  const kind = gasEntry ? "gas" : isPurchaseKind(query.kind) ? query.kind : null;
+  // « Toute la période » by default: a twelve-month window would hide the paper logbook.
+  const period = isExpensePeriod(query.period) ? query.period : "all";
   const range = resolveRange(period, { from: query.from, to: query.to });
-  const sources = parseSources(query.source);
+  // A kind only exists on a purchase; picking one implies that source.
+  const sources: ExpenseSource[] = kind ? ["purchase"] : parseSources(query.source);
+  const categoryId = query.category ?? null;
+  const limit = parsePurchaseLimit(query.limit);
   const previous = previousRange(period, range);
 
-  const [{ data: rows }, { data: history }] = await Promise.all([
-    supabase
-      .from("expenses_by_category")
-      .select("source, entity_id, label, amount, date, category_id, category_name, category_color")
-      .eq("boat_id", boatId)
-      .gte("date", range.from)
-      .lte("date", range.to)
-      .in("source", sources)
-      .order("date", { ascending: false }),
-    // Light query (two columns) feeding both the comparison and the running total.
-    supabase
-      .from("expenses_by_category")
-      .select("amount, date")
-      .eq("boat_id", boatId)
-      .in("source", sources)
-      .order("date", { ascending: true }),
-  ]);
-
-  const all = history ?? [];
-  const previousTotal = all
-    .filter((row) => (row.date ?? "") >= previous.from && (row.date ?? "") <= previous.to)
-    .reduce((sum, row) => sum + (row.amount ?? 0), 0);
-
-  const data: ExpensesData = {
-    rows: (rows ?? []).map((row): ExpenseRow => ({
-      source: row.source,
-      entityId: row.entity_id,
-      label: row.label,
-      amount: row.amount,
-      date: row.date,
-      categoryId: row.category_id,
-      categoryName: row.category_name,
-      categoryColor: row.category_color,
-    })),
-    previousTotal,
-    cumulativeTotal: all.reduce((sum, row) => sum + (row.amount ?? 0), 0),
-    firstDate: all[0]?.date ?? null,
-  };
-
-  return (
-    <ExpensesTab
-      boatId={boatId}
-      period={period}
-      range={range}
-      sources={sources}
-      data={data}
-      filtered={period !== "rolling12" || query.source !== undefined}
-    />
-  );
-}
-
-async function PurchasesSection({
-  boatId,
-  query,
-  gasEntry,
-  canWrite,
-  categories,
-  categoryRefs,
-}: {
-  boatId: string;
-  query: SearchParams;
-  gasEntry: boolean;
-  canWrite: boolean;
-  categories: { id: string; name: string; color: string; icon: string | null }[];
-  categoryRefs: { id: string; external_ref: string | null }[];
-}) {
-  const supabase = await createClient();
-  const kind = gasEntry ? "gas" : isPurchaseKind(query.kind) ? query.kind : null;
-  const categoryId = query.category ?? null;
-  const period = isPurchasePeriod(query.period) ? query.period : "all";
-  const range = resolvePurchaseRange(period, { from: query.from, to: query.to });
-  const limit = parsePurchaseLimit(query.limit);
-  const gasView = kind === "gas";
-
-  let list = supabase
-    .from("purchases")
+  let listQuery = supabase
+    .from("expenses_by_category")
     .select(
-      "id, purchased_at, designation, kind, amount, category_id, supplier_contact_id, supplier_name, needs_review",
+      "source, purchase_kind, entity_id, label, amount, date, category_id, category_name, category_color",
     )
     .eq("boat_id", boatId)
-    .is("deleted_at", null);
-  if (kind) list = list.eq("kind", kind);
-  if (categoryId) list = list.eq("category_id", categoryId);
-  if (range) list = list.gte("purchased_at", range.from).lte("purchased_at", range.to);
+    .gte("date", range.from)
+    .lte("date", range.to)
+    .in("source", sources);
+  if (kind) listQuery = listQuery.eq("purchase_kind", kind);
+  if (categoryId) listQuery = listQuery.eq("category_id", categoryId);
 
-  const [{ data: rows }, { data: contacts }, { data: gasRows }] = await Promise.all([
-    // One row more than the page: that is how « Charger plus » knows it has something to show.
-    list
-      .order("purchased_at", { ascending: false })
-      .order("id")
-      .limit(limit + 1),
-    supabase
-      .from("contacts")
-      .select("id, name, specialty, company, phone")
-      .eq("boat_id", boatId)
-      .order("name"),
-    gasView
-      ? supabase
-          .from("purchases")
-          .select(
-            "purchased_at, amount, bottle_type, supplier_contact_id, supplier_name, category_id",
-          )
-          .eq("boat_id", boatId)
-          .eq("kind", "gas")
-          .is("deleted_at", null)
-          .order("purchased_at", { ascending: false })
-      : Promise.resolve({ data: null }),
+  const [{ data: rows }, { data: history }, { data: contacts }, { data: gasRows }] =
+    await Promise.all([
+      listQuery.order("date", { ascending: false }),
+      // Light query (two columns) feeding both the comparison and the running total.
+      supabase
+        .from("expenses_by_category")
+        .select("amount, date")
+        .eq("boat_id", boatId)
+        .in("source", sources)
+        .order("date", { ascending: true }),
+      supabase
+        .from("contacts")
+        .select("id, name, specialty, company, phone")
+        .eq("boat_id", boatId)
+        .order("name"),
+      kind === "gas" || gasEntry
+        ? supabase
+            .from("purchases")
+            .select(
+              "purchased_at, amount, bottle_type, supplier_contact_id, supplier_name, category_id",
+            )
+            .eq("boat_id", boatId)
+            .eq("kind", "gas")
+            .is("deleted_at", null)
+            .order("purchased_at", { ascending: false })
+        : Promise.resolve({ data: null }),
+    ]);
+
+  const all = history ?? [];
+  const previousTotal =
+    period === "all"
+      ? 0
+      : all
+          .filter((row) => (row.date ?? "") >= previous.from && (row.date ?? "") <= previous.to)
+          .reduce((sum, row) => sum + (row.amount ?? 0), 0);
+
+  const expenseRows: ExpenseRow[] = (rows ?? []).map((row) => ({
+    source: row.source,
+    purchaseKind: row.purchase_kind,
+    entityId: row.entity_id,
+    label: row.label,
+    amount: row.amount,
+    date: row.date,
+    categoryId: row.category_id,
+    categoryName: row.category_name,
+    categoryColor: row.category_color,
+  }));
+
+  // The view carries neither the supplier nor the imported-line flag: one extra read, keyed
+  // by the purchase ids of the page, keeps both visible in the merged list.
+  const page = expenseRows.slice(0, limit);
+  const purchaseIds = page
+    .filter((row) => row.source === "purchase")
+    .map((row) => row.entityId)
+    .filter((id): id is string => Boolean(id));
+  const { data: purchaseExtras } = purchaseIds.length
+    ? await supabase
+        .from("purchases")
+        .select("id, supplier_contact_id, supplier_name, needs_review")
+        .in("id", purchaseIds)
+    : { data: null };
+  const contactNames = new Map((contacts ?? []).map((contact) => [contact.id, contact.name]));
+  const extras = new Map((purchaseExtras ?? []).map((row) => [row.id, row]));
+
+  const [t, tk, ti] = await Promise.all([
+    getTranslations("supplies"),
+    getTranslations("purchaseKind"),
+    getTranslations("import"),
   ]);
 
-  const contactNames = new Map((contacts ?? []).map((contact) => [contact.id, contact.name]));
-  const categoryById = new Map(categories.map((category) => [category.id, category]));
-  const page = (rows ?? []).slice(0, limit);
-  const purchases: PurchaseListItem[] = page.map((row) => {
-    const category = row.category_id ? categoryById.get(row.category_id) : undefined;
+  const lines: ExpenseLine[] = page.map((row) => {
+    const extra = row.entityId ? extras.get(row.entityId) : undefined;
     return {
-      id: row.id,
-      purchasedAt: row.purchased_at,
-      designation: row.designation,
-      kind: row.kind,
+      source: (row.source ?? "purchase") as ExpenseSource,
+      entityId: row.entityId ?? "",
+      label: row.label ?? "",
+      date: row.date ?? "",
       amount: row.amount,
-      categoryName: category?.name ?? null,
-      categoryColor: category?.color ?? null,
-      supplier: row.supplier_contact_id
-        ? (contactNames.get(row.supplier_contact_id) ?? null)
-        : row.supplier_name,
-      needsReview: row.needs_review,
+      categoryName: row.categoryName,
+      categoryColor: row.categoryColor,
+      kindLabel: row.purchaseKind
+        ? tk(purchaseKindLabelKey(row.purchaseKind as PurchaseKind))
+        : null,
+      supplier: extra
+        ? extra.supplier_contact_id
+          ? (contactNames.get(extra.supplier_contact_id) ?? null)
+          : extra.supplier_name
+        : null,
+      needsReview: extra?.needs_review ?? false,
     };
   });
 
   const moreHref =
-    (rows ?? []).length > limit
-      ? suppliesPath(boatId, "purchases", {
+    expenseRows.length > limit
+      ? suppliesPath(boatId, undefined, {
           kind: kind ?? undefined,
           category: categoryId ?? undefined,
           period: period === "all" ? undefined : period,
-          from: period === "custom" ? range?.from : undefined,
-          to: period === "custom" ? range?.to : undefined,
+          from: period === "custom" ? range.from : undefined,
+          to: period === "custom" ? range.to : undefined,
+          source: kind ? undefined : query.source,
           limit: limit + PURCHASE_PAGE_SIZE,
         })
       : null;
 
+  const data: ExpensesData = {
+    rows: expenseRows,
+    lines,
+    previousTotal,
+    cumulativeTotal: all.reduce((sum, row) => sum + (row.amount ?? 0), 0),
+    firstDate: all[0]?.date ?? null,
+    moreHref,
+  };
+
   const gas = gasRows ?? [];
   const facts = gasFacts(gas.map((row) => row.purchased_at));
   const last = gas[0];
-  const defaults = {
+  const gasDefaults = {
     bottleTypes: [
       ...new Set(gas.map((row) => row.bottle_type).filter((type): type is string => Boolean(type))),
     ],
@@ -270,13 +242,27 @@ async function PurchasesSection({
     supplierName: last?.supplier_name ?? null,
     categoryId:
       last?.category_id ??
-      categoryRefs.find((category) => category.external_ref === GAS_CATEGORY_REF)?.id ??
+      (categories ?? []).find((category) => category.external_ref === GAS_CATEGORY_REF)?.id ??
       null,
   };
 
   return (
     <div className="flex flex-col gap-6">
-      {gasView ? (
+      <PageHeader
+        title={t("title")}
+        subtitle={t("expenses.subtitle")}
+        actions={
+          canWrite ? (
+            <Button asChild variant="outline">
+              <Link href={importPath(boatId, "purchases") as Route}>
+                <UploadIcon />
+                {ti("action")}
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
+      {kind === "gas" ? (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           <div className="min-w-0 flex-1">
             <GasFacts facts={facts} total={gas.reduce((sum, row) => sum + (row.amount ?? 0), 0)} />
@@ -285,90 +271,25 @@ async function PurchasesSection({
             <GasBottleEntry
               boatId={boatId}
               contacts={contacts ?? []}
-              defaults={defaults}
+              defaults={gasDefaults}
               facts={facts}
               defaultOpen={gasEntry}
             />
           ) : null}
         </div>
       ) : null}
-      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <PurchaseFilters
-          boatId={boatId}
-          categories={categories}
-          kind={kind}
-          categoryId={categoryId}
-          period={period}
-          range={range ?? resolveRange("rolling12", {})}
-        />
-      </div>
-      <PurchaseList
+      <ExpensesTab
         boatId={boatId}
-        purchases={purchases}
+        period={period}
+        range={range}
+        sources={sources}
+        kind={kind}
+        categoryId={categoryId}
+        categories={categoryList}
+        data={data}
         canWrite={canWrite}
-        filtered={Boolean(kind || categoryId || period !== "all")}
-        moreHref={moreHref}
+        filtered={Boolean(kind || categoryId || period !== "all" || query.source !== undefined)}
       />
     </div>
-  );
-}
-
-async function StockSection({
-  boatId,
-  query,
-  canWrite,
-  categories,
-}: {
-  boatId: string;
-  query: SearchParams;
-  canWrite: boolean;
-  categories: { id: string; name: string; color: string; icon: string | null }[];
-}) {
-  const supabase = await createClient();
-  const filter: StockFilter = query.low === "1" ? "low" : "all";
-
-  const [{ data: rows }, { data: contacts }] = await Promise.all([
-    supabase
-      .from("parts")
-      .select(
-        "id, name, reference, quantity, min_quantity, unit, location, category_id, supplier_contact_id, checked_at",
-      )
-      .eq("boat_id", boatId)
-      .order("name"),
-    supabase.from("contacts").select("id, name").eq("boat_id", boatId),
-  ]);
-
-  const categoryById = new Map(categories.map((category) => [category.id, category]));
-  const contactNames = new Map((contacts ?? []).map((contact) => [contact.id, contact.name]));
-  const all: StockItem[] = sortStock(
-    (rows ?? []).map((row) => {
-      const category = row.category_id ? categoryById.get(row.category_id) : undefined;
-      return {
-        id: row.id,
-        name: row.name,
-        reference: row.reference,
-        quantity: row.quantity,
-        minQuantity: row.min_quantity,
-        unit: row.unit,
-        location: row.location,
-        categoryName: category?.name ?? null,
-        categoryColor: category?.color ?? null,
-        supplierName: row.supplier_contact_id
-          ? (contactNames.get(row.supplier_contact_id) ?? null)
-          : null,
-        checkedAt: row.checked_at,
-      };
-    }),
-  );
-
-  return (
-    <StockList
-      boatId={boatId}
-      parts={applyStockFilter(all, filter)}
-      canWrite={canWrite}
-      filter={filter}
-      lowCount={countLowStock(all)}
-      totalCount={all.length}
-    />
   );
 }

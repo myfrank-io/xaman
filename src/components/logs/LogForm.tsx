@@ -356,6 +356,7 @@ export function LogForm({
             autoComplete="off"
             autoCapitalize="sentences"
             enterKeyHint="next"
+            placeholder={t("titlePlaceholder")}
             autoFocus={!log}
             aria-invalid={errors.title ? true : undefined}
             {...form.register("title")}

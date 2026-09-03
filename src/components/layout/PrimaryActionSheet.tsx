@@ -7,9 +7,11 @@ import { usePathname } from "next/navigation";
 import {
   AnchorIcon,
   ChevronRightIcon,
+  ContactIcon,
   EuroIcon,
   FlameIcon,
   GaugeIcon,
+  ListChecksIcon,
   NotebookPenIcon,
   PlusIcon,
   type LucideIcon,
@@ -43,7 +45,16 @@ const ENTRY_ICONS: Record<CreateKey, LucideIcon> = {
   haulOut: AnchorIcon,
 };
 
-// Order = frequency of use (ux-flows §1.4).
+/** Fixed subtitles; the dynamic ones (last reading, last bottle) arrive in `hints`. */
+type HintKey = "logHint" | "purchaseHint" | "haulOutHint";
+
+const HINT_KEYS: Partial<Record<CreateKey, HintKey>> = {
+  log: "logHint",
+  purchase: "purchaseHint",
+  haulOut: "haulOutHint",
+};
+
+// Order = frequency of use (ux-flows §1.4). The intervention leads: it is the dominant act.
 const ALL_KEYS: CreateKey[] = ["log", "hourReading", "gas", "purchase", "haulOut"];
 // A `pro` only records his own work: two entries, the others are absent (not greyed).
 const PRO_KEYS: CreateKey[] = ["log", "hourReading"];
@@ -63,13 +74,42 @@ function entryHref(key: CreateKey, boatId: string): string {
   }
 }
 
+/** The one object a screen obviously creates (D19); null when the screen is ambiguous. */
+type DirectKey = "newChecklistItem" | "newContact" | "newPurchase" | "newHaulOut";
+type Direct = { href: string; labelKey: DirectKey; icon: LucideIcon };
+
+function directTarget(segments: string[], boatId: string, role: BoatRole): Direct | null {
+  const [section, second] = segments;
+  if (section === "checklist" && segments.length === 2 && second) {
+    return {
+      href: newChecklistItemPath(boatId, second),
+      labelKey: "newChecklistItem",
+      icon: ListChecksIcon,
+    };
+  }
+  if (role === "pro") return null;
+  if (section === "contacts" && segments.length === 1) {
+    return { href: newContactPath(boatId), labelKey: "newContact", icon: ContactIcon };
+  }
+  // « Dépenses » creates an expense line, « Sorties de l'eau » a haul-out: one object each.
+  if (section === "supplies" && segments.length === 1) {
+    return { href: newPurchasePath(boatId), labelKey: "newPurchase", icon: EuroIcon };
+  }
+  if (section === "haul-outs" && segments.length === 1) {
+    return { href: newHaulOutPath(boatId), labelKey: "newHaulOut", icon: AnchorIcon };
+  }
+  return null;
+}
+
 /**
- * The single creation control of the app (R2). One component, two placements:
- * sidebar footer from `lg`, compact header below. No floating FAB — it covers
- * the last row of every list and duplicates a control that already exists.
+ * The single creation control of the app (R2, D19). One component, two placements: sidebar
+ * footer from `lg`, compact header below. No floating FAB — it covers the last row of every
+ * list and duplicates a control that already exists.
  *
- * Behaviour: when the screen has an obvious object the « + » creates it
- * directly; otherwise it opens the choice sheet (ux-flows §1.4).
+ * Two shapes, never both: when the screen has an obvious object the control creates it and
+ * says its name; otherwise the control is named after the dominant act — « Noter une
+ * intervention », one tap to the form — with a quieter « Noter autre chose » under it for the
+ * four other acts (D35). « Ajouter » on its own never appears again: it never said what.
  */
 export function PrimaryActionSheet({
   boatId,
@@ -81,12 +121,11 @@ export function PrimaryActionSheet({
   hints?: PrimaryActionHints;
 }) {
   const t = useTranslations("create");
-  const tc = useTranslations("common");
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
 
   const base = `/boats/${boatId}`;
-  // Outside the boat tree (design gallery, previews) the sheet is the default.
+  // Outside the boat tree (design gallery, previews) the ambiguous shape is the default.
   const inBoat = pathname.startsWith(base);
   const segments = inBoat ? pathname.slice(base.length).split("/").filter(Boolean) : [];
 
@@ -94,47 +133,33 @@ export function PrimaryActionSheet({
   const hidden =
     inBoat &&
     (["trash", "members", "settings"].includes(segments[0] ?? "") ||
-      (segments[0] === "logs" && segments.length > 1) ||
+      // The journal carries « Noter une intervention » in its own header (D35): the frame
+      // steps aside so the screen keeps exactly one way in.
+      segments[0] === "logs" ||
       (segments[0] === "checklist" && segments.length > 2) ||
       (segments[0] === "contacts" && segments.length > 1) ||
       // Haul-out sheet and purchase form: each carries its own creation control.
       (segments[0] === "haul-outs" && segments.length > 1) ||
       (segments[0] === "supplies" && segments.length > 1));
 
-  // Direct target when the screen has one obvious object.
-  let directHref: string | null = null;
-  if (segments[0] === "logs" && segments.length === 1) directHref = newLogPath(boatId);
-  if (segments[0] === "checklist" && segments.length === 2 && segments[1]) {
-    directHref = newChecklistItemPath(boatId, segments[1]);
-  }
-  if (segments[0] === "contacts" && segments.length === 1 && role !== "pro") {
-    directHref = newContactPath(boatId);
-  }
-  // « Dépenses » creates a purchase, « Sorties de l'eau » a haul-out: one obvious object each.
-  if (segments[0] === "supplies" && segments.length === 1 && role !== "pro") {
-    directHref = newPurchasePath(boatId);
-  }
-  if (segments[0] === "haul-outs" && segments.length === 1 && role !== "pro") {
-    directHref = newHaulOutPath(boatId);
-  }
-
+  const direct = inBoat ? directTarget(segments, boatId, role) : null;
   const keys = role === "pro" ? PRO_KEYS : ALL_KEYS;
 
   if (hidden) return null;
 
-  if (directHref) {
+  if (direct) {
+    const Icon = direct.icon;
+    const label = t(direct.labelKey);
     return (
       <>
         <Button asChild size="icon" variant="inverse" className="lg:hidden">
-          <Link href={directHref as Route} aria-label={tc("add")}>
-            <PlusIcon />
+          <Link href={direct.href as Route} aria-label={label}>
+            <Icon />
           </Link>
         </Button>
-        <Button asChild size="xl" className="hidden w-full lg:inline-flex">
-          <Link href={directHref as Route}>
-            <PlusIcon />
-            {tc("add")}
-          </Link>
+        {/* No icon on the wide button: the label must never be clipped by its own frame. */}
+        <Button asChild size="xl" className="hidden w-full px-4 text-label lg:inline-flex">
+          <Link href={direct.href as Route}>{label}</Link>
         </Button>
       </>
     );
@@ -142,19 +167,32 @@ export function PrimaryActionSheet({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <Button
-        size="icon"
-        variant="inverse"
-        aria-label={tc("add")}
-        onClick={() => setOpen(true)}
-        className="lg:hidden"
-      >
-        <PlusIcon />
-      </Button>
-      <Button size="xl" onClick={() => setOpen(true)} className="hidden w-full lg:inline-flex">
-        <PlusIcon />
-        {tc("add")}
-      </Button>
+      {/* Compact header: two 44 px squares — the act, then everything else. */}
+      <div className="flex items-center gap-1 lg:hidden">
+        <Button asChild size="icon" variant="inverse">
+          <Link href={newLogPath(boatId) as Route} aria-label={t("primary")}>
+            <NotebookPenIcon />
+          </Link>
+        </Button>
+        <Button size="icon" variant="inverse" aria-label={t("other")} onClick={() => setOpen(true)}>
+          <PlusIcon />
+        </Button>
+      </div>
+      {/* Sidebar footer: the act in full, the rest one tap under it. */}
+      <div className="hidden w-full flex-col gap-1.5 lg:flex">
+        <Button asChild size="xl" className="w-full px-4 text-label">
+          <Link href={newLogPath(boatId) as Route}>{t("primary")}</Link>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-ink-2"
+          onClick={() => setOpen(true)}
+        >
+          <PlusIcon className="size-4" />
+          {t("other")}
+        </Button>
+      </div>
       <SheetContent side="bottom" className="gap-0">
         <SheetHeader>
           <SheetTitle>{t("title")}</SheetTitle>
@@ -162,7 +200,8 @@ export function PrimaryActionSheet({
         <ul className="flex flex-col border-t border-border">
           {keys.map((key) => {
             const Icon = ENTRY_ICONS[key];
-            const hint = hints?.[key];
+            const hintKey = HINT_KEYS[key];
+            const hint = hints?.[key] ?? (hintKey ? t(hintKey) : undefined);
             return (
               <li key={key}>
                 <Link

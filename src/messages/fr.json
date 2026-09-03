@@ -91,7 +91,6 @@
       "import": "Importer",
       "engines": "Moteurs",
       "equipment": "Équipements",
-      "purchases": "Achats",
       "parts": "Stock",
       "report": "Rapport",
       "profile": "Profil"
@@ -439,16 +438,28 @@
     "viewerHelp": "Consultation seule. Pour un expert ou un acheteur."
   },
   "create": {
-    "title": "Ajouter",
-    "log": "Intervention",
+    "title": "Qu'est-ce que vous notez ?",
+    "log": "Une intervention",
     "logHint": "Vidange, réparation, contrôle…",
-    "hourReading": "Relevé d'heures moteur",
+    "hourReading": "Un relevé d'heures moteur",
     "hourReadingHint": "{engine} · {hours} le {date}",
-    "gas": "Bouteille de gaz",
+    "gas": "Un changement de bouteille de gaz",
     "gasHint": "Dernier changement il y a {days} jours",
-    "purchase": "Achat",
-    "haulOut": "Sortie de l'eau",
-    "checklistItem": "Nouveau point de checklist"
+    "purchase": "Une dépense",
+    "haulOut": "Une sortie de l'eau",
+    "checklistItem": "Nouveau point de checklist",
+    "purchaseHint": "Facture, pièce, carburant…",
+    "haulOutHint": "Carénage, chantier, hivernage…",
+    "primary": "Noter une intervention",
+    "primaryShort": "Noter",
+    "other": "Noter autre chose",
+    "newLog": "Noter une intervention",
+    "newChecklistItem": "Ajouter un point",
+    "newContact": "Ajouter un intervenant",
+    "newPurchase": "Ajouter une dépense",
+    "newHaulOut": "Nouvelle sortie de l'eau",
+    "onEngine": "Noter une intervention",
+    "onEquipment": "Noter une intervention"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -610,9 +621,9 @@
     "emptyPlannedDescription": "Les interventions planifiées, en cours ou urgentes apparaissent ici jusqu'à leur réalisation.",
     "haulOutsTab": "Les sorties de l'eau ont leur propre écran.",
     "form": {
-      "newTitle": "Nouvelle intervention",
+      "newTitle": "Noter une intervention",
       "editTitle": "Modifier l'intervention",
-      "title": "Titre",
+      "title": "Qu'avez-vous fait ?",
       "category": "Catégorie",
       "status": "Statut",
       "date": "Date",
@@ -649,7 +660,9 @@
       "saved": "Intervention enregistrée",
       "savedWithReading": "Intervention enregistrée · Relevé {engine} {hours}",
       "view": "Voir",
-      "attachments": "Photos et documents"
+      "attachments": "Photos et documents",
+      "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
+      "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants."
     },
     "detail": {
       "fields": {
@@ -895,7 +908,9 @@
       "noNotes": "Aucune note.",
       "saved": "Fiche du bateau enregistrée",
       "template": "Modèle de checklist : {name}",
-      "noTemplate": "Aucun modèle de checklist"
+      "noTemplate": "Aucun modèle de checklist",
+      "details": "Détails du bateau",
+      "editAria": "Modifier la fiche du bateau"
     }
   },
   "engines": {
@@ -1015,7 +1030,65 @@
     "removed": "Équipement déposé",
     "saved": "Équipement enregistré",
     "installedOn": "installé le {date}",
-    "quantityShort": "× {count}"
+    "quantityShort": "× {count}",
+    "stock": {
+      "title": "Stock",
+      "new": "Ajouter une pièce",
+      "edit": "Modifier la pièce",
+      "saved": "Pièce enregistrée.",
+      "emptyTitle": "Aucune pièce en stock",
+      "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
+      "emptyFiltered": "Aucune pièce sous le seuil",
+      "showAll": "Voir toutes les pièces",
+      "filters": {
+        "label": "Afficher",
+        "all": "Toutes ({count})",
+        "low": "Sous le seuil ({count})"
+      },
+      "low": "Sous le seuil",
+      "threshold": "seuil {min}",
+      "noThreshold": "sans seuil",
+      "checked": {
+        "never": "jamais vérifié",
+        "thisMonth": "vérifié ce mois-ci",
+        "monthsAgo": "vérifié il y a {count} mois"
+      },
+      "increment": "Ajouter 1 : {name}",
+      "decrement": "Retirer 1 : {name}",
+      "fields": {
+        "name": "Désignation",
+        "reference": "Référence",
+        "quantity": "Quantité",
+        "unit": "Unité",
+        "minQuantity": "Seuil d'alerte",
+        "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
+        "location": "Emplacement à bord",
+        "category": "Catégorie",
+        "noCategory": "Sans catégorie",
+        "supplier": "Fournisseur",
+        "noSupplier": "Aucun fournisseur",
+        "notes": "Notes"
+      },
+      "units": {
+        "pc": "pc",
+        "m": "m",
+        "l": "L",
+        "kg": "kg",
+        "jeu": "jeu"
+      },
+      "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
+      "delete": {
+        "action": "Supprimer la pièce",
+        "title": "Supprimer « {name} » ?",
+        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
+        "done": "Pièce supprimée."
+      }
+    },
+    "stockSection": "Pièces détachées",
+    "stockEmpty": "Aucune pièce de rechange listée.",
+    "stockLow": "{count} sous le seuil",
+    "sectionEquipment": "Équipements à bord",
+    "stockCount": "{count, plural, =0 {aucune pièce de rechange} one {# pièce de rechange} other {# pièces de rechange}}"
   },
   "categories": {
     "title": "Catégories",
@@ -1251,65 +1324,7 @@
   },
   "supplies": {
     "title": "Dépenses",
-    "subtitle": "Ce que le bateau a coûté, et ce qui a été acheté.",
-    "tabs": {
-      "expenses": "Dépenses",
-      "purchases": "Achats",
-      "stock": "Stock"
-    },
-    "stock": {
-      "title": "Stock",
-      "new": "Ajouter une pièce",
-      "edit": "Modifier la pièce",
-      "saved": "Pièce enregistrée.",
-      "emptyTitle": "Aucune pièce en stock",
-      "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
-      "emptyFiltered": "Aucune pièce sous le seuil",
-      "showAll": "Voir toutes les pièces",
-      "filters": {
-        "label": "Afficher",
-        "all": "Toutes ({count})",
-        "low": "Sous le seuil ({count})"
-      },
-      "low": "Sous le seuil",
-      "threshold": "seuil {min}",
-      "noThreshold": "sans seuil",
-      "checked": {
-        "never": "jamais vérifié",
-        "thisMonth": "vérifié ce mois-ci",
-        "monthsAgo": "vérifié il y a {count} mois"
-      },
-      "increment": "Ajouter 1 : {name}",
-      "decrement": "Retirer 1 : {name}",
-      "fields": {
-        "name": "Désignation",
-        "reference": "Référence",
-        "quantity": "Quantité",
-        "unit": "Unité",
-        "minQuantity": "Seuil d'alerte",
-        "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
-        "location": "Emplacement à bord",
-        "category": "Catégorie",
-        "noCategory": "Sans catégorie",
-        "supplier": "Fournisseur",
-        "noSupplier": "Aucun fournisseur",
-        "notes": "Notes"
-      },
-      "units": {
-        "pc": "pc",
-        "m": "m",
-        "l": "L",
-        "kg": "kg",
-        "jeu": "jeu"
-      },
-      "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
-      "delete": {
-        "action": "Supprimer la pièce",
-        "title": "Supprimer « {name} » ?",
-        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
-        "done": "Pièce supprimée."
-      }
-    },
+    "subtitle": "Ce que le bateau coûte, ligne par ligne.",
     "period": {
       "label": "Période",
       "all": "Toute la période",
@@ -1363,7 +1378,11 @@
         "category": "Catégorie",
         "amount": "Montant (EUR)",
         "filename": "xaman-depenses-{from}-{to}.csv"
-      }
+      },
+      "linesTitle": "Toutes les lignes",
+      "linesEmpty": "Aucune ligne sur cette période.",
+      "paidFor": "Payé pour",
+      "subtitle": "Interventions, achats et sorties de l'eau : une seule liste."
     },
     "purchases": {
       "title": "Achats",

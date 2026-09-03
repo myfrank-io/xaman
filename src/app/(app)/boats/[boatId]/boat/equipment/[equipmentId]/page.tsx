@@ -76,6 +76,7 @@ export default async function EquipmentPage({
         }}
         logs={logRows}
         canWrite={can(boatRole, "write")}
+        canContribute={can(boatRole, "contribute")}
       />
       <AuditFooter
         createdByName={names.get(item.created_by ?? "")}

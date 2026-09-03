@@ -175,7 +175,7 @@ export default async function ContactPage({
       {references.purchases > 0 ? (
         <SectionCard
           title={`${t("references.purchases")} (${references.purchases})`}
-          actionHref={suppliesPath(boatId, "purchases")}
+          actionHref={suppliesPath(boatId)}
           actionLabel={t("references.seeAll")}
         >
           {(purchases ?? []).map((purchase) => (

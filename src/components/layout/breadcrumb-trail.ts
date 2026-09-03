@@ -4,7 +4,7 @@ import {
   boatPath,
   boatTabPath,
   reportPath,
-  suppliesPath,
+  stockPath,
 } from "@/lib/queries/boat-routes";
 
 /** A path segment that is an id carries no meaning for a reader: it becomes « Fiche ». */
@@ -19,7 +19,6 @@ export const CRUMB_STEPS = [
   "import",
   "engines",
   "equipment",
-  "purchases",
   "parts",
   "report",
   "profile",
@@ -89,15 +88,14 @@ function groupOf(section: NavKey | undefined, segment: string, boatId: string): 
       return { key: "crumbs.equipment", href: boatTabPath(boatId, "equipment"), record: true };
     }
   }
-  if (section === "supplies") {
-    // A purchase and a spare part are only ever edited, never shown: no record screen.
-    if (segment === "purchases") {
-      return { key: "crumbs.purchases", href: suppliesPath(boatId, "purchases"), record: false };
-    }
-    if (segment === "parts") {
-      return { key: "crumbs.parts", href: suppliesPath(boatId, "stock"), record: false };
-    }
+  // The spare-parts stock moved under Bateau (D34): it is an inventory of things aboard, not
+  // money. Its crumb points at the Équipements tab, the only address that serves the list.
+  if (section === "boat" && segment === "parts") {
+    return { key: "crumbs.parts", href: stockPath(boatId), record: false };
   }
+  // Dépenses is one ledger now (D33): `/supplies/purchases` serves no list of its own, so a
+  // « Achats » crumb between « Dépenses » and « Nouveau » would name a screen that is the one
+  // already above it. A purchase is only ever created or edited, never shown.
   return null;
 }
 
