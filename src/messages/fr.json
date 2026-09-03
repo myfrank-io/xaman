@@ -26,7 +26,6 @@
     "no": "Non",
     "today": "Aujourd'hui",
     "empty": "Rien à afficher pour le moment.",
-    "comingSoon": "Cet écran arrive bientôt.",
     "seeAll": "Tout afficher",
     "viewAll": "Voir tout",
     "undo": "Annuler l'action",
@@ -453,8 +452,6 @@
   },
   "create": {
     "title": "Qu'est-ce que vous notez ?",
-    "log": "Une intervention",
-    "logHint": "Vidange, réparation, contrôle…",
     "hourReading": "Un relevé d'heures moteur",
     "hourReadingHint": "{engine} · {hours} le {date}",
     "gas": "Un changement de bouteille de gaz",

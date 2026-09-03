@@ -12,10 +12,15 @@ export type QueueResult<T> =
 /**
  * Send a creation, or keep it on the device (E9-1b, D25).
  *
- * Offline, nothing is attempted: the entry goes straight to the queue and the form closes as
- * if it had been saved, because for the person it has been — it is on the iPad and it is
- * listed. Online, a refusal by the database is shown as usual; only a request that never
+ * Offline, a creation is attempted only when it may be queued: it goes straight to the queue and
+ * the form closes as if it had been saved, because for the person it has been — it is on the iPad
+ * and it is listed. Online, a refusal by the database is shown as usual; only a request that never
  * reached the server falls back to the queue.
+ *
+ * An **edit** is never queued (`allowQueue: false`): the outbox is creations-only because an edit
+ * replayed later would overwrite whatever a colleague changed in the meantime (see `lib/outbox.ts`).
+ * When an edit cannot reach the server it is refused, the form keeps its input, and the person
+ * retries when the network is back — it is sent or it fails, it is never silently deferred.
  */
 export async function submitOrQueue<T>({
   kind,
@@ -26,6 +31,7 @@ export async function submitOrQueue<T>({
   action,
   enqueue,
   online,
+  allowQueue,
 }: {
   kind: OutboxKind;
   boatId: string;
@@ -36,6 +42,8 @@ export async function submitOrQueue<T>({
   action: (input: unknown) => Promise<ActionResult<T>>;
   enqueue: (entry: OutboxEntry) => boolean;
   online: boolean;
+  /** True only for genuine creations; an edit is sent or refused, never queued. */
+  allowQueue: boolean;
 }): Promise<QueueResult<T>> {
   const queue = (): QueueResult<T> => {
     const entry: OutboxEntry = {
@@ -48,15 +56,17 @@ export async function submitOrQueue<T>({
     };
     return enqueue(entry) ? { status: "queued" } : { status: "full" };
   };
+  const offline = (): QueueResult<T> =>
+    allowQueue ? queue() : { status: "refused", error: "errors.offline" };
 
-  if (!online) return queue();
+  if (!online) return offline();
 
   try {
     const result = await action(values);
     if (result.ok) return { status: "sent", data: result.data };
     return { status: "refused", error: result.error };
   } catch (error) {
-    if (isNetworkFailure(error)) return queue();
+    if (isNetworkFailure(error)) return offline();
     throw error;
   }
 }
