@@ -53,7 +53,7 @@
   },
   "nav": {
     "dashboard": "Tableau de bord",
-    "logs": "Journal",
+    "logs": "Interventions",
     "checklist": "Checklist",
     "supplies": "Dépenses",
     "haulOuts": "Sorties de l'eau",
@@ -69,7 +69,7 @@
     "installApp": "Installer l'application",
     "short": {
       "dashboard": "Bord",
-      "logs": "Journal",
+      "logs": "Interventions",
       "checklist": "Checklist",
       "boat": "Bateau",
       "supplies": "Dépenses",
@@ -91,7 +91,6 @@
       "import": "Importer",
       "engines": "Moteurs",
       "equipment": "Équipements",
-      "purchases": "Achats",
       "parts": "Stock",
       "report": "Rapport",
       "profile": "Profil"
@@ -157,7 +156,7 @@
       "toast": "Afficher une notification",
       "toastMessage": "Intervention enregistrée",
       "emptyTitle": "Aucune intervention",
-      "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal.",
+      "emptyDescription": "Ajoutez votre première intervention pour démarrer.",
       "undoToast": "Afficher un toast d'annulation",
       "undoMessage": "Intervention mise à la corbeille",
       "undoDescription": "Récupérable pendant 30 jours.",
@@ -313,7 +312,8 @@
     "engine_in_use": "Ce moteur a des relevés ou des points de checklist : désactivez-le plutôt.",
     "date_in_future": "Cette date est dans le futur.",
     "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus.",
-    "part_not_found": "Cette pièce n'existe plus."
+    "part_not_found": "Cette pièce n'existe plus.",
+    "attachment_owner_not_found": "La ligne à laquelle ce document devait être rattaché n'existe plus."
   },
   "members": {
     "title": "Membres",
@@ -321,7 +321,7 @@
     "you": "(vous)",
     "roleLabel": "Rôle",
     "roleUpdated": "Rôle mis à jour.",
-    "removed": "Membre retiré. Ses interventions restent dans le journal.",
+    "removed": "Membre retiré. Ses interventions sont conservées.",
     "remove": "Retirer",
     "validUntil": "Accès jusqu'au {date}",
     "list": {
@@ -342,7 +342,7 @@
     },
     "removeDialog": {
       "title": "Retirer {name} ?",
-      "description": "La personne perd l'accès au bateau immédiatement. Les interventions qu'elle a enregistrées restent dans le journal."
+      "description": "La personne perd l'accès au bateau immédiatement. Les interventions qu'elle a enregistrées sont conservées."
     },
     "invite": {
       "button": "Inviter",
@@ -352,7 +352,7 @@
       "submit": "Envoyer l'invitation",
       "sent": "Invitation envoyée à {email}.",
       "proTitle": "Ce que verra ce professionnel",
-      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions resteront dans le journal.",
+      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions seront conservées.",
       "duration": "Durée d'accès",
       "durations": {
         "7": "7 jours",
@@ -438,16 +438,28 @@
     "viewerHelp": "Consultation seule. Pour un expert ou un acheteur."
   },
   "create": {
-    "title": "Ajouter",
-    "log": "Intervention",
+    "title": "Qu'est-ce que vous notez ?",
+    "log": "Une intervention",
     "logHint": "Vidange, réparation, contrôle…",
-    "hourReading": "Relevé d'heures moteur",
+    "hourReading": "Un relevé d'heures moteur",
     "hourReadingHint": "{engine} · {hours} le {date}",
-    "gas": "Bouteille de gaz",
+    "gas": "Un changement de bouteille de gaz",
     "gasHint": "Dernier changement il y a {days} jours",
-    "purchase": "Achat",
-    "haulOut": "Sortie de l'eau",
-    "checklistItem": "Nouveau point de checklist"
+    "purchase": "Une dépense",
+    "haulOut": "Une sortie de l'eau",
+    "checklistItem": "Nouveau point de checklist",
+    "purchaseHint": "Facture, pièce, carburant…",
+    "haulOutHint": "Carénage, chantier, hivernage…",
+    "primary": "Noter une intervention",
+    "primaryShort": "Noter",
+    "other": "Noter autre chose",
+    "newLog": "Noter une intervention",
+    "newChecklistItem": "Ajouter un point",
+    "newContact": "Ajouter un intervenant",
+    "newPurchase": "Ajouter une dépense",
+    "newHaulOut": "Nouvelle sortie de l'eau",
+    "onEngine": "Noter une intervention",
+    "onEquipment": "Noter une intervention"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -577,9 +589,9 @@
     "haulOutLabel": "Sortie de l'eau du {date}"
   },
   "logs": {
-    "title": "Journal",
+    "title": "Interventions",
     "emptyTitle": "Aucune intervention",
-    "emptyDescription": "Le journal garde la trace de tout ce qui est fait sur le bateau : vidanges, réparations, contrôles.",
+    "emptyDescription": "Les interventions gardent la trace de tout ce qui est fait sur le bateau : vidanges, réparations, contrôles.",
     "emptyFiltered": "Aucun résultat pour « {query} »",
     "clearFilters": "Effacer les filtres",
     "new": "Nouvelle intervention",
@@ -609,9 +621,9 @@
     "emptyPlannedDescription": "Les interventions planifiées, en cours ou urgentes apparaissent ici jusqu'à leur réalisation.",
     "haulOutsTab": "Les sorties de l'eau ont leur propre écran.",
     "form": {
-      "newTitle": "Nouvelle intervention",
+      "newTitle": "Noter une intervention",
       "editTitle": "Modifier l'intervention",
-      "title": "Titre",
+      "title": "Qu'avez-vous fait ?",
       "category": "Catégorie",
       "status": "Statut",
       "date": "Date",
@@ -647,7 +659,10 @@
       },
       "saved": "Intervention enregistrée",
       "savedWithReading": "Intervention enregistrée · Relevé {engine} {hours}",
-      "view": "Voir"
+      "view": "Voir",
+      "attachments": "Photos et documents",
+      "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
+      "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants."
     },
     "detail": {
       "fields": {
@@ -696,7 +711,8 @@
         "undo": "Annuler",
         "restored": "Intervention restaurée"
       }
-    }
+    },
+    "attachments": "{count, plural, one {# document joint} other {# documents joints}}"
   },
   "checklist": {
     "title": "Checklist",
@@ -892,7 +908,9 @@
       "noNotes": "Aucune note.",
       "saved": "Fiche du bateau enregistrée",
       "template": "Modèle de checklist : {name}",
-      "noTemplate": "Aucun modèle de checklist"
+      "noTemplate": "Aucun modèle de checklist",
+      "details": "Détails du bateau",
+      "editAria": "Modifier la fiche du bateau"
     }
   },
   "engines": {
@@ -1012,7 +1030,65 @@
     "removed": "Équipement déposé",
     "saved": "Équipement enregistré",
     "installedOn": "installé le {date}",
-    "quantityShort": "× {count}"
+    "quantityShort": "× {count}",
+    "stock": {
+      "title": "Stock",
+      "new": "Ajouter une pièce",
+      "edit": "Modifier la pièce",
+      "saved": "Pièce enregistrée.",
+      "emptyTitle": "Aucune pièce en stock",
+      "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
+      "emptyFiltered": "Aucune pièce sous le seuil",
+      "showAll": "Voir toutes les pièces",
+      "filters": {
+        "label": "Afficher",
+        "all": "Toutes ({count})",
+        "low": "Sous le seuil ({count})"
+      },
+      "low": "Sous le seuil",
+      "threshold": "seuil {min}",
+      "noThreshold": "sans seuil",
+      "checked": {
+        "never": "jamais vérifié",
+        "thisMonth": "vérifié ce mois-ci",
+        "monthsAgo": "vérifié il y a {count} mois"
+      },
+      "increment": "Ajouter 1 : {name}",
+      "decrement": "Retirer 1 : {name}",
+      "fields": {
+        "name": "Désignation",
+        "reference": "Référence",
+        "quantity": "Quantité",
+        "unit": "Unité",
+        "minQuantity": "Seuil d'alerte",
+        "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
+        "location": "Emplacement à bord",
+        "category": "Catégorie",
+        "noCategory": "Sans catégorie",
+        "supplier": "Fournisseur",
+        "noSupplier": "Aucun fournisseur",
+        "notes": "Notes"
+      },
+      "units": {
+        "pc": "pc",
+        "m": "m",
+        "l": "L",
+        "kg": "kg",
+        "jeu": "jeu"
+      },
+      "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
+      "delete": {
+        "action": "Supprimer la pièce",
+        "title": "Supprimer « {name} » ?",
+        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
+        "done": "Pièce supprimée."
+      }
+    },
+    "stockSection": "Pièces détachées",
+    "stockEmpty": "Aucune pièce de rechange listée.",
+    "stockLow": "{count} sous le seuil",
+    "sectionEquipment": "Équipements à bord",
+    "stockCount": "{count, plural, =0 {aucune pièce de rechange} one {# pièce de rechange} other {# pièces de rechange}}"
   },
   "categories": {
     "title": "Catégories",
@@ -1248,65 +1324,7 @@
   },
   "supplies": {
     "title": "Dépenses",
-    "subtitle": "Ce que le bateau a coûté, et ce qui a été acheté.",
-    "tabs": {
-      "expenses": "Dépenses",
-      "purchases": "Achats",
-      "stock": "Stock"
-    },
-    "stock": {
-      "title": "Stock",
-      "new": "Ajouter une pièce",
-      "edit": "Modifier la pièce",
-      "saved": "Pièce enregistrée.",
-      "emptyTitle": "Aucune pièce en stock",
-      "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
-      "emptyFiltered": "Aucune pièce sous le seuil",
-      "showAll": "Voir toutes les pièces",
-      "filters": {
-        "label": "Afficher",
-        "all": "Toutes ({count})",
-        "low": "Sous le seuil ({count})"
-      },
-      "low": "Sous le seuil",
-      "threshold": "seuil {min}",
-      "noThreshold": "sans seuil",
-      "checked": {
-        "never": "jamais vérifié",
-        "thisMonth": "vérifié ce mois-ci",
-        "monthsAgo": "vérifié il y a {count} mois"
-      },
-      "increment": "Ajouter 1 : {name}",
-      "decrement": "Retirer 1 : {name}",
-      "fields": {
-        "name": "Désignation",
-        "reference": "Référence",
-        "quantity": "Quantité",
-        "unit": "Unité",
-        "minQuantity": "Seuil d'alerte",
-        "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
-        "location": "Emplacement à bord",
-        "category": "Catégorie",
-        "noCategory": "Sans catégorie",
-        "supplier": "Fournisseur",
-        "noSupplier": "Aucun fournisseur",
-        "notes": "Notes"
-      },
-      "units": {
-        "pc": "pc",
-        "m": "m",
-        "l": "L",
-        "kg": "kg",
-        "jeu": "jeu"
-      },
-      "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
-      "delete": {
-        "action": "Supprimer la pièce",
-        "title": "Supprimer « {name} » ?",
-        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
-        "done": "Pièce supprimée."
-      }
-    },
+    "subtitle": "Ce que le bateau coûte, ligne par ligne.",
     "period": {
       "label": "Période",
       "all": "Toute la période",
@@ -1360,7 +1378,11 @@
         "category": "Catégorie",
         "amount": "Montant (EUR)",
         "filename": "xaman-depenses-{from}-{to}.csv"
-      }
+      },
+      "linesTitle": "Toutes les lignes",
+      "linesEmpty": "Aucune ligne sur cette période.",
+      "paidFor": "Payé pour",
+      "subtitle": "Interventions, achats et sorties de l'eau : une seule liste."
     },
     "purchases": {
       "title": "Achats",
@@ -1410,8 +1432,9 @@
       },
       "supplierNameHelp": "Le lieu ou l'enseigne, quand le fournisseur n'est pas dans l'annuaire.",
       "noLog": "Aucune",
-      "logHelp": "Rattachez cet achat à une intervention du journal.",
-      "suggestions": "Déjà saisi"
+      "logHelp": "Rattachez cet achat à une intervention.",
+      "suggestions": "Déjà saisi",
+      "attachments": "Facture et documents"
     },
     "gas": {
       "title": "Gaz",
@@ -1486,7 +1509,7 @@
     "trash": {
       "action": "Mettre à la corbeille",
       "title": "Mettre cette sortie de l'eau à la corbeille ?",
-      "description": "Les interventions rattachées restent dans le journal. La sortie reste 30 jours dans la corbeille.",
+      "description": "Les interventions rattachées sont conservées. La sortie reste 30 jours dans la corbeille.",
       "done": "Sortie de l'eau mise à la corbeille",
       "restored": "Sortie de l'eau restaurée"
     }
@@ -1514,7 +1537,7 @@
     "backwards": "En recul de {hours} par rapport au relevé précédent.",
     "submit": "Valider {count, plural, one {# ligne} other {les # lignes}}",
     "submitted": "{logs, plural, one {# ligne vérifiée} other {# lignes vérifiées}} · {readings, plural, one {# relevé créé} other {# relevés créés}}",
-    "backToLogs": "Voir le journal",
+    "backToLogs": "Voir les interventions",
     "onlyOne": "Vérification de cette ligne seulement.",
     "allRows": "Vérifier toutes les lignes"
   },
@@ -1523,11 +1546,24 @@
     "run": "{count, plural, one {Importer # ligne} other {Importer # lignes}}",
     "done": "{created, plural, =0 {Aucune création} one {# création} other {# créations}} · {updated, plural, =0 {aucune mise à jour} one {# mise à jour} other {# mises à jour}}.",
     "action": "Importer",
+    "steps": {
+      "source": "1 · Votre tableau",
+      "mapping": "2 · Vos colonnes",
+      "preview": "3 · Aperçu et import"
+    },
     "source": {
       "title": "Votre tableau",
-      "file": "Choisir un fichier (.csv, .tsv)",
+      "file": "Choisir un fichier (.csv, .tsv, .xlsx, .vcf)",
+      "formats": "Tableur Excel (.xlsx, .xlsm), fichier .csv ou .tsv, fiche de contact .vcf exportée d'un téléphone.",
       "or": "ou",
-      "paste": "Coller les cellules copiées depuis Excel"
+      "paste": "Coller les cellules copiées depuis Excel",
+      "template": "Télécharger un modèle",
+      "templateHelp": "Un fichier vierge avec les bons en-têtes et une ligne d'exemple, à remplir puis à réimporter.",
+      "summary": "{rows, plural, one {# ligne lue} other {# lignes lues}} · {columns, plural, one {# colonne} other {# colonnes}} · {origin}",
+      "pasted": "cellules collées",
+      "change": "Changer de fichier",
+      "keep": "Continuer avec ce tableau",
+      "sheet": "Feuille à importer"
     },
     "empty": {
       "title": "Rien à importer pour le moment",
@@ -1535,14 +1571,29 @@
     },
     "mapping": {
       "title": "Colonnes",
-      "help": "Vérifiez la correspondance devinée depuis vos en-têtes. Une colonne « Ignorer » n'est pas importée.",
-      "none": "Ignorer",
+      "help": "Une carte par colonne de votre fichier. Vérifiez ce que chacune alimente : ce qui reste sur « Ne pas importer » est laissé de côté.",
+      "none": "Ne pas importer",
       "column": "Colonne {index}",
-      "missing": "Colonnes obligatoires à renseigner : {fields}."
+      "missing": "Colonnes obligatoires à renseigner : {fields}.",
+      "field": "Alimente le champ",
+      "ignored": "Non importée",
+      "guessed": "Deviné",
+      "required": "Obligatoire",
+      "samples": "Dans votre fichier",
+      "emptyColumn": "Colonne vide",
+      "unmapped": "Champs sans colonne : {fields}.",
+      "defaults": "Valeurs pour tout le fichier",
+      "defaultsHelp": "Écrites dans les lignes où la cellule est vide. Une fiche de contact ne porte pas de métier : il se saisit ici, une fois pour toutes.",
+      "defaultValue": "Valeur par défaut"
     },
     "preview": {
       "title": "{count, plural, one {# ligne détectée} other {# lignes détectées}}",
-      "more": "{count, plural, one {et # autre ligne} other {et # autres lignes}}."
+      "more": "{count, plural, one {et # autre ligne} other {et # autres lignes}}.",
+      "plan": "{created, plural, =0 {Aucune ligne ne sera créée} one {# ligne sera créée} other {# lignes seront créées}}, {updated, plural, =0 {aucune reconnue} one {# reconnue et mise à jour} other {# reconnues et mises à jour}}, {rejected, plural, =0 {aucune refusée} one {# refusée} other {# refusées}}.",
+      "state": "État",
+      "new": "Nouvelle",
+      "updated": "Mise à jour",
+      "rejected": "Refusée"
     },
     "report": {
       "title": "Import terminé",
@@ -1553,7 +1604,9 @@
     "back": {
       "contacts": "Voir les contacts",
       "equipment": "Voir les équipements",
-      "parts": "Voir le stock"
+      "parts": "Voir le stock",
+      "logs": "Retour aux interventions",
+      "purchases": "Retour aux achats"
     },
     "errors": {
       "empty": "Le tableau est vide.",
@@ -1562,6 +1615,20 @@
       "noSpecialty": "Spécialité manquante",
       "badEmail": "Adresse e-mail invalide",
       "badDate": "Date illisible (attendu 12/03/2026)",
+      "legacyExcel": "Ce fichier est un ancien Excel (.xls). Ouvrez-le, puis « Enregistrer sous » au format .xlsx — ou copiez les cellules et collez-les ci-dessous.",
+      "notAZip": "Ce fichier n'est pas un classeur Excel lisible. Réenregistrez-le au format .xlsx depuis Excel, Numbers ou LibreOffice.",
+      "zip64": "Ce classeur est trop volumineux pour être ouvert ici. Enregistrez la feuille utile dans un nouveau fichier .xlsx.",
+      "truncated": "Le fichier est incomplet : son transfert s'est interrompu. Sélectionnez-le à nouveau.",
+      "compression": "Ce classeur utilise une compression illisible ici. Réenregistrez-le au format .xlsx depuis Excel.",
+      "noDecompressor": "Ce navigateur ne sait pas ouvrir les classeurs Excel. Mettez-le à jour, ou copiez les cellules et collez-les ci-dessous.",
+      "notAWorkbook": "Ce fichier compressé n'est pas un classeur Excel.",
+      "noSheet": "Ce classeur ne contient aucune feuille lisible.",
+      "tooLarge": "Ce classeur contient trop de cellules. Ne gardez que la feuille et les colonnes utiles, puis réessayez.",
+      "unreadable": "Ce fichier n'a pas pu être lu. Réessayez, ou copiez les cellules et collez-les ci-dessous.",
+      "noTable": "Aucun tableau n'a été trouvé dans ce fichier : la première ligne doit contenir les en-têtes de colonnes.",
+      "noDate": "Date manquante",
+      "noAmount": "Montant manquant",
+      "badAmount": "Montant illisible (attendu 42,90)",
       "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous."
     },
     "entities": {
@@ -1579,6 +1646,16 @@
         "title": "Importer des pièces en stock",
         "help": "Une ligne par pièce. Quantité et seuil d'alerte acceptent la virgule ; une pièce déjà présente sous la même désignation est mise à jour.",
         "placeholder": "Désignation\tRéférence\tQuantité\tSeuil\tEmplacement\nFiltre à huile\t119305-35170\t2\t2\tCoffre moteur"
+      },
+      "logs": {
+        "title": "Importer des interventions",
+        "help": "Une ligne par intervention faite sur le bateau. Le libellé et la date sont obligatoires. La colonne « Prestataire » est rapprochée de vos contacts par leur nom ; un nom inconnu est recopié dans les notes plutôt que perdu. Tout ce qui entre par l'import arrive « à vérifier ».",
+        "placeholder": "Intervention\tFaite le\tCatégorie\tPrestataire\tCoût\nVidange moteur bâbord\t14/06/2026\tMoteurs\tMotoriste Yanmar\t348,50"
+      },
+      "purchases": {
+        "title": "Importer des achats",
+        "help": "Une ligne par achat ou par facture. Le libellé, la date et le montant sont obligatoires. Un relevé bancaire ou un export comptable s'importe tel quel ; la colonne « Référence », si votre fichier en a une, évite les doublons d'un import à l'autre.",
+        "placeholder": "Achat\tAcheté le\tMontant\tType\tFournisseur\nFiltre à huile Volvo\t02/06/2026\t42,90\tPièce\tAccastillage Diffusion"
       }
     }
   },
@@ -1664,6 +1741,64 @@
     "footer": {
       "tagline": "Carnet d'entretien numérique et partagé pour bateaux.",
       "rights": "Xaman"
+    }
+  },
+  "attachments": {
+    "title": "Photos et documents",
+    "description": "Factures, devis, photos du travail réalisé. Ils restent attachés au bateau.",
+    "camera": "Prendre une photo",
+    "library": "Photothèque",
+    "files": "Fichiers",
+    "hint": "Photos et PDF, 10 Mo par fichier. Les photos sont réduites sur l'iPad avant l'envoi.",
+    "caption": "Légende",
+    "pdf": "PDF",
+    "open": "Ouvrir {name}",
+    "unavailable": "Aperçu indisponible",
+    "by": "Ajouté par {name} le {date}",
+    "unknownAuthor": "un membre",
+    "removed": "Document mis à la corbeille",
+    "empty": "Aucun document pour l'instant.",
+    "count": "{count, plural, =0 {aucun document} one {# document} other {# documents}}",
+    "marker": "{count, plural, one {# document joint} other {# documents joints}}",
+    "deferredBusy": "Les documents finissent de s'envoyer. Enregistrez quand ils sont prêts.",
+    "commitFailed": "L'intervention est enregistrée mais les documents n'ont pas pu y être rattachés. Rouvrez la fiche pour réessayer.",
+    "stage": {
+      "queued": "En attente…",
+      "preparing": "Réduction de la photo…",
+      "uploading": "Envoi…",
+      "saving": "Enregistrement…",
+      "done": "Envoyé",
+      "error": "Échec"
+    },
+    "errors": {
+      "tooLarge": "Fichier trop lourd : 10 Mo maximum une fois réduit.",
+      "unsupported": "Format non accepté : photos et PDF seulement.",
+      "upload": "L'envoi a échoué. Réessayez quand le réseau revient.",
+      "save": "Le document est envoyé mais n'a pas pu être rattaché."
+    },
+    "import": {
+      "title": "Importer des documents",
+      "description": "Déposez vos factures et vos photos en une fois, puis rattachez chacune à une intervention.",
+      "entry": "Importer des documents",
+      "drop": "Déposez vos fichiers ici",
+      "choose": "Choisir des fichiers",
+      "pending": "{count, plural, one {# document attend un choix} other {# documents attendent un choix}}",
+      "emptyTitle": "Aucun document pour l'instant",
+      "emptyDescription": "Choisissez des photos ou des PDF : rien n'est envoyé avant que vous ayez dit où le ranger.",
+      "modeExisting": "Intervention existante",
+      "modeNew": "Nouvelle intervention",
+      "existingLabel": "Intervention",
+      "existingPlaceholder": "Choisir une intervention…",
+      "newTitle": "Titre de l'intervention",
+      "newDate": "Date",
+      "newCategory": "Catégorie",
+      "attach": "Rattacher",
+      "createAndAttach": "Créer et rattacher",
+      "attached": "Rattaché à « {title} »",
+      "discard": "Retirer de la liste",
+      "done": "{count, plural, one {# document rattaché} other {# documents rattachés}}",
+      "noLogs": "Aucune intervention pour l'instant : créez-en une depuis un document.",
+      "readOnly": "Vous n'avez pas le droit d'ajouter des documents sur ce bateau."
     }
   }
 }

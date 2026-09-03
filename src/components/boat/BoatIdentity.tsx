@@ -23,7 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { NumericField } from "@/components/ui/numeric-field";
@@ -92,7 +92,12 @@ function meters(value: number | string | null): string | null {
   return `${formatNumber(value)} m`;
 }
 
-// Boat identity card (E2-1): read view, edited in place by owner/editor.
+/**
+ * Boat identity (E2-1, D37). It is the **heading** of the Bateau screen, not a destination:
+ * the name and what the boat is are always on screen above the tabs, a small pencil edits
+ * them in place, and everything a person reads twice a year — hull number, flag, home port,
+ * dimensions, notes — sits in a « Détails » section that starts closed.
+ */
 export function BoatIdentity({
   boat,
   canEdit,
@@ -141,64 +146,78 @@ export function BoatIdentity({
     });
   }
 
+  // What the boat IS, in one line: the model and the builder earn the top of the screen;
+  // the hull number and the flag are read twice a year and live under « Détails ».
+  const subtitle = [
+    [boat.model, boat.hull_number ? `#${boat.hull_number}` : null].filter(Boolean).join(" "),
+    boat.builder,
+    tt(boat.type),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   if (!editing) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-h2">{t("title")}</CardTitle>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight">{boat.name}</h1>
+            {subtitle ? <p className="mt-1 num text-sm text-muted-foreground">{subtitle}</p> : null}
+          </div>
           {canEdit ? (
-            <CardAction>
-              <Button type="button" variant="outline" onClick={startEditing}>
-                <PencilIcon />
-                {t("edit")}
-              </Button>
-            </CardAction>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={t("editAria")}
+              onClick={startEditing}
+            >
+              <PencilIcon />
+            </Button>
           ) : null}
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <Term>{t("name")}</Term>
-              <Value>{boat.name}</Value>
-            </div>
-            <div>
-              <Term>{t("type")}</Term>
-              <Value>{tt(boat.type)}</Value>
-            </div>
-            <div>
-              <Term>{t("builder")}</Term>
-              <Value>{boat.builder}</Value>
-            </div>
-            <div>
-              <Term>{t("model")}</Term>
-              <Value>{boat.model}</Value>
-            </div>
-            <div>
-              <Term>{t("hullNumber")}</Term>
-              <Value>{boat.hull_number}</Value>
-            </div>
-            <div>
-              <Term>{t("year")}</Term>
-              <Value>{boat.year ? <span className="num">{boat.year}</span> : null}</Value>
-            </div>
-            <div>
-              <Term>{t("flag")}</Term>
-              <Value>{boat.flag}</Value>
-            </div>
-            <div>
-              <Term>{t("homePort")}</Term>
-              <Value>{boat.home_port}</Value>
-            </div>
-            <div>
-              <Term>{t("sailNumber")}</Term>
-              <Value>{boat.sail_number}</Value>
-            </div>
-          </dl>
-          <Accordion type="single" collapsible className="border-t border-border">
-            <AccordionItem value="dimensions">
-              <AccordionTrigger>{t("characteristics")}</AccordionTrigger>
-              <AccordionContent>
-                <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-3">
+        </div>
+        <Accordion type="single" collapsible className="rounded-xl border border-border px-4">
+          <AccordionItem value="details">
+            <AccordionTrigger className="text-body text-ink-2">{t("details")}</AccordionTrigger>
+            <AccordionContent>
+              <div className="flex flex-col gap-5 pb-2">
+                <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <Term>{t("name")}</Term>
+                    <Value>{boat.name}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("type")}</Term>
+                    <Value>{tt(boat.type)}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("builder")}</Term>
+                    <Value>{boat.builder}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("model")}</Term>
+                    <Value>{boat.model}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("hullNumber")}</Term>
+                    <Value>{boat.hull_number}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("year")}</Term>
+                    <Value>{boat.year ? <span className="num">{boat.year}</span> : null}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("flag")}</Term>
+                    <Value>{boat.flag}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("homePort")}</Term>
+                    <Value>{boat.home_port}</Value>
+                  </div>
+                  <div>
+                    <Term>{t("sailNumber")}</Term>
+                    <Value>{boat.sail_number}</Value>
+                  </div>
                   <div>
                     <Term>{t("lengthM")}</Term>
                     <Value>{meters(boat.length_m)}</Value>
@@ -212,20 +231,20 @@ export function BoatIdentity({
                     <Value>{meters(boat.draft_m)}</Value>
                   </div>
                 </dl>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-          <div className="border-t border-border pt-4">
-            <h3 className="text-overline text-ink-2 uppercase">{t("notes")}</h3>
-            <p className="mt-2 text-body whitespace-pre-wrap text-foreground">
-              {boat.notes || <span className="text-ink-3">{t("noNotes")}</span>}
-            </p>
-          </div>
-          <p className="text-caption text-ink-3">
-            {templateName ? t("template", { name: templateName }) : t("noTemplate")}
-          </p>
-        </CardContent>
-      </Card>
+                <div className="border-t border-border pt-4">
+                  <h2 className="text-overline text-ink-2 uppercase">{t("notes")}</h2>
+                  <p className="mt-2 text-body whitespace-pre-wrap text-foreground">
+                    {boat.notes || <span className="text-ink-3">{t("noNotes")}</span>}
+                  </p>
+                </div>
+                <p className="text-caption text-ink-3">
+                  {templateName ? t("template", { name: templateName }) : t("noTemplate")}
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
     );
   }
 

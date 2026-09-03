@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { upsertPart } from "@/lib/actions/parts";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { suppliesPath } from "@/lib/queries/boat-routes";
+import { stockPath } from "@/lib/queries/boat-routes";
 import { PART_UNITS, upsertPartSchema } from "@/lib/schemas/parts";
 
 /** Neutral grey for the « no category » chip: a category colour never travels alone (rule 12). */
@@ -79,8 +79,8 @@ export function PartForm({
   categories: CategoryChoice[];
   contacts: ContactOption[];
 }) {
-  const t = useTranslations("supplies.stock");
-  const tu = useTranslations("supplies.stock.units");
+  const t = useTranslations("equipment.stock");
+  const tu = useTranslations("equipment.stock.units");
   const errorMessage = useErrorMessage();
   const to = useTranslations("offline");
   const fieldError = useFieldError();
@@ -109,7 +109,7 @@ export function PartForm({
   });
   const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const errors = form.formState.errors;
-  const backHref = suppliesPath(boatId, "stock");
+  const backHref = stockPath(boatId);
   const choices: CategoryChoice[] = [
     { id: "", name: t("fields.noCategory"), color: NO_CATEGORY_COLOR },
     ...categories,

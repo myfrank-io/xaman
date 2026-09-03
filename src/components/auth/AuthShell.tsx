@@ -23,7 +23,7 @@ export async function AuthShell({
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="bg-header-gradient px-6 pt-8 safe-top pb-10 text-on-navy">
+      <header className="bg-header-gradient px-6 safe-pt-8 pb-10 text-on-navy">
         <div className="mx-auto w-full max-w-md">
           <p className="text-overline text-brass-light uppercase">{ta("eyebrow")}</p>
           <Link
@@ -37,7 +37,7 @@ export async function AuthShell({
           {subtitle ? <p className="mt-2 text-body text-on-navy-2">{subtitle}</p> : null}
         </div>
       </header>
-      <section className="flex flex-1 justify-center px-6 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <section className="flex flex-1 items-center justify-center px-6 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
         <div className="w-full max-w-md">{children}</div>
       </section>
     </main>

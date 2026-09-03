@@ -1,15 +1,12 @@
-import Link from "next/link";
-import type { Route } from "next";
-import { EuroIcon, SearchIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
-import { EmptyState } from "@/components/common/EmptyState";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatCard } from "@/components/common/StatCard";
-import { Button } from "@/components/ui/button";
+import type { CategoryChoice } from "@/components/common/CategoryChips";
 import { ExpenseFilters } from "@/components/supplies/ExpenseFilters";
+import { ExpenseLines, type ExpenseLine } from "@/components/supplies/ExpenseLines";
 import { ExportExpensesButton } from "@/components/supplies/ExportExpensesButton";
 import {
   groupByCategory,
@@ -21,36 +18,47 @@ import {
   type ExpenseSource,
 } from "@/lib/expenses";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
-import { suppliesPath } from "@/lib/queries/boat-routes";
+import type { PurchaseKind } from "@/lib/schemas/purchases";
 
 /** Neutral grey for the « no category » bucket: a category colour never travels alone. */
 const NO_CATEGORY_COLOR = "#8A99AC";
 
 export type ExpensesData = {
   rows: ExpenseRow[];
+  lines: ExpenseLine[];
   previousTotal: number;
   cumulativeTotal: number;
   firstDate: string | null;
+  moreHref: string | null;
 };
 
 /**
- * Expenses tab (E5-5): a total, the categories in descending order with a proportional bar,
- * one comparison with the previous period and the running total. No pivot table (audit §3.4)
- * — the question is « où est parti l'argent », not « croisez-moi ces axes ».
+ * Dépenses (E5-5, D33): **one** money list. A total, the categories in descending order with
+ * a proportional bar, one comparison with the previous period, then every line — the cost of
+ * an intervention, a purchase, a haul-out — each linking back to what it paid for.
+ * No pivot table (audit §3.4): the question is « où est parti l'argent ».
  */
 export async function ExpensesTab({
   boatId,
   period,
   range,
   sources,
+  kind,
+  categoryId,
+  categories,
   data,
+  canWrite,
   filtered,
 }: {
   boatId: string;
   period: ExpensePeriod;
   range: DateRange;
   sources: ExpenseSource[];
+  kind: PurchaseKind | null;
+  categoryId: string | null;
+  categories: CategoryChoice[];
   data: ExpensesData;
+  canWrite: boolean;
   /** true when a filter is narrowing the list: the empty state must not offer creation. */
   filtered: boolean;
 }) {
@@ -59,7 +67,7 @@ export async function ExpensesTab({
     getTranslations("supplies.period"),
   ]);
   const total = totalAmount(data.rows);
-  const categories = groupByCategory(data.rows, t("uncategorized"), NO_CATEGORY_COLOR);
+  const categoryTotals = groupByCategory(data.rows, t("uncategorized"), NO_CATEGORY_COLOR);
   const change = variation(total, data.previousTotal);
 
   // The card carries the previous figure; the variation is the sentence under it.
@@ -75,14 +83,26 @@ export async function ExpensesTab({
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <ExpenseFilters boatId={boatId} period={period} range={range} sources={sources} />
+        <ExpenseFilters
+          boatId={boatId}
+          period={period}
+          range={range}
+          sources={sources}
+          kind={kind}
+          categoryId={categoryId}
+          categories={categories}
+        />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard
           label={t("total")}
           value={formatCurrency(total)}
-          hint={tp("range", { from: formatDate(range.from), to: formatDate(range.to) })}
+          hint={
+            period === "all"
+              ? t("lines", { count: data.rows.length })
+              : tp("range", { from: formatDate(range.from), to: formatDate(range.to) })
+          }
         />
         <StatCard
           label={t("comparison.label")}
@@ -100,37 +120,21 @@ export async function ExpensesTab({
         />
       </div>
 
-      <SectionCard
-        title={t("byCategory")}
-        action={
-          <ExportExpensesButton
-            boatId={boatId}
-            range={range}
-            sources={sources}
-            disabled={data.rows.length === 0}
-          />
-        }
-        bare={categories.length === 0}
-        footer={t("lines", { count: data.rows.length })}
-      >
-        {categories.length === 0 ? (
-          <EmptyState
-            variant={filtered ? "filtered" : "initial"}
-            icon={filtered ? <SearchIcon aria-hidden /> : <EuroIcon aria-hidden />}
-            title={filtered ? t("emptyFiltered") : t("emptyTitle")}
-            description={filtered ? undefined : t("emptyDescription")}
-            // A filtered empty state offers the way out, never a creation (ux-flows §5.1).
-            action={
-              filtered ? (
-                <Button asChild variant="outline">
-                  <Link href={suppliesPath(boatId, "expenses") as Route}>{t("clearFilters")}</Link>
-                </Button>
-              ) : undefined
-            }
-          />
-        ) : (
+      {categoryTotals.length > 0 ? (
+        <SectionCard
+          title={t("byCategory")}
+          action={
+            <ExportExpensesButton
+              boatId={boatId}
+              range={range}
+              sources={sources}
+              disabled={data.rows.length === 0}
+            />
+          }
+          footer={t("lines", { count: data.rows.length })}
+        >
           <ul>
-            {categories.map((category) => (
+            {categoryTotals.map((category) => (
               <li
                 key={category.id || "none"}
                 className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-b-0"
@@ -152,7 +156,17 @@ export async function ExpensesTab({
               </li>
             ))}
           </ul>
-        )}
+        </SectionCard>
+      ) : null}
+
+      <SectionCard title={t("linesTitle")} bare>
+        <ExpenseLines
+          boatId={boatId}
+          lines={data.lines}
+          canWrite={canWrite}
+          filtered={filtered}
+          moreHref={data.moreHref}
+        />
       </SectionCard>
     </div>
   );

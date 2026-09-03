@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import { ChevronDownIcon, ChevronRightIcon, GaugeIcon } from "lucide-react";
 import type { z } from "zod";
 
+import {
+  AttachmentPicker,
+  pendingRows,
+  type PickedAttachment,
+} from "@/components/attachments/AttachmentPicker";
 import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ContactPicker } from "@/components/contacts/ContactPicker";
@@ -42,9 +47,11 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { NumericField } from "@/components/ui/numeric-field";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { saveAttachments } from "@/lib/actions/attachments";
 import { saveLog, suggestChecklistItems, type ItemSuggestion } from "@/lib/actions/logs";
 import { formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import type { AttachmentItem } from "@/lib/queries/attachments";
 import { logPath, logsPath } from "@/lib/queries/boat-routes";
 import { saveLogSchema, SEGMENT_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
 
@@ -86,6 +93,7 @@ export function LogForm({
   contacts,
   equipment,
   haulOuts,
+  attachments = [],
   canCreateContact,
 }: {
   boatId: string;
@@ -98,9 +106,12 @@ export function LogForm({
   contacts: ContactOption[];
   equipment: LogFormChoice[];
   haulOuts: LogFormChoice[];
+  /** Documents already stored on this intervention (E10-1); empty on a creation. */
+  attachments?: AttachmentItem[];
   canCreateContact: boolean;
 }) {
   const t = useTranslations("logs.form");
+  const ta = useTranslations("attachments");
   const tc = useTranslations("common");
   const ts = useTranslations("logStatus");
   const errorMessage = useErrorMessage();
@@ -176,6 +187,11 @@ export function LogForm({
     items: [],
   });
   const [serverError, setServerError] = useState<string | null>(null);
+  // Documents (E10-1). On a creation their objects go up while the form is being typed — the id
+  // of the intervention is drawn at open — and their rows are written once it exists.
+  const [picked, setPicked] = useState<PickedAttachment[]>([]);
+  // Same id the form will save under: the objects can go up before the row exists.
+  const attachmentOwnerId = log?.id ?? newId;
   // Points the user ticked or unticked by hand are never re-decided by the suggestions.
   const decided = useRef<Set<string>>(new Set(defaultValues.checklistItemIds));
 
@@ -262,6 +278,14 @@ export function LogForm({
         return;
       }
       const result = { ok: true as const, data: outcome.data };
+      // The intervention now exists: the documents uploaded while it was typed get their rows.
+      const rows = log
+        ? []
+        : pendingRows(picked, { type: "maintenance_log", id: result.data.logId });
+      if (rows.length > 0) {
+        const committed = await saveAttachments({ boatId, items: rows });
+        if (!committed.ok) toast.error(ta("commitFailed"));
+      }
       draft.clear();
       const reading = result.data.readings[0];
       const engine = reading ? engines.find((row) => row.id === reading.engineId) : undefined;
@@ -332,6 +356,7 @@ export function LogForm({
             autoComplete="off"
             autoCapitalize="sentences"
             enterKeyHint="next"
+            placeholder={t("titlePlaceholder")}
             autoFocus={!log}
             aria-invalid={errors.title ? true : undefined}
             {...form.register("title")}
@@ -552,6 +577,17 @@ export function LogForm({
           ) : null}
         </div>
       ) : null}
+
+      <div className="flex flex-col gap-3">
+        <Label>{t("attachments")}</Label>
+        <AttachmentPicker
+          boatId={boatId}
+          owner={{ type: "maintenance_log", id: attachmentOwnerId }}
+          initial={attachments}
+          deferred={!log}
+          onItemsChange={setPicked}
+        />
+      </div>
 
       {status === "done" ? (
         <ChecklistMatches

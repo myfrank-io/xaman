@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { LogForm } from "@/components/logs/LogForm";
 import type { LogFormValues } from "@/components/logs/log-form-values";
 import { can, type BoatRole } from "@/lib/permissions";
+import { listAttachments } from "@/lib/queries/attachments";
 import { logFormData } from "@/lib/queries/log-form-data";
 import { createClient } from "@/lib/supabase/server";
 import type { LogStatusValue } from "@/lib/schemas/logs";
@@ -17,7 +18,7 @@ export default async function EditLogPage({
 }) {
   const { boatId, logId } = await params;
   const supabase = await createClient();
-  const [{ data: role }, { data: log }, { data: readings }, { data: completions }] =
+  const [{ data: role }, { data: log }, { data: readings }, { data: completions }, attachments] =
     await Promise.all([
       supabase.rpc("boat_role", { p_boat_id: boatId }),
       supabase
@@ -37,6 +38,8 @@ export default async function EditLogPage({
         .from("checklist_completions")
         .select("checklist_item_id")
         .eq("maintenance_log_id", logId),
+      // Documents already on the intervention (E10-1); a Storage hiccup leaves the form usable.
+      listAttachments(supabase, boatId, { type: "maintenance_log", id: logId }).catch(() => []),
     ]);
   if (!role || !log) notFound();
   const boatRole = role as BoatRole;
@@ -73,6 +76,7 @@ export default async function EditLogPage({
       contacts={data.contacts}
       equipment={data.equipment}
       haulOuts={data.haulOuts}
+      attachments={attachments}
       canCreateContact={can(boatRole, "write")}
     />
   );

@@ -509,12 +509,25 @@
   background-image: var(--header-gradient);
 }
 
-@utility safe-top {
-  padding-top: env(safe-area-inset-top);
+/*
+ * Safe areas that ADD to the design's own padding instead of replacing it.
+ *
+ * The previous `safe-top` / `safe-bottom` set `padding-top` / `padding-bottom` outright, so
+ * anywhere they sat beside a `pt-8` or a `p-3` they silently erased it on every screen with no
+ * notch to inset for: desktop, most Android, and iPad Safari outside standalone. The header of
+ * the sign-in screen lost all 32 px of its top padding and its eyebrow touched the top edge;
+ * the account block at the foot of the sidebar lost its 12 px and sat on the bottom edge.
+ *
+ * `safe-pt-8` reads « eight units, plus the notch when there is one ». Use `safe-pt-0` where
+ * the inset alone is wanted. There is no non-numbered form on purpose: the base has to be
+ * stated, so the padding can never go missing again.
+ */
+@utility safe-pt-* {
+  padding-top: calc(--value(integer) * var(--spacing) + env(safe-area-inset-top, 0px));
 }
 
-@utility safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+@utility safe-pb-* {
+  padding-bottom: calc(--value(integer) * var(--spacing) + env(safe-area-inset-bottom, 0px));
 }
 
 /* Figures aligned in a column: engine hours, amounts, counters.

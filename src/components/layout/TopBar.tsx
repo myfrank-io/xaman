@@ -49,7 +49,7 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b border-navy-deep bg-header-gradient safe-top text-on-navy",
+        "sticky top-0 z-40 border-b border-navy-deep bg-header-gradient safe-pt-0 text-on-navy",
         className,
       )}
     >

@@ -1,24 +1,27 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 
 import { BoatIdentity } from "@/components/boat/BoatIdentity";
 import { BoatTabs } from "@/components/boat/BoatTabs";
 import { isBoatTab, type BoatTab } from "@/components/boat/tabs";
-import { PageHeader } from "@/components/common/PageHeader";
 import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab";
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
+import type { StockItem } from "@/components/parts/StockList";
+import { applyStockFilter, countLowStock, sortStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
-// Boat screen (tab 4): identity, engines and equipment, the tab kept in the URL.
+/**
+ * Boat screen (tab 4, D34, D37): the identity is the heading, then two lists — the engines
+ * and, with the equipment, the spare-parts stock. The tab is kept in the URL.
+ */
 export default async function BoatPage({
   params,
   searchParams,
 }: {
   params: Promise<{ boatId: string }>;
-  searchParams: Promise<{ tab?: string; reading?: string }>;
+  searchParams: Promise<{ tab?: string; reading?: string; low?: string }>;
 }) {
-  const [{ boatId }, { tab, reading }] = await Promise.all([params, searchParams]);
+  const [{ boatId }, { tab, reading, low }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const [
     { data: boat },
@@ -28,6 +31,8 @@ export default async function BoatPage({
     { data: linkedItems },
     { data: equipment },
     { data: categories },
+    { data: parts },
+    { data: partContacts },
   ] = await Promise.all([
     supabase.from("boats").select("*").eq("id", boatId).maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
@@ -56,6 +61,15 @@ export default async function BoatPage({
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
+    // The spare-parts stock lives in this tab now (D34): read it with the equipment.
+    supabase
+      .from("parts")
+      .select(
+        "id, name, reference, quantity, min_quantity, unit, location, category_id, supplier_contact_id, checked_at",
+      )
+      .eq("boat_id", boatId)
+      .order("name"),
+    supabase.from("contacts").select("id, name").eq("boat_id", boatId),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -99,24 +113,45 @@ export default async function BoatPage({
     removedAt: item.removed_at,
   }));
 
+  const categoryById = new Map((categories ?? []).map((category) => [category.id, category]));
+  const partContactNames = new Map((partContacts ?? []).map((row) => [row.id, row.name]));
+  const allParts: StockItem[] = sortStock(
+    (parts ?? []).map((row) => {
+      const category = row.category_id ? categoryById.get(row.category_id) : undefined;
+      return {
+        id: row.id,
+        name: row.name,
+        reference: row.reference,
+        quantity: row.quantity,
+        minQuantity: row.min_quantity,
+        unit: row.unit,
+        location: row.location,
+        categoryName: category?.name ?? null,
+        categoryColor: category?.color ?? null,
+        supplierName: row.supplier_contact_id
+          ? (partContactNames.get(row.supplier_contact_id) ?? null)
+          : null,
+        checkedAt: row.checked_at,
+      };
+    }),
+  );
+  const stockFilter: StockFilter = low === "1" ? "low" : "all";
+
+  // `?tab=identity` still arrives from an old link: it now lands on the default list, with
+  // the identity right above it (D37).
   const activeTab: BoatTab = isBoatTab(tab)
     ? tab
     : engineRows.some((engine) => engine.isActive)
       ? "engines"
-      : "identity";
-
-  const tt = await getTranslations("boatType");
-  const subtitle = [
-    [boat.model, boat.hull_number ? `#${boat.hull_number}` : null].filter(Boolean).join(" "),
-    boat.builder,
-    tt(boat.type),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+      : "equipment";
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={boat.name} subtitle={subtitle} />
+      <BoatIdentity
+        boat={boat}
+        canEdit={can(boatRole, "write")}
+        templateName={template?.name ?? null}
+      />
       <BoatTabs
         boatId={boatId}
         active={activeTab}
@@ -125,13 +160,6 @@ export default async function BoatPage({
           equipment: equipmentRows.filter((item) => !item.removedAt).length,
         }}
       />
-      {activeTab === "identity" ? (
-        <BoatIdentity
-          boat={boat}
-          canEdit={can(boatRole, "write")}
-          templateName={template?.name ?? null}
-        />
-      ) : null}
       {activeTab === "engines" ? (
         <EnginesTab
           boatId={boatId}
@@ -146,6 +174,12 @@ export default async function BoatPage({
           boatId={boatId}
           items={equipmentRows}
           categories={categories ?? []}
+          stock={{
+            parts: applyStockFilter(allParts, stockFilter),
+            filter: stockFilter,
+            lowCount: countLowStock(allParts),
+            totalCount: allParts.length,
+          }}
           canWrite={can(boatRole, "write")}
         />
       ) : null}

@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { SearchIcon, XIcon } from "lucide-react";
+import { PaperclipIcon, SearchIcon, XIcon } from "lucide-react";
 
 import type { CategoryChoice } from "@/components/common/CategoryChips";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import type { Route } from "next";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { LOG_STATUSES } from "@/lib/schemas/logs";
-import { logsPath } from "@/lib/queries/boat-routes";
+import { importDocumentsPath, logsPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -49,14 +51,18 @@ export function LogsToolbar({
   categories,
   reviewCount,
   contactName,
+  canContribute = false,
 }: {
   boatId: string;
   filters: LogsFilters;
   categories: CategoryChoice[];
   reviewCount: number;
   contactName: string | null;
+  /** Only someone who may write documents is offered the batch import (E10-1). */
+  canContribute?: boolean;
 }) {
   const t = useTranslations("logs");
+  const ta = useTranslations("attachments.import");
   const ts = useTranslations("logStatus");
   const router = useRouter();
   const [query, setQuery] = useState(filters.q);
@@ -148,6 +154,16 @@ export function LogsToolbar({
           <Button type="button" variant="outline" onClick={() => go({ contact: "" })}>
             {t("filters.contact", { name: contactName })}
             <XIcon />
+          </Button>
+        ) : null}
+        {canContribute ? (
+          /* Not a « + » (D19): this ranges documents onto interventions, it creates nothing on
+             its own. */
+          <Button asChild variant="outline" className="ml-auto">
+            <Link href={importDocumentsPath(boatId) as Route}>
+              <PaperclipIcon />
+              {ta("entry")}
+            </Link>
           </Button>
         ) : null}
       </div>

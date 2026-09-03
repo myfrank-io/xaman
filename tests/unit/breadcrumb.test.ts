@@ -64,8 +64,8 @@ const SCREENS = new Set([
   "haul-outs/:id",
   "haul-outs/:id/edit",
   "supplies",
-  "supplies/parts/new",
-  "supplies/parts/:id/edit",
+  "boat/parts/new",
+  "boat/parts/:id/edit",
   "supplies/purchases/new",
   "supplies/purchases/:id/edit",
   "members",
@@ -115,8 +115,8 @@ const ALL_PATHS = [
   `/haul-outs/${HAUL_OUT}`,
   `/haul-outs/${HAUL_OUT}/edit`,
   "/supplies",
-  "/supplies/parts/new",
-  `/supplies/parts/${PART}/edit`,
+  "/boat/parts/new",
+  `/boat/parts/${PART}/edit`,
   "/supplies/purchases/new",
   `/supplies/purchases/${PURCHASE}/edit`,
   "/members",
@@ -129,17 +129,17 @@ const ALL_PATHS = [
 describe("buildTrail", () => {
   it("names the section on its own root, as the current page and not as a link", () => {
     expect(at("/logs")).toEqual([{ key: "logs" }]);
-    expect(labels(at("/logs"))).toEqual(["Journal"]);
+    expect(labels(at("/logs"))).toEqual(["Interventions"]);
     expect(labels(at("/checklist"))).toEqual(["Checklist"]);
     expect(labels(at("/boat"))).toEqual(["Bateau"]);
-    expect(current(at("/logs"))).toEqual(["Journal"]);
+    expect(current(at("/logs"))).toEqual(["Interventions"]);
   });
 
   it("gives the dashboard its own crumb and opens no other trail with it", () => {
     expect(at("/dashboard")).toEqual([{ key: "dashboard" }]);
     expect(labels(at("/dashboard"))).toEqual(["Tableau de bord"]);
     // The home of the boat is a tab, one tap away: it never prefixes another section.
-    expect(labels(at("/logs/new"))).toEqual(["Journal", "Nouveau"]);
+    expect(labels(at("/logs/new"))).toEqual(["Interventions", "Nouveau"]);
   });
 
   it("names the section and the step of a creation screen", () => {
@@ -152,7 +152,7 @@ describe("buildTrail", () => {
       { key: "logs", href: path("/logs") },
       { key: "crumbs.record" },
     ]);
-    expect(labels(at(`/logs/${LOG}`))).toEqual(["Journal", "Fiche"]);
+    expect(labels(at(`/logs/${LOG}`))).toEqual(["Interventions", "Fiche"]);
     expect(current(at(`/logs/${LOG}`))).toEqual(["Fiche"]);
 
     expect(at(`/logs/${LOG}/edit`)).toEqual([
@@ -188,24 +188,25 @@ describe("buildTrail", () => {
     expect(current(at(`/boat/engines/${ENGINE}/edit`))).toEqual(["Modifier"]);
   });
 
-  it("follows the nested lists of the supplies screen through their tab", () => {
-    expect(at("/supplies/parts/new")).toEqual([
-      { key: "supplies", href: path("/supplies") },
-      { key: "crumbs.parts", href: path("/supplies?tab=stock") },
+  // D34: the stock left Dépenses for Bateau, and its list is the Équipements tab.
+  it("takes the spare parts back to the Équipements tab of the boat", () => {
+    expect(at("/boat/parts/new")).toEqual([
+      { key: "boat", href: path("/boat") },
+      { key: "crumbs.parts", href: path("/boat?tab=equipment") },
       { key: "crumbs.new" },
     ]);
-    // An achat has no screen of its own: no inert « Fiche » between the list and the form.
-    expect(labels(at(`/supplies/purchases/${PURCHASE}/edit`))).toEqual([
-      "Dépenses",
-      "Achats",
-      "Modifier",
-    ]);
+  });
+
+  // D33: Dépenses is one ledger. A purchase has no list and no screen of its own, so nothing
+  // stands between the section and the form.
+  it("takes a purchase straight back to the ledger", () => {
+    expect(labels(at(`/supplies/purchases/${PURCHASE}/edit`))).toEqual(["Dépenses", "Modifier"]);
   });
 
   it("hangs the haul-outs off the Journal, the tab they are reached from (D9)", () => {
     expect(at("/haul-outs")).toEqual([{ key: "logs", href: path("/logs") }, { key: "haulOuts" }]);
     expect(labels(at(`/haul-outs/${HAUL_OUT}/edit`))).toEqual([
-      "Journal",
+      "Interventions",
       "Sorties de l'eau",
       "Fiche",
       "Modifier",
@@ -224,8 +225,26 @@ describe("buildTrail", () => {
     // The report opens from the settings; the import from the list in `?entity=`, unknown here.
     expect(labels(at("/report"))).toEqual(["Paramètres", "Rapport"]);
     expect(at("/import")).toEqual([{ key: "crumbs.import" }]);
-    expect(labels(at("/logs/review"))).toEqual(["Journal", "Reprise du carnet"]);
+    expect(labels(at("/logs/review"))).toEqual(["Interventions", "Reprise du carnet"]);
     expect(labels(at("/checklist/setup"))).toEqual(["Checklist", "Mise en route"]);
+  });
+
+  // Dépenses is one ledger (D33): there is no « Achats » list under it any more, so the trail
+  // does not invent a crumb between the section and the form.
+  it("takes a new purchase straight back to the ledger", () => {
+    expect(at("/supplies/purchases/new")).toEqual([
+      { key: "supplies", href: `/boats/${BOAT}/supplies` },
+      { key: "crumbs.new" },
+    ]);
+  });
+
+  // The stock moved under Bateau (D34): its trail starts at Bateau, not at Dépenses.
+  it("puts the spare parts under the boat", () => {
+    expect(at("/boat/parts/new")).toEqual([
+      { key: "boat", href: `/boats/${BOAT}/boat` },
+      { key: "crumbs.parts", href: `/boats/${BOAT}/boat?tab=equipment` },
+      { key: "crumbs.new" },
+    ]);
   });
 
   it("links only to screens the app serves, on every path", () => {

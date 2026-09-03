@@ -7,6 +7,11 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import {
+  AttachmentPicker,
+  pendingRows,
+  type PickedAttachment,
+} from "@/components/attachments/AttachmentPicker";
 import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
 import { PageHeader } from "@/components/common/PageHeader";
 import type { ContactOption } from "@/components/contacts/specialties";
@@ -30,9 +35,11 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { NumericField } from "@/components/ui/numeric-field";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { saveAttachments } from "@/lib/actions/attachments";
 import { upsertPurchase } from "@/lib/actions/purchases";
 import { formatDate, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import type { AttachmentItem } from "@/lib/queries/attachments";
 import { suppliesPath } from "@/lib/queries/boat-routes";
 import {
   purchaseKindLabelKey,
@@ -94,6 +101,7 @@ export function PurchaseForm({
   contacts,
   logs,
   suggestions,
+  attachments = [],
   defaultKind,
 }: {
   boatId: string;
@@ -103,9 +111,12 @@ export function PurchaseForm({
   logs: LogOption[];
   /** Designations already used on this boat, most frequent first (ux-flows §4.6). */
   suggestions: string[];
+  /** Invoice and documents already stored on this purchase (E10-1). */
+  attachments?: AttachmentItem[];
   defaultKind?: PurchaseKind;
 }) {
   const t = useTranslations("supplies.purchases");
+  const ta = useTranslations("attachments");
   const tk = useTranslations("purchaseKind");
   const errorMessage = useErrorMessage();
   const to = useTranslations("offline");
@@ -115,6 +126,11 @@ export function PurchaseForm({
   const [newId] = useState(() => crypto.randomUUID());
   const outbox = useOutbox(boatId);
   const { online } = useOnline();
+  // Invoice scanned while the amount is being typed: the objects go up straight away, their
+  // rows are written once the purchase exists (E10-1).
+  const [picked, setPicked] = useState<PickedAttachment[]>([]);
+  // Same id the form will save under: the invoice can go up before the row exists.
+  const attachmentOwnerId = purchase?.id ?? newId;
 
   const form = useForm<PurchaseFormState, unknown, PurchaseOutput>({
     resolver: formResolver<PurchaseFormState, PurchaseOutput>(upsertPurchaseSchema),
@@ -138,7 +154,7 @@ export function PurchaseForm({
   });
   const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const errors = form.formState.errors;
-  const backHref = suppliesPath(boatId, "purchases");
+  const backHref = suppliesPath(boatId);
   const choices: CategoryChoice[] = [
     { id: "", name: t("fields.noCategory"), color: NO_CATEGORY_COLOR },
     ...categories,
@@ -175,6 +191,13 @@ export function PurchaseForm({
       if (outcome.status === "refused") {
         toast.error(errorMessage(outcome.error));
         return;
+      }
+      if (outcome.status === "sent") {
+        const rows = purchase ? [] : pendingRows(picked, { type: "purchase", id: values.id });
+        if (rows.length > 0) {
+          const committed = await saveAttachments({ boatId, items: rows });
+          if (!committed.ok) toast.error(ta("commitFailed"));
+        }
       }
       toast.success(outcome.status === "queued" ? to("savedOnDevice") : t("saved"));
       router.push(backHref as Parameters<typeof router.push>[0]);
@@ -372,6 +395,17 @@ export function PurchaseForm({
           {...form.register("notes")}
         />
       </Field>
+
+      <div className="flex flex-col gap-3">
+        <Label>{t("attachments")}</Label>
+        <AttachmentPicker
+          boatId={boatId}
+          owner={{ type: "purchase", id: attachmentOwnerId }}
+          initial={attachments}
+          deferred={!purchase}
+          onItemsChange={setPicked}
+        />
+      </div>
 
       {purchase?.needsReview ? (
         <p className="text-caption text-state-soon-fg">{t("review.help")}</p>

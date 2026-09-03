@@ -50,7 +50,7 @@ export default async function HomePage() {
     <main className="flex min-h-dvh flex-col bg-background">
       {/* Hero — the brand band carries the navigation, the promise and a drawn dashboard. */}
       <div className="bg-header-gradient text-on-navy">
-        <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-6 pt-6 safe-top lg:px-8">
+        <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-6 safe-pt-6 lg:px-8">
           <Link
             href="/"
             aria-label={t("nav.home")}

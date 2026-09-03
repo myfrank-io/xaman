@@ -12,8 +12,10 @@ export type Database = {
       attachments: {
         Row: {
           boat_id: string
+          caption: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           entity_id: string
           entity_type: Database["public"]["Enums"]["attachment_entity"]
           file_name: string
@@ -26,8 +28,10 @@ export type Database = {
         }
         Insert: {
           boat_id: string
+          caption?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           entity_id: string
           entity_type: Database["public"]["Enums"]["attachment_entity"]
           file_name: string
@@ -40,8 +44,10 @@ export type Database = {
         }
         Update: {
           boat_id?: string
+          caption?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           entity_id?: string
           entity_type?: Database["public"]["Enums"]["attachment_entity"]
           file_name?: string

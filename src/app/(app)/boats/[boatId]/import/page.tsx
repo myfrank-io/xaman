@@ -3,9 +3,9 @@ import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { ImportWizard } from "@/components/import/ImportWizard";
-import { isImportEntity } from "@/lib/import/entities";
+import { descriptorOf, isImportEntity } from "@/lib/import/entities";
 import { can, type BoatRole } from "@/lib/permissions";
-import { boatPath, boatTabPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { boatPath, boatTabPath, stockPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -26,17 +26,34 @@ export default async function ImportPage({
   const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
   if (!role || !can(role as BoatRole, "write")) notFound();
 
+  // What is already on the boat, so the screen can say « 3 reconnues » before writing anything.
+  const descriptor = descriptorOf(entity);
+  let query = supabase.from(descriptor.table).select(descriptor.keyColumns).eq("boat_id", boatId);
+  if (descriptor.softDeleted) query = query.is("deleted_at", null);
+  const { data: existing } = (await query) as unknown as {
+    data: Record<string, unknown>[] | null;
+  };
+  const existingKeys = (existing ?? []).map((row) => descriptor.existingKey(row));
+
   const t = await getTranslations("import");
   const back = {
+    logs: { href: boatPath(boatId, "logs"), label: t("back.logs") },
+    purchases: { href: boatPath(boatId, "supplies"), label: t("back.purchases") },
     contacts: { href: boatPath(boatId, "contacts"), label: t("back.contacts") },
     equipment: { href: boatTabPath(boatId, "equipment"), label: t("back.equipment") },
-    parts: { href: suppliesPath(boatId, "stock"), label: t("back.parts") },
+    parts: { href: stockPath(boatId), label: t("back.parts") },
   }[entity];
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t(`entities.${entity}.title`)} subtitle={t("subtitle")} />
-      <ImportWizard boatId={boatId} entity={entity} backHref={back.href} backLabel={back.label} />
+      <ImportWizard
+        boatId={boatId}
+        entity={entity}
+        backHref={back.href}
+        backLabel={back.label}
+        existingKeys={existingKeys}
+      />
     </div>
   );
 }

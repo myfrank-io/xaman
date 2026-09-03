@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { publicEnv } from "@/lib/env";
+import { callbackUrl } from "@/lib/auth/redirect";
 import {
   emailSchema,
   otpSchema,
@@ -101,7 +101,7 @@ export function LoginForm({
       email: values.email,
       options: {
         shouldCreateUser: allowSignup,
-        emailRedirectTo: `${publicEnv.appUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+        emailRedirectTo: callbackUrl(next),
       },
     });
     if (sendError) {

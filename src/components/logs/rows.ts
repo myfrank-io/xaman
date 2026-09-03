@@ -13,6 +13,8 @@ export type LogRow = {
   contactName: string | null;
   cost: number | null;
   needsReview: boolean;
+  /** Documents joined to the intervention (E10-1): the paperclip of the list. */
+  attachmentsCount: number;
   engineHours: LogEngineHours[];
   updatedAt: string;
 };
@@ -49,6 +51,7 @@ export type LogListSelection = Pick<
   | "cost"
   | "contact_name"
   | "needs_review"
+  | "attachments_count"
   | "engine_hours"
   | "updated_at"
 >;
@@ -65,6 +68,7 @@ export function toLogRow(row: LogListSelection): LogRow {
     contactName: row.contact_name,
     cost: row.cost,
     needsReview: row.needs_review ?? false,
+    attachmentsCount: row.attachments_count ?? 0,
     engineHours: parseEngineHours(row.engine_hours),
     updatedAt: row.updated_at ?? "",
   };

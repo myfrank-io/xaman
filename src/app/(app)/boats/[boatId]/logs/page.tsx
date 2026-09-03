@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound, redirect } from "next/navigation";
-import { NotebookPenIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { NotebookPenIcon, PlusIcon, SearchIcon, UploadIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -12,7 +12,13 @@ import { firstParam } from "@/components/logs/log-form-values";
 import { toLogRow } from "@/components/logs/rows";
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
-import { boatPath, logsPath, logsReviewPath, newLogPath } from "@/lib/queries/boat-routes";
+import {
+  boatPath,
+  importPath,
+  logsPath,
+  logsReviewPath,
+  newLogPath,
+} from "@/lib/queries/boat-routes";
 import { LOG_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -69,7 +75,7 @@ export default async function LogsPage({
   const query = sanitize(filters.q);
 
   const columns =
-    "id, boat_id, title, category_id, category_name, category_color, status, performed_at, cost, contact_name, needs_review, engine_hours, updated_at";
+    "id, boat_id, title, category_id, category_name, category_color, status, performed_at, cost, contact_name, needs_review, attachments_count, engine_hours, updated_at";
 
   let rowsQuery = supabase
     .from("maintenance_logs_view")
@@ -117,12 +123,19 @@ export default async function LogsPage({
     });
   }
 
-  const [t, tn] = await Promise.all([getTranslations("logs"), getTranslations("nav")]);
+  const [t, tn, tc, ti] = await Promise.all([
+    getTranslations("logs"),
+    getTranslations("nav"),
+    getTranslations("create"),
+    getTranslations("import"),
+  ]);
   const total = count ?? list.length;
   const filtered = Boolean(
     filters.q || filters.category || filters.status || filters.review || filters.contact,
   );
   const canContribute = can(boatRole, "contribute");
+  // Importing writes whole rows: owner and editor only, like any other bulk write.
+  const canWrite = can(boatRole, "write");
 
   const tabs: { key: "history" | "planned"; label: string; href: string }[] = [
     { key: "history", label: t("tabs.history"), href: logsPath(boatId) },
@@ -131,9 +144,36 @@ export default async function LogsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* One « + » per screen (D19): on /logs the sidebar button already creates an
-          intervention, so the header carries no second one. */}
-      <PageHeader title={t("title")} subtitle={t("results", { count: total })} />
+      {/* The journal's own object, named and at the top right (D35). It replaces the bare
+          « + » of the frame on this screen: reading the list is not the same gesture as
+          adding to it, and the frame's control sits in the corner the eye reaches last.
+          It wraps under the title on a phone rather than shrinking below 44 px. */}
+      <PageHeader
+        title={t("title")}
+        subtitle={t("results", { count: total })}
+        actions={
+          canContribute ? (
+            <>
+              {/* Reprendre un carnet papier ou un export commence ici, à côté de l'acte du
+                  quotidien : importer n'est pas un réglage, c'est une façon de saisir. */}
+              {canWrite ? (
+                <Button asChild variant="outline">
+                  <Link href={importPath(boatId, "logs") as Route}>
+                    <UploadIcon />
+                    {ti("action")}
+                  </Link>
+                </Button>
+              ) : null}
+              <Button asChild size="xl">
+                <Link href={newLogPath(boatId) as Route}>
+                  <PlusIcon />
+                  {tc("newLog")}
+                </Link>
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
 
       <div className="flex flex-wrap gap-2 border-b border-border">
         {tabs.map((entry) => (
@@ -165,6 +205,7 @@ export default async function LogsPage({
         categories={categories ?? []}
         reviewCount={reviewCount ?? 0}
         contactName={contact?.name ?? null}
+        canContribute={canContribute}
       />
 
       {list.length === 0 ? (

@@ -1,10 +1,18 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { PlusIcon } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+
 import type { CategoryChoice } from "@/components/common/CategoryChips";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Button } from "@/components/ui/button";
 import { LogActions } from "@/components/logs/LogActions";
 import { LogDetail } from "@/components/logs/LogDetail";
 import { LogForm } from "@/components/logs/LogForm";
 import { LogsList } from "@/components/logs/LogsList";
 import { LogsToolbar } from "@/components/logs/LogsToolbar";
 
+import { DEV_ATTACHMENTS } from "../attachments/sample";
 import { DevShell, DEV_BOAT_ID } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 import { DevLogsGallery } from "./DevLogsGallery";
@@ -45,6 +53,7 @@ function Section({
  * status, the form with its hours block open, and the detail.
  */
 export default async function DevLogsPage() {
+  const [t, tc] = await Promise.all([getTranslations("logs"), getTranslations("create")]);
   return (
     <DevShell>
       <div className="flex flex-col gap-12 pb-16">
@@ -54,6 +63,24 @@ export default async function DevLogsPage() {
             Recette visuelle des écrans du journal, avec des données factices.
           </p>
         </div>
+
+        <Section
+          title="En-tête"
+          description="« Noter une intervention » en haut à droite : sur cet écran, l'action de la page remplace le « + » du cadre (D35)."
+        >
+          <PageHeader
+            title={t("title")}
+            subtitle={t("results", { count: 7 })}
+            actions={
+              <Button asChild size="xl">
+                <Link href={`/boats/${DEV_BOAT_ID}/logs/new` as Route}>
+                  <PlusIcon />
+                  {tc("newLog")}
+                </Link>
+              </Button>
+            }
+          />
+        </Section>
 
         <Section
           title="Liste"
@@ -72,6 +99,7 @@ export default async function DevLogsPage() {
             categories={CATEGORIES}
             reviewCount={2}
             contactName={null}
+            canContribute
           />
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
             <LogsList boatId={DEV_BOAT_ID} rows={DEV_LOG_ROWS} />
@@ -122,6 +150,7 @@ export default async function DevLogsPage() {
             ]}
             completions={DEV_LOG_COMPLETIONS}
             purchases={[{ id: "purchase-1", designation: "Filtres à huile ×2", amount: 48.5 }]}
+            attachments={DEV_ATTACHMENTS}
             canWrite
             actions={
               <LogActions

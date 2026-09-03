@@ -43,7 +43,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="bg-header-gradient px-6 pt-8 safe-top pb-10 text-white">
+      <header className="bg-header-gradient px-6 safe-pt-8 pb-10 text-white">
         <div className="mx-auto w-full max-w-md">
           <p className="text-xs font-medium tracking-widest text-white/60 uppercase">Xaman</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">{t("title")}</h1>
