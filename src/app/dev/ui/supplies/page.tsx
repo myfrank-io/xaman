@@ -1,15 +1,12 @@
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
-import { PartForm } from "@/components/supplies/PartForm";
+import { PartForm } from "@/components/parts/PartForm";
 import { ExpensesTab } from "@/components/supplies/ExpensesTab";
 import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
-import { PurchaseFilters } from "@/components/supplies/PurchaseFilters";
 import { PurchaseForm } from "@/components/supplies/PurchaseForm";
-import { PurchaseList } from "@/components/supplies/PurchaseList";
-import { StockList } from "@/components/supplies/StockList";
-import { SuppliesTabs } from "@/components/supplies/SuppliesTabs";
+import { StockList } from "@/components/parts/StockList";
 import { EXPENSE_SOURCES, resolveRange } from "@/lib/expenses";
 import { gasFacts } from "@/lib/gas";
 import { countLowStock } from "@/lib/parts";
@@ -24,14 +21,13 @@ import {
   SAMPLE_GAS_PURCHASES,
   SAMPLE_LOGS,
   SAMPLE_PARTS,
-  SAMPLE_PURCHASES,
   SAMPLE_SUPPLY_CATEGORIES,
 } from "./sample";
 
 /**
- * Visual acceptance of the Dépenses module (E5-1, E5-2, E5-3) without a database:
- * the three tabs, the gas view and the purchase form stacked on one page.
- * `?dialog=1` opens the gas dialog so it can be screenshotted on its own.
+ * Visual acceptance of the Dépenses module (E5-1 → E5-3, D33) without a database: the single
+ * money list with its filters, the gas view, the purchase form and the part form stacked on
+ * one page. `?dialog=1` opens the gas dialog so it can be screenshotted on its own.
  */
 export default async function DevSuppliesPage({
   searchParams,
@@ -49,19 +45,21 @@ export default async function DevSuppliesPage({
       <div className="flex flex-col gap-10">
         <div className="flex flex-col gap-6">
           <PageHeader title={t("title")} subtitle={t("subtitle")} />
-          <SuppliesTabs boatId={DEV_BOAT_ID} active="expenses" />
           <ExpensesTab
             boatId={DEV_BOAT_ID}
-            period="rolling12"
+            period="all"
             range={range}
             sources={[...EXPENSE_SOURCES]}
+            kind={null}
+            categoryId={null}
+            categories={SAMPLE_SUPPLY_CATEGORIES}
             data={SAMPLE_EXPENSES}
+            canWrite
             filtered={false}
           />
         </div>
 
         <div className="flex flex-col gap-6">
-          <SuppliesTabs boatId={DEV_BOAT_ID} active="purchases" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
             <div className="min-w-0 flex-1">
               <GasFacts facts={facts} total={gasTotal} />
@@ -74,27 +72,9 @@ export default async function DevSuppliesPage({
               defaultOpen={dialog === "1"}
             />
           </div>
-          <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-            <PurchaseFilters
-              boatId={DEV_BOAT_ID}
-              categories={SAMPLE_SUPPLY_CATEGORIES}
-              kind="gas"
-              categoryId={null}
-              period="all"
-              range={range}
-            />
-          </div>
-          <PurchaseList
-            boatId={DEV_BOAT_ID}
-            purchases={SAMPLE_PURCHASES}
-            canWrite
-            filtered={false}
-            moreHref={null}
-          />
         </div>
 
         <div className="flex flex-col gap-6">
-          <SuppliesTabs boatId={DEV_BOAT_ID} active="stock" />
           <StockList
             boatId={DEV_BOAT_ID}
             parts={SAMPLE_PARTS}

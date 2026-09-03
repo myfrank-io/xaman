@@ -138,7 +138,7 @@ export function PurchaseForm({
   });
   const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const errors = form.formState.errors;
-  const backHref = suppliesPath(boatId, "purchases");
+  const backHref = suppliesPath(boatId);
   const choices: CategoryChoice[] = [
     { id: "", name: t("fields.noCategory"), color: NO_CATEGORY_COLOR },
     ...categories,

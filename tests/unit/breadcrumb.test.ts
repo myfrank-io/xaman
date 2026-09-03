@@ -29,9 +29,18 @@ describe("buildTrail", () => {
   });
 
   it("follows the nested lists of the supplies screen", () => {
-    expect(at("/supplies/parts/new")).toEqual([
+    expect(at("/supplies/purchases/new")).toEqual([
       { key: "supplies", href: `/boats/${BOAT}/supplies` },
-      { key: "crumbs.parts", href: `/boats/${BOAT}/supplies/parts` },
+      { key: "crumbs.purchases", href: `/boats/${BOAT}/supplies/purchases` },
+      { key: "crumbs.new" },
+    ]);
+  });
+
+  // The stock moved under Bateau (D34): its trail starts at Bateau, not at Dépenses.
+  it("puts the spare parts under the boat", () => {
+    expect(at("/boat/parts/new")).toEqual([
+      { key: "boat", href: `/boats/${BOAT}/boat` },
+      { key: "crumbs.parts", href: `/boats/${BOAT}/boat/parts` },
       { key: "crumbs.new" },
     ]);
   });

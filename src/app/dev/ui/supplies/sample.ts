@@ -1,8 +1,8 @@
-import type { StockItem } from "@/components/supplies/StockList";
+import type { StockItem } from "@/components/parts/StockList";
 import type { ContactOption } from "@/components/contacts/specialties";
 import type { GasDefaults } from "@/components/supplies/GasBottleDialog";
 import type { ExpensesData } from "@/components/supplies/ExpensesTab";
-import type { PurchaseListItem } from "@/components/supplies/PurchaseList";
+import type { ExpenseLine } from "@/components/supplies/ExpenseLines";
 import type { LogOption } from "@/components/supplies/PurchaseForm";
 import type { ExpenseRow } from "@/lib/expenses";
 
@@ -89,72 +89,37 @@ const EXPENSE_ROWS: ExpenseRow[] = [
   }),
 ];
 
+/** The merged ledger (D33): every line says what it paid for. */
+const KIND_LABELS: Record<string, string> = { p1: "Pièce", p2: "Gaz", p3: "Gaz" };
+const SUPPLIERS: Record<string, string> = {
+  p1: "Accastillage Diffusion",
+  p2: "Station Total Hyères",
+  p3: "Station Total Hyères",
+};
+
+const EXPENSE_LINES: ExpenseLine[] = EXPENSE_ROWS.map((row) => ({
+  source: (row.source ?? "purchase") as ExpenseLine["source"],
+  entityId: row.entityId ?? "",
+  label: row.label ?? "",
+  date: row.date ?? "",
+  amount: row.amount,
+  categoryName: row.categoryName,
+  categoryColor: row.categoryColor,
+  kindLabel: KIND_LABELS[row.entityId ?? ""] ?? null,
+  supplier: SUPPLIERS[row.entityId ?? ""] ?? null,
+  needsReview: row.entityId === "p3",
+}));
+
 export const SAMPLE_EXPENSES: ExpensesData = {
   rows: EXPENSE_ROWS,
+  lines: EXPENSE_LINES,
   previousTotal: 2617,
   cumulativeTotal: 12480.6,
   firstDate: "2023-06-14",
+  moreHref: null,
 };
 
-export const SAMPLE_PURCHASES: PurchaseListItem[] = [
-  {
-    id: "p1",
-    purchasedAt: "2026-08-20",
-    designation: "Filtres à huile Yanmar",
-    kind: "part",
-    amount: 148.4,
-    categoryName: ENGINES.name,
-    categoryColor: ENGINES.color,
-    supplier: "Accastillage Diffusion",
-    needsReview: false,
-  },
-  {
-    id: "p2",
-    purchasedAt: "2026-07-05",
-    designation: "Bouteille de gaz — Butane 13 kg",
-    kind: "gas",
-    amount: 34.5,
-    categoryName: PLUMBING.name,
-    categoryColor: PLUMBING.color,
-    supplier: "Hyères",
-    needsReview: true,
-  },
-  {
-    id: "p3",
-    purchasedAt: "2026-03-11",
-    designation: "Bouteille de gaz — Butane 13 kg",
-    kind: "gas",
-    amount: 33.9,
-    categoryName: PLUMBING.name,
-    categoryColor: PLUMBING.color,
-    supplier: "Hyères",
-    needsReview: false,
-  },
-  {
-    id: "p4",
-    purchasedAt: "2026-03-02",
-    designation: "Anodes de rechange",
-    kind: "consumable",
-    amount: 96,
-    categoryName: HULL.name,
-    categoryColor: HULL.color,
-    supplier: null,
-    needsReview: false,
-  },
-  {
-    id: "p5",
-    purchasedAt: "2025-11-30",
-    designation: "Changement bouteille gaz",
-    kind: "gas",
-    amount: null,
-    categoryName: PLUMBING.name,
-    categoryColor: PLUMBING.color,
-    supplier: null,
-    needsReview: true,
-  },
-];
-
-export const SAMPLE_GAS_PURCHASES = SAMPLE_PURCHASES.filter((purchase) => purchase.kind === "gas");
+export const SAMPLE_GAS_PURCHASES = EXPENSE_LINES.filter((line) => line.kindLabel === "Gaz");
 
 /** Four changes → three intervals: exactly the threshold where an estimate appears. */
 export const SAMPLE_GAS_DATES = ["2025-03-18", "2025-07-24", "2025-11-30", "2026-07-05"];

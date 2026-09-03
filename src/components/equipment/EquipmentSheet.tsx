@@ -6,7 +6,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ChevronLeftIcon, PencilIcon } from "lucide-react";
+import { ChevronLeftIcon, PencilIcon, PlusIcon } from "lucide-react";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
@@ -30,7 +30,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { removeEquipment, restoreEquipment } from "@/lib/actions/equipment";
 import { formatCurrency, formatDate, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { boatTabPath, editEquipmentPath, logPath } from "@/lib/queries/boat-routes";
+import { boatTabPath, editEquipmentPath, logPath, newLogPath } from "@/lib/queries/boat-routes";
 
 export type EquipmentDetail = {
   id: string;
@@ -60,14 +60,18 @@ export function EquipmentSheet({
   item,
   logs,
   canWrite,
+  canContribute,
 }: {
   boatId: string;
   item: EquipmentDetail;
   logs: EquipmentLogRow[];
   canWrite: boolean;
+  /** A `pro` records his own work here too, but never edits the equipment sheet. */
+  canContribute: boolean;
 }) {
   const t = useTranslations("equipment");
   const tc = useTranslations("common");
+  const tcr = useTranslations("create");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -187,7 +191,28 @@ export function EquipmentSheet({
         </p>
       </SectionCard>
 
-      <SectionCard title={t("history")}>
+      {/* The act starts where the subject is named (D35): the form opens with this piece of
+          equipment and its category already chosen. */}
+      <SectionCard
+        title={t("history")}
+        action={
+          canContribute ? (
+            <Button asChild variant="outline" size="sm">
+              <Link
+                href={
+                  newLogPath(boatId, {
+                    equipment: item.id,
+                    category: item.category?.id,
+                  }) as Route
+                }
+              >
+                <PlusIcon />
+                {tcr("onEquipment")}
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      >
         {logs.length === 0 ? (
           <p className="px-5 py-4 text-body text-ink-2">{t("noHistory")}</p>
         ) : (

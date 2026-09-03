@@ -6,7 +6,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ChevronLeftIcon, GaugeIcon, MoreHorizontalIcon, PencilIcon } from "lucide-react";
+import { ChevronLeftIcon, GaugeIcon, MoreHorizontalIcon, PencilIcon, PlusIcon } from "lucide-react";
 
 import { ChecklistStateBadge, type ChecklistState } from "@/components/common/ChecklistStateBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -36,6 +36,7 @@ import {
   editEnginePath,
   logPath,
   logsPath,
+  newLogPath,
 } from "@/lib/queries/boat-routes";
 import type { EnginePosition } from "@/lib/schemas/engines";
 
@@ -116,6 +117,7 @@ export function EngineSheet({
   const tu = useTranslations("units");
   const tp = useTranslations("enginePosition");
   const tc = useTranslations("common");
+  const tcr = useTranslations("create");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -320,10 +322,27 @@ export function EngineSheet({
         )}
       </SectionCard>
 
+      {/* The act starts where the subject is named (D35): the form arrives with this engine's
+          category chosen and its hours field open and focused — two taps to a saved line. */}
       <SectionCard
         title={t("logs")}
-        actionHref={logs.length > 0 ? logsPath(boatId) : undefined}
-        actionLabel={logs.length > 0 ? tc("viewAll") : undefined}
+        action={
+          canContribute ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={newLogPath(boatId, { engine: engine.id }) as Route}>
+                <PlusIcon />
+                {tcr("onEngine")}
+              </Link>
+            </Button>
+          ) : logs.length > 0 ? (
+            <Link
+              href={logsPath(boatId) as Route}
+              className="inline-flex min-h-11 items-center px-2 text-label font-medium text-primary"
+            >
+              {tc("viewAll")}
+            </Link>
+          ) : undefined
+        }
       >
         {logs.length === 0 ? (
           <p className="px-5 py-4 text-body text-ink-2">{t("noLogs")}</p>

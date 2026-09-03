@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { subMonths } from "date-fns";
-import { AnchorIcon, ChevronRightIcon } from "lucide-react";
+import { AnchorIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { ChecklistGrid, toCategoryProgress } from "@/components/checklist/ChecklistGrid";
@@ -25,8 +25,11 @@ import {
   checklistPath,
   logPath,
   logsPath,
+  newLogPath,
+  stockPath,
   suppliesPath,
 } from "@/lib/queries/boat-routes";
+import { Button } from "@/components/ui/button";
 import { completionContext } from "@/lib/queries/completion-context";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -104,12 +107,13 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const canWrite = can(boatRole, "write");
   const canContribute = can(boatRole, "contribute");
 
-  const [t, tn, tc, tl, tb] = await Promise.all([
+  const [t, tn, tc, tl, tb, tcreate] = await Promise.all([
     getTranslations("dashboard"),
     getTranslations("nav"),
     getTranslations("common"),
     getTranslations("logs"),
     getTranslations("boatType"),
+    getTranslations("create"),
   ]);
 
   // Engines and their last reading
@@ -285,7 +289,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
             label={t("stats.expenses", { year })}
             value={formatCurrency(ytdTotal)}
             hint={t("stats.expensesHint", { count: ytdRows.length })}
-            href={suppliesPath(boatId, "expenses")}
+            href={suppliesPath(boatId, undefined, { period: "year" })}
           />
         </div>
 
@@ -296,6 +300,20 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
           canWrite={canWrite}
         />
       </header>
+
+      {/* 2 bis — the dominant act, named, on the screen a cold start lands on (D35). From
+          `lg` the sidebar already carries « Noter une intervention »: one named primary
+          action per viewport, never two. */}
+      {canContribute ? (
+        <div className="lg:hidden">
+          <Button asChild size="xl" className="w-full sm:w-auto">
+            <Link href={newLogPath(boatId) as Route}>
+              <PlusIcon />
+              {tcreate("primary")}
+            </Link>
+          </Button>
+        </div>
+      ) : null}
 
       {/* 2 — one contextual banner */}
       <DashboardBanner
@@ -368,7 +386,18 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
         bare={recentRows.length === 0}
       >
         {recentRows.length === 0 ? (
-          <p className="text-body text-ink-2">{t("recent.empty")}</p>
+          // An empty state that invites the act instead of stating a lack (ux-flows §5.1).
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-body text-ink-2">{t("recent.empty")}</p>
+            {canContribute ? (
+              <Button asChild variant="outline">
+                <Link href={newLogPath(boatId) as Route}>
+                  <PlusIcon />
+                  {tcreate("primary")}
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         ) : (
           recentRows.map((log) => (
             <ListRow
@@ -428,7 +457,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
                 </div>
               ))
             )}
-            <Link href={suppliesPath(boatId, "expenses") as Route} className={linkClass}>
+            <Link href={suppliesPath(boatId) as Route} className={linkClass}>
               {t("recap.expensesDetail")}
               <ChevronRightIcon className="size-4" aria-hidden />
             </Link>
@@ -457,7 +486,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
             <p className="text-body">
               {lowStock > 0 ? t("recap.lowStock", { count: lowStock }) : t("recap.stockOk")}
             </p>
-            <Link href={suppliesPath(boatId, "stock") as Route} className={linkClass}>
+            <Link href={stockPath(boatId) as Route} className={linkClass}>
               {t("recap.stockDetail")}
               <ChevronRightIcon className="size-4" aria-hidden />
             </Link>

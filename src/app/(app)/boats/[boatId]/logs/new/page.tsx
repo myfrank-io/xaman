@@ -44,6 +44,34 @@ export default async function NewLogPage({
     hours: parseHoursParam(search.hours),
   };
 
+  // « Noter une intervention » from an engine sheet (D35): the subject is already named, so
+  // the form arrives with its category chosen and its hours field open and focused.
+  const engineId = firstParam(search.engine);
+  if (engineId) {
+    const { data: engine } = await supabase
+      .from("engines")
+      .select("id")
+      .eq("id", engineId)
+      .eq("boat_id", boatId)
+      .maybeSingle();
+    if (engine) {
+      prefill.expandHours = true;
+      // The engine category is already resolved for the hours block: reuse it, no extra query.
+      prefill.categoryId = prefill.categoryId ?? data.engineCategoryIds[0];
+    }
+  }
+
+  // Same from an equipment sheet: the piece of equipment carries its own system.
+  if (prefill.equipmentId && !prefill.categoryId) {
+    const { data: item } = await supabase
+      .from("equipment")
+      .select("category_id")
+      .eq("id", prefill.equipmentId)
+      .eq("boat_id", boatId)
+      .maybeSingle();
+    prefill.categoryId = item?.category_id ?? undefined;
+  }
+
   // « + Ajouter les détails » from the « Fait » dialog: the point is already ticked, its label
   // becomes the title and its category is selected (ux-flows §3a).
   const itemId = firstParam(search.item);

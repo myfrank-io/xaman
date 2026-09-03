@@ -117,7 +117,11 @@ export default async function LogsPage({
     });
   }
 
-  const [t, tn] = await Promise.all([getTranslations("logs"), getTranslations("nav")]);
+  const [t, tn, tc] = await Promise.all([
+    getTranslations("logs"),
+    getTranslations("nav"),
+    getTranslations("create"),
+  ]);
   const total = count ?? list.length;
   const filtered = Boolean(
     filters.q || filters.category || filters.status || filters.review || filters.contact,
@@ -131,9 +135,24 @@ export default async function LogsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* One « + » per screen (D19): on /logs the sidebar button already creates an
-          intervention, so the header carries no second one. */}
-      <PageHeader title={t("title")} subtitle={t("results", { count: total })} />
+      {/* The journal's own object, named and at the top right (D35). It replaces the bare
+          « + » of the frame on this screen: reading the list is not the same gesture as
+          adding to it, and the frame's control sits in the corner the eye reaches last.
+          It wraps under the title on a phone rather than shrinking below 44 px. */}
+      <PageHeader
+        title={t("title")}
+        subtitle={t("results", { count: total })}
+        actions={
+          canContribute ? (
+            <Button asChild size="xl">
+              <Link href={newLogPath(boatId) as Route}>
+                <PlusIcon />
+                {tc("newLog")}
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
 
       <div className="flex flex-wrap gap-2 border-b border-border">
         {tabs.map((entry) => (

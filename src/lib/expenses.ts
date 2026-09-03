@@ -11,13 +11,22 @@ import { toDate, toDateString } from "@/lib/format";
 export const EXPENSE_SOURCES = ["log", "purchase", "haul_out"] as const;
 export type ExpenseSource = (typeof EXPENSE_SOURCES)[number];
 
-export const EXPENSE_PERIODS = ["rolling12", "year", "custom"] as const;
+/**
+ * « Toute la période » leads and is the default (D33): Dépenses is now the only money list,
+ * and a rolling twelve-month window would silently hide the paper-logbook import.
+ */
+export const EXPENSE_PERIODS = ["all", "rolling12", "year", "custom"] as const;
 export type ExpensePeriod = (typeof EXPENSE_PERIODS)[number];
+
+/** Lower bound of « toute la période »: older than any boat this app will ever hold. */
+export const EXPENSE_EPOCH = "1900-01-01";
 
 export type DateRange = { from: string; to: string };
 
 export type ExpenseRow = {
   source: string | null;
+  /** Only for a purchase line: fuel, gas, part… Absent everywhere else. */
+  purchaseKind?: string | null;
   entityId: string | null;
   label: string | null;
   amount: number | null;
@@ -64,6 +73,7 @@ export function resolveRange(
 ): DateRange {
   const reference = toDate(today) ?? new Date();
   const to = toDateString(reference);
+  if (period === "all") return { from: EXPENSE_EPOCH, to };
   if (period === "year") {
     const year = reference.getFullYear();
     return { from: `${year}-01-01`, to: `${year}-12-31` };
@@ -79,6 +89,8 @@ export function resolveRange(
 
 /** Same length, shifted one step back — « N-1 » in the comparison line. */
 export function previousRange(period: ExpensePeriod, range: DateRange): DateRange {
+  // « Toute la période » has no previous period: the caller shows « — » instead.
+  if (period === "all") return range;
   if (period === "year") {
     const from = toDate(range.from);
     const year = (from?.getFullYear() ?? new Date().getFullYear()) - 1;

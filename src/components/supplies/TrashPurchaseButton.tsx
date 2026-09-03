@@ -54,7 +54,7 @@ export function TrashPurchaseButton({
           });
         },
       });
-      router.push(suppliesPath(boatId, "purchases") as Parameters<typeof router.push>[0]);
+      router.push(suppliesPath(boatId) as Parameters<typeof router.push>[0]);
       router.refresh();
     });
   }

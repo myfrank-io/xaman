@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { deletePart } from "@/lib/actions/parts";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { suppliesPath } from "@/lib/queries/boat-routes";
+import { stockPath } from "@/lib/queries/boat-routes";
 
 /**
  * Deleting a part (E5-4, D10): the stock is declarative, so no trash — a confirmation that
@@ -25,7 +25,7 @@ export function DeletePartButton({
   partId: string;
   name: string;
 }) {
-  const t = useTranslations("supplies.stock.delete");
+  const t = useTranslations("equipment.stock.delete");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -40,7 +40,7 @@ export function DeletePartButton({
       }
       setOpen(false);
       toast.success(t("done"));
-      router.push(suppliesPath(boatId, "stock") as Parameters<typeof router.push>[0]);
+      router.push(stockPath(boatId) as Parameters<typeof router.push>[0]);
       router.refresh();
     });
   }

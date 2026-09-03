@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { ImportWizard } from "@/components/import/ImportWizard";
 import { isImportEntity } from "@/lib/import/entities";
 import { can, type BoatRole } from "@/lib/permissions";
-import { boatPath, boatTabPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { boatPath, boatTabPath, stockPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -30,7 +30,7 @@ export default async function ImportPage({
   const back = {
     contacts: { href: boatPath(boatId, "contacts"), label: t("back.contacts") },
     equipment: { href: boatTabPath(boatId, "equipment"), label: t("back.equipment") },
-    parts: { href: suppliesPath(boatId, "stock"), label: t("back.parts") },
+    parts: { href: stockPath(boatId), label: t("back.parts") },
   }[entity];
 
   return (
