@@ -457,3 +457,50 @@ Ce qui marche réellement sur ordinateur, et que le texte d'aide nomme maintenan
 Sur Mac comme sur PC on glisse une fiche depuis Contacts directement dans le sélecteur de
 fichier, ou on en sélectionne plusieurs et on exporte la vCard — l'import lit déjà les fiches
 multiples.
+
+## 2026-09-03 — D58 : l'audit mesure enfin la densité, et pas seulement le débordement
+
+**Question.** « Tu as tout tout tout couvert là ? » Non — et le trou n'était pas une liste
+d'écrans manquants, c'était l'absence de mesure. L'audit vérifiait le débordement horizontal et
+les cibles de 44 px. Les deux passaient, sur les cinq viewports, pendant que la checklist rendait
+**une carte de 175 px par système** : neuf systèmes remplissaient 1 600 px, deux tenaient à
+l'écran, et « trop gros trop zoomé, bloc pas simple à utiliser » a été signalé depuis le bateau
+avec un audit vert derrière. La prochaine régression serait passée de la même façon.
+
+**Décision.** Une règle, qui encode exactement la classe de défaut survenue :
+
+> Sur un téléphone (< 640 px), une **ligne tappable répétée** — trois frères ou plus construits
+> du même balisage — ne dépasse pas **120 px** de haut.
+
+120 px vient de ce que l'application produit réellement : une ligne de liste fait 64 ou 76 px,
+une fiche prestataire 64, les quatre tuiles du tableau de bord environ 110 — et la carte qui a
+provoqué la plainte en faisait 175. Le seuil discrimine là où il faut. Restreint aux liens et aux
+boutons, donc un accordéon déplié ou une section de formulaire n'est pas concerné ; et aux
+largeurs de téléphone, puisque au-dessus de `sm` il y a la place pour des cartes.
+
+**Vérifiée dans les deux sens** : j'ai remis la carte de 175 px, l'audit échoue en la nommant
+(« repeated rows over 120px: … height 185, repeated 9 ») ; je la retire, il passe. Ce n'est pas
+une supposition, et une règle qu'on n'a pas vue échouer ne vaut rien.
+
+Les six écrans jamais mesurés — achats, sorties d'eau, corbeille, équipage, import, paramètres —
+passent la règle, et leurs lignes mesurent 76 à 107 px. Ils n'avaient pas le défaut.
+
+## 2026-09-03 — D59 : le sélecteur de contacts est sur le formulaire, pas dans l'import
+
+**Question.** « Choisir dans mes contacts, je ne le vois toujours pas, il doit remplacer importer
+sur mobile je pense. »
+
+**Décision.** L'emplacement était mauvais, l'instinct était bon. Il vivait dans l'assistant
+d'import — or importer est un geste de tableur, et sortir une fiche de son carnet d'adresses est
+ce qu'on fait *en remplissant le formulaire*. Il est désormais sur le formulaire d'un nouvel
+intervenant, à un tap de « Nouvel intervenant », et il **remplit les champs** au lieu d'écrire :
+on voit ce qui est arrivé, on corrige la spécialité, on enregistre. Pas sur l'édition d'un
+intervenant existant, où il écraserait ce qui est déjà juste.
+
+**Mais il ne remplace pas « Importer »**, contrairement à la suggestion : sur la plupart des
+iPhone il est absent (Safari garde l'API derrière un drapeau, et il n'existe aucun repli web),
+donc le remplacement aurait supprimé l'import sur exactement ces appareils — l'erreur déjà
+commise et annulée plus haut.
+
+`tests/e2e/contact-picker.spec.ts` vérifie les deux faces, et l'absence compte plus que la
+présence : le bouton ne doit **pas** exister quand le navigateur n'a pas de carnet à ouvrir.

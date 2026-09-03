@@ -53,6 +53,20 @@ const PAGES = [
 
 const MIN_TARGET = 44;
 const MIN_FONT = 16;
+/**
+ * How tall a REPEATED tappable row may be on a phone.
+ *
+ * This is the rule nothing was measuring. Overflow and 44 px targets both passed, on every
+ * viewport, while the checklist rendered one 175 px card per system: nine systems filled
+ * 1 600 px, two fitted a screen, and « trop gros trop zoomé, bloc pas simple à utiliser » was
+ * reported from the boat with a green audit behind it.
+ *
+ * 120 px is picked from what the app actually produces: a list row is 64 or 76 px, a contact
+ * card 64, the four dashboard tiles about 110 — and the card that caused the complaint was 175.
+ * It discriminates exactly where it should. Above `sm` there is room for cards, so it applies
+ * to phone widths only.
+ */
+const MAX_REPEATED_ROW = 120;
 
 type Offender = {
   tag: string;
@@ -63,6 +77,8 @@ type Offender = {
   fontSize?: number;
   /** Pixels the box runs past the right edge of the viewport. */
   over?: number;
+  /** How many identical siblings this row has: what makes it a list rather than a card. */
+  repeated?: number;
 };
 
 async function audit(page: Page): Promise<{
@@ -71,9 +87,10 @@ async function audit(page: Page): Promise<{
   clipped: Offender[];
   overflow: number;
   wider: Offender[];
+  tall: Offender[];
 }> {
   return page.evaluate(
-    ({ minTarget, minFont }) => {
+    ({ minTarget, minFont, minRow }) => {
       const visible = (el: Element) => {
         const rect = el.getBoundingClientRect();
         const style = getComputedStyle(el);
@@ -168,10 +185,44 @@ async function audit(page: Page): Promise<{
         })
         .map((el) => ({ ...describe(el), over: Math.round(el.getBoundingClientRect().right - vw) }))
         .slice(0, 8);
+      /**
+       * Repeated tappable rows that are too tall for a phone.
+       *
+       * « Repeated » means three or more siblings built from the same markup — a list, a grid,
+       * a set of tiles. One tall card is a design choice; nine of them is a screen you scroll
+       * to learn what exists. Restricted to links and buttons, which is what a row of a list
+       * is, so an expanded accordion or a form section is not caught by it.
+       */
+      const tall: Offender[] = [];
+      if (vw < 640) {
+        const seen = new Set<Element>();
+        for (const el of document.querySelectorAll("a, button")) {
+          if (seen.has(el)) continue;
+          const parent = el.parentElement?.parentElement ?? el.parentElement;
+          if (!parent) continue;
+          const signature = `${el.tagName}|${el.getAttribute("class") ?? ""}`;
+          const siblings = [...(el.parentElement?.children ?? [])].filter(
+            (s) => `${s.tagName}|${s.getAttribute("class") ?? ""}` === signature,
+          );
+          // A grid or list wraps each row in an `li` or a `div`, so also look one level out.
+          const cousins =
+            siblings.length >= 3
+              ? siblings
+              : [...parent.querySelectorAll(":scope > * > a, :scope > * > button")].filter(
+                  (s) => `${s.tagName}|${s.getAttribute("class") ?? ""}` === signature,
+                );
+          if (cousins.length < 3) continue;
+          for (const c of cousins) seen.add(c);
+          const rect = el.getBoundingClientRect();
+          if (rect.height > minRow + 0.5 && rect.width > 100) {
+            tall.push({ ...describe(el), repeated: cousins.length });
+          }
+        }
+      }
       const overflow = document.documentElement.scrollWidth - window.innerWidth;
-      return { controls, fields, clipped, overflow, wider };
+      return { controls, fields, clipped, overflow, wider, tall: tall.slice(0, 6) };
     },
-    { minTarget: MIN_TARGET, minFont: MIN_FONT },
+    { minTarget: MIN_TARGET, minFont: MIN_FONT, minRow: MAX_REPEATED_ROW },
   );
 }
 
@@ -207,6 +258,10 @@ for (const path of PAGES) {
     expect(
       result.fields,
       `${path} fields under ${MIN_TARGET}px / ${MIN_FONT}px: ${JSON.stringify(result.fields)}`,
+    ).toEqual([]);
+    expect(
+      result.tall,
+      `${path} repeated rows over ${MAX_REPEATED_ROW}px on a phone: ${JSON.stringify(result.tall)}`,
     ).toEqual([]);
     expect(errors, `${path} console errors`).toEqual([]);
   });
