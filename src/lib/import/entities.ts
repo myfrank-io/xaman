@@ -8,7 +8,7 @@ import { parseDecimal } from "@/lib/numbers";
  * natural key used to recognise a line already present. Everything else — parsing, mapping,
  * validation, writing — is shared by every entity.
  */
-export const IMPORT_ENTITIES = ["contacts", "equipment", "parts"] as const;
+export const IMPORT_ENTITIES = ["logs", "purchases", "contacts", "equipment", "parts"] as const;
 export type ImportEntity = (typeof IMPORT_ENTITIES)[number];
 
 export function isImportEntity(value: string | null | undefined): value is ImportEntity {
@@ -54,19 +54,59 @@ function isRealDate(year?: string, month?: string, day?: string): boolean {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
+/**
+ * « Pièce », "part", « pièces détachées » — a purchase whose type we cannot read is filed as
+ * « Autre » rather than refused: the amount and the date are what matter, and the type is one
+ * tap to fix afterwards.
+ */
+export function cellPurchaseKind(
+  value: string | undefined,
+): "gas" | "part" | "consumable" | "service" | "other" {
+  const folded = normaliseHeader(value ?? "");
+  if (folded.startsWith("gaz") || folded.startsWith("gas")) return "gas";
+  if (folded.startsWith("piece") || folded.startsWith("part")) return "part";
+  if (folded.startsWith("consommable") || folded.startsWith("consumable")) return "consumable";
+  if (folded.startsWith("prestation") || folded.startsWith("service")) return "service";
+  return "other";
+}
+
 export type EntityDescriptor = {
   key: ImportEntity;
   /** Table written, used by the Server Action. */
-  table: "contacts" | "equipment" | "parts";
+  table: "contacts" | "equipment" | "parts" | "maintenance_logs" | "purchases";
   fields: FieldDescriptor[];
   /**
    * Recognises a line already on the boat, so re-importing a corrected sheet corrects it
    * instead of duplicating it. Empty string = always a new row.
    */
   naturalKey: (row: ImportRow) => string;
-  /** Columns of the natural key, read from the database to match existing rows. */
-  matchColumn: "name";
+  /** Columns read back from the table to recognise the rows already there. */
+  keyColumns: string;
+  /** The same key, built from a row that is already in the database. */
+  existingKey: (row: Record<string, unknown>) => string;
+  /** Rows that only ever arrive through an import land « à vérifier ». */
+  needsReview?: boolean;
+  /** Table with a trash: a line put there on purpose must not be matched and revived. */
+  softDeleted?: boolean;
+  /** Reads the boat's contacts, to turn a provider's name into a link. */
+  matchesContacts?: boolean;
 };
+
+/** `text(value)`, but folded the way a header is, for comparing two names. */
+function fold(value: unknown): string {
+  return normaliseHeader(String(value ?? ""));
+}
+
+/**
+ * A dated record is the same record when its wording AND its date match. « Vidange » in April
+ * and « Vidange » in October are two interventions, not one corrected twice — so the date is
+ * part of the key. A file that carries its own reference wins over both: that is what an
+ * accounting export gives, and it survives a title being rewritten.
+ */
+function datedKey(reference: string | null, label: string, date: string | null): string {
+  if (reference) return `ref:${fold(reference)}`;
+  return `${fold(label)}@${date ?? ""}`;
+}
 
 const NOTES: FieldDescriptor = {
   key: "notes",
@@ -83,11 +123,136 @@ const CATEGORY: FieldDescriptor = {
 };
 
 export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
+  logs: {
+    key: "logs",
+    table: "maintenance_logs",
+    softDeleted: true,
+    matchesContacts: true,
+    // Imported history is never taken on trust: it lands « à vérifier », where the dates,
+    // the systems and the providers get confirmed one screen at a time.
+    needsReview: true,
+    keyColumns: "id, title, performed_at, external_ref",
+    existingKey: (row) =>
+      datedKey(
+        typeof row.external_ref === "string" ? row.external_ref : null,
+        String(row.title ?? ""),
+        typeof row.performed_at === "string" ? row.performed_at : null,
+      ),
+    naturalKey: (row) => datedKey(cellText(row.reference, 120), row.name ?? "", cellDate(row.date)),
+    fields: [
+      {
+        key: "name",
+        label: "Intervention",
+        required: true,
+        aliases: ["titre", "libelle", "libellé", "designation", "désignation", "travaux", "objet"],
+        sample: "Vidange moteur bâbord",
+      },
+      {
+        key: "date",
+        label: "Faite le",
+        required: true,
+        aliases: ["date", "date intervention", "realisee le", "réalisée le", "jour"],
+        sample: "14/06/2026",
+      },
+      CATEGORY,
+      {
+        key: "provider",
+        label: "Prestataire",
+        aliases: ["intervenant", "entreprise", "chantier", "fournisseur", "par"],
+        help: "Le nom d'un contact du bateau. Inconnu, il est recopié dans les notes.",
+        sample: "Motoriste Yanmar",
+      },
+      {
+        key: "cost",
+        label: "Coût",
+        aliases: ["montant", "prix", "facture", "total", "ttc"],
+        sample: "348,50",
+      },
+      {
+        key: "nextDate",
+        label: "Prochaine échéance",
+        aliases: ["prochaine", "a refaire le", "à refaire le", "echeance", "échéance"],
+        sample: "14/06/2027",
+      },
+      {
+        key: "reference",
+        label: "Référence",
+        aliases: ["ref", "réf", "numero", "numéro", "no facture", "n° facture"],
+        help: "Si votre fichier en porte une, elle sert à reconnaître la ligne d'un import à l'autre.",
+        sample: "F-2026-0142",
+      },
+      { ...NOTES, sample: "Filtres et joints changés, huile 15W40." },
+    ],
+  },
+  purchases: {
+    key: "purchases",
+    table: "purchases",
+    softDeleted: true,
+    matchesContacts: true,
+    needsReview: true,
+    keyColumns: "id, designation, purchased_at, external_ref",
+    existingKey: (row) =>
+      datedKey(
+        typeof row.external_ref === "string" ? row.external_ref : null,
+        String(row.designation ?? ""),
+        typeof row.purchased_at === "string" ? row.purchased_at : null,
+      ),
+    naturalKey: (row) => datedKey(cellText(row.reference, 120), row.name ?? "", cellDate(row.date)),
+    fields: [
+      {
+        key: "name",
+        label: "Achat",
+        required: true,
+        aliases: ["designation", "désignation", "libelle", "libellé", "article", "objet"],
+        sample: "Filtre à huile Volvo",
+      },
+      {
+        key: "date",
+        label: "Acheté le",
+        required: true,
+        aliases: ["date", "date achat", "date facture", "jour"],
+        sample: "02/06/2026",
+      },
+      {
+        key: "amount",
+        label: "Montant",
+        required: true,
+        aliases: ["prix", "cout", "coût", "total", "ttc", "somme"],
+        sample: "42,90",
+      },
+      {
+        key: "kind",
+        label: "Type",
+        aliases: ["nature", "categorie achat", "type achat"],
+        help: "Gaz, Pièce, Consommable, Prestation ou Autre. Vide, l'achat est classé « Autre ».",
+        allowDefault: true,
+        sample: "Pièce",
+      },
+      { key: "quantity", label: "Quantité", aliases: ["qte", "qté", "nombre"], sample: "2" },
+      {
+        key: "supplier",
+        label: "Fournisseur",
+        aliases: ["vendeur", "magasin", "chantier", "entreprise", "chez"],
+        allowDefault: true,
+        sample: "Accastillage Diffusion",
+      },
+      CATEGORY,
+      {
+        key: "reference",
+        label: "Référence",
+        aliases: ["ref", "réf", "numero", "numéro", "no facture", "n° facture"],
+        help: "Si votre fichier en porte une, elle sert à reconnaître la ligne d'un import à l'autre.",
+        sample: "AD-88213",
+      },
+      { ...NOTES, sample: "Deux filtres d'avance au coffre bâbord." },
+    ],
+  },
   contacts: {
     key: "contacts",
     table: "contacts",
-    matchColumn: "name",
-    naturalKey: (row) => normaliseHeader(row.name ?? ""),
+    keyColumns: "id, name",
+    existingKey: (row) => fold(row.name),
+    naturalKey: (row) => fold(row.name),
     fields: [
       {
         key: "name",
@@ -136,8 +301,9 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
   equipment: {
     key: "equipment",
     table: "equipment",
-    matchColumn: "name",
-    naturalKey: (row) => normaliseHeader(row.name ?? ""),
+    keyColumns: "id, name",
+    existingKey: (row) => fold(row.name),
+    naturalKey: (row) => fold(row.name),
     fields: [
       {
         key: "name",
@@ -173,8 +339,9 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
   parts: {
     key: "parts",
     table: "parts",
-    matchColumn: "name",
-    naturalKey: (row) => normaliseHeader(row.name ?? ""),
+    keyColumns: "id, name",
+    existingKey: (row) => fold(row.name),
+    naturalKey: (row) => fold(row.name),
     fields: [
       {
         key: "name",
@@ -236,6 +403,19 @@ export function rejectionReason(entity: ImportEntity, row: ImportRow): string | 
   if (entity === "equipment") {
     if ((row.installedAt ?? "").trim() !== "" && cellDate(row.installedAt) === null) {
       return "import.errors.badDate";
+    }
+  }
+  if (entity === "logs" || entity === "purchases") {
+    // Undated, a line cannot take its place in the boat's history — that is the whole point.
+    if ((row.date ?? "").trim() === "") return "import.errors.noDate";
+    if (cellDate(row.date) === null) return "import.errors.badDate";
+    if ((row.nextDate ?? "").trim() !== "" && cellDate(row.nextDate) === null) {
+      return "import.errors.badDate";
+    }
+    const money = entity === "logs" ? row.cost : row.amount;
+    if (entity === "purchases" && (money ?? "").trim() === "") return "import.errors.noAmount";
+    if ((money ?? "").trim() !== "" && cellNumber(money) === null) {
+      return "import.errors.badAmount";
     }
   }
   return null;

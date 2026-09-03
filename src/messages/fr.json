@@ -53,7 +53,7 @@
   },
   "nav": {
     "dashboard": "Tableau de bord",
-    "logs": "Journal",
+    "logs": "Interventions",
     "checklist": "Checklist",
     "supplies": "Dépenses",
     "haulOuts": "Sorties de l'eau",
@@ -69,7 +69,7 @@
     "installApp": "Installer l'application",
     "short": {
       "dashboard": "Bord",
-      "logs": "Journal",
+      "logs": "Interventions",
       "checklist": "Checklist",
       "boat": "Bateau",
       "supplies": "Dépenses",
@@ -157,7 +157,7 @@
       "toast": "Afficher une notification",
       "toastMessage": "Intervention enregistrée",
       "emptyTitle": "Aucune intervention",
-      "emptyDescription": "Ajoutez votre première intervention pour démarrer le journal.",
+      "emptyDescription": "Ajoutez votre première intervention pour démarrer.",
       "undoToast": "Afficher un toast d'annulation",
       "undoMessage": "Intervention mise à la corbeille",
       "undoDescription": "Récupérable pendant 30 jours.",
@@ -321,7 +321,7 @@
     "you": "(vous)",
     "roleLabel": "Rôle",
     "roleUpdated": "Rôle mis à jour.",
-    "removed": "Membre retiré. Ses interventions restent dans le journal.",
+    "removed": "Membre retiré. Ses interventions sont conservées.",
     "remove": "Retirer",
     "validUntil": "Accès jusqu'au {date}",
     "list": {
@@ -342,7 +342,7 @@
     },
     "removeDialog": {
       "title": "Retirer {name} ?",
-      "description": "La personne perd l'accès au bateau immédiatement. Les interventions qu'elle a enregistrées restent dans le journal."
+      "description": "La personne perd l'accès au bateau immédiatement. Les interventions qu'elle a enregistrées sont conservées."
     },
     "invite": {
       "button": "Inviter",
@@ -352,7 +352,7 @@
       "submit": "Envoyer l'invitation",
       "sent": "Invitation envoyée à {email}.",
       "proTitle": "Ce que verra ce professionnel",
-      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions resteront dans le journal.",
+      "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions seront conservées.",
       "duration": "Durée d'accès",
       "durations": {
         "7": "7 jours",
@@ -577,9 +577,9 @@
     "haulOutLabel": "Sortie de l'eau du {date}"
   },
   "logs": {
-    "title": "Journal",
+    "title": "Interventions",
     "emptyTitle": "Aucune intervention",
-    "emptyDescription": "Le journal garde la trace de tout ce qui est fait sur le bateau : vidanges, réparations, contrôles.",
+    "emptyDescription": "Les interventions gardent la trace de tout ce qui est fait sur le bateau : vidanges, réparations, contrôles.",
     "emptyFiltered": "Aucun résultat pour « {query} »",
     "clearFilters": "Effacer les filtres",
     "new": "Nouvelle intervention",
@@ -1410,7 +1410,7 @@
       },
       "supplierNameHelp": "Le lieu ou l'enseigne, quand le fournisseur n'est pas dans l'annuaire.",
       "noLog": "Aucune",
-      "logHelp": "Rattachez cet achat à une intervention du journal.",
+      "logHelp": "Rattachez cet achat à une intervention.",
       "suggestions": "Déjà saisi"
     },
     "gas": {
@@ -1486,7 +1486,7 @@
     "trash": {
       "action": "Mettre à la corbeille",
       "title": "Mettre cette sortie de l'eau à la corbeille ?",
-      "description": "Les interventions rattachées restent dans le journal. La sortie reste 30 jours dans la corbeille.",
+      "description": "Les interventions rattachées sont conservées. La sortie reste 30 jours dans la corbeille.",
       "done": "Sortie de l'eau mise à la corbeille",
       "restored": "Sortie de l'eau restaurée"
     }
@@ -1514,7 +1514,7 @@
     "backwards": "En recul de {hours} par rapport au relevé précédent.",
     "submit": "Valider {count, plural, one {# ligne} other {les # lignes}}",
     "submitted": "{logs, plural, one {# ligne vérifiée} other {# lignes vérifiées}} · {readings, plural, one {# relevé créé} other {# relevés créés}}",
-    "backToLogs": "Voir le journal",
+    "backToLogs": "Voir les interventions",
     "onlyOne": "Vérification de cette ligne seulement.",
     "allRows": "Vérifier toutes les lignes"
   },
@@ -1581,7 +1581,9 @@
     "back": {
       "contacts": "Voir les contacts",
       "equipment": "Voir les équipements",
-      "parts": "Voir le stock"
+      "parts": "Voir le stock",
+      "logs": "Retour aux interventions",
+      "purchases": "Retour aux achats"
     },
     "errors": {
       "empty": "Le tableau est vide.",
@@ -1600,7 +1602,10 @@
       "noSheet": "Ce classeur ne contient aucune feuille lisible.",
       "tooLarge": "Ce classeur contient trop de cellules. Ne gardez que la feuille et les colonnes utiles, puis réessayez.",
       "unreadable": "Ce fichier n'a pas pu être lu. Réessayez, ou copiez les cellules et collez-les ci-dessous.",
-      "noTable": "Aucun tableau n'a été trouvé dans ce fichier : la première ligne doit contenir les en-têtes de colonnes."
+      "noTable": "Aucun tableau n'a été trouvé dans ce fichier : la première ligne doit contenir les en-têtes de colonnes.",
+      "noDate": "Date manquante",
+      "noAmount": "Montant manquant",
+      "badAmount": "Montant illisible (attendu 42,90)"
     },
     "entities": {
       "contacts": {
@@ -1617,6 +1622,16 @@
         "title": "Importer des pièces en stock",
         "help": "Une ligne par pièce. Quantité et seuil d'alerte acceptent la virgule ; une pièce déjà présente sous la même désignation est mise à jour.",
         "placeholder": "Désignation\tRéférence\tQuantité\tSeuil\tEmplacement\nFiltre à huile\t119305-35170\t2\t2\tCoffre moteur"
+      },
+      "logs": {
+        "title": "Importer des interventions",
+        "help": "Une ligne par intervention faite sur le bateau. Le libellé et la date sont obligatoires. La colonne « Prestataire » est rapprochée de vos contacts par leur nom ; un nom inconnu est recopié dans les notes plutôt que perdu. Tout ce qui entre par l'import arrive « à vérifier ».",
+        "placeholder": "Intervention\tFaite le\tCatégorie\tPrestataire\tCoût\nVidange moteur bâbord\t14/06/2026\tMoteurs\tMotoriste Yanmar\t348,50"
+      },
+      "purchases": {
+        "title": "Importer des achats",
+        "help": "Une ligne par achat ou par facture. Le libellé, la date et le montant sont obligatoires. Un relevé bancaire ou un export comptable s'importe tel quel ; la colonne « Référence », si votre fichier en a une, évite les doublons d'un import à l'autre.",
+        "placeholder": "Achat\tAcheté le\tMontant\tType\tFournisseur\nFiltre à huile Volvo\t02/06/2026\t42,90\tPièce\tAccastillage Diffusion"
       }
     }
   },

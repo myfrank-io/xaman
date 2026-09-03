@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ImportWizard } from "@/components/import/ImportWizard";
 import { descriptorOf, isImportEntity } from "@/lib/import/entities";
-import { normaliseHeader } from "@/lib/import/mapping";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath, boatTabPath, suppliesPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
@@ -29,14 +28,17 @@ export default async function ImportPage({
 
   // What is already on the boat, so the screen can say « 3 reconnues » before writing anything.
   const descriptor = descriptorOf(entity);
-  const { data: existing } = await supabase
-    .from(descriptor.table)
-    .select("name")
-    .eq("boat_id", boatId);
-  const existingKeys = (existing ?? []).map((row) => normaliseHeader(row.name));
+  let query = supabase.from(descriptor.table).select(descriptor.keyColumns).eq("boat_id", boatId);
+  if (descriptor.softDeleted) query = query.is("deleted_at", null);
+  const { data: existing } = (await query) as unknown as {
+    data: Record<string, unknown>[] | null;
+  };
+  const existingKeys = (existing ?? []).map((row) => descriptor.existingKey(row));
 
   const t = await getTranslations("import");
   const back = {
+    logs: { href: boatPath(boatId, "logs"), label: t("back.logs") },
+    purchases: { href: suppliesPath(boatId, "purchases"), label: t("back.purchases") },
     contacts: { href: boatPath(boatId, "contacts"), label: t("back.contacts") },
     equipment: { href: boatTabPath(boatId, "equipment"), label: t("back.equipment") },
     parts: { href: suppliesPath(boatId, "stock"), label: t("back.parts") },
