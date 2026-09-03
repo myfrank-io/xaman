@@ -1143,10 +1143,14 @@
     "subtitle": "Les pièces au seuil ou en dessous, à racheter avant la prochaine sortie.",
     "count": "{count, plural, one {# pièce à racheter} other {# pièces à racheter}}",
     "supplier": "chez {name}",
-    "check": "Marquer rachetée : {name}",
-    "done": "« {name} » rachetée et remise à bord",
-    "empty": "Tout est racheté.",
-    "seeStock": "Voir le stock"
+    "empty": "Rien à racheter.",
+    "emptyHint": "Notez ici ce qu'il faut racheter : la pièce entre au stock (0 en réserve) et reste dans cette liste jusqu'à ce que vous en ajoutiez.",
+    "seeStock": "Voir le stock",
+    "add": "Noter une pièce à racheter",
+    "addTitle": "Noter une pièce à racheter",
+    "addHelp": "La pièce entre au stock avec 0 en réserve et un seuil de 1 : elle apparaît aussitôt ici et dans le stock. Complétez la fiche (seuil, emplacement, fournisseur) depuis Bateau › Équipements.",
+    "nameLabel": "Désignation",
+    "added": "« {name} » ajoutée à la liste"
   },
   "categories": {
     "title": "Catégories",

@@ -590,3 +590,41 @@ que pour une intervention (`LogActions`). `maintenance_logs.equipment_id` étant
 `tests/unit/rls.test.ts` couvre l'équipement supprimé comme les pièces : qui peut le mettre à la
 corbeille et le restaurer, sa lisibilité par tout membre, la purge à 30 jours, et l'historique
 préservé après purge.
+
+## 2026-09-03 — D63 : checklist « À racheter » — agir sur place, la note EST la pièce
+
+**Question.** Xav, sur la première version : « bien mais pas dingue. Je voudrais pouvoir cliquer
+depuis Checklist pour rajouter du stock ou me noter de racheter — là je suis juste redirigé vers
+Équipements de la page Bateau. Réfléchis bien pour qu'il n'y ait pas de double saisie. »
+
+**Contexte.** La checklist « À racheter » (pièces au seuil ou en dessous : `isLowStock`,
+`min_quantity > 0` et `quantity <= min_quantity`) est une **vue du stock**, pas une table :
+elle se remplit et se vide seule selon les mêmes lignes `parts` qu'écrivent la fiche, les +/− et
+l'import. La première version cochait « racheté » (quantité à `min + 1`) et la ligne renvoyait
+vers Bateau au tap. Le geste manquait de deux choses : ajuster la vraie quantité, et noter une
+pièce à racheter sans quitter la checklist. *(Cette décision remplace la première note de la
+fonctionnalité, dont le numéro D61 a été repris par une autre branche fusionnée en parallèle ;
+elle est désormais la référence unique. Aucune migration : tout reste dérivé du stock.)*
+
+**Décision.**
+
+1. **Action sur la ligne, pas de navigation.** Chaque ligne « À racheter » porte des **+/−** qui
+   ajoutent ou retirent du stock sur place (le RPC atomique `adjust_part_quantity`, D10) ; une
+   pièce qui repasse au-dessus de son seuil quitte la liste d'elle-même. Le corps de la ligne ne
+   navigue plus — il ne faisait que renvoyer vers Bateau, ce qui était le reproche. La fiche
+   complète (seuil, emplacement, fournisseur) reste éditable depuis le stock sous Bateau.
+
+2. **« Noter une pièce à racheter » = créer la pièce.** Un bouton ouvre un dialogue à un seul
+   champ (la désignation) ; la pièce entre au stock avec **0 en réserve et un seuil de 1**, donc
+   elle apparaît aussitôt dans « À racheter » **et** dans le stock. La note *est* la ligne de
+   stock : il n'y a pas de seconde liste de courses à tenir (JAMAIS de double saisie). Le reste
+   de la fiche se complète plus tard depuis Bateau. Le bouton est présent même quand rien n'est
+   sous le seuil, pour que « se noter de racheter » soit toujours à portée depuis la checklist,
+   sans redirection.
+
+3. **Réservé au rôle `write`** (owner/editor), comme les +/− du stock (RPC gardé par
+   `can_write_boat`) ; un lecteur voit la liste et « Voir le stock ».
+
+La case à cocher « racheté » de la première version et son action serveur `restockPart` sont
+retirées : les +/− couvrent le même besoin plus précisément (on saisit la quantité réellement
+rachetée), et une pièce qui franchit son seuil disparaît de la liste comme avant.
