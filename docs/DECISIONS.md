@@ -504,3 +504,23 @@ commise et annulée plus haut.
 
 `tests/e2e/contact-picker.spec.ts` vérifie les deux faces, et l'absence compte plus que la
 présence : le bouton ne doit **pas** exister quand le navigateur n'a pas de carnet à ouvrir.
+
+## 2026-09-03 — D60 : une fonction indisponible se dit, elle ne se tait pas
+
+**Question.** « Je ne vois pas le sélecteur de contacts » — trois fois, alors qu'il était déployé
+et que le code faisait exactement ce qui était décidé : disparaître là où le navigateur n'expose
+pas de carnet d'adresses (D57), ce qui est le cas de la plupart des iPhone.
+
+**Décision.** Le raisonnement « un bouton qui ne peut pas fonctionner coûte un geste pour rien »
+était juste, la conclusion « donc on ne montre rien » était fausse. **Vu de l'extérieur, « ton
+navigateur ne le propose pas » et « ce n'est pas encore déployé » sont indiscernables** — d'où
+la question posée trois fois, et à raison.
+
+Là où le sélecteur est impossible, une légende prend sa place : elle nomme la raison, le réglage
+qui l'active sur iPhone (`Réglages › Safari › Avancé › Feature Flags › Contact Picker API`) et
+le chemin qui marche de toute façon (une fiche `.vcf`). Une légende ne se tape pas, donc
+l'objection au bouton mort ne s'y applique pas.
+
+Règle générale qui en sort : **le silence n'est pas une réponse acceptable pour une capacité
+absente.** Si l'application ne peut pas faire quelque chose sur cet appareil, elle le dit à
+l'endroit où on la cherche.
