@@ -1603,7 +1603,7 @@
     "source": {
       "title": "Votre tableau",
       "file": "Choisir un fichier (.csv, .tsv, .xlsx, .vcf)",
-      "formats": "Tableur Excel (.xlsx, .xlsm), fichier .csv ou .tsv, fiche de contact .vcf exportée d'un téléphone.",
+      "formats": "Tableur Excel (.xlsx, .xlsm), fichier .csv ou .tsv, fiche de contact .vcf. Sur Mac ou PC : glissez une fiche depuis Contacts, ou sélectionnez-en plusieurs et exportez la vCard.",
       "phone": "Choisir dans mes contacts",
       "phoneOrigin": "contacts du téléphone",
       "phoneFailed": "Impossible d'ouvrir le carnet d'adresses.",

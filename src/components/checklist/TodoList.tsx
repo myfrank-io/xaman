@@ -95,7 +95,10 @@ export function TodoList({
           ))}
         </ToggleGroup>
         {counts.never > 0 ? (
-          <p className="text-caption text-ink-3">{t("neverHint", { count: counts.never })}</p>
+          // The « Jamais fait » chip already prints this count 8 px above it.
+          <p className="hidden text-caption text-ink-3 sm:block">
+            {t("neverHint", { count: counts.never })}
+          </p>
         ) : null}
       </div>
       {visible.length === 0 ? (

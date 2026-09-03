@@ -371,8 +371,7 @@ montre les données et leur explication.* En pratique :
 3. **Une ligne de liste tient sur deux lignes**, pas trois : la valeur rejoint le titre, le badge
    rejoint les métadonnées. Rien n'est retiré.
 4. **Un bloc de filtres ne prend pas trois lignes** : une seule ligne qui défile sur téléphone.
-5. **« Importer » n'est pas une action de téléphone** : `hidden sm:inline-flex`. Coller un
-   tableur se fait à un bureau ; le « + » reste entier.
+5. ~~**« Importer » n'est pas une action de téléphone**~~ — **annulé, voir ci-dessous.**
 6. **Une barre d'outils qui précède les données peut les suivre** : `order-last sm:order-none`.
 7. **Le rythme vertical est celui de l'écran** : `gap-6` → `gap-4 sm:gap-6`, `pt-6` → `pt-3 sm:pt-6`.
 
@@ -384,6 +383,20 @@ rétréci.
 l'orientation) ; et rendre le bouton d'action primaire au `PrimaryActionSheet` sur les
 interventions — cela révise D35 et touche l'iPad portrait, donc cela se demande, cela ne se
 décide pas ici.
+
+**Annulé après signalement** : cacher « Importer » sur téléphone. « Ducoup sur mobile on a perdu
+le bouton pour importer un intervenant. » Deux raisons, et j'avais tort sur les deux :
+
+- **Il n'existe aucune autre route.** Le diagnostic affirmait que l'import restait joignable
+  depuis la feuille « Plus » ou le menu compte. Vérifié dans `nav.ts` : il n'y a **aucune** entrée
+  d'import dans la navigation. Cacher le bouton ne le déplaçait pas, il supprimait l'import de
+  toute une plateforme.
+- **Sur les intervenants, l'écran d'import EST le chemin téléphone.** « Choisir dans mes
+  contacts » (D52) vit derrière ce bouton. Le cacher sur téléphone cachait le carnet d'adresses —
+  j'ai construit le geste le plus natif de l'app puis masqué sa seule porte.
+
+Un gain de densité ne vaut jamais la suppression d'une fonction sur une plateforme entière. La
+règle 5 tombe ; les six autres tiennent.
 
 ## 2026-09-03 — D55 : une instruction d'installation par navigateur
 
@@ -407,3 +420,40 @@ chaînes est exactement ce qui a produit le défaut.
 d'installation. « C'est toujours le même texte » était indécidable sans lui : ni lui ni moi ne
 pouvions distinguer un déploiement pas encore arrivé d'un correctif qui ne marche pas — et nous
 nous sommes trompés chacun une fois dans la journée.
+
+## 2026-09-03 — D56 : pas de conteneur à défilement horizontal dans l'en-tête sombre
+
+**Question.** Les puces moteur mesuraient 217-239 px chacune dans une boîte de 358 px : trois
+moteurs prenaient trois lignes de 44 px, soit 148 px de l'en-tête d'un écran dont le premier
+viewport était déjà entièrement du chrome. La correction évidente était une ligne unique qui
+défile.
+
+**Décision.** Non. Un `overflow-x: auto` posé là fait sur-déclarer `documentElement.scrollWidth`
+de 64 px — un débordement que le `overflow-x: clip` de la racine masque à l'œil mais que l'audit
+signale, à juste titre : une mise en page dont on ne peut pas dire si elle déborde est une mise en
+page à éviter. Bisecté élément par élément avant de conclure ; ni la marge négative ni le
+scroll-snap n'en étaient la cause, le conteneur lui-même l'était.
+
+Ce qui est fait à la place est plus simple **et** meilleur : la date du relevé quitte la puce sur
+téléphone. C'est elle qui faisait la largeur, elle est sur la fiche du moteur à un tap, et la
+couleur ambre continue de dire « ce relevé est vieux » sans elle. Trois moteurs tiennent alors
+sans rien qui défile.
+
+**Note de méthode.** J'ai d'abord « prouvé » que la page défilait en appelant `window.scrollTo`
+et en lisant `scrollX`. C'est faux : `overflow: hidden` et `clip` empêchent l'utilisateur de
+défiler, pas un défilement programmatique. La bonne preuve est la mesure des boîtes.
+
+## 2026-09-03 — D57 : « Choisir dans mes contacts » n'existera pas sur ordinateur
+
+**Question.** « Il peut aussi être sur la version PC, on a les contacts là aussi. »
+
+**Décision.** Impossible, et il vaut mieux le dire que le simuler. La Contact Picker API n'est
+exposée que par Chrome sur **Android** (et par Safari iOS derrière un drapeau) : ni Chrome
+Windows, ni Chrome macOS, ni Safari macOS, ni Firefox ne l'implémentent — il n'y a pas
+d'intégration au carnet d'adresses du système sur ordinateur. Le bouton est déjà absent par
+détection de fonctionnalité, ce qui reste le bon comportement.
+
+Ce qui marche réellement sur ordinateur, et que le texte d'aide nomme maintenant : le `.vcf`.
+Sur Mac comme sur PC on glisse une fiche depuis Contacts directement dans le sélecteur de
+fichier, ou on en sélectionne plusieurs et on exporte la vCard — l'import lit déjà les fiches
+multiples.

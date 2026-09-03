@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { PlusIcon, UploadIcon } from "lucide-react";
 
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactsList } from "@/components/contacts/ContactsList";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
+import { Button } from "@/components/ui/button";
 
 import { DevShell } from "../DevShell";
 import { ContactPickerDemo } from "./ContactPickerDemo";
@@ -59,10 +61,33 @@ const CONTACTS = [
 export default async function DevContactsPage() {
   if (!devUiEnabled()) notFound();
   const t = await getTranslations("contacts");
+  const ti = await getTranslations("import");
   return (
     <DevShell>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-4 sm:p-6">
-        <PageHeader title={t("title")} subtitle={t("count", { count: CONTACTS.length })} />
+        {/* The same actions the real page carries. The mock used to show the header bare, so
+            the touch audit never saw the two buttons that have to share a 358 px row — which
+            is how « on a perdu le bouton pour importer un intervenant » got past it. */}
+        <PageHeader
+          title={t("title")}
+          subtitle={t("count", { count: CONTACTS.length })}
+          actions={
+            <>
+              <Button asChild variant="outline">
+                <a href={`/boats/${DEV_BOAT_ID}/import?entity=contacts`}>
+                  <UploadIcon />
+                  {ti("action")}
+                </a>
+              </Button>
+              <Button asChild>
+                <a href={`/boats/${DEV_BOAT_ID}/contacts/new`}>
+                  <PlusIcon />
+                  {t("new")}
+                </a>
+              </Button>
+            </>
+          }
+        />
         <ContactsList boatId={DEV_BOAT_ID} contacts={CONTACTS} canWrite />
         <SectionCard title={t("picker.provider")} bare>
           <div className="rounded-xl border border-border bg-surface p-5">

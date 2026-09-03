@@ -102,7 +102,10 @@ export function StatCard({
             dark ? "text-on-navy-3" : "text-ink-3",
           )}
         >
-          <span className="line-clamp-2 min-w-0">{hint}</span>
+          {/* The caption explains a label that already reads « EN RETARD ». Two lines per tile,
+              four tiles, 62 px measured — prose, so it waits for a screen with room. The
+              chevron is not prose and stays: it is what says the tile is a way in. */}
+          <span className="line-clamp-2 hidden min-w-0 sm:block">{hint}</span>
           {interactive ? <ChevronRightIcon className="mt-0.5 size-4 shrink-0" aria-hidden /> : null}
         </div>
       ) : interactive ? (
@@ -117,8 +120,8 @@ export function StatCard({
   const shell = cn(
     "flex w-full flex-col justify-between rounded-xl border p-3.5 text-left",
     dark
-      ? "min-h-26 border-on-navy-border bg-on-navy-surface text-on-navy"
-      : "min-h-26 border-border bg-surface text-card-foreground shadow-sm",
+      ? "min-h-20 border-on-navy-border bg-on-navy-surface text-on-navy sm:min-h-26"
+      : "min-h-20 border-border bg-surface text-card-foreground shadow-sm sm:min-h-26",
     interactive &&
       "pressable focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
     className,

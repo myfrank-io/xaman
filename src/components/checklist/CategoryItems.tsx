@@ -309,14 +309,16 @@ export function CategoryItems({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2">
+        {/* A third way back on a phone: the TopBar shows « ‹ Retour » and the trail shows
+            « Checklist › ». 52 px on the screen every checklist tap lands on. */}
+        <Button asChild variant="ghost" size="sm" className="-ml-2 hidden sm:inline-flex">
           <Link href={checklistPath(boatId) as Route}>
             <ChevronLeftIcon />
             {t("title")}
           </Link>
         </Button>
         <PageHeader
-          className="mt-2"
+          className="sm:mt-2"
           title={
             <span className="flex items-center gap-3">
               <CategoryIcon color={category.color} icon={category.icon} />

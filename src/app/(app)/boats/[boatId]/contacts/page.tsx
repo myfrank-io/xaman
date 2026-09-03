@@ -39,9 +39,10 @@ export default async function ContactsPage({ params }: { params: Promise<{ boatI
             <>
               {/* Adding one by hand was only offered in the empty state: as soon as the boat
                   held a single provider the button vanished and « Importer » was the only way
-                  left. Importing a spreadsheet is the rare, desk-bound gesture — the primary
-                  action is the form, and it is hidden nowhere. */}
-              <Button asChild variant="outline" className="hidden sm:inline-flex">
+                  left. The form is the primary action now — and « Importer » stays on the phone
+                  too, because behind it is « Choisir dans mes contacts », which is the most
+                  phone-native gesture in the app. Hiding it here hid the address book. */}
+              <Button asChild variant="outline">
                 <Link href={importPath(boatId, "contacts") as Route}>
                   <UploadIcon />
                   {ti("action")}
