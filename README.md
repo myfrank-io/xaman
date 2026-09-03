@@ -54,4 +54,4 @@ La CI GitHub Actions (`.github/workflows/ci.yml`) rejoue lint, prettier, typeche
 Xaman est réservé aux membres d'un bateau. Pour rejoindre le carnet d'un bateau existant, demandez une invitation à son propriétaire (« Membres → Inviter ») ; pour ouvrir un nouveau bateau, contactez l'administrateur de la plateforme (Joseph), qui crée le bateau à partir de son modèle et nomme son premier propriétaire.
 
 ## Personnes
-Joseph (produit, admin plateforme) · Xavier (propriétaire, iPad) · Emmanuel Lesaffre (associé, Android).
+Joseph (produit, admin plateforme) · Xavier · Emmanuel
