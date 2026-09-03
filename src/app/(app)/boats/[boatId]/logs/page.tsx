@@ -69,7 +69,7 @@ export default async function LogsPage({
   const query = sanitize(filters.q);
 
   const columns =
-    "id, boat_id, title, category_id, category_name, category_color, status, performed_at, cost, contact_name, needs_review, engine_hours, updated_at";
+    "id, boat_id, title, category_id, category_name, category_color, status, performed_at, cost, contact_name, needs_review, attachments_count, engine_hours, updated_at";
 
   let rowsQuery = supabase
     .from("maintenance_logs_view")
@@ -165,6 +165,7 @@ export default async function LogsPage({
         categories={categories ?? []}
         reviewCount={reviewCount ?? 0}
         contactName={contact?.name ?? null}
+        canContribute={canContribute}
       />
 
       {list.length === 0 ? (

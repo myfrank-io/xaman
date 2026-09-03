@@ -50,6 +50,7 @@ export function dbErrorKey(error: PostgrestError | { code?: string; message: str
       "template_not_found",
       "log_not_found",
       "part_not_found",
+      "attachment_owner_not_found",
     ];
     const hit = known.find((k) => message.includes(k));
     if (hit) return `errors.${hit}`;

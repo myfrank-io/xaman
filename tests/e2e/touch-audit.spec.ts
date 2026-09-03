@@ -19,6 +19,7 @@ const PAGES = [
   "/dev/ui/supplies",
   "/dev/ui/haul-outs",
   "/dev/ui/logs",
+  "/dev/ui/attachments",
   "/dev/ui/review",
   "/dev/ui/import",
   "/dev/ui/install",

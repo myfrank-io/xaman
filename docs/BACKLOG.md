@@ -90,7 +90,7 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 ## L8 — Confort
 
-- [ ] **E10-1 (S, 2)** Pièces jointes réduites : photo(s) sur intervention (caméra iPad) + facture sur achat ; galerie équipement et photo du bateau en V1.1.
+- [x] **E10-1 (S, 2)** Pièces jointes réduites : photo(s) sur intervention (caméra iPad) + facture sur achat ; galerie équipement et photo du bateau en V1.1. **Fait** (`0011` : `caption`, `deleted_at`, chemin de stockage lié au bateau par contrainte, garde d'intégrité polymorphe, purge en cascade, `attachments_count` sans corbeille ; `AttachmentPicker` — caméra / photothèque / Fichiers, réduction JPEG 2000 px sur l'iPad, progression et échec par fichier, légende, corbeille avec Annuler ; galerie sur la fiche intervention, trombone dans le journal, « Importer des documents » en lot ; page de recette `/dev/ui/attachments`).
 - [x] **E10-4 (S, 1)** « créé par / modifié par / le » en pied des détails. Fiches moteur, équipement, intervenant (`AuditFooter`) ; la fiche intervention l'obtient avec E3-4.
 - [x] **E5-4 (S, 1)** Stock déclaratif (D10) : liste plate (nom, quantité, seuil, emplacement), +/− atomiques, filtre « sous le seuil », « vérifié il y a N mois ». **Fait** (`0010` : `checked_at` + `adjust_part_quantity`, onglet Stock, fiche création / édition, suppression après confirmation, tests unitaires et RLS).
 - [ ] **E8-1 (M, 1)** Compléter `seed/xaman-boat.json` (e-mails réels, modèles de moteurs, contacts). La liste des 80+ points **ne bloque plus** : Xav trie dans l'assistant (E4-9).

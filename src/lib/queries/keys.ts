@@ -12,6 +12,8 @@ export const boatKeys = {
     ["boat", boatId, "logs", filters] as const,
   log: (boatId: string, logId: string) => ["boat", boatId, "logs", "detail", logId] as const,
   trash: (boatId: string) => ["boat", boatId, "trash"] as const,
+  attachments: (boatId: string, ownerType: string, ownerId: string) =>
+    ["boat", boatId, "attachments", ownerType, ownerId] as const,
   purchases: (boatId: string, filters: Record<string, unknown> = {}) =>
     ["boat", boatId, "purchases", filters] as const,
   parts: (boatId: string) => ["boat", boatId, "parts"] as const,

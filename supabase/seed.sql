@@ -97,8 +97,11 @@ insert into public.purchases (id, boat_id, purchased_at, kind, designation, amou
 values ('00000000-0000-0000-0000-000000007001', '00000000-0000-0000-0000-00000000b001', '2026-02-01', 'gas', 'Bouteille gaz', 35, '00000000-0000-0000-0000-00000000ca01', 'test-gas', '00000000-0000-0000-0000-000000000011')
 on conflict (id) do nothing;
 
-insert into public.attachments (id, boat_id, entity_type, entity_id, storage_path, file_name, mime_type, size_bytes, created_by)
-values ('00000000-0000-0000-0000-000000008001', '00000000-0000-0000-0000-00000000b001', 'maintenance_log', '00000000-0000-0000-0000-000000002001', 'boats/00000000-0000-0000-0000-00000000b001/maintenance_log/00000000-0000-0000-0000-000000002001/test.jpg', 'test.jpg', 'image/jpeg', 1234, '00000000-0000-0000-0000-000000000011')
+-- attachments: one photo added by the owner, one invoice added by the pro on their own line (E10-1)
+insert into public.attachments (id, boat_id, entity_type, entity_id, storage_path, file_name, mime_type, size_bytes, caption, created_by)
+values
+  ('00000000-0000-0000-0000-000000008001', '00000000-0000-0000-0000-00000000b001', 'maintenance_log', '00000000-0000-0000-0000-000000002001', 'boats/00000000-0000-0000-0000-00000000b001/maintenance_log/00000000-0000-0000-0000-000000002001/test.jpg', 'test.jpg', 'image/jpeg', 1234, 'Photo owner', '00000000-0000-0000-0000-000000000011'),
+  ('00000000-0000-0000-0000-000000008002', '00000000-0000-0000-0000-00000000b001', 'maintenance_log', '00000000-0000-0000-0000-000000002002', 'boats/00000000-0000-0000-0000-00000000b001/maintenance_log/00000000-0000-0000-0000-000000002002/facture.pdf', 'facture.pdf', 'application/pdf', 4321, 'Facture pro', '00000000-0000-0000-0000-000000000013')
 on conflict (id) do nothing;
 
 -- Boat 2: owned by the outsider (tenant isolation) --------------------------------------------

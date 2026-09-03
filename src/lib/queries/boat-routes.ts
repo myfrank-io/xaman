@@ -59,6 +59,14 @@ export function logsPath(
   return withQuery(boatPath(boatId, "logs"), query);
 }
 
+/**
+ * « Importer des documents » (E10-1): a batch of invoices and photos dropped at once, each
+ * attached to an intervention or turned into one.
+ */
+export function importDocumentsPath(boatId: string): string {
+  return `${boatPath(boatId, "logs")}/documents`;
+}
+
 /** « Reprise du carnet » (E3-7): the guided review of the imported rows. */
 export function logsReviewPath(
   boatId: string,

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PurchaseForm } from "@/components/supplies/PurchaseForm";
 import { TrashPurchaseButton } from "@/components/supplies/TrashPurchaseButton";
 import { can, type BoatRole } from "@/lib/permissions";
+import { listAttachments } from "@/lib/queries/attachments";
 import { purchaseFormContext } from "@/lib/queries/purchase-form";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,7 @@ export default async function EditPurchasePage({
 }) {
   const { boatId, purchaseId } = await params;
   const supabase = await createClient();
-  const [{ data: role }, { data: purchase }, context] = await Promise.all([
+  const [{ data: role }, { data: purchase }, context, attachments] = await Promise.all([
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase
       .from("purchases")
@@ -27,6 +28,8 @@ export default async function EditPurchasePage({
       .is("deleted_at", null)
       .maybeSingle(),
     purchaseFormContext(supabase, boatId),
+    // The invoice and the photos already stored on this purchase (E10-1).
+    listAttachments(supabase, boatId, { type: "purchase", id: purchaseId }).catch(() => []),
   ]);
   if (!role || !can(role as BoatRole, "write") || !purchase) notFound();
 
@@ -53,6 +56,7 @@ export default async function EditPurchasePage({
         contacts={context.contacts}
         logs={context.logs}
         suggestions={context.suggestions}
+        attachments={attachments}
       />
       <div className="flex justify-end">
         <TrashPurchaseButton boatId={boatId} purchaseId={purchase.id} />

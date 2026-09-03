@@ -242,7 +242,8 @@
     "engine_in_use": "Ce moteur a des relevés ou des points de checklist : désactivez-le plutôt.",
     "date_in_future": "Cette date est dans le futur.",
     "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus.",
-    "part_not_found": "Cette pièce n'existe plus."
+    "part_not_found": "Cette pièce n'existe plus.",
+    "attachment_owner_not_found": "La ligne à laquelle ce document devait être rattaché n'existe plus."
   },
   "members": {
     "title": "Membres",
@@ -576,7 +577,8 @@
       },
       "saved": "Intervention enregistrée",
       "savedWithReading": "Intervention enregistrée · Relevé {engine} {hours}",
-      "view": "Voir"
+      "view": "Voir",
+      "attachments": "Photos et documents"
     },
     "detail": {
       "fields": {
@@ -625,7 +627,8 @@
         "undo": "Annuler",
         "restored": "Intervention restaurée"
       }
-    }
+    },
+    "attachments": "{count, plural, one {# document joint} other {# documents joints}}"
   },
   "checklist": {
     "title": "Checklist",
@@ -1340,7 +1343,8 @@
       "supplierNameHelp": "Le lieu ou l'enseigne, quand le fournisseur n'est pas dans l'annuaire.",
       "noLog": "Aucune",
       "logHelp": "Rattachez cet achat à une intervention du journal.",
-      "suggestions": "Déjà saisi"
+      "suggestions": "Déjà saisi",
+      "attachments": "Facture et documents"
     },
     "gas": {
       "title": "Gaz",
@@ -1509,6 +1513,64 @@
         "help": "Une ligne par pièce. Quantité et seuil d'alerte acceptent la virgule ; une pièce déjà présente sous la même désignation est mise à jour.",
         "placeholder": "Désignation\tRéférence\tQuantité\tSeuil\tEmplacement\nFiltre à huile\t119305-35170\t2\t2\tCoffre moteur"
       }
+    }
+  },
+  "attachments": {
+    "title": "Photos et documents",
+    "description": "Factures, devis, photos du travail réalisé. Ils restent attachés au bateau.",
+    "camera": "Prendre une photo",
+    "library": "Photothèque",
+    "files": "Fichiers",
+    "hint": "Photos et PDF, 10 Mo par fichier. Les photos sont réduites sur l'iPad avant l'envoi.",
+    "caption": "Légende",
+    "pdf": "PDF",
+    "open": "Ouvrir {name}",
+    "unavailable": "Aperçu indisponible",
+    "by": "Ajouté par {name} le {date}",
+    "unknownAuthor": "un membre",
+    "removed": "Document mis à la corbeille",
+    "empty": "Aucun document pour l'instant.",
+    "count": "{count, plural, =0 {aucun document} one {# document} other {# documents}}",
+    "marker": "{count, plural, one {# document joint} other {# documents joints}}",
+    "deferredBusy": "Les documents finissent de s'envoyer. Enregistrez quand ils sont prêts.",
+    "commitFailed": "L'intervention est enregistrée mais les documents n'ont pas pu y être rattachés. Rouvrez la fiche pour réessayer.",
+    "stage": {
+      "queued": "En attente…",
+      "preparing": "Réduction de la photo…",
+      "uploading": "Envoi…",
+      "saving": "Enregistrement…",
+      "done": "Envoyé",
+      "error": "Échec"
+    },
+    "errors": {
+      "tooLarge": "Fichier trop lourd : 10 Mo maximum une fois réduit.",
+      "unsupported": "Format non accepté : photos et PDF seulement.",
+      "upload": "L'envoi a échoué. Réessayez quand le réseau revient.",
+      "save": "Le document est envoyé mais n'a pas pu être rattaché."
+    },
+    "import": {
+      "title": "Importer des documents",
+      "description": "Déposez vos factures et vos photos en une fois, puis rattachez chacune à une intervention.",
+      "entry": "Importer des documents",
+      "drop": "Déposez vos fichiers ici",
+      "choose": "Choisir des fichiers",
+      "pending": "{count, plural, one {# document attend un choix} other {# documents attendent un choix}}",
+      "emptyTitle": "Aucun document pour l'instant",
+      "emptyDescription": "Choisissez des photos ou des PDF : rien n'est envoyé avant que vous ayez dit où le ranger.",
+      "modeExisting": "Intervention existante",
+      "modeNew": "Nouvelle intervention",
+      "existingLabel": "Intervention",
+      "existingPlaceholder": "Choisir une intervention…",
+      "newTitle": "Titre de l'intervention",
+      "newDate": "Date",
+      "newCategory": "Catégorie",
+      "attach": "Rattacher",
+      "createAndAttach": "Créer et rattacher",
+      "attached": "Rattaché à « {title} »",
+      "discard": "Retirer de la liste",
+      "done": "{count, plural, one {# document rattaché} other {# documents rattachés}}",
+      "noLogs": "Aucune intervention pour l'instant : créez-en une depuis un document.",
+      "readOnly": "Vous n'avez pas le droit d'ajouter des documents sur ce bateau."
     }
   }
 }

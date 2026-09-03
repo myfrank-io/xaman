@@ -5,6 +5,7 @@ import { LogForm } from "@/components/logs/LogForm";
 import { LogsList } from "@/components/logs/LogsList";
 import { LogsToolbar } from "@/components/logs/LogsToolbar";
 
+import { DEV_ATTACHMENTS } from "../attachments/sample";
 import { DevShell, DEV_BOAT_ID } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 import { DevLogsGallery } from "./DevLogsGallery";
@@ -72,6 +73,7 @@ export default async function DevLogsPage() {
             categories={CATEGORIES}
             reviewCount={2}
             contactName={null}
+            canContribute
           />
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
             <LogsList boatId={DEV_BOAT_ID} rows={DEV_LOG_ROWS} />
@@ -122,6 +124,7 @@ export default async function DevLogsPage() {
             ]}
             completions={DEV_LOG_COMPLETIONS}
             purchases={[{ id: "purchase-1", designation: "Filtres à huile ×2", amount: 48.5 }]}
+            attachments={DEV_ATTACHMENTS}
             canWrite
             actions={
               <LogActions

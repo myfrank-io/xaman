@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { ChevronLeftIcon, PhoneIcon, TriangleAlertIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { AttachmentsSection } from "@/components/attachments/AttachmentsSection";
 import { CategoryBadge } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -14,6 +15,7 @@ import type { LogEngineHours } from "@/components/logs/rows";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate, formatHours } from "@/lib/format";
+import type { AttachmentItem } from "@/lib/queries/attachments";
 import { boatPath, categoryPath, logsReviewPath } from "@/lib/queries/boat-routes";
 
 export type LogDetailData = {
@@ -68,6 +70,7 @@ export function LogDetail({
   engineHours,
   completions,
   purchases,
+  attachments = [],
   canWrite,
   actions,
 }: {
@@ -78,6 +81,8 @@ export function LogDetail({
   engineHours: LogEngineHours[];
   completions: LogDetailCompletion[];
   purchases: { id: string; designation: string; amount: number | null }[];
+  /** Documents already stored, with their signed URLs (E10-1). */
+  attachments?: AttachmentItem[];
   canWrite: boolean;
   actions?: React.ReactNode;
 }) {
@@ -239,6 +244,12 @@ export function LogDetail({
           ))}
         </SectionCard>
       ) : null}
+
+      <AttachmentsSection
+        boatId={boatId}
+        owner={{ type: "maintenance_log", id: log.id }}
+        initial={attachments}
+      />
 
       <p className="text-caption text-ink-3">
         {log.updatedByName && log.updatedAt !== log.createdAt
