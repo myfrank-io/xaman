@@ -1239,6 +1239,8 @@
   "contacts": {
     "title": "Intervenants",
     "new": "Nouvel intervenant",
+    "fromPhone": "Choisir dans mes contacts",
+    "fromPhoneFailed": "Impossible d'ouvrir le carnet d'adresses.",
     "edit": "Modifier l'intervenant",
     "search": "Rechercher un nom, une entreprise, une spécialité",
     "emptyTitle": "Aucun intervenant",

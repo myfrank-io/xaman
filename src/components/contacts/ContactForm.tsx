@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { FillFromPhoneButton } from "@/components/contacts/FillFromPhoneButton";
 import { isListedSpecialty, specialtyOptions } from "@/components/contacts/specialties";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DiscardDialog } from "@/components/forms/DiscardDialog";
@@ -111,6 +112,16 @@ export function ContactForm({
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
       <PageHeader title={contact ? t("edit") : t("new")} />
+      {/* Only on a new provider: on an existing one it would overwrite what is already right. */}
+      {contact ? null : (
+        <FillFromPhoneButton
+          onPicked={(picked) => {
+            form.setValue("name", picked.name, { shouldDirty: true });
+            if (picked.phone) form.setValue("phone", picked.phone, { shouldDirty: true });
+            if (picked.email) form.setValue("email", picked.email, { shouldDirty: true });
+          }}
+        />
+      )}
       <Field id="contact-name" label={t("fields.name")} required error={fieldError(errors.name)}>
         <Input
           id="contact-name"

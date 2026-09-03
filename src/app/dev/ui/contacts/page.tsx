@@ -99,6 +99,14 @@ export default async function DevContactsPage() {
         {/* Rendered bare, exactly as `/contacts/new` renders it: its action bar bleeds into
             the page padding with a negative margin, so nesting it in a padded card pushes the
             whole column sideways — a defect of the preview, not of the form. */}
+        {/* The creation case, which is the only one that offers « Choisir dans mes contacts »:
+            on an existing provider the picker would overwrite what is already right. The mock
+            showed only the edit form, so the audit never saw the button. */}
+        <SectionCard title={t("new")} bare>
+          <div>
+            <ContactForm boatId={DEV_BOAT_ID} contact={null} usedSpecialties={["Gréeur"]} />
+          </div>
+        </SectionCard>
         <SectionCard title={t("edit")} bare>
           <div>
             <ContactForm
