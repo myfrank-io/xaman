@@ -182,7 +182,8 @@ export function PurchaseForm({
         values,
         action: upsertPurchase,
         enqueue: outbox.enqueue,
-        online: online || Boolean(purchase),
+        online,
+        allowQueue: !purchase,
       });
       if (outcome.status === "full") {
         toast.error(to("queueFull"));

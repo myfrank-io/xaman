@@ -33,7 +33,11 @@ test("explains itself when the browser exposes no address book", async ({ page }
   await expect(page.getByRole("button", { name: LABEL })).toHaveCount(0);
   // And it must not be silent about it: « je ne le vois toujours pas » came back three times
   // because an absent button and an undeployed one look the same from the outside.
-  await expect(page.getByText(/ne donne pas accès au carnet d'adresses/)).toBeVisible();
+  const caption = page.getByText(/ne donne pas accès au carnet d'adresses/);
+  await expect(caption).toBeVisible();
+  // But it must not send a boat owner into an experimental WebKit flag: that path is theatre,
+  // not a fix. The caption names the routes that actually work on this device instead.
+  await expect(caption).not.toContainText(/Feature Flags/i);
 });
 
 test("fills the new provider's fields from the picked card", async ({ page }) => {

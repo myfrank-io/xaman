@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckIcon, FileTextIcon, TrashIcon, UploadIcon } from "lucide-react";
 
@@ -25,6 +26,7 @@ import { Progress } from "@/components/ui/progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { saveAttachment } from "@/lib/actions/attachments";
 import { saveLog } from "@/lib/actions/logs";
+import { boatKeys } from "@/lib/queries/keys";
 import { formatBytes, rejectionReason } from "@/lib/attachments/image";
 import { formatDate, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -72,6 +74,7 @@ export function DocumentImport({
   const ta = useTranslations("attachments");
   const errorMessage = useErrorMessage();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -169,6 +172,9 @@ export function DocumentImport({
       return;
     }
     patch(row.key, { stage: "done", attachedTo: logTitle });
+    void queryClient.invalidateQueries({
+      queryKey: boatKeys.attachments(boatId, "maintenance_log", logId),
+    });
     router.refresh();
   }
 

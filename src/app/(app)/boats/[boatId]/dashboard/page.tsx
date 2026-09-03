@@ -133,7 +133,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const itemIds = queueRows.filter((row) => row.kind === "item").map((row) => row.id);
   let statusRows: StatusViewRow[] = [];
   if (itemIds.length > 0) {
-    const { data } = await supabase.from("checklist_item_status").select("*").in("id", itemIds);
+    const { data } = await supabase
+      .from("checklist_item_status")
+      .select("*")
+      .eq("boat_id", boatId)
+      .in("id", itemIds);
     statusRows = data ?? [];
   }
   const statusById = new Map(statusRows.map((row) => [row.id ?? "", row]));

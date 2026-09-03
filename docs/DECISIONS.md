@@ -525,29 +525,23 @@ Règle générale qui en sort : **le silence n'est pas une réponse acceptable p
 absente.** Si l'application ne peut pas faire quelque chose sur cet appareil, elle le dit à
 l'endroit où on la cherche.
 
-## 2026-09-03 — D61 : « À racheter » est une checklist des pièces détachées, déduite du stock
+## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
 
-**Question.** Xav : « crée les checklists pour les pièces détachées aussi, hyper important pour
-en racheter — ça doit être complètement transparent pour les users, JAMAIS de double saisie. »
+**Question.** « Je suis sûr que c'est faux, il y a plein de solutions pour importer des contacts
+directement. » La légende de D60 conseillait `Réglages › Safari › Avancé › Feature Flags ›
+Contact Picker API`.
 
-**Décision.** Les pièces au seuil ou en dessous (`isLowStock` : `min_quantity > 0` et
-`quantity <= min_quantity`, la même règle que la carte Stock et le récap du tableau de bord)
-forment une checklist **« À racheter »**. Ce n'est **pas** une nouvelle table ni une nouvelle
-saisie : c'est une **vue du stock existant**. La liste se remplit et se vide toute seule quand
-la quantité franchit le seuil dans un sens ou dans l'autre — les mêmes lignes `parts` qu'écrivent
-déjà la fiche, les +/− et l'import. Aucune double saisie (règle du briefing respectée).
+**Vérifié.** Le fait technique de D52/D57 tient : `navigator.contacts.select()` n'existe que sur
+Chromium/Android et sur Safari iOS derrière un drapeau expérimental ; aucune API web (Contact
+Picker **ni** Web Share Target) ne lit le carnet d'adresses depuis Safari iOS standard. Il n'y a
+donc pas d'API manquée. Mais **le conseil de D60 était faible** : nommer un drapeau WebKit
+expérimental (instable, qui saute entre versions d'iOS) à un propriétaire non technique, c'est du
+théâtre — personne ne l'activera, et ce n'était pas la vraie réponse à son besoin.
 
-**Cocher = « racheté et remis à bord ».** La quantité remonte juste au-dessus du seuil
-(`min_quantity + 1`, `restockDelta`) et la ligne quitte la liste, avec un « Annuler » de 8 s
-(doigts mouillés, plein soleil — ux-flows §5.5). L'écriture passe par le RPC atomique existant
-`adjust_part_quantity` (D10), lu **frais côté serveur** pour que deux appareils qui rachètent la
-même pièce ne se dépassent pas ; une pièce déjà revenue en stock est un no-op. **Aucune
-migration** : la fonctionnalité est entièrement dérivée.
+**Décision.** La légende ne pointe plus vers le drapeau. Elle nomme les voies **réellement**
+universelles, qui existent déjà : saisir le prestataire à la main sur le formulaire, ou importer
+sa fiche `.vcf` / la liste depuis un tableur. « Ne jamais retaper un prestataire » n'a jamais eu
+besoin du carnet natif ; c'était un problème de visibilité, pas de capacité manquante.
 
-**Emplacement (les deux).** Une seule source de vérité, deux portes : en tête de l'écran
-**Checklist** (là où l'œil est quand on planifie la sortie, avant la grille des systèmes) et en
-tête de **Bateau › Équipements** (là où vivent déjà les pièces détachées). Le chargement des
-lignes est mutualisé (`src/lib/queries/stock.ts`) pour que la carte, la liste et le récap ne
-puissent jamais diverger. Le fournisseur est affiché (« chez X ») : la liste dit aussi où
-racheter. Réservé au rôle `write` (owner/editor), comme les +/− du stock (le RPC est gardé par
-`can_write_boat`).
+`tests/e2e/contact-picker.spec.ts` vérifie désormais aussi que la légende **ne** renvoie **pas**
+vers « Feature Flags » — c'est l'assertion qui manquait.

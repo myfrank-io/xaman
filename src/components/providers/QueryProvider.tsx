@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { QueryClient } from "@tanstack/react-query";
+import { defaultShouldDehydrateQuery, QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider, type Persister } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { del, get, set } from "idb-keyval";
@@ -52,7 +52,18 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, maxAge: ONE_WEEK, buster: "v1" }}
+      persistOptions={{
+        persister,
+        maxAge: ONE_WEEK,
+        buster: "v1",
+        dehydrateOptions: {
+          // Attachment queries carry private, capability-bearing signed URLs: they expire in ~1h
+          // and must never outlive the session nor cross users on a shared iPad. Keep them out of
+          // the persisted IndexedDB cache (everything else may still persist for offline reads).
+          shouldDehydrateQuery: (query) =>
+            defaultShouldDehydrateQuery(query) && !query.queryKey.includes("attachments"),
+        },
+      }}
     >
       {children}
     </PersistQueryClientProvider>

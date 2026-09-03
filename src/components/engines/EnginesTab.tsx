@@ -61,7 +61,7 @@ export function EngineCounter({
             ? "text-body-lg font-medium text-ink-3"
             : size === "lg"
               ? "text-display"
-              : "text-num-lg",
+              : "text-num-md sm:text-num-lg",
         )}
       >
         {hours === null ? t("unknownCounter") : formatHours(hours)}
@@ -88,8 +88,13 @@ function EngineCard({
   const t = useTranslations("engines");
   const tp = useTranslations("enginePosition");
   const details = [engine.brand, engine.model].filter(Boolean).join(" ");
+  // 231 px measured on a phone — 27% of the viewport per engine, so one of three fitted. Tighter
+  // padding and a 24 px counter on a phone bring it to ~183 px, two engines visible. Buttons keep
+  // their 44 px floor; iPad keeps the fuller card from `sm`.
   return (
-    <Card className={cn("gap-3 px-5", !engine.isActive && "bg-surface-2")}>
+    <Card
+      className={cn("gap-2 px-4 py-4 sm:gap-3 sm:px-5 sm:py-5", !engine.isActive && "bg-surface-2")}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-h3">{engine.label}</h3>
@@ -105,7 +110,7 @@ function EngineCard({
         )}
       </div>
       <EngineCounter hours={engine.hours} readAt={engine.readAt} />
-      <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+      <div className="flex items-center justify-between gap-2 border-t border-border pt-2 sm:pt-3">
         {onReading ? (
           <Button type="button" variant="outline" onClick={onReading}>
             <GaugeIcon />
