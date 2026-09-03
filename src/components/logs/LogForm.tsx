@@ -262,7 +262,8 @@ export function LogForm({
         values,
         action: saveLog,
         enqueue: outbox.enqueue,
-        online: online || Boolean(log),
+        online,
+        allowQueue: !log,
       });
       if (outcome.status === "full") {
         setServerError(to("queueFull"));

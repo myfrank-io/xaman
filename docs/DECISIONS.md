@@ -537,3 +537,24 @@ conservé ; seules la finition et l'identité changent.
 | 2026-09-03 | Anneau de focus | Azur marin (`--ring #1b5e96`) au lieu du bleu framework `#1d4ed8` | Le bleu par défaut est un marqueur « non designé » ; l'azur appartient à la palette |
 | 2026-09-03 | Badges de statut/état (révision de la règle DA « le plein = action requise ») | **Un seul langage teinté** : tous les badges (y compris En retard, Bientôt, Urgent) passent en teinte + `-fg` + liseré + icône, plus aucun aplat rouge/orange | Le mur d'aplats lisait « tableau de bord en alarme » ; la teinte garde l'instrument calme et reste lisible au soleil (contrastes `-fg`/`-border` mesurés), l'icône et le libellé portent le sens sans la couleur seule. Idem pour les pastilles de comptage (`Badge variant="danger"` ajouté) |
 | 2026-09-03 | Signature d'en-tête | Filet laiton (`brass-rule`) au bas de tout bandeau navy + dégradé multi-arrêt plus profond | Le « trait doré » d'une couverture de carnet ; détail de marque discret, jamais une alerte (respecte « le laiton ne porte jamais de donnée ») |
+
+## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
+
+**Question.** « Je suis sûr que c'est faux, il y a plein de solutions pour importer des contacts
+directement. » La légende de D60 conseillait `Réglages › Safari › Avancé › Feature Flags ›
+Contact Picker API`.
+
+**Vérifié.** Le fait technique de D52/D57 tient : `navigator.contacts.select()` n'existe que sur
+Chromium/Android et sur Safari iOS derrière un drapeau expérimental ; aucune API web (Contact
+Picker **ni** Web Share Target) ne lit le carnet d'adresses depuis Safari iOS standard. Il n'y a
+donc pas d'API manquée. Mais **le conseil de D60 était faible** : nommer un drapeau WebKit
+expérimental (instable, qui saute entre versions d'iOS) à un propriétaire non technique, c'est du
+théâtre — personne ne l'activera, et ce n'était pas la vraie réponse à son besoin.
+
+**Décision.** La légende ne pointe plus vers le drapeau. Elle nomme les voies **réellement**
+universelles, qui existent déjà : saisir le prestataire à la main sur le formulaire, ou importer
+sa fiche `.vcf` / la liste depuis un tableur. « Ne jamais retaper un prestataire » n'a jamais eu
+besoin du carnet natif ; c'était un problème de visibilité, pas de capacité manquante.
+
+`tests/e2e/contact-picker.spec.ts` vérifie désormais aussi que la légende **ne** renvoie **pas**
+vers « Feature Flags » — c'est l'assertion qui manquait.

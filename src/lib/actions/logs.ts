@@ -154,7 +154,7 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     );
     if (blocked) return fail("errors.engine_hours_required");
 
-    const { error: completionError } = await supabase.from("checklist_completions").insert(
+    const { error: completionError } = await supabase.from("checklist_completions").upsert(
       (items ?? []).map((item) => ({
         boat_id: boatId,
         checklist_item_id: item.id,
@@ -165,6 +165,7 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
         created_by: userId,
         updated_by: userId,
       })),
+      { onConflict: "maintenance_log_id,checklist_item_id", ignoreDuplicates: true },
     );
     if (completionError) return fail(dbErrorKey(completionError));
   }
@@ -339,16 +340,19 @@ export async function createRecurringFromLog(
   );
   if (itemError) return fail(dbErrorKey(itemError));
 
-  const { error: completionError } = await supabase.from("checklist_completions").insert({
-    boat_id: boatId,
-    checklist_item_id: itemId,
-    completed_at: log.performed_at,
-    completed_by: userId,
-    engine_hours: hours,
-    maintenance_log_id: logId,
-    created_by: userId,
-    updated_by: userId,
-  });
+  const { error: completionError } = await supabase.from("checklist_completions").upsert(
+    {
+      boat_id: boatId,
+      checklist_item_id: itemId,
+      completed_at: log.performed_at,
+      completed_by: userId,
+      engine_hours: hours,
+      maintenance_log_id: logId,
+      created_by: userId,
+      updated_by: userId,
+    },
+    { onConflict: "maintenance_log_id,checklist_item_id", ignoreDuplicates: true },
+  );
   if (completionError) return fail(dbErrorKey(completionError));
 
   revalidateBoat(boatId);

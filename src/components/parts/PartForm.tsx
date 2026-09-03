@@ -131,7 +131,8 @@ export function PartForm({
         values,
         action: upsertPart,
         enqueue: outbox.enqueue,
-        online: online || Boolean(part),
+        online,
+        allowQueue: !part,
       });
       if (outcome.status === "full") {
         toast.error(to("queueFull"));
