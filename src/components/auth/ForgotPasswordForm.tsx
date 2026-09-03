@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { ArrowLeftIcon, MailCheckIcon, SendIcon } from "lucide-react";
+import { ArrowLeftIcon, MailCheckIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ export function ForgotPasswordForm() {
   const t = useTranslations("auth.forgot");
   const ta = useTranslations("auth");
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<EmailInput>({
     resolver: zodResolver(emailSchema),
@@ -33,10 +34,19 @@ export function ForgotPasswordForm() {
   });
 
   async function submit(values: EmailInput) {
+    setError(null);
     const supabase = createClient();
-    await supabase.auth.resetPasswordForEmail(values.email, {
+    const { error: sendError } = await supabase.auth.resetPasswordForEmail(values.email, {
       redirectTo: callbackUrl("/reset-password"),
     });
+    // A refusal is still answered with « sent »: whether an address has an account here is not
+    // ours to tell. The hourly mail quota is the exception — it belongs to the application, not
+    // to the address, so saying it leaks nothing, and staying silent would leave someone
+    // waiting for a message that is never going to be sent.
+    if (sendError && /rate limit|too many|429/i.test(sendError.message)) {
+      setError(t("rateLimited"));
+      return;
+    }
     setSentTo(values.email);
   }
 
@@ -60,6 +70,12 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-5" noValidate>
+      {error ? (
+        <Alert variant="destructive">
+          <TriangleAlertIcon />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <div className="grid gap-2">
         <Label htmlFor="forgot-email">{ta("email.label")}</Label>
         <Input
