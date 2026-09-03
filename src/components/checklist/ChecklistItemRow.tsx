@@ -87,7 +87,10 @@ export function ChecklistItemRow({
           <Button
             type="button"
             variant={row.status === "ok" ? "outline" : "default"}
-            className="w-22"
+            // « Fait » is four characters at 14 px: 64 px holds it with room, and the 44 px
+            // height is untouched, so the target stays 64 x 44. The 24 px goes to the title,
+            // which is what drops most real labels from two lines to one.
+            className="w-16 sm:w-22"
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();

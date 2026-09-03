@@ -34,12 +34,16 @@ function EngineChip({
         <span className="num">
           {formatHours(engine.lastHours)}
           {engine.lastDate ? (
-            <>
+            // The date of the reading is what made a chip 217-239 px wide, so three engines
+            // took three 44 px lines of the dark header — 148 px measured, on the screen whose
+            // whole first viewport was chrome. It is on the engine's own sheet, one tap away,
+            // and the amber colour below still says « this reading is old » without it.
+            <span className="hidden sm:inline">
               {" · "}
               <span className={cn(stale && "text-state-soon-on-dark")}>
                 {formatDayMonth(engine.lastDate)}
               </span>
-            </>
+            </span>
           ) : null}
         </span>
       )}

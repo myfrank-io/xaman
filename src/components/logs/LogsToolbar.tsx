@@ -107,9 +107,12 @@ export function LogsToolbar({
           }}
         />
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      {/* One line that scrolls on a phone. `w-52` (208 px) and `w-44` (176 px) cannot share a
+          358 px row, and `ml-auto` on the last button pushed it alone onto a third — 204 px of
+          filters measured, above the single intervention that fitted the screen. */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {/* NativeSelect fills its parent: the width is set on the wrapper, not on the select. */}
-        <div className="w-52 max-w-full">
+        <div className="w-44 shrink-0 sm:w-52 sm:max-w-full">
           <NativeSelect
             aria-label={t("filters.category")}
             value={filters.category}
@@ -126,7 +129,7 @@ export function LogsToolbar({
             <option value={STOCK_FILTER}>{t("filters.fromStock")}</option>
           </NativeSelect>
         </div>
-        <div className="w-44 max-w-full">
+        <div className="w-40 shrink-0 sm:w-44 sm:max-w-full">
           <NativeSelect
             aria-label={t("filters.status")}
             value={filters.status}
@@ -163,7 +166,7 @@ export function LogsToolbar({
         {canContribute ? (
           /* Not a « + » (D19): this ranges documents onto interventions, it creates nothing on
              its own. */
-          <Button asChild variant="outline" className="ml-auto">
+          <Button asChild variant="outline" className="shrink-0 sm:ml-auto">
             <Link href={importDocumentsPath(boatId) as Route}>
               <PaperclipIcon />
               {ta("entry")}

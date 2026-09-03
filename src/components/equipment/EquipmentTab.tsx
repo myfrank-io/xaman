@@ -105,9 +105,13 @@ export function EquipmentTab({
   const empty = groups.length === 0 && stock.totalCount === 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-body text-ink-2">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      {/* Same treatment as the engines: the toolbar led the list and cost the fold. */}
+      <div className="order-last flex flex-wrap items-center justify-between gap-3 sm:order-none">
+        {/* « 7 équipements · 5 pièces de rechange » repeats the tab badge 24 px above it and
+            the « Pièces détachées 5 » row below it, and it was what pushed the two buttons onto
+            a second line. */}
+        <p className="hidden text-body text-ink-2 sm:block">
           {t("count", { count: active.length })}
           {stock.totalCount > 0 ? (
             <>

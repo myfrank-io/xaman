@@ -158,11 +158,18 @@ export function BoatIdentity({
 
   if (!editing) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight">{boat.name}</h1>
-            {subtitle ? <p className="mt-1 num text-sm text-muted-foreground">{subtitle}</p> : null}
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {/* No `flex-wrap`: the subtitle's intrinsic width is 320 px, so with the 12 px gap and
+            the 44 px button it asked for 376 px of a 358 px row and the pencil dropped onto a
+            line of its own — 56 px measured, for a button that belongs beside the name. `flex-1`
+            plus `truncate` lets the text give way instead. At both iPad sizes the subtitle sits
+            in a 664 px box, so nothing truncates there. */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{boat.name}</h1>
+            {subtitle ? (
+              <p className="mt-1 truncate num text-sm text-muted-foreground">{subtitle}</p>
+            ) : null}
           </div>
           {canEdit ? (
             <Button
@@ -176,7 +183,14 @@ export function BoatIdentity({
             </Button>
           ) : null}
         </div>
-        <Accordion type="single" collapsible className="rounded-xl border border-border px-4">
+        {/* Read « twice a year », says its own comment below — and it sat between the title and
+            the tabs on every single visit, 74 px of the only thing above the data. `order-last`
+            bites only on a phone; from `sm` it returns to where it has always been. */}
+        <Accordion
+          type="single"
+          collapsible
+          className="order-last rounded-xl border border-border px-4 sm:order-none"
+        >
           <AccordionItem value="details">
             <AccordionTrigger className="text-body text-ink-2">{t("details")}</AccordionTrigger>
             <AccordionContent>

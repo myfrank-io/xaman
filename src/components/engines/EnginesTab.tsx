@@ -165,9 +165,12 @@ export function EnginesTab({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {canWrite ? (
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        // A bare button row was the first thing under the tabs, before a single engine: 68 px
+        // measured, and only one of three engines fitted the fold. It follows the list on a
+        // phone and leads it again from `sm`.
+        <div className="order-last flex flex-wrap items-center justify-end gap-2 sm:order-none">
           {/* Reprendre un carnet d'heures commence ici, à côté de l'acte du quotidien (E12-4). */}
           <Button asChild variant="outline">
             <Link href={importPath(boatId, "readings") as Route}>{ti("action")}</Link>
