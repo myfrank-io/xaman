@@ -25,7 +25,7 @@ export default async function BoatsPage() {
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="bg-header-gradient px-6 pt-8 safe-top pb-10 text-on-navy">
+      <header className="bg-header-gradient px-6 safe-pt-8 pb-10 text-on-navy">
         <div className="mx-auto w-full max-w-2xl">
           <p className="text-overline text-brass-light uppercase">{ta("eyebrow")}</p>
           <XamanLogotype className="mt-3 h-9" />

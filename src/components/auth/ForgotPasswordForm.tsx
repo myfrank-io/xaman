@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { publicEnv } from "@/lib/env";
+import { callbackUrl } from "@/lib/auth/redirect";
 import { emailSchema, type EmailInput } from "@/lib/schemas/auth";
 import { createClient } from "@/lib/supabase/client";
 
@@ -35,7 +35,7 @@ export function ForgotPasswordForm() {
   async function submit(values: EmailInput) {
     const supabase = createClient();
     await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${publicEnv.appUrl}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+      redirectTo: callbackUrl("/reset-password"),
     });
     setSentTo(values.email);
   }

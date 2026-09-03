@@ -60,7 +60,7 @@ export function Sidebar({
         className,
       )}
     >
-      <div className="bg-header-gradient px-5 pt-5 safe-top pb-5 text-on-navy">
+      <div className="bg-header-gradient px-5 safe-pt-5 pb-5 text-on-navy">
         <p className="flex items-center gap-2 text-overline text-brass-light uppercase">
           <XamanMark className="size-4" decorative />
           {t("eyebrow")}
@@ -88,7 +88,7 @@ export function Sidebar({
         ) : null}
       </nav>
       {primaryAction || accountMenu ? (
-        <div className="flex flex-col gap-2 border-t border-sidebar-border p-3 safe-bottom">
+        <div className="flex flex-col gap-2 border-t border-sidebar-border p-3 safe-pb-3">
           {primaryAction}
           {accountMenu}
         </div>

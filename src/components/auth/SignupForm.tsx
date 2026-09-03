@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { publicEnv } from "@/lib/env";
+import { callbackUrl } from "@/lib/auth/redirect";
 import { signUpSchema, type SignUpInput } from "@/lib/schemas/auth";
 import { createClient } from "@/lib/supabase/client";
 
@@ -52,7 +52,7 @@ export function SignupForm({ next }: { next: string }) {
       password: values.password,
       options: {
         data: { full_name: values.fullName },
-        emailRedirectTo: `${publicEnv.appUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+        emailRedirectTo: callbackUrl(next),
       },
     });
 

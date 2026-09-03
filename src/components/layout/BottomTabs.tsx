@@ -122,7 +122,7 @@ export function BottomTabs({
   return (
     <nav
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 safe-bottom backdrop-blur",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 safe-pb-0 backdrop-blur",
         className,
       )}
     >
