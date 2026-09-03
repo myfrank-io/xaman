@@ -41,7 +41,17 @@ export function FillFromPhoneButton({
   const [gone, setGone] = useState(false);
   const [pending, setPending] = useState(false);
 
-  if (!supported || gone) return null;
+  /**
+   * Where there is no address book to open, say so rather than render nothing.
+   *
+   * Silence was the wrong call. « Je ne le vois toujours pas » came back three times, and it
+   * had to: from the outside, « your browser does not offer this » and « it is not deployed
+   * yet » look identical. A caption cannot be tapped uselessly — the objection to a dead
+   * button does not apply to it — and it names the one thing that does work here.
+   */
+  if (!supported || gone) {
+    return <p className="text-caption text-ink-3">{t("fromPhoneUnavailable")}</p>;
+  }
 
   async function pick() {
     setPending(true);

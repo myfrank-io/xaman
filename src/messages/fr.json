@@ -1241,6 +1241,7 @@
     "new": "Nouvel intervenant",
     "fromPhone": "Choisir dans mes contacts",
     "fromPhoneFailed": "Impossible d'ouvrir le carnet d'adresses.",
+    "fromPhoneUnavailable": "Ce navigateur ne donne pas accès au carnet d'adresses. Sur iPhone : Réglages › Safari › Avancé › Feature Flags › Contact Picker API. Sinon, importez une fiche .vcf.",
     "edit": "Modifier l'intervenant",
     "search": "Rechercher un nom, une entreprise, une spécialité",
     "emptyTitle": "Aucun intervenant",

@@ -27,10 +27,13 @@ const FAKE_PICKER = () => {
 
 const LABEL = "Choisir dans mes contacts";
 
-test("absent when the browser exposes no address book", async ({ page }) => {
+test("explains itself when the browser exposes no address book", async ({ page }) => {
   await page.goto("/dev/ui/contacts", { waitUntil: "networkidle" });
   // Headless Chromium has no Contact Picker, which is the iPhone case too.
   await expect(page.getByRole("button", { name: LABEL })).toHaveCount(0);
+  // And it must not be silent about it: « je ne le vois toujours pas » came back three times
+  // because an absent button and an undeployed one look the same from the outside.
+  await expect(page.getByText(/ne donne pas accès au carnet d'adresses/)).toBeVisible();
 });
 
 test("fills the new provider's fields from the picked card", async ({ page }) => {
