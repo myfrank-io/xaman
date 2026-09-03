@@ -10,6 +10,7 @@ import {
   descriptorOf,
   IMPORT_MAX_ROWS,
   isImportEntity,
+  rejectionReason,
   type ImportReport,
   type ImportRow,
   type RejectedRow,
@@ -65,11 +66,13 @@ export async function importRows(input: {
 
   rows.forEach((row, index) => {
     const line = index + 1;
-    const name = cellText(row.name, 120);
-    if (!name) {
-      rejected.push({ line, reason: "import.errors.noName", values: row });
+    // One validator for the preview and for the write: what the screen announced is written.
+    const reason = rejectionReason(entity, row);
+    if (reason) {
+      rejected.push({ line, reason, values: row });
       return;
     }
+    const name = cellText(row.name, 120) ?? "";
     const key = descriptor.naturalKey({ ...row, name });
     const known = byKey.get(key);
     // A generated id keeps the write idempotent and every object of the batch identical.
@@ -85,31 +88,16 @@ export async function importRows(input: {
     };
 
     if (entity === "contacts") {
-      const specialty = cellText(row.specialty, 60);
-      if (!specialty) {
-        rejected.push({ line, reason: "import.errors.noSpecialty", values: row });
-        return;
-      }
-      const email = cellText(row.email, 160);
-      if (email && !/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email)) {
-        rejected.push({ line, reason: "import.errors.badEmail", values: row });
-        return;
-      }
       target.push({
         ...base,
-        specialty,
+        specialty: cellText(row.specialty, 60),
         company: cellText(row.company, 120),
         phone: cellText(row.phone, 40),
-        email,
+        email: cellText(row.email, 160),
         address: cellText(row.address, 300),
       });
     } else if (entity === "equipment") {
       const quantity = cellNumber(row.quantity);
-      const installedAt = cellDate(row.installedAt);
-      if ((row.installedAt ?? "").trim() !== "" && installedAt === null) {
-        rejected.push({ line, reason: "import.errors.badDate", values: row });
-        return;
-      }
       target.push({
         ...base,
         category_id: categoryByName.get(normaliseHeader(row.category ?? "")) ?? null,
@@ -117,7 +105,7 @@ export async function importRows(input: {
         model: cellText(row.model, 80),
         serial: cellText(row.serial, 80),
         quantity: quantity === null ? 1 : Math.max(0, Math.round(quantity)),
-        installed_at: installedAt,
+        installed_at: cellDate(row.installedAt),
       });
     } else {
       const quantity = cellNumber(row.quantity);

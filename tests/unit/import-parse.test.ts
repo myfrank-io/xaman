@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseTable, sniffDelimiter } from "@/lib/import/parse";
 import {
+  applyDefaults,
   applyMapping,
   guessMapping,
   missingRequired,
@@ -64,7 +65,7 @@ describe("parseTable", () => {
 
 const FIELDS: FieldDescriptor[] = [
   { key: "name", label: "Nom", required: true, aliases: ["intitulé"] },
-  { key: "specialty", label: "Spécialité", required: true },
+  { key: "specialty", label: "Spécialité", required: true, allowDefault: true },
   { key: "phone", label: "Téléphone", aliases: ["tel", "mobile"] },
   { key: "email", label: "E-mail", aliases: ["mail", "courriel"] },
 ];
@@ -105,6 +106,42 @@ describe("applyMapping and missingRequired", () => {
   it("names the required fields still unmapped", () => {
     expect(missingRequired(FIELDS, guessMapping(["Nom"], FIELDS), {})).toEqual(["Spécialité"]);
     expect(missingRequired(FIELDS, guessMapping(["Nom", "Spécialité"], FIELDS), {})).toEqual([]);
+  });
+
+  it("stops naming a required field once a value is chosen for the whole file", () => {
+    const mapping = guessMapping(["Nom"], FIELDS);
+    expect(missingRequired(FIELDS, mapping, { specialty: "Chantier" })).toEqual([]);
+    // Blanks are not a value: they must not unlock the import.
+    expect(missingRequired(FIELDS, mapping, { specialty: "   " })).toEqual(["Spécialité"]);
+    // A field the descriptor does not open to a default is never satisfied this way.
+    expect(missingRequired(FIELDS, guessMapping(["Spécialité"], FIELDS), { name: "X" })).toEqual([
+      "Nom",
+    ]);
+  });
+});
+
+describe("applyDefaults", () => {
+  it("fills only the blanks, and only where the descriptor allows it", () => {
+    const values = { name: "Chantier Bleu", specialty: "", phone: "", email: "" };
+    expect(applyDefaults(values, FIELDS, { specialty: "Chantier", phone: "0102" })).toEqual({
+      name: "Chantier Bleu",
+      specialty: "Chantier",
+      // phone has no allowDefault: the value chosen for the file is ignored
+      phone: "",
+      email: "",
+    });
+  });
+
+  it("never overwrites a cell the file already carries", () => {
+    const values = { name: "Voilerie", specialty: "Voilier", phone: "", email: "" };
+    expect(applyDefaults(values, FIELDS, { specialty: "Chantier" }).specialty).toBe("Voilier");
+    // A cell holding only spaces is empty, and a default made of spaces is no default.
+    expect(
+      applyDefaults({ ...values, specialty: "  " }, FIELDS, { specialty: "Chantier" }).specialty,
+    ).toBe("Chantier");
+    expect(applyDefaults({ ...values, specialty: "" }, FIELDS, { specialty: " " }).specialty).toBe(
+      "",
+    );
   });
 });
 

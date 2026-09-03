@@ -3,7 +3,8 @@ import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { ImportWizard } from "@/components/import/ImportWizard";
-import { isImportEntity } from "@/lib/import/entities";
+import { descriptorOf, isImportEntity } from "@/lib/import/entities";
+import { normaliseHeader } from "@/lib/import/mapping";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath, boatTabPath, suppliesPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
@@ -26,6 +27,14 @@ export default async function ImportPage({
   const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
   if (!role || !can(role as BoatRole, "write")) notFound();
 
+  // What is already on the boat, so the screen can say « 3 reconnues » before writing anything.
+  const descriptor = descriptorOf(entity);
+  const { data: existing } = await supabase
+    .from(descriptor.table)
+    .select("name")
+    .eq("boat_id", boatId);
+  const existingKeys = (existing ?? []).map((row) => normaliseHeader(row.name));
+
   const t = await getTranslations("import");
   const back = {
     contacts: { href: boatPath(boatId, "contacts"), label: t("back.contacts") },
@@ -36,7 +45,13 @@ export default async function ImportPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t(`entities.${entity}.title`)} subtitle={t("subtitle")} />
-      <ImportWizard boatId={boatId} entity={entity} backHref={back.href} backLabel={back.label} />
+      <ImportWizard
+        boatId={boatId}
+        entity={entity}
+        backHref={back.href}
+        backLabel={back.label}
+        existingKeys={existingKeys}
+      />
     </div>
   );
 }

@@ -78,6 +78,8 @@ const CATEGORY: FieldDescriptor = {
   label: "Catégorie",
   aliases: ["systeme", "système", "poste"],
   help: "Le nom d'un système du bateau ; laissé vide si aucun ne correspond.",
+  // A spreadsheet of one system rarely repeats it on every line: « tout ceci, c'est Moteurs ».
+  allowDefault: true,
 };
 
 export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
@@ -92,6 +94,7 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         label: "Nom",
         required: true,
         aliases: ["intitule", "contact", "raison sociale"],
+        sample: "Chantier Naval du Guip",
       },
       {
         key: "specialty",
@@ -99,12 +102,35 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         required: true,
         aliases: ["metier", "métier", "type", "categorie"],
         help: "Chantier, Voilier, Motoriste… texte libre.",
+        // A contact card exported from a phone carries no trade: it is typed once, for all.
+        allowDefault: true,
+        sample: "Chantier",
       },
-      { key: "company", label: "Société", aliases: ["entreprise", "societe"] },
-      { key: "phone", label: "Téléphone", aliases: ["tel", "tél", "mobile", "portable"] },
-      { key: "email", label: "E-mail", aliases: ["mail", "courriel", "adresse mail"] },
-      { key: "address", label: "Adresse", aliases: ["adresse postale", "ville"] },
-      NOTES,
+      {
+        key: "company",
+        label: "Société",
+        aliases: ["entreprise", "societe"],
+        sample: "Le Guip",
+      },
+      {
+        key: "phone",
+        label: "Téléphone",
+        aliases: ["tel", "tél", "mobile", "portable"],
+        sample: "02 98 00 00 00",
+      },
+      {
+        key: "email",
+        label: "E-mail",
+        aliases: ["mail", "courriel", "adresse mail"],
+        sample: "contact@leguip.fr",
+      },
+      {
+        key: "address",
+        label: "Adresse",
+        aliases: ["adresse postale", "ville"],
+        sample: "Brest",
+      },
+      { ...NOTES, sample: "Interlocuteur : Yann" },
     ],
   },
   equipment: {
@@ -118,22 +144,30 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         label: "Nom",
         required: true,
         aliases: ["designation", "désignation", "equipement", "équipement"],
+        sample: "Guindeau",
       },
-      CATEGORY,
-      { key: "brand", label: "Marque", aliases: ["fabricant", "constructeur"] },
-      { key: "model", label: "Modèle", aliases: ["modele", "type"] },
+      { ...CATEGORY, sample: "Coque & Pont" },
+      {
+        key: "brand",
+        label: "Marque",
+        aliases: ["fabricant", "constructeur"],
+        sample: "Lofrans",
+      },
+      { key: "model", label: "Modèle", aliases: ["modele", "type"], sample: "Tigres 1500 W" },
       {
         key: "serial",
         label: "Numéro de série",
         aliases: ["serie", "série", "sn", "numero de serie"],
+        sample: "LT-2019-4471",
       },
-      { key: "quantity", label: "Quantité", aliases: ["qte", "qté", "nombre"] },
+      { key: "quantity", label: "Quantité", aliases: ["qte", "qté", "nombre"], sample: "1" },
       {
         key: "installedAt",
         label: "Installé le",
         aliases: ["date installation", "installation", "date"],
+        sample: "12/03/2019",
       },
-      NOTES,
+      { ...NOTES, sample: "Révisé au carénage 2025" },
     ],
   },
   parts: {
@@ -147,24 +181,64 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         label: "Désignation",
         required: true,
         aliases: ["nom", "piece", "pièce", "article"],
+        sample: "Filtre à huile Volvo",
       },
-      { key: "reference", label: "Référence", aliases: ["ref", "réf", "reference fabricant"] },
-      { key: "quantity", label: "Quantité", aliases: ["qte", "qté", "stock", "en stock"] },
+      {
+        key: "reference",
+        label: "Référence",
+        aliases: ["ref", "réf", "reference fabricant"],
+        sample: "3847643",
+      },
+      {
+        key: "quantity",
+        label: "Quantité",
+        aliases: ["qte", "qté", "stock", "en stock"],
+        sample: "2",
+      },
       {
         key: "minQuantity",
         label: "Seuil d'alerte",
         aliases: ["seuil", "minimum", "mini", "stock mini"],
+        sample: "1",
       },
-      { key: "unit", label: "Unité", aliases: ["unite", "u"] },
-      { key: "location", label: "Emplacement", aliases: ["rangement", "localisation", "coffre"] },
-      CATEGORY,
-      NOTES,
+      // A stock sheet counts « 2 » and « 1 » without ever writing the unit down.
+      { key: "unit", label: "Unité", aliases: ["unite", "u"], allowDefault: true, sample: "pc" },
+      {
+        key: "location",
+        label: "Emplacement",
+        aliases: ["rangement", "localisation", "coffre"],
+        sample: "Coffre bâbord",
+      },
+      { ...CATEGORY, sample: "Moteurs" },
+      { ...NOTES, sample: "Compatible D2-75" },
     ],
   },
 };
 
 export function descriptorOf(entity: ImportEntity): EntityDescriptor {
   return ENTITY_DESCRIPTORS[entity];
+}
+
+const EMAIL = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
+
+/**
+ * Why this row cannot be written, or `null` when it can. Shared by the preview and by the
+ * Server Action so the screen can announce « 2 refusées » before the write and name the same
+ * reason afterwards — a count that changes between the two would be worse than no count.
+ */
+export function rejectionReason(entity: ImportEntity, row: ImportRow): string | null {
+  if (!cellText(row.name, 120)) return "import.errors.noName";
+  if (entity === "contacts") {
+    if (!cellText(row.specialty, 60)) return "import.errors.noSpecialty";
+    const email = cellText(row.email, 160);
+    if (email && !EMAIL.test(email)) return "import.errors.badEmail";
+  }
+  if (entity === "equipment") {
+    if ((row.installedAt ?? "").trim() !== "" && cellDate(row.installedAt) === null) {
+      return "import.errors.badDate";
+    }
+  }
+  return null;
 }
 
 /** Enough for a boat's whole directory or stock in one go, small enough for one statement. */
