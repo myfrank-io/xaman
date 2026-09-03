@@ -13,7 +13,15 @@
 import { type ParsedTable } from "@/lib/import/parse";
 
 /** Column order of the produced table; matches the labels of the contacts descriptor. */
-const HEADERS = ["Nom", "Spécialité", "Société", "Téléphone", "E-mail", "Adresse", "Notes"];
+export const CONTACT_HEADERS = [
+  "Nom",
+  "Spécialité",
+  "Société",
+  "Téléphone",
+  "E-mail",
+  "Adresse",
+  "Notes",
+];
 
 export function isContactCardFile(name: string): boolean {
   return /\.(vcf|vcard)$/i.test(name);
@@ -24,7 +32,7 @@ type Line = { name: string; params: Record<string, string>; value: string };
 export function parseContactCards(input: string): ParsedTable {
   const cards = splitCards(unfold(stripBom(input)));
   const rows = cards.map(toRow).filter((row) => (row[0] ?? "") !== "");
-  return { headers: HEADERS, rows, delimiter: "\t" };
+  return { headers: CONTACT_HEADERS, rows, delimiter: "\t" };
 }
 
 function stripBom(text: string): string {

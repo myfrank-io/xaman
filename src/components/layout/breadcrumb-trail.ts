@@ -190,6 +190,15 @@ export function buildTrail(pathname: string, boatId: string, entity?: string | n
     if (isStep(segment)) crumbs.push({ key: `crumbs.${segment}` });
   });
 
+  /**
+   * A trail of one crumb is not a trail: it names the screen you are already looking at, which
+   * the page title says above it and the highlighted tab says below it. « Checklist › » over a
+   * heading reading « Checklist » with the Checklist tab lit is the same word three times, and
+   * on a phone it costs a whole row of a screen that has few to spare. The dashboard was
+   * already exempt for this reason (D-…); the rule is simply general now.
+   */
+  if (crumbs.length < 2) return [];
+
   // The last crumb is the page itself: it loses its link and carries `aria-current`.
   return crumbs.map((crumb, index) => (index === crumbs.length - 1 ? { key: crumb.key } : crumb));
 }
