@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { MinusIcon, PackageIcon, PlusIcon } from "lucide-react";
+import { MinusIcon, PackageIcon, PlusIcon, UploadIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ import { adjustPartQuantity } from "@/lib/actions/parts";
 import { formatNumber } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { isLowStock, monthsSinceCheck, STOCK_FILTERS, type StockFilter } from "@/lib/parts";
-import { editPartPath, newPartPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { editPartPath, importPath, newPartPath, suppliesPath } from "@/lib/queries/boat-routes";
 
 /** Neutral grey when a line has no system: a category colour never travels alone (rule 12). */
 const NO_CATEGORY_COLOR = "#8A99AC";
@@ -58,6 +58,7 @@ export function StockList({
   totalCount: number;
 }) {
   const t = useTranslations("supplies.stock");
+  const ti = useTranslations("import");
   const tu = useTranslations("supplies.stock.units");
   const errorMessage = useErrorMessage();
   const router = useRouter();
@@ -114,13 +115,21 @@ export function StockList({
         ))}
       </ToggleGroup>
       {canWrite ? (
-        // A named button, not a second « + »: the screen's « + » creates a purchase (D19).
-        <Button asChild>
-          <Link href={newPartPath(boatId) as Route}>
-            <PlusIcon />
-            {t("new")}
-          </Link>
-        </Button>
+        // Named buttons, not a second « + »: the screen's « + » creates a purchase (D19).
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline">
+            <Link href={importPath(boatId, "parts") as Route}>
+              <UploadIcon />
+              {ti("action")}
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href={newPartPath(boatId) as Route}>
+              <PlusIcon />
+              {t("new")}
+            </Link>
+          </Button>
+        </div>
       ) : null}
     </div>
   );

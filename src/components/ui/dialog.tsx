@@ -86,19 +86,23 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1 pr-10 text-left", className)}
+      className={cn("flex flex-col gap-1.5 pr-12 text-left", className)}
       {...props}
     />
   );
 }
 
-// Sticky action bar: stays reachable when the iPad keyboard is open (art-direction §7.8).
+/**
+ * Action bar of a dialog. It used to be `sticky bottom-0`, which on a short viewport laid its
+ * opaque background over the text above — the install dialog showed a description cut in half.
+ * It now flows after the content: the dialog scrolls as one block, and nothing is ever hidden.
+ */
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
       className={cn(
-        "sticky bottom-0 -mx-6 mt-auto -mb-6 flex flex-col-reverse gap-2 border-t border-border bg-surface px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end md:-mb-6 md:pb-4",
+        "-mx-6 mt-2 -mb-6 flex flex-col-reverse gap-2 border-t border-border bg-surface px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end md:-mb-6 md:pb-4",
         className,
       )}
       {...props}

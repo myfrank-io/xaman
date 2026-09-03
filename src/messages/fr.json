@@ -80,6 +80,21 @@
       "members": "Membres",
       "settings": "Réglages",
       "profile": "Profil"
+    },
+    "crumbs": {
+      "label": "Fil d'Ariane",
+      "record": "Fiche",
+      "new": "Nouveau",
+      "edit": "Modifier",
+      "review": "Reprise du carnet",
+      "setup": "Mise en route",
+      "import": "Importer",
+      "engines": "Moteurs",
+      "equipment": "Équipements",
+      "purchases": "Achats",
+      "parts": "Stock",
+      "report": "Rapport",
+      "profile": "Profil"
     }
   },
   "logStatus": {
@@ -1431,5 +1446,69 @@
     "backToLogs": "Voir le journal",
     "onlyOne": "Vérification de cette ligne seulement.",
     "allRows": "Vérifier toutes les lignes"
+  },
+  "import": {
+    "subtitle": "Reprenez un tableau existant plutôt que de tout retaper.",
+    "run": "{count, plural, one {Importer # ligne} other {Importer # lignes}}",
+    "done": "{created, plural, =0 {Aucune création} one {# création} other {# créations}} · {updated, plural, =0 {aucune mise à jour} one {# mise à jour} other {# mises à jour}}.",
+    "action": "Importer",
+    "source": {
+      "title": "Votre tableau",
+      "file": "Choisir un fichier (.csv, .tsv)",
+      "or": "ou",
+      "paste": "Coller les cellules copiées depuis Excel"
+    },
+    "empty": {
+      "title": "Rien à importer pour le moment",
+      "description": "Choisissez un fichier ou collez vos cellules : la première ligne doit contenir les en-têtes de colonnes."
+    },
+    "mapping": {
+      "title": "Colonnes",
+      "help": "Vérifiez la correspondance devinée depuis vos en-têtes. Une colonne « Ignorer » n'est pas importée.",
+      "none": "Ignorer",
+      "column": "Colonne {index}",
+      "missing": "Colonnes obligatoires à renseigner : {fields}."
+    },
+    "preview": {
+      "title": "{count, plural, one {# ligne détectée} other {# lignes détectées}}",
+      "more": "{count, plural, one {et # autre ligne} other {et # autres lignes}}."
+    },
+    "report": {
+      "title": "Import terminé",
+      "summary": "{created, plural, =0 {Aucune ligne créée} one {# ligne créée} other {# lignes créées}}, {updated, plural, =0 {aucune mise à jour} one {# mise à jour} other {# mises à jour}}, {rejected, plural, =0 {aucun refus} one {# ligne refusée} other {# lignes refusées}}.",
+      "line": "Ligne {line}",
+      "download": "Télécharger les lignes refusées"
+    },
+    "back": {
+      "contacts": "Voir les contacts",
+      "equipment": "Voir les équipements",
+      "parts": "Voir le stock"
+    },
+    "errors": {
+      "empty": "Le tableau est vide.",
+      "tooMany": "Le tableau dépasse {max} lignes. Importez-le en plusieurs fois.",
+      "noName": "Nom manquant",
+      "noSpecialty": "Spécialité manquante",
+      "badEmail": "Adresse e-mail invalide",
+      "badDate": "Date illisible (attendu 12/03/2026)",
+      "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous."
+    },
+    "entities": {
+      "contacts": {
+        "title": "Importer des contacts",
+        "help": "Une ligne par prestataire. Le nom et la spécialité sont obligatoires ; un contact déjà présent sous le même nom est mis à jour, jamais dupliqué.",
+        "placeholder": "Nom\tSpécialité\tTéléphone\nChantier du Levant\tChantier\t04 94 00 00 00"
+      },
+      "equipment": {
+        "title": "Importer des équipements",
+        "help": "Une ligne par équipement. La colonne « Catégorie » est rapprochée des systèmes du bateau par leur nom ; un équipement déjà présent sous le même nom est mis à jour.",
+        "placeholder": "Nom\tCatégorie\tMarque\tQuantité\nGuindeau\tCoque & Pont\tLofrans\t1"
+      },
+      "parts": {
+        "title": "Importer des pièces en stock",
+        "help": "Une ligne par pièce. Quantité et seuil d'alerte acceptent la virgule ; une pièce déjà présente sous la même désignation est mise à jour.",
+        "placeholder": "Désignation\tRéférence\tQuantité\tSeuil\tEmplacement\nFiltre à huile\t119305-35170\t2\t2\tCoffre moteur"
+      }
+    }
   }
 }
