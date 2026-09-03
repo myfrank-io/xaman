@@ -289,3 +289,23 @@ bouton revient — il échoue si l'on retire le script.
 Le texte de repli disait « dans le menu du navigateur », ce qui ne mène nulle part sur un Chrome
 de bureau. Il nomme maintenant l'icône d'installation de la barre d'adresse, et ajoute la raison
 la plus fréquente d'un refus silencieux du navigateur : **l'application est déjà installée**.
+
+## 2026-09-03 — D51 : les dialogues entrent dans l'audit, un à la fois
+
+**Question.** Un dialogue est fermé au chargement. L'audit tactile ouvre une URL et mesure ce
+qu'il trouve : il n'avait donc jamais vu l'intérieur d'un seul — alors que ce sont les surfaces
+les plus denses de l'application (une date, un compteur, un sélecteur et une note dans une
+boîte qui doit tenir au-dessus du clavier d'un téléphone), « Marquer comme fait » en tête.
+
+**Décision.** `/dev/ui/dialogs?d=…` en ouvre exactement un — plusieurs empilés se recouvriraient
+et fausseraient la mesure. Cinq entrées dans l'audit (`complete`, `hours`, `edit-reading`,
+`contact`, `recurring`) plus `/dev/ui/supplies?dialog=1` pour la bouteille de gaz, dont la
+couture `defaultOpen` existait déjà sans que l'audit s'en serve.
+
+Vérifié en plus des règles : à 320 × 568, les cinq dialogues tiennent dans l'écran et leur
+bouton « Enregistrer » est atteignable. Un dialogue plus haut que l'écran dont on ne peut pas
+atteindre le bouton est inutilisable, et aucune des règles de l'audit ne l'aurait dit.
+
+**Restent sans preview**, et c'est assumé : `/invite/[token]` (une alerte et un bouton) et la
+fiche d'un prestataire (`PageHeader`, `SectionCard`, `ListRow`) — leurs primitives sont toutes
+auditées ailleurs, seule la composition ne l'est pas, et elle est en lecture seule.

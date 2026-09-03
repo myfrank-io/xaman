@@ -40,6 +40,15 @@ const PAGES = [
   "/dev/ui/reset-password",
   "/dev/ui/checklist-setup",
   "/dev/ui/checklist-form",
+  // A dialog is closed on load, so the audit had never seen inside one — and they are the
+  // densest surfaces in the app: a date, a counter, a picker and a note in a box that must fit
+  // above a phone keyboard. `?d=` / `?dialog=` open exactly one.
+  "/dev/ui/dialogs?d=complete",
+  "/dev/ui/dialogs?d=hours",
+  "/dev/ui/dialogs?d=edit-reading",
+  "/dev/ui/dialogs?d=contact",
+  "/dev/ui/dialogs?d=recurring",
+  "/dev/ui/supplies?dialog=1",
 ];
 
 const MIN_TARGET = 44;
