@@ -52,7 +52,7 @@ pnpm lint · pnpm typecheck · pnpm test · pnpm test:e2e · pnpm build
 - Données : lectures via hooks `src/lib/queries/use-*.ts` (TanStack Query + client Supabase navigateur) ; écritures via Server Actions `src/lib/actions/*.ts` (`"use server"`, zod, client Supabase serveur, `revalidatePath` + invalidation query côté client).
 - Routes : `src/app/(app)/boats/[boatId]/…` ; le layout de `[boatId]` charge le bateau + le rôle de l'utilisateur et les expose via un contexte (`useBoat()`). Navigation V1 : 4 onglets (Tableau de bord, Checklist, Journal, Bateau), feuille « Plus », menu compte — voir `AUDIT.md D8`. Chemins construits uniquement via `src/lib/queries/boat-routes.ts`.
 - Rôles côté UI : helper `can(role, 'write' | 'contribute' | 'manageMembers' | 'deleteBoat')` dans `src/lib/permissions.ts`, miroir des fonctions SQL (`write` = owner/editor, couvre aussi la mise à la corbeille et l'export ; `contribute` = + pro sur ses propres lignes ; `manageMembers` et `deleteBoat` = owner). L'admin plateforme est traité comme owner.
-- Authentification : code OTP à 6 chiffres saisi dans l'app (mode principal), lien magique en secours ; jamais de mot de passe.
+- Authentification : mot de passe (mode principal, `signInWithPassword`) ou code OTP à 6 chiffres saisi dans l'app ; le code reste le chemin des personnes invitées, qui n'ont pas encore de mot de passe. Lien magique en secours. Inscription publique depuis `/signup`, réinitialisation par lien de récupération (D26).
 - Dates : `date-fns` avec locale `fr` ; stockage `yyyy-MM-dd` pour les `date`.
 - Montants : `Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })`.
 - Tests : logique métier (statuts, schémas, permissions) en unitaire ; parcours en E2E ; pas de tests de rendu triviaux.

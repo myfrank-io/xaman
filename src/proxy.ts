@@ -4,7 +4,21 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { updateSession } from "@/lib/supabase/middleware";
 
 // Paths reachable without a session. Everything else (the (app) group) requires one.
-const PUBLIC_PREFIXES = ["/login", "/auth", "/invite", "/health", "/dev"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/auth",
+  "/invite",
+  "/health",
+  "/dev",
+];
+
+// Screens a signed-in visitor has no business on: they already have what these ask for.
+// `/reset-password` is deliberately absent — it is REACHED with the session the recovery
+// link opened, and sending that visitor away would make the link do nothing.
+const SIGNED_IN_ELSEWHERE = ["/", "/login", "/signup"];
 
 function isPublic(pathname: string): boolean {
   if (pathname === "/") return true;
@@ -26,7 +40,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (claims && (pathname === "/login" || pathname === "/")) {
+  if (claims && SIGNED_IN_ELSEWHERE.includes(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/boats";
     url.search = "";
