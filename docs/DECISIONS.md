@@ -115,3 +115,13 @@ Format : date · question · décision · raison. Claude Code ajoute une ligne �
 | 2026-09-02 | Modification d'un achat importé | Enregistrer une ligne efface `needs_review` | Lire et enregistrer une ligne, c'est la vérifier |
 | 2026-09-02 | Filtre de source des dépenses | Multi-sélection ; une sélection vide revient à « toutes » | Ne jamais afficher un écran vide à cause d'un tap raté |
 | 2026-09-02 | Fournisseur / chantier | Un contact de l'annuaire l'emporte sur le texte libre ; jamais les deux stockés | Une seule source de vérité par ligne |
+| 2026-09-02 | Vérification d'une pièce en stock | Enregistrer la fiche ou toucher +/− met `checked_at` à aujourd'hui ; pas de bouton « vérifié » séparé | Lire et enregistrer une ligne, c'est la vérifier (même règle que les achats importés) ; un contrôle de plus serait un troisième bouton sur la ligne |
+| 2026-09-02 | Suppression d'une pièce | Physique, après confirmation nommée ; pas de corbeille | Donnée déclarative sans historique (D10) ; la règle 9 (corbeille) ne vise que interventions, achats et sorties de l'eau |
+| 2026-09-02 | Décrément sous zéro | `adjust_part_quantity` plafonne à 0 et le bouton − est inactif à 0 | Un stock négatif n'a pas de sens ; deux taps rapides restent atomiques côté base |
+| 2026-09-02 | Création d'une pièce | Bouton nommé « Ajouter une pièce » dans l'onglet Stock ; le « + » de l'écran Dépenses crée toujours un achat | Règle D19 : un seul « + » par écran, un raccourci nommé n'est pas un « + » concurrent |
+| 2026-09-02 | Badge « Sous le seuil » | Contour et teinte `state-overdue` (rouge) sur la ligne et compteur dans le filtre | Le rouge est réservé à ce qui exige une action : ici, racheter |
+| 2026-09-03 | Page d'accueil `/` | Redirection vers `/login` (l'écran d'attente « en cours de construction » est supprimé) | L'app est privée : un visiteur non connecté n'a rien à y voir, et la racine était un cul-de-sac depuis la mise en production |
+| 2026-09-03 | Portée des brouillons hors ligne | Créations seulement : intervention, achat, pièce, cochage d'un point ; jamais une modification | Rejouer une modification écraserait le travail d'un autre (D25) |
+| 2026-09-03 | Renvoi des brouillons | Manuel, depuis la carte du tableau de bord ; aucune synchronisation de fond | Rien ne quitte l'iPad sans un geste, donc une ligne erronée peut encore être supprimée |
+| 2026-09-03 | File pleine | 20 saisies maximum, message explicite au-delà | Au-delà, la personne n'est pas hors ligne un instant : elle travaille sans réseau et doit le savoir |
+| 2026-09-03 | Échec au renvoi | Une ligne refusée par la base garde son erreur et reste dans la file ; un échec réseau arrête le renvoi | Rien n'est jeté en silence, et inutile d'insister quand le lien est retombé |

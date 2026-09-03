@@ -383,6 +383,7 @@ Index : `(checklist_item_id, completed_at desc)`.
 | location | text | | emplacement à bord |
 | supplier_contact_id | uuid | FK contacts on delete set null | |
 | notes | text | | |
+| checked_at | date | null | dernier jour où la quantité a été comptée ou ajustée (`0010`, D10) ; null = jamais vérifiée |
 | external_ref | text | | |
 | created_by / updated_by / created_at / updated_at | | | |
 | unique | (boat_id, external_ref) | | |
@@ -648,10 +649,22 @@ Colonnes : `rank, kind ('log'|'item'), id, title, category_id, category_name, ca
 ### 12.7 Couleurs de catégories
 Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards_rudders #0284C7`, `sails_rigging #A21CAF`, `hull_deck #52606F`, `electronics_nav #1D4ED8`, `energy #A16207`, `plumbing_systems #0F766E`, `safety #C81E2B` ; `engines #D97706` inchangé. La migration ne met à jour, par `external_ref`, que les `checklist_template_categories` / `boat_categories` **portant encore l'ancienne couleur exacte** : un choix fait par l'utilisateur n'est jamais écrasé. `seed/orc50-checklist.json` porte les nouvelles valeurs et gagne le point `haul-out` « Carénage / sortie de l'eau » (18 mois, catégorie Coque & Pont) qui fait entrer les sorties de l'eau dans le modèle unique (D9).
 
-## 13. Notes d'implémentation — `0005_journal.sql`, `0007_invitation_privacy.sql`, `0008_weekly_digest.sql`, `0009_function_privileges.sql`
+## 13. Notes d'implémentation — `0005_journal.sql`, `0007_invitation_privacy.sql`, `0008_weekly_digest.sql`, `0009_function_privileges.sql`, `0010_parts_stock.sql`
 
 - **0005** : trois fonctions `security invoker` en lecture seule (la RLS de l'appelant s'applique) : `text_fold(text)` (minuscules + repli des accents par `translate`, `immutable`, pas d'extension `unaccent`), `log_title_suggestions(p_boat_id, p_query)` (≤ 5 titres distincts du bateau contenant la requête repliée via `strpos`, 2 caractères minimum, avec la catégorie du dernier journal et le moteur le plus fréquent), `suggest_checklist_items(p_boat_id, p_category_id, p_title)` (≤ 5 points actifs de la catégorie dont `greatest(similarity, strict_word_similarity)` — calculé sur le libellé **sans** le suffixe « — Moteur » — dépasse 0,5, avec leur statut d'échéance). Grants `authenticated` + `service_role`.
 - **0007** : `get_invitation_preview(p_token)` renvoie désormais l'adresse invitée **masquée** (`x•••@domaine`) ; la page publique `/invite/[token]` ne pré-remplit plus le formulaire de connexion et `accept_invitation` reste la seule vérification exacte de l'adresse (D29).
 - **0008** : `weekly_digest_payload()` (security definer, `service_role` seulement) agrège par bateau les destinataires owner/editor actifs, les points en retard et bientôt (`checklist_item_status`) et les interventions planifiées / en cours / urgentes à 30 jours ; `enqueue_weekly_digest()` appelle l'Edge Function `weekly-digest` via `net.http_post` avec l'URL et la clé lues dans Vault (`xaman_digest_url`, `xaman_digest_key`) ; planification `pg_cron` « vendredi 06:30 UTC » quand l'extension existe (rien en local). L'envoi passe par Resend (secrets de la fonction : `RESEND_API_KEY`, `DIGEST_FROM`, `APP_URL`).
 
 - **0009** : les privilèges par défaut de Supabase donnent `EXECUTE` à `anon` à la création de chaque fonction, et `revoke … from public` ne retire pas ce grant explicite. La migration retire `EXECUTE` à `PUBLIC` et `anon` sur **toutes** les fonctions de `public` (sauf `get_invitation_preview` et `boat_id_from_storage_path`, points d'entrée anonymes voulus), et à `authenticated` sur les fonctions trigger et les fonctions réservées au service (`purge_trash`, `weekly_digest_payload`, `enqueue_weekly_digest`) ; privilèges par défaut ajustés pour les fonctions futures. Toute nouvelle fonction doit garder cette règle (conseillers Supabase 0028 / 0029).
+- **0010** : `parts.checked_at` (date de la dernière vérification) et `adjust_part_quantity(p_part_id, p_delta)` : +/− atomique depuis la liste (`quantity = greatest(0, quantity + delta)`, `checked_at = current_date`), `security invoker` donc soumis à la politique `parts_update` (owner / editor) ; delta nul refusé (`invalid_delta`), ligne inaccessible → `part_not_found`. Les pièces n'ont pas de corbeille : suppression physique après confirmation (D10, donnée déclarative).
+
+### Conseillers de sécurité Supabase — avertissements acceptés
+
+`get_advisors(security)` signale en `WARN` toutes les fonctions `security definer` de `public` appelables via `/rest/v1/rpc/…`. **C'est le modèle voulu, ne pas « corriger » :**
+
+- `is_platform_admin`, `is_boat_member`, `boat_role`, `is_boat_owner`, `can_write_boat`, `can_contribute_boat`, `shares_boat_with` — helpers de la RLS. Ils **doivent** être `security definer` (ils lisent `boat_members` et `profiles`, tables elles-mêmes protégées) et rester exécutables par `authenticated` : chaque écran appelle `boat_role` en RPC pour connaître son rôle. Chacun ne renvoie qu'un booléen ou un rôle sur le bateau demandé.
+- `accept_invitation`, `apply_checklist_template`, `mark_log_reviewed` — vérifient elles-mêmes l'autorisation (e-mail de l'invitation, `can_write_boat`) avant d'écrire.
+- `get_invitation_preview` reste exécutable par `anon` : c'est le point d'entrée de la page publique `/invite/[token]`, et depuis `0007` elle masque l'adresse.
+- `adjust_part_quantity` (`0010`) est `security invoker` et n'apparaît donc pas : la politique `parts_update` décide.
+
+`auth_leaked_password_protection` est sans objet : l'authentification se fait par code OTP, l'app n'a pas de mot de passe.

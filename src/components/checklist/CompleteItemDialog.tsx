@@ -26,6 +26,9 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { NumericField } from "@/components/ui/numeric-field";
 import { Spinner } from "@/components/ui/spinner";
+import { submitOrQueue } from "@/components/forms/submit-or-queue";
+import { useOnline } from "@/components/common/use-online";
+import { useOutbox } from "@/components/offline/use-outbox";
 import { completeChecklistItem, deleteCompletion } from "@/lib/actions/checklist";
 import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -146,9 +149,12 @@ function CompleteForm({
   const t = useTranslations("checklist.complete");
   const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
+  const to = useTranslations("offline");
   const fieldError = useFieldError();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const outbox = useOutbox(boatId);
+  const { online } = useOnline();
   const [completionId] = useState(() => crypto.randomUUID());
   const [completedAt, setCompletedAt] = useState(() => todayString());
   const [by, setBy] = useState<string>("me");
@@ -199,9 +205,24 @@ function CompleteForm({
           ? currentUserName
           : (members.find((member) => member.id === by)?.name ?? "");
     startTransition(async () => {
-      const result = await completeChecklistItem(parsed.data);
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
+      // Ticking a point is the one gesture that must survive a dead link (E9-1b): offline it
+      // is kept on the iPad, the row shows as done, and « Annuler » drops it from the queue.
+      const outcome = await submitOrQueue({
+        kind: "completion",
+        boatId,
+        id: completionId,
+        label: item.label,
+        values: parsed.data,
+        action: completeChecklistItem,
+        enqueue: outbox.enqueue,
+        online,
+      });
+      if (outcome.status === "full") {
+        toast.error(to("queueFull"));
+        return;
+      }
+      if (outcome.status === "refused") {
+        toast.error(errorMessage(outcome.error));
         return;
       }
       const saved: SavedCompletion = {
@@ -213,6 +234,18 @@ function CompleteForm({
       };
       onCompleted?.(item, saved);
       onClose();
+      if (outcome.status === "queued") {
+        undoToast({
+          message: to("savedOnDevice"),
+          undoLabel: t("undo"),
+          onUndo: () => {
+            outbox.discard(completionId);
+            onUndone?.(item, completionId);
+            toast.success(t("undone"));
+          },
+        });
+        return;
+      }
       undoToast({
         message: t("saved", { label: item.label }),
         undoLabel: t("undo"),

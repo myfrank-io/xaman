@@ -41,6 +41,7 @@ export function FormActionBar({
   saveLabel,
   cancelLabel,
   onCancel,
+  queueable = false,
   className,
 }: {
   pending?: boolean;
@@ -48,6 +49,12 @@ export function FormActionBar({
   saveLabel?: string;
   cancelLabel?: string;
   onCancel: () => void;
+  /**
+   * Creation form whose result can wait on the device (E9-1b): offline it still submits and
+   * says so, instead of refusing. An edit is never queueable — replaying it later could
+   * overwrite someone else's change (D25).
+   */
+  queueable?: boolean;
   className?: string;
 }) {
   const t = useTranslations("common");
@@ -68,14 +75,15 @@ export function FormActionBar({
       <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
         {cancelLabel ?? t("cancel")}
       </Button>
-      {/* Offline: the form is never emptied, the button says why and stays tappable (§5.4). */}
+      {/* Offline: the form is never emptied. A creation is saved on the device and re-sent
+          later (E9-1b); anything else says why the button cannot do its job (§5.4). */}
       <Button
-        type={online ? "submit" : "button"}
+        type={online || queueable ? "submit" : "button"}
         disabled={pending || disabled}
         aria-busy={pending}
-        aria-disabled={!online || undefined}
+        aria-disabled={(!online && !queueable) || undefined}
         variant={online ? "default" : "outline"}
-        onClick={online ? undefined : () => toast.error(to("actionUnavailable"))}
+        onClick={online || queueable ? undefined : () => toast.error(to("actionUnavailable"))}
       >
         {pending ? (
           <>
@@ -84,6 +92,8 @@ export function FormActionBar({
           </>
         ) : online ? (
           (saveLabel ?? t("save"))
+        ) : queueable ? (
+          to("saveOnDevice")
         ) : (
           to("retryLabel")
         )}

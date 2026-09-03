@@ -17,7 +17,10 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { formResolver } from "@/components/forms/form-resolver";
 import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
+import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
+import { useOnline } from "@/components/common/use-online";
+import { useOutbox } from "@/components/offline/use-outbox";
 import { SupplierField } from "@/components/supplies/SupplierField";
 import { Button } from "@/components/ui/button";
 import { DateField } from "@/components/ui/date-field";
@@ -105,10 +108,13 @@ export function PurchaseForm({
   const t = useTranslations("supplies.purchases");
   const tk = useTranslations("purchaseKind");
   const errorMessage = useErrorMessage();
+  const to = useTranslations("offline");
   const fieldError = useFieldError();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [newId] = useState(() => crypto.randomUUID());
+  const outbox = useOutbox(boatId);
+  const { online } = useOnline();
 
   const form = useForm<PurchaseFormState, unknown, PurchaseOutput>({
     resolver: formResolver<PurchaseFormState, PurchaseOutput>(upsertPurchaseSchema),
@@ -152,12 +158,25 @@ export function PurchaseForm({
 
   function onSubmit(values: PurchaseOutput) {
     startTransition(async () => {
-      const result = await upsertPurchase(values);
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
+      const outcome = await submitOrQueue({
+        kind: "purchase",
+        boatId,
+        id: values.id,
+        label: values.designation,
+        values,
+        action: upsertPurchase,
+        enqueue: outbox.enqueue,
+        online: online || Boolean(purchase),
+      });
+      if (outcome.status === "full") {
+        toast.error(to("queueFull"));
         return;
       }
-      toast.success(t("saved"));
+      if (outcome.status === "refused") {
+        toast.error(errorMessage(outcome.error));
+        return;
+      }
+      toast.success(outcome.status === "queued" ? to("savedOnDevice") : t("saved"));
       router.push(backHref as Parameters<typeof router.push>[0]);
       router.refresh();
     });
@@ -359,6 +378,7 @@ export function PurchaseForm({
       ) : null}
       <FormActionBar
         pending={pending}
+        queueable={!purchase}
         onCancel={() =>
           guard.leave(() => router.push(backHref as Parameters<typeof router.push>[0]))
         }

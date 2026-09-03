@@ -1105,3 +1105,64 @@ describe("journal helpers (0005)", () => {
     expect(rows).toEqual([]);
   });
 });
+
+describe("parts stock (0010)", () => {
+  const PART = "00000000-0000-0000-0000-000000006001";
+
+  it("an editor adjusts the quantity atomically and the line counts as checked", async () => {
+    const result = await as(U.editor, async (c) => {
+      const before = await c.query("select quantity from public.parts where id = $1", [PART]);
+      const returned = await c.query("select public.adjust_part_quantity($1, 2) as quantity", [
+        PART,
+      ]);
+      const after = await c.query("select quantity, checked_at from public.parts where id = $1", [
+        PART,
+      ]);
+      return {
+        before: Number(before.rows[0].quantity),
+        returned: Number(returned.rows[0].quantity),
+        after: Number(after.rows[0].quantity),
+        checked: after.rows[0].checked_at as Date | null,
+      };
+    });
+    expect(result.returned).toBe(result.before + 2);
+    expect(result.after).toBe(result.before + 2);
+    expect(result.checked).not.toBeNull();
+  });
+
+  it("floors the quantity at zero", async () => {
+    const result = await as(U.owner, async (c) => {
+      const returned = await c.query("select public.adjust_part_quantity($1, -50) as quantity", [
+        PART,
+      ]);
+      return Number(returned.rows[0].quantity);
+    });
+    expect(result).toBe(0);
+  });
+
+  it("refuses a null delta", async () => {
+    const result = await run(U.owner, "select public.adjust_part_quantity($1, 0)", [PART]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toContain("invalid_delta");
+  });
+
+  it("a pro, a viewer or a stranger update no row", async () => {
+    for (const user of [U.pro, U.viewer, U.stranger]) {
+      const result = await run(user, "select public.adjust_part_quantity($1, 1)", [PART]);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.message).toContain("part_not_found");
+    }
+  });
+
+  it("anon cannot execute the function", async () => {
+    const result = await run(null, "select public.adjust_part_quantity($1, 1)", [PART]);
+    expect(result.ok).toBe(false);
+  });
+
+  it("only an owner or an editor deletes a part", async () => {
+    const editor = await run(U.editor, "delete from public.parts where id = $1", [PART]);
+    expect(editor).toEqual({ ok: true, rowCount: 1 });
+    const pro = await run(U.pro, "delete from public.parts where id = $1", [PART]);
+    expect(pro).toEqual({ ok: true, rowCount: 0 });
+  });
+});

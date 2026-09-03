@@ -3,11 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { BOAT_TABS, type BoatTab } from "@/components/boat/tabs";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { boatTabPath } from "@/lib/queries/boat-routes";
-
-export type BoatTab = "identity" | "engines" | "equipment";
-export const BOAT_TABS: BoatTab[] = ["identity", "engines", "equipment"];
 
 // The tab lives in the URL (`?tab=`): reload, back and share keep it (ux-flows §1.2).
 export function BoatTabs({

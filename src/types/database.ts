@@ -1519,6 +1519,7 @@ export type Database = {
         Row: {
           boat_id: string
           category_id: string | null
+          checked_at: string | null
           created_at: string
           created_by: string | null
           external_ref: string | null
@@ -1537,6 +1538,7 @@ export type Database = {
         Insert: {
           boat_id: string
           category_id?: string | null
+          checked_at?: string | null
           created_at?: string
           created_by?: string | null
           external_ref?: string | null
@@ -1555,6 +1557,7 @@ export type Database = {
         Update: {
           boat_id?: string
           category_id?: string | null
+          checked_at?: string | null
           created_at?: string
           created_by?: string | null
           external_ref?: string | null
@@ -2236,6 +2239,10 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      adjust_part_quantity: {
+        Args: { p_delta: number; p_part_id: string }
+        Returns: number
+      }
       apply_checklist_template: {
         Args: { p_boat_id: string; p_engine_id?: string; p_template_id: string }
         Returns: undefined
