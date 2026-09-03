@@ -1,6 +1,12 @@
 import { getTranslations } from "next-intl/server";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatCard } from "@/components/common/StatCard";
@@ -18,6 +24,7 @@ import {
   type ExpenseSource,
 } from "@/lib/expenses";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/purchases";
 import type { PurchaseKind } from "@/lib/schemas/purchases";
 
 /** Neutral grey for the « no category » bucket: a category colour never travels alone. */
@@ -66,6 +73,22 @@ export async function ExpensesTab({
     getTranslations("supplies.expenses"),
     getTranslations("supplies.period"),
   ]);
+  const tk = await getTranslations("purchaseKind");
+  // What the fold is hiding, in one line: a filter that is on must be readable without opening
+  // anything, or folding the panel would quietly change what the totals below mean.
+  const filterSummary = [
+    tp(period),
+    sources.length === 0 || sources.length === 3
+      ? null
+      : sources.map((source) => t(`sources.${source}`)).join(" · "),
+    kind && (VISIBLE_PURCHASE_KINDS as readonly string[]).includes(kind)
+      ? tk(kind as VisiblePurchaseKind)
+      : null,
+    categoryId ? (categories.find((c) => c.id === categoryId)?.name ?? null) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const total = totalAmount(data.rows);
   const categoryTotals = groupByCategory(data.rows, t("uncategorized"), NO_CATEGORY_COLOR);
   const change = variation(total, data.previousTotal);
@@ -82,17 +105,34 @@ export async function ExpensesTab({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <ExpenseFilters
-          boatId={boatId}
-          period={period}
-          range={range}
-          sources={sources}
-          kind={kind}
-          categoryId={categoryId}
-          categories={categories}
-        />
-      </div>
+      {/* Folded (D46). Four groups of chips stacked to roughly 600 px on a 360 px phone: opening
+          Dépenses showed filters and not one euro. The heading says what is currently kept, so
+          the fold never hides an active filter — and the money is the first thing on screen. */}
+      <Accordion
+        type="single"
+        collapsible
+        className="rounded-xl border border-border bg-surface px-4 shadow-sm sm:px-5"
+      >
+        <AccordionItem value="filters" className="border-b-0">
+          <AccordionTrigger className="text-body">
+            <span className="flex min-w-0 flex-col items-start gap-0.5 text-left">
+              <span className="font-medium">{t("filters.title")}</span>
+              <span className="text-caption font-normal text-ink-2">{filterSummary}</span>
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <ExpenseFilters
+              boatId={boatId}
+              period={period}
+              range={range}
+              sources={sources}
+              kind={kind}
+              categoryId={categoryId}
+              categories={categories}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard

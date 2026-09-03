@@ -140,6 +140,12 @@ export type ImportCatalog = {
   engines?: { id: string; label: string; position: string }[];
   /** Readings already recorded, so a counter that goes backwards is spotted. */
   readings?: { engineId: string; readAt: string; hours: number }[];
+  /**
+   * Trades already used on this boat. A whole file of contacts often carries one trade, or
+   * none at all — a phone export has no such column — so it is chosen once from what the boat
+   * already knows rather than typed blind (D44).
+   */
+  specialties?: string[];
 };
 
 /** A checklist point resolved from a name, with what the database will demand of it. */
@@ -417,7 +423,7 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         label: "Spécialité",
         required: true,
         aliases: ["metier", "métier", "type", "categorie"],
-        help: "Chantier, Voilier, Motoriste… texte libre.",
+        help: "Chantier, Voilier, Motoriste… choisie dans la liste ou nommée.",
         // A contact card exported from a phone carries no trade: it is typed once, for all.
         allowDefault: true,
         sample: "Chantier",

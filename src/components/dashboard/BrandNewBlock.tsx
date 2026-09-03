@@ -104,7 +104,7 @@ export function BrandNewBlock({
           return (
             <li
               key={row.key}
-              className="flex min-h-12 items-center gap-3 rounded-lg border border-border bg-surface px-4 py-2"
+              className="flex min-h-12 flex-col items-start gap-2 rounded-lg border border-border bg-surface px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:py-2"
             >
               <span
                 className={cn(
@@ -114,7 +114,12 @@ export function BrandNewBlock({
               >
                 {done ? <CheckIcon className="size-4" aria-hidden /> : index + 1}
               </span>
-              <span className={cn("min-w-0 flex-1 text-body", done && "text-ink-3 line-through")}>
+              <span
+                className={cn(
+                  "min-w-0 flex-1 text-body [overflow-wrap:anywhere]",
+                  done && "text-ink-3 line-through",
+                )}
+              >
                 {row.label}
               </span>
               {!done && (canContribute || row.key === "checklist") ? (

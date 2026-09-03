@@ -8,6 +8,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DeleteAccountCard } from "@/components/profile/DeleteAccountCard";
+import { PasswordCard } from "@/components/profile/PasswordCard";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +60,7 @@ export default async function ProfilePage() {
         actions={<SignOutButton variant="outline" />}
       />
       <ProfileForm defaultValues={{ fullName: profile?.full_name ?? "" }} />
+      <PasswordCard />
       <DeleteAccountCard blockingBoats={blocking} />
     </main>
   );

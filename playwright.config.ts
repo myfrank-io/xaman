@@ -34,6 +34,18 @@ export default defineConfig({
       name: "iphone",
       use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, hasTouch: true },
     },
+    {
+      // The floor the app is held to, mobile-first: a small Android in portrait. Everything
+      // that survives 360 px survives every phone anyone brings aboard.
+      name: "android-small",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 640 }, hasTouch: true },
+    },
+    {
+      // The hard floor: an iPhone SE. Nothing is designed for it, but nothing may break on it
+      // either — it is where a layout that cannot shrink shows itself first.
+      name: "phone-narrow",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 320, height: 568 }, hasTouch: true },
+    },
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined

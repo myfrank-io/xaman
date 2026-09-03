@@ -32,8 +32,11 @@ export function SectionCard({
 }) {
   return (
     <section className={cn("flex flex-col gap-3", className)}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-overline text-ink-2 uppercase">{title}</h2>
+      {/* Wraps rather than overflows: a section title and a full-sentence action button
+          (« Intervention pendant cette sortie », 254 px) do not share a 360 px phone. The
+          action drops to its own line there and sits back beside the title from `sm`. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h2 className="min-w-0 text-overline text-ink-2 uppercase">{title}</h2>
         {action ??
           (actionHref && actionLabel ? (
             <Link

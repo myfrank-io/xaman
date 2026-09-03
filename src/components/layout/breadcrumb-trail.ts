@@ -134,8 +134,11 @@ function groupOf(section: NavKey | undefined, segment: string, boatId: string): 
  * The dashboard is the home of a boat but NOT the root of every trail: it is one of the four
  * tabs, always one tap away in the bar and in the sidebar, so opening every trail with it
  * would repeat a control already on screen and push the crumbs that matter onto a second line
- * on a phone. It gets its own crumb on `/dashboard`, and nothing more — the shortest way out
- * of a deep screen is its section, not the home.
+ * on a phone. The shortest way out of a deep screen is its section, not the home.
+ *
+ * It carries no trail of its own either: a lone « Tableau de bord » naming the screen you are
+ * looking at says nothing the highlighted tab has not already said, and it left the dark
+ * header floating below a line of grey. The boat's name, in that header, is the title.
  *
  * A crumb that links, links to a screen that exists: never a bare `/boat/engines`, and no
  * « Fiche » for a record the app only ever edits.
@@ -147,6 +150,8 @@ export function buildTrail(pathname: string, boatId: string, entity?: string | n
   const head = segments[0];
   // `/boats/<id>` serves no screen of its own: nothing to name.
   if (!head) return [];
+  // …and neither does the dashboard, which announces itself in its own header.
+  if (head === BOAT_ROUTES.dashboard && segments.length === 1) return [];
   const section = sectionOf(head, boatId, entity);
   if (!section) return [];
 

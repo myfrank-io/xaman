@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/common/EmptyState";
+import { specialtyOptions } from "@/components/contacts/specialties";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,9 @@ import { templateCsv, templateFileName } from "@/lib/import/template";
 import { parseContactCards, isContactCardFile } from "@/lib/import/vcard";
 import { isLegacyExcelFile, isSpreadsheetFile, readWorkbook, type Sheet } from "@/lib/import/xlsx";
 import { cn } from "@/lib/utils";
+
+/** « Autre » chip: never the empty string, which Radix reads as « nothing selected ». */
+const OTHER_TRADE = "__other__";
 
 const PREVIEW_ROWS = 8;
 const NO_FIELD = "";
@@ -255,7 +259,22 @@ export function ImportWizard({
     setReport(null);
   }
 
+  // One page can hold several wizards (the /dev/ui gallery does): the id carries the entity so
+  // the label points at its own field rather than at the first one on the page.
+  const pasteId = `import-paste-${entity}`;
   const defaultFields = useMemo(() => fields.filter((field) => field.allowDefault), [fields]);
+  const tc = useTranslations("contacts.specialties");
+  const tCommon = useTranslations("common");
+  /**
+   * A trade is chosen, not spelled (D44): the seven built-ins plus every trade this boat
+   * already uses, and « Autre » to name a new one — the same list the contact form offers,
+   * from the same reader, so the two screens can never disagree.
+   */
+  const specialtyChips = useMemo(
+    () => specialtyOptions((key) => tc(key), catalog?.specialties ?? []),
+    [tc, catalog?.specialties],
+  );
+  const chipsFor = (key: string): string[] => (key === "specialty" ? specialtyChips : []);
   const missing = useMemo(
     () => missingRequired(fields, mapping, defaults),
     [fields, mapping, defaults],
@@ -405,9 +424,9 @@ export function ImportWizard({
               <p>{t("source.templateHelp")}</p>
             </div>
             <span className="text-caption text-ink-3">{t("source.or")}</span>
-            <Label htmlFor="import-paste">{t("source.paste")}</Label>
+            <Label htmlFor={pasteId}>{t("source.paste")}</Label>
             <Textarea
-              id="import-paste"
+              id={pasteId}
               rows={4}
               value={raw}
               spellCheck={false}
@@ -548,22 +567,64 @@ export function ImportWizard({
                   <p className="text-caption text-ink-2">{t("mapping.defaultsHelp")}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {defaultFields.map((field) => (
-                    <div key={field.key} className="flex flex-col gap-1.5">
-                      <Label htmlFor={`default-${field.key}`}>{field.label}</Label>
-                      <Input
-                        id={`default-${field.key}`}
-                        value={defaults[field.key] ?? ""}
-                        placeholder={t("mapping.defaultValue")}
-                        autoComplete="off"
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          setDefaults((current) => ({ ...current, [field.key]: value }));
-                          setReport(null);
-                        }}
-                      />
-                    </div>
-                  ))}
+                  {defaultFields.map((field) => {
+                    const chips = chipsFor(field.key);
+                    const current = defaults[field.key] ?? "";
+                    const listed = chips.includes(current);
+                    const setValue = (value: string) => {
+                      setDefaults((state) => ({ ...state, [field.key]: value }));
+                      setReport(null);
+                    };
+                    // A field with a known list is picked from it; « Autre » opens the box that
+                    // names a new one, exactly as the contact form does (D44).
+                    if (chips.length > 0) {
+                      return (
+                        <div key={field.key} className="flex flex-col gap-2 sm:col-span-2">
+                          <Label>{field.label}</Label>
+                          <ToggleGroup
+                            type="single"
+                            value={listed ? current : current === "" ? "" : OTHER_TRADE}
+                            onValueChange={(value) => {
+                              if (value === "") return;
+                              setValue(value === OTHER_TRADE ? "" : value);
+                            }}
+                            className="flex flex-wrap gap-2"
+                          >
+                            {chips.map((chip) => (
+                              <ToggleGroupItem key={chip} value={chip} className="min-h-11">
+                                {chip}
+                              </ToggleGroupItem>
+                            ))}
+                            <ToggleGroupItem value={OTHER_TRADE} className="min-h-11">
+                              {tc("other")}
+                            </ToggleGroupItem>
+                          </ToggleGroup>
+                          {!listed ? (
+                            <Input
+                              id={`default-${field.key}`}
+                              value={current}
+                              placeholder={t("mapping.newSpecialty")}
+                              autoComplete="off"
+                              autoCapitalize="sentences"
+                              onChange={(event) => setValue(event.target.value)}
+                            />
+                          ) : null}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={field.key} className="flex flex-col gap-1.5">
+                        <Label htmlFor={`default-${field.key}`}>{field.label}</Label>
+                        <Input
+                          id={`default-${field.key}`}
+                          value={current}
+                          placeholder={t("mapping.defaultValue")}
+                          autoComplete="off"
+                          onChange={(event) => setValue(event.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
@@ -585,6 +646,9 @@ export function ImportWizard({
           <section className="flex flex-col gap-3">
             <h2 className="text-h2">{t("steps.preview")}</h2>
             <p className="text-body">{t("preview.plan", plan)}</p>
+            {/* Seven columns cannot fit 328 px and stay a table, so it scrolls — and a table that
+                scrolls without saying so reads as a table with three columns (F9). */}
+            <p className="text-caption text-ink-3 sm:hidden">{tCommon("scrollTable")}</p>
             <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
               <table className="w-full border-collapse text-caption">
                 <thead>
@@ -593,7 +657,7 @@ export function ImportWizard({
                       {t("preview.state")}
                     </th>
                     {previewFields.map((field) => (
-                      <th key={field.key} className="px-3 py-2 font-medium whitespace-nowrap">
+                      <th key={field.key} className="px-3 py-2 font-medium sm:whitespace-nowrap">
                         {field.label}
                       </th>
                     ))}
@@ -629,7 +693,7 @@ export function ImportWizard({
                           </div>
                         </td>
                         {previewFields.map((field) => (
-                          <td key={field.key} className="px-3 py-2 whitespace-nowrap text-ink-2">
+                          <td key={field.key} className="px-3 py-2 text-ink-2 sm:whitespace-nowrap">
                             {values[field.key] || "—"}
                           </td>
                         ))}

@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 // 12 px / 600 and not 11 px / 500: readability in full sun (ux-flows §1.3).
 function tabClass(active: boolean) {
   return cn(
-    "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 tap-feedback px-1 text-[12px] font-semibold",
+    "relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 tap-feedback px-1 text-[12px] font-semibold",
     active ? "text-primary" : "text-ink-2",
   );
 }

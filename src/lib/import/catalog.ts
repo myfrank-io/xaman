@@ -1,4 +1,5 @@
 import type { ImportCatalog, EntityDescriptor } from "@/lib/import/entities";
+import { usedSpecialties } from "@/lib/queries/contact-specialties";
 import type { createClient } from "@/lib/supabase/server";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -61,6 +62,14 @@ export async function loadImportCatalog(
         hours: reading.hours,
       })),
     };
+  }
+
+  // Importing contacts: the trades this boat already uses, so « ces 40 contacts sont tous des
+  // chantiers » is chosen from a list instead of spelled out — and a trade typed here becomes
+  // a chip for the next contact, exactly as it does in the contact form (D44). Same reader as
+  // that form, so the two screens can never offer different lists.
+  if (descriptor.table === "contacts") {
+    return { specialties: await usedSpecialties(supabase, boatId) };
   }
 
   return {};

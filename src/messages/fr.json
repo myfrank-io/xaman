@@ -49,7 +49,8 @@
       "created": "Créé par {name} le {date}",
       "updated": "modifié par {name} le {date}",
       "unknown": "un membre"
-    }
+    },
+    "scrollTable": "Faites glisser le tableau pour voir toutes les colonnes."
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -258,7 +259,8 @@
       "sent": {
         "title": "Lien envoyé",
         "description": "Si un compte existe pour {email}, un lien de réinitialisation vient d'y être envoyé. Il est valable une heure."
-      }
+      },
+      "rateLimited": "Trop de messages ont été envoyés depuis cette application dans l'heure. Attendez une heure, ou changez votre mot de passe depuis votre profil si vous êtes déjà connecté."
     },
     "reset": {
       "title": "Choisir un nouveau mot de passe",
@@ -425,6 +427,18 @@
       "blockedDescription": "Avant de supprimer votre compte, transférez le bateau à un autre propriétaire ou supprimez-le.",
       "transfer": "Transférer le bateau",
       "deleteBoat": "Supprimer le bateau"
+    },
+    "password": {
+      "title": "Mot de passe",
+      "help": "Choisissez-en un nouveau. Vous restez connecté sur cet appareil ; les autres devront se reconnecter.",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le mot de passe",
+      "submit": "Changer le mot de passe",
+      "saved": "Mot de passe changé.",
+      "weak": "Mot de passe trop court : 8 caractères au minimum.",
+      "mismatch": "Les deux mots de passe ne sont pas identiques.",
+      "failed": "Impossible de changer le mot de passe. Réessayez.",
+      "sameAsOld": "Ce mot de passe est déjà le vôtre. Choisissez-en un autre."
     }
   },
   "roles": {
@@ -764,7 +778,8 @@
       "stockParts": "{count, plural, =0 {aucune pièce} one {# pièce} other {# pièces}}",
       "stockLow": "{count, plural, one {# sous le seuil} other {# sous le seuil}}",
       "stockToBuy": "À racheter avant la prochaine sortie",
-      "stockComplete": "Rien à racheter"
+      "stockComplete": "Rien à racheter",
+      "stockEmpty": "Ajouter les pièces que vous gardez à bord"
     },
     "todoEmpty": {
       "title": "Rien à traiter",
@@ -1410,7 +1425,10 @@
       "linesTitle": "Toutes les lignes",
       "linesEmpty": "Aucune ligne sur cette période.",
       "paidFor": "Payé pour",
-      "subtitle": "Interventions, achats et sorties de l'eau : une seule liste."
+      "subtitle": "Interventions, achats et sorties de l'eau : une seule liste.",
+      "filters": {
+        "title": "Filtres"
+      }
     },
     "purchases": {
       "title": "Achats",
@@ -1612,7 +1630,8 @@
       "unmapped": "Champs sans colonne : {fields}.",
       "defaults": "Valeurs pour tout le fichier",
       "defaultsHelp": "Écrites dans les lignes où la cellule est vide. Une fiche de contact ne porte pas de métier : il se saisit ici, une fois pour toutes.",
-      "defaultValue": "Valeur par défaut"
+      "defaultValue": "Valeur par défaut",
+      "newSpecialty": "Nommer une nouvelle spécialité"
     },
     "preview": {
       "title": "{count, plural, one {# ligne détectée} other {# lignes détectées}}",

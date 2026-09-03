@@ -28,6 +28,10 @@ const PAGES = [
   "/dev/ui/review",
   "/dev/ui/import",
   "/dev/ui/install",
+  // The account screen had no preview at all until D45 put a password card on it.
+  "/dev/ui/profile",
+  // The densest row in the app: title, two metadata lines, an amount and two buttons (D40).
+  "/dev/ui/trash",
 ];
 
 const MIN_TARGET = 44;

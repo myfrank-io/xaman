@@ -168,7 +168,7 @@ export function LogDetail({
           <Fact label={t("fields.haulOut")}>
             <Link
               href={boatPath(boatId, "haulOuts") as Route}
-              className="text-primary underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline"
             >
               {haulOut.label}
             </Link>

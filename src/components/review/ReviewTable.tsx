@@ -189,8 +189,10 @@ export function ReviewTable({
       {logs.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-overline text-ink-2 uppercase">{t("logsTitle")}</h2>
+          {/* Says it scrolls, rather than looking like a table with three columns (F9). */}
+          <p className="text-caption text-ink-3 sm:hidden">{tc("scrollTable")}</p>
           <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-            <table className="w-full min-w-[42rem] border-collapse">
+            <table className="w-full border-collapse sm:min-w-[42rem]">
               <thead>
                 <tr className="border-b border-border text-left">
                   <th scope="col" className="px-4 py-3 text-caption font-semibold text-ink-2">
@@ -272,7 +274,7 @@ export function ReviewTable({
         <section className="flex flex-col gap-3">
           <h2 className="text-overline text-ink-2 uppercase">{t("purchasesTitle")}</h2>
           <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-            <table className="w-full min-w-[40rem] border-collapse">
+            <table className="w-full border-collapse sm:min-w-[40rem]">
               <thead>
                 <tr className="border-b border-border text-left">
                   <th scope="col" className="px-4 py-3 text-caption font-semibold text-ink-2">

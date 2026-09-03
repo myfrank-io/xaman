@@ -5,6 +5,7 @@ import { ContactsList } from "@/components/contacts/ContactsList";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 
+import { DevShell } from "../DevShell";
 import { ContactPickerDemo } from "./ContactPickerDemo";
 import { devUiEnabled } from "@/lib/dev-ui";
 
@@ -58,14 +59,16 @@ export default async function DevContactsPage() {
   if (!devUiEnabled()) notFound();
   const t = await getTranslations("contacts");
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8 p-6">
-      <PageHeader title={t("title")} subtitle={t("count", { count: CONTACTS.length })} />
-      <ContactsList boatId={DEV_BOAT_ID} contacts={CONTACTS} canWrite />
-      <SectionCard title={t("picker.provider")} bare>
-        <div className="rounded-xl border border-border bg-surface p-5">
-          <ContactPickerDemo boatId={DEV_BOAT_ID} contacts={CONTACTS} />
-        </div>
-      </SectionCard>
-    </div>
+    <DevShell>
+      <div className="mx-auto flex max-w-3xl flex-col gap-8 p-4 sm:p-6">
+        <PageHeader title={t("title")} subtitle={t("count", { count: CONTACTS.length })} />
+        <ContactsList boatId={DEV_BOAT_ID} contacts={CONTACTS} canWrite />
+        <SectionCard title={t("picker.provider")} bare>
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <ContactPickerDemo boatId={DEV_BOAT_ID} contacts={CONTACTS} />
+          </div>
+        </SectionCard>
+      </div>
+    </DevShell>
   );
 }

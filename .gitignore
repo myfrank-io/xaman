@@ -52,3 +52,8 @@ pnpm-debug.log*
 
 # Agent worktrees (Claude Code isolation)
 .claude/worktrees/
+
+# Throwaway browser scripts. Playwright is only resolvable from the repo root, so a one-off
+# script that drives a page has to be written here — and then it sits next to real source
+# waiting to be committed by accident, or to fail `format:check`. Name them `zz-*.mjs`.
+zz-*.mjs
