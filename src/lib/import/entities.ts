@@ -169,12 +169,6 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         sample: "348,50",
       },
       {
-        key: "nextDate",
-        label: "Prochaine échéance",
-        aliases: ["prochaine", "a refaire le", "à refaire le", "echeance", "échéance"],
-        sample: "14/06/2027",
-      },
-      {
         key: "reference",
         label: "Référence",
         aliases: ["ref", "réf", "numero", "numéro", "no facture", "n° facture"],
@@ -409,9 +403,6 @@ export function rejectionReason(entity: ImportEntity, row: ImportRow): string | 
     // Undated, a line cannot take its place in the boat's history — that is the whole point.
     if ((row.date ?? "").trim() === "") return "import.errors.noDate";
     if (cellDate(row.date) === null) return "import.errors.badDate";
-    if ((row.nextDate ?? "").trim() !== "" && cellDate(row.nextDate) === null) {
-      return "import.errors.badDate";
-    }
     const money = entity === "logs" ? row.cost : row.amount;
     if (entity === "purchases" && (money ?? "").trim() === "") return "import.errors.noAmount";
     if ((money ?? "").trim() !== "" && cellNumber(money) === null) {

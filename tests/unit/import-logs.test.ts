@@ -102,13 +102,10 @@ describe("interventions: what is refused", () => {
     expect(rejectionReason("logs", row({ ...base, cost: "1 348,50" }))).toBeNull();
   });
 
-  it("refuses an unreadable next due date", () => {
-    expect(
-      rejectionReason(
-        "logs",
-        row({ name: "Vidange", date: "14/06/2026", nextDate: "l'an prochain" }),
-      ),
-    ).toBe("import.errors.badDate");
+  // Migration 0004 removed `maintenance_logs.next_due_at` on purpose: a next due date belongs
+  // to the checklist, not to a line of history. The import must not offer to fill it.
+  it("does not offer a « prochaine échéance » column", () => {
+    expect(logs.fields.map((field) => field.key)).not.toContain("nextDate");
   });
 });
 

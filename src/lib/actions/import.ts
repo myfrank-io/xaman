@@ -159,7 +159,6 @@ export async function importRows(input: {
         title: name,
         notes: [base.notes, unmatched].filter(Boolean).join("\n") || null,
         performed_at: cellDate(row.date),
-        next_due_at: cellDate(row.nextDate),
         category_id: category,
         contact_id: contactId,
         cost: cellNumber(row.cost),
