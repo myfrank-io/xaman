@@ -283,7 +283,7 @@ describe("insert", () => {
     expect((await run(U.stranger, sql, params(U.stranger))).ok, "stranger").toBe(false);
   });
 
-  // D63: the table stays shut. Opening a carnet goes through create_boat, so a boat can never
+  // D64: the table stays shut. Opening a carnet goes through create_boat, so a boat can never
   // exist without an owner and never exist without its checklist.
   it("boats: the table itself still takes an insert only from the platform admin", async () => {
     const sql = "insert into public.boats (name, type, created_by) values ('Nouveau', 'motor', $1)";
@@ -313,7 +313,7 @@ describe("insert", () => {
 });
 
 /**
- * Opening a carnet (D63, migration 0015). `create_boat` is the only door an ordinary user has to
+ * Opening a carnet (D64, migration 0015). `create_boat` is the only door an ordinary user has to
  * a boat of their own, so what it refuses matters as much as what it creates.
  */
 describe("create_boat", () => {

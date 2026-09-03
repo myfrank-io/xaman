@@ -46,7 +46,7 @@ export const deleteBoatSchema = z.object({
 });
 
 /**
- * Onboarding (D63): what it takes to open a carnet. A name, a model, and how many engines.
+ * Onboarding (D64): what it takes to open a carnet. A name, a model, and how many engines.
  *
  * The model is not optional — it is what makes the boat arrive already filled, and the audit's
  * « ne pas faire : création libre de bateaux sans modèle » (§2) is the whole point. Builder,

@@ -20,7 +20,7 @@ export type PickableBoat = {
  * The screen between signing in and a boat (E1-3, E10-2) — for anyone who keeps more than one.
  *
  * It is no longer the waiting room it used to be: someone with no boat is sent straight to
- * « Ajouter mon bateau » by the page around it (D63), so the empty state here is only reached
+ * « Ajouter mon bateau » by the page around it (D64), so the empty state here is only reached
  * from the gallery. The row that opens a second carnet sits at the end of the list, where the
  * eye already is after reading it, rather than as a button competing with the boats.
  *

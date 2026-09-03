@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * « Ajouter mon bateau » (D63, E11-3). The screen someone lands on when they signed up without an
+ * « Ajouter mon bateau » (D64, E11-3). The screen someone lands on when they signed up without an
  * invitation — which until now was a waiting room with nothing to wait for.
  *
  * The model registry is read here rather than in the client so the picker is populated on first

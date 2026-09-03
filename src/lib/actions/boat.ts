@@ -52,7 +52,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
 }
 
 /**
- * Opening a carnet (D63, E11-3). One call: the boat, its owner, its engines and the whole
+ * Opening a carnet (D64, E11-3). One call: the boat, its owner, its engines and the whole
  * checklist instantiated from the chosen model — `create_boat` does all four in one transaction,
  * because a boat that exists without an owner, or without its checklist, is a broken boat.
  *

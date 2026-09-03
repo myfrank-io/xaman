@@ -44,7 +44,7 @@ type NewBoatFormState = {
 };
 
 /**
- * « Ajouter mon bateau » (D63, E11-3). Three answers and the carnet is open: a name, a model,
+ * « Ajouter mon bateau » (D64, E11-3). Three answers and the carnet is open: a name, a model,
  * and how many engines.
  *
  * There is no boat type field and no builder field. The model carries all three, and asking a

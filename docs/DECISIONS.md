@@ -7,7 +7,7 @@ Format : date · question · décision · raison. Claude Code ajoute une ligne �
 | 2026-09-02 | Stack | Next.js + Supabase + Vercel, PWA | iPad Safari en priorité, multi-tenant par RLS, MCP Supabase/Vercel déjà connectés, pas de serveur à maintenir |
 | 2026-09-02 | Portée multi-acteurs V1 | Modèle multi-bateaux / organisations dès la V1, UI limitée à un bateau et 4 rôles (owner, editor, pro, viewer) | Éviter une refonte du schéma en V2 sans alourdir le MVP |
 | 2026-09-02 | Offline | V1 = cache de lecture + écritures en ligne ; offline-first en V2 | Starlink à bord ; l'offline-first double la complexité (sync, conflits) |
-| 2026-09-02 | Inscription publique | ~~Pas de création libre de bateau en V1 ; l'admin plateforme crée les bateaux et invite~~ — **renversée le 2026-09-03, voir D63** | Un seul bateau au lancement, réduit la surface (onboarding, abus) |
+| 2026-09-02 | Inscription publique | ~~Pas de création libre de bateau en V1 ; l'admin plateforme crée les bateaux et invite~~ — **renversée le 2026-09-03, voir D64** | Un seul bateau au lancement, réduit la surface (onboarding, abus) |
 | 2026-09-02 | Statut « Urgent » | Conservé comme statut d'intervention (conforme au briefing), pas comme drapeau séparé | Fidélité au briefing ; à rediscuter avec Xav si gênant (question ouverte §13-5) |
 | 2026-09-02 | Stock de pièces | Stock simple (quantité, seuil, emplacement, +/−) dans le MVP ; inventaire avancé exclu | Le briefing liste le stock en must-have et « gestion des stocks » en hors-scope : on prend la version simple |
 | 2026-09-02 | Bouteilles de gaz | Importées et gérées comme achats (`purchases.kind = gas`) avec vue dédiée, pas comme interventions | Un changement de bouteille est un achat consommable, pas un entretien ; permet le calcul de consommation |
@@ -591,7 +591,46 @@ que pour une intervention (`LogActions`). `maintenance_logs.equipment_id` étant
 corbeille et le restaurer, sa lisibilité par tout membre, la purge à 30 jours, et l'historique
 préservé après purge.
 
-## 2026-09-03 — D63 : un compte sans bateau ajoute le sien (renversement du 2026-09-02)
+## 2026-09-03 — D63 : checklist « À racheter » — agir sur place, la note EST la pièce
+
+**Question.** Xav, sur la première version : « bien mais pas dingue. Je voudrais pouvoir cliquer
+depuis Checklist pour rajouter du stock ou me noter de racheter — là je suis juste redirigé vers
+Équipements de la page Bateau. Réfléchis bien pour qu'il n'y ait pas de double saisie. »
+
+**Contexte.** La checklist « À racheter » (pièces au seuil ou en dessous : `isLowStock`,
+`min_quantity > 0` et `quantity <= min_quantity`) est une **vue du stock**, pas une table :
+elle se remplit et se vide seule selon les mêmes lignes `parts` qu'écrivent la fiche, les +/− et
+l'import. La première version cochait « racheté » (quantité à `min + 1`) et la ligne renvoyait
+vers Bateau au tap. Le geste manquait de deux choses : ajuster la vraie quantité, et noter une
+pièce à racheter sans quitter la checklist. *(Cette décision remplace la première note de la
+fonctionnalité, dont le numéro D61 a été repris par une autre branche fusionnée en parallèle ;
+elle est désormais la référence unique. Aucune migration : tout reste dérivé du stock.)*
+
+**Décision.**
+
+1. **Action sur la ligne, pas de navigation.** Chaque ligne « À racheter » porte des **+/−** qui
+   ajoutent ou retirent du stock sur place (le RPC atomique `adjust_part_quantity`, D10) ; une
+   pièce qui repasse au-dessus de son seuil quitte la liste d'elle-même. Le corps de la ligne ne
+   navigue plus — il ne faisait que renvoyer vers Bateau, ce qui était le reproche. La fiche
+   complète (seuil, emplacement, fournisseur) reste éditable depuis le stock sous Bateau.
+
+2. **« Noter une pièce à racheter » = créer la pièce.** Un bouton ouvre un dialogue à un seul
+   champ (la désignation) ; la pièce entre au stock avec **0 en réserve et un seuil de 1**, donc
+   elle apparaît aussitôt dans « À racheter » **et** dans le stock. La note *est* la ligne de
+   stock : il n'y a pas de seconde liste de courses à tenir (JAMAIS de double saisie). Le reste
+   de la fiche se complète plus tard depuis Bateau. Le bouton est présent même quand rien n'est
+   sous le seuil, pour que « se noter de racheter » soit toujours à portée depuis la checklist,
+   sans redirection.
+
+3. **Réservé au rôle `write`** (owner/editor), comme les +/− du stock (RPC gardé par
+   `can_write_boat`) ; un lecteur voit la liste et « Voir le stock ».
+
+La case à cocher « racheté » de la première version et son action serveur `restockPart` sont
+retirées : les +/− couvrent le même besoin plus précisément (on saisit la quantité réellement
+rachetée), et une pièce qui franchit son seuil disparaît de la liste comme avant.
+
+
+## 2026-09-03 — D64 : un compte sans bateau ajoute le sien (renversement du 2026-09-02)
 
 **Question.** « Quand je crée un compte sans avoir été invité, évidemment que je dois ajouter mon
 bateau. » Quelqu'un qui s'inscrivait sans invitation atterrissait sur `/boats`, lisait « Vous

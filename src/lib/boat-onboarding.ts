@@ -2,7 +2,7 @@ import type { BoatType } from "@/lib/schemas/boat";
 import type { EnginePosition } from "@/lib/schemas/engines";
 
 /**
- * Opening a carnet (D63): what the boat needs before the model can be applied.
+ * Opening a carnet (D64): what the boat needs before the model can be applied.
  *
  * The engines are the one thing the creation screen cannot skip. `apply_checklist_template`
  * duplicates an engine-scoped point once per active engine and skips the point entirely when the

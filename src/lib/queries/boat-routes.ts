@@ -21,7 +21,7 @@ export const BOAT_ROUTES: Record<NavKey, string> = {
 export const PROFILE_PATH = "/settings/profile";
 
 /**
- * Opening a carnet (D63). Outside the boat tree — there is no boat yet — and the only forward
+ * Opening a carnet (D64). Outside the boat tree — there is no boat yet — and the only forward
  * move for someone who signed up without an invitation.
  */
 export const NEW_BOAT_PATH = "/boats/new";

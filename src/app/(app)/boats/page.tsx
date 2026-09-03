@@ -5,7 +5,7 @@ import { NEW_BOAT_PATH } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 // After login: one boat → its dashboard, several → selector, none → « Ajouter mon bateau »
-// (BACKLOG E1-3, D63). Landing on the creation screen rather than on a picker with a single
+// (BACKLOG E1-3, D64). Landing on the creation screen rather than on a picker with a single
 // button is the difference between an onboarding and a waiting room; someone who was invited and
 // has not accepted yet still has their e-mail link, and the screen says so.
 export default async function BoatsPage() {

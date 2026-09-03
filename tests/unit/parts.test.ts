@@ -6,7 +6,6 @@ import {
   isLowStock,
   isStockFilter,
   monthsSinceCheck,
-  restockDelta,
   sortStock,
 } from "@/lib/parts";
 
@@ -22,26 +21,6 @@ describe("isLowStock", () => {
   it("never flags a line without threshold, even at zero", () => {
     expect(isLowStock({ quantity: 0, minQuantity: 0 })).toBe(false);
     expect(isLowStock({ quantity: 3, minQuantity: 2 })).toBe(false);
-  });
-});
-
-describe("restockDelta", () => {
-  it("brings a low line just above its threshold", () => {
-    // « racheté » = quantity climbs to min + 1, so the line clears the alert.
-    expect(restockDelta({ quantity: 0, minQuantity: 2 })).toBe(3);
-    expect(restockDelta({ quantity: 1, minQuantity: 2 })).toBe(2);
-    expect(restockDelta({ quantity: 2, minQuantity: 2 })).toBe(1);
-  });
-
-  it("is a no-op for a line that is not (or no longer) low", () => {
-    expect(restockDelta({ quantity: 3, minQuantity: 2 })).toBe(0);
-    expect(restockDelta({ quantity: 0, minQuantity: 0 })).toBe(0);
-  });
-
-  it("clears the threshold when applied", () => {
-    const line = { quantity: 0, minQuantity: 5 };
-    const after = line.quantity + restockDelta(line);
-    expect(isLowStock({ quantity: after, minQuantity: line.minQuantity })).toBe(false);
   });
 });
 

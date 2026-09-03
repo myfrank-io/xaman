@@ -482,7 +482,7 @@ create function accept_invitation(p_token text) returns uuid ...;
 --  * p_engine_id non null → ne (re)génère que les points de ce moteur (action « Générer les points de ce moteur »).
 create function apply_checklist_template(p_boat_id uuid, p_template_id uuid, p_engine_id uuid default null) returns void ...;
 
--- Ouverture d'un carnet (security definer, D63) : crée le bateau, inscrit l'appelant comme owner,
+-- Ouverture d'un carnet (security definer, D64) : crée le bateau, inscrit l'appelant comme owner,
 -- crée ses moteurs puis instancie le modèle — dans la même transaction.
 --  * idempotente sur p_boat_id : un rejeu par le même owner renvoie le bateau sans rien changer
 --    (double tap = un seul carnet) ; tout autre id existant lève `forbidden` ;
@@ -540,7 +540,7 @@ Les tables sans contribution `pro` (`purchases`, `parts`, `haul_outs`, `contacts
 
 Cas particuliers :
 - `profiles` : select pour soi-même et pour les profils partageant au moins un bateau avec soi (nécessaire pour afficher « qui a fait » ; un `pro` voit donc les noms des co-membres mais pas la page Membres — accepté, documenté) ; update soi-même uniquement ; `revoke update (is_platform_admin) on profiles from authenticated`.
-- `boats` : select `is_boat_member(id)` ; insert `is_platform_admin()` — **la table reste fermée**, la création d'un bateau par son propriétaire passe par `create_boat` (D63, `0015`), seule porte qui garantit qu'un bateau naît toujours avec son owner et sa checklist ; update `can_write_boat(id)` ; delete `is_boat_owner(id)`.
+- `boats` : select `is_boat_member(id)` ; insert `is_platform_admin()` — **la table reste fermée**, la création d'un bateau par son propriétaire passe par `create_boat` (D64, `0015`), seule porte qui garantit qu'un bateau naît toujours avec son owner et sa checklist ; update `can_write_boat(id)` ; delete `is_boat_owner(id)`.
 - `boat_members` : select `can_write_boat(boat_id)` (owner + editor voient la liste) **ou** `user_id = auth.uid()` (sa propre ligne) ; insert/update/delete `is_boat_owner(boat_id)` (+ trigger dernier owner).
 - `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.
@@ -592,7 +592,7 @@ Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `p
 Par bateau : `overdue_items`, `soon_items`, `planned_logs`, `in_progress_logs`, `urgent_logs`, `ytd_expenses`, `last_haul_out_at`, `months_since_haul_out`, `low_stock_parts` (pièces à la corbeille exclues depuis `0012`).
 
 ### 6.7 `checklist_template_catalog`
-Le **registre des modèles** tel que le lit le sélecteur de création d'un bateau (D63) : une ligne par modèle lisible, avec son nombre de catégories et de points (« 8 systèmes · 70 points »). `security_invoker`, donc `checklist_templates_select` (`is_public or is_platform_admin()`) décide seul de ce qui est visible.
+Le **registre des modèles** tel que le lit le sélecteur de création d'un bateau (D64) : une ligne par modèle lisible, avec son nombre de catégories et de points (« 8 systèmes · 70 points »). `security_invoker`, donc `checklist_templates_select` (`is_public or is_platform_admin()`) décide seul de ce qui est visible.
 
 ## 7. Realtime
 Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `checklist_completions`, `engine_hour_readings`, `purchases`, `parts`, `haul_outs`, `contacts`. Le client ouvre un canal par bateau avec filtre `boat_id=eq.{id}` sur ces 8 tables et invalide les queries TanStack correspondantes. La RLS s'applique aux événements Realtime (Supabase le garantit pour les tables avec RLS).

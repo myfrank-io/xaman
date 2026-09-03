@@ -35,7 +35,7 @@ const PAGES = [
   // Six screens that had no preview at all, so the audit had never opened them: each is either
   // several queries deep, gated behind a role, or reachable only once in the life of a boat.
   "/dev/ui/boats",
-  // The first screen of anyone who signs up without an invitation (D63), and one nobody on the
+  // The first screen of anyone who signs up without an invitation (D64), and one nobody on the
   // team can reach any more: every account here already has a boat.
   "/dev/ui/boats/new",
   "/dev/ui/members",

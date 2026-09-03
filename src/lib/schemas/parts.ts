@@ -46,6 +46,3 @@ export const adjustPartQuantitySchema = z.object({
 
 /** Move a part to the trash, or bring it back from « Annuler » (D40). */
 export const trashPartSchema = z.object({ boatId: uuid, partId: uuid });
-
-/** Tick a low part off the « À racheter » checklist (D61): racheté, remis à bord. */
-export const restockPartSchema = z.object({ boatId: uuid, partId: uuid });

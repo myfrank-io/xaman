@@ -6,7 +6,7 @@
 -- invitation reached `/boats`, read « Vous n'avez pas encore de bateau. Demandez une invitation
 -- au propriétaire » and had nowhere to go. That was a deliberate V1 restriction
 -- (DECISIONS 2026-09-02, SPEC §4.3) taken when there was one boat and one owner; it is now the
--- first wall a new user hits. D63 opens it.
+-- first wall a new user hits. D64 opens it.
 --
 -- The restriction is lifted **without** opening the table: `boats_insert` stays admin-only and
 -- creation goes through this one security-definer entry point. Three things follow from that,
@@ -125,7 +125,7 @@ end;
 $$;
 
 comment on function public.create_boat(uuid, text, uuid, jsonb) is
-  'Onboarding (D63): creates a boat, makes the caller its owner, creates its engines and instantiates the chosen public template — atomically. The only way an ordinary user gets a boat; boats_insert stays admin-only. Idempotent on p_boat_id for the caller.';
+  'Onboarding (D64): creates a boat, makes the caller its owner, creates its engines and instantiates the chosen public template — atomically. The only way an ordinary user gets a boat; boats_insert stays admin-only. Idempotent on p_boat_id for the caller.';
 
 revoke all on function public.create_boat(uuid, text, uuid, jsonb) from public, anon;
 grant execute on function public.create_boat(uuid, text, uuid, jsonb) to authenticated, service_role;
@@ -156,6 +156,6 @@ select
 from public.checklist_templates t;
 
 comment on view public.checklist_template_catalog is
-  'The model registry as the boat-creation picker reads it (D63): one row per readable template with its category and point counts. security_invoker, so checklist_templates_select decides what is visible.';
+  'The model registry as the boat-creation picker reads it (D64): one row per readable template with its category and point counts. security_invoker, so checklist_templates_select decides what is visible.';
 
 grant select on public.checklist_template_catalog to authenticated, service_role;

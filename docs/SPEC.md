@@ -149,7 +149,7 @@ Priorisation MoSCoW. **Must** = livré dans le MVP, **Should** = dans le MVP si 
 - Profil minimal : nom affiché, e-mail, langue (fr par défaut).
 - **Invitation à un bateau** par e-mail avec un rôle. La page d'invitation affiche le nom du bateau, l'inviteur et le rôle (fonction serveur dédiée, sans exposer la table), le destinataire se connecte avec son e-mail et devient membre. Lien valable 14 jours, révocable.
 - Gestion des membres (owner) : liste, changement de rôle, retrait.
-- Première mise en route : Joseph (admin plateforme) exécute le seed, qui **crée les comptes** de Xavier (`owner`), Emmanuel (`editor`) et Joseph (`editor` + admin plateforme) via l'API admin Supabase (chacun reçoit un e-mail d'invitation Supabase) et les inscrit directement comme membres du bateau. **Depuis D63, un compte sans bateau ajoute le sien** : `/boats/new` demande un nom, un modèle et le nombre de moteurs, puis `create_boat` crée le bateau, inscrit la personne comme `owner`, crée les moteurs et instancie le modèle. Le modèle reste obligatoire (aucun bateau vide) et la table `boats` reste fermée en insertion — la fonction est la seule porte. Un compte sans bateau n'est donc plus une page d'attente.
+- Première mise en route : Joseph (admin plateforme) exécute le seed, qui **crée les comptes** de Xavier (`owner`), Emmanuel (`editor`) et Joseph (`editor` + admin plateforme) via l'API admin Supabase (chacun reçoit un e-mail d'invitation Supabase) et les inscrit directement comme membres du bateau. **Depuis D64, un compte sans bateau ajoute le sien** : `/boats/new` demande un nom, un modèle et le nombre de moteurs, puis `create_boat` crée le bateau, inscrit la personne comme `owner`, crée les moteurs et instancie le modèle. Le modèle reste obligatoire (aucun bateau vide) et la table `boats` reste fermée en insertion — la fonction est la seule porte. Un compte sans bateau n'est donc plus une page d'attente.
 
 #### M2. Fiche bateau
 - Identité : nom, constructeur, modèle, numéro de coque, année, type (catamaran, monocoque, moteur…), pavillon, port d'attache, longueur/largeur/tirant d'eau, photo.
@@ -232,8 +232,8 @@ Modèle de checklist :
 - Notifications / rappels d'échéance (e-mail hebdomadaire de synthèse ; push web sur PWA installée).
 - Export PDF de la checklist d'une catégorie ou du journal sur une période.
 - Graphique des heures moteur dans le temps et par intervention.
-- ~~Création libre d'un bateau par un nouvel utilisateur (onboarding public) et choix du modèle de checklist.~~ **Livré (D63)** : `/boats/new`, `create_boat` (`0015`).
-- ~~Modèle de checklist générique (voilier / moteur) complet.~~ **Livré (D63)** : trois modèles génériques (catamaran, monocoque, moteur) dans `0016`. Reste hors V1 : un modèle par constructeur au-delà de l'ORC 50.
+- ~~Création libre d'un bateau par un nouvel utilisateur (onboarding public) et choix du modèle de checklist.~~ **Livré (D64)** : `/boats/new`, `create_boat` (`0015`).
+- ~~Modèle de checklist générique (voilier / moteur) complet.~~ **Livré (D64)** : trois modèles génériques (catamaran, monocoque, moteur) dans `0016`. Reste hors V1 : un modèle par constructeur au-delà de l'ORC 50.
 
 ### 5.4 Won't — hors V1
 

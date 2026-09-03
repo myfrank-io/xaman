@@ -7,7 +7,7 @@ import type { TemplateOption } from "@/lib/boat-onboarding";
 import { devUiEnabled } from "@/lib/dev-ui";
 
 /**
- * Visual acceptance of « Ajouter mon bateau » (D63). The real screen only exists for an account
+ * Visual acceptance of « Ajouter mon bateau » (D64). The real screen only exists for an account
  * with no boat, which nobody on the team has any more — so without this page it would ship
  * having been looked at on one viewport, by accident.
  *

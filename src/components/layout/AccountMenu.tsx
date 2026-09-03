@@ -70,7 +70,7 @@ export function AccountMenu({
       href: boatPath(boatId, "profile"),
     },
     // The only door to a second carnet: /boats redirects straight to the dashboard as long as
-    // there is exactly one boat, so the picker that carries the same entry is never seen (D63).
+    // there is exactly one boat, so the picker that carries the same entry is never seen (D64).
     { key: "newBoat", label: t("newBoat"), icon: PlusIcon, href: NEW_BOAT_PATH },
     ...(write
       ? [
