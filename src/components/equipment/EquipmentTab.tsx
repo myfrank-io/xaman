@@ -44,7 +44,7 @@ export type CategorySummary = {
 /** Everything the stock section needs, read by the page and handed down as plain props. */
 export type StockData = {
   parts: StockItem[];
-  /** The low lines, whatever the list filter: the « À racheter » checklist (D61). */
+  /** The low lines, whatever the list filter: the « À racheter » checklist (D63). */
   lowParts: StockItem[];
   filter: StockFilter;
   lowCount: number;
@@ -111,7 +111,7 @@ export function EquipmentTab({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      {/* « À racheter » first, when there is anything to buy back (D61): the parts at or under
+      {/* « À racheter » first, when there is anything to buy back (D63): the parts at or under
           their threshold, as a checklist to tick off before the next outing. Derived from the
           same stock shown below — one source of truth, never a second entry. */}
       {stock.lowParts.length > 0 ? (

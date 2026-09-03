@@ -20,18 +20,6 @@ export function isLowStock({ quantity, minQuantity }: StockLine): boolean {
   return minQuantity > 0 && quantity <= minQuantity;
 }
 
-/**
- * « Racheté et remis à bord » from the restock checklist (D61): buying a low part back clears
- * its alert, so its quantity climbs just above the threshold (min + 1). The delta to apply,
- * `0` when the line is not (or no longer) low — the check stays a no-op, so a list gone stale
- * on another device never overshoots. Derived from the same numbers `isLowStock` reads: the
- * « À racheter » list is a view of the stock, never a second entry.
- */
-export function restockDelta({ quantity, minQuantity }: StockLine): number {
-  if (!isLowStock({ quantity, minQuantity })) return 0;
-  return minQuantity + 1 - quantity;
-}
-
 /** Whole months since the line was last counted; null when it never was. */
 export function monthsSinceCheck(
   checkedAt: string | null | undefined,

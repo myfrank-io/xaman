@@ -11,6 +11,7 @@ import { PlusIcon } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
+import { QuickRestockAdd } from "@/components/parts/QuickRestockAdd";
 import { RestockChecklist } from "@/components/parts/RestockChecklist";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ export default async function ChecklistPage({
         .in("status", ["overdue", "soon", "never"]),
       supabase.from("engines").select("id, label").eq("boat_id", boatId),
       // The stock closes the grid: what is aboard, and what is under its threshold (D43). The
-      // low lines also feed the « À racheter » checklist above the grid (D61) — one read, one
+      // low lines also feed the « À racheter » checklist above the grid (D63) — one read, one
       // source of truth, so the card and the list can never disagree.
       loadStockItems(supabase, boatId),
     ]);
@@ -137,22 +138,33 @@ export default async function ChecklistPage({
       <ChecklistViewTabs boatId={boatId} view={activeView} todoCount={todoCount} />
       {activeView === "grid" ? (
         <>
-          {/* « À racheter » before the systems (D61): the spare parts to buy back sit where the
-              eye already is when planning the work — a checklist derived from the stock, ticked
-              off as the parts come aboard, never a second list to keep. */}
-          {lowParts.length > 0 ? (
+          {/* « À racheter » before the systems (D63): the spare parts to buy back sit where
+              the eye already is when planning the work — a checklist derived from the stock,
+              its + / − adding stock on the spot, never a second list to keep. « Noter une pièce
+              à racheter » adds straight from here: the note is the stock line (0 en réserve), so
+              it lands both here and in the stock without a second entry. Shown for a writer even
+              when nothing is low, so the door to note something is always here rather than a
+              redirect to Bateau. */}
+          {can(boatRole, "write") || lowParts.length > 0 ? (
             <SectionCard
               title={tr("title")}
-              actionHref={stockPath(boatId)}
-              actionLabel={tr("seeStock")}
-              footer={tr("subtitle")}
+              action={can(boatRole, "write") ? <QuickRestockAdd boatId={boatId} /> : undefined}
+              actionHref={can(boatRole, "write") ? undefined : stockPath(boatId)}
+              actionLabel={can(boatRole, "write") ? undefined : tr("seeStock")}
+              footer={lowParts.length > 0 ? tr("subtitle") : undefined}
               bare
             >
-              <RestockChecklist
-                boatId={boatId}
-                parts={lowParts}
-                canWrite={can(boatRole, "write")}
-              />
+              {lowParts.length > 0 ? (
+                <RestockChecklist
+                  boatId={boatId}
+                  parts={lowParts}
+                  canWrite={can(boatRole, "write")}
+                />
+              ) : (
+                <p className="rounded-xl border border-border bg-surface p-4 text-body text-ink-2 shadow-sm">
+                  {tr("emptyHint")}
+                </p>
+              )}
             </SectionCard>
           ) : null}
           <ChecklistGrid boatId={boatId} categories={categories} stock={stock} />

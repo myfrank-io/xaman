@@ -7,7 +7,7 @@ import type { Database } from "@/types/database";
 /**
  * The boat's spare-parts stock, enriched with its system and supplier names and sorted for the
  * list (E5-4, D34). One loader read by every screen that shows the stock or the « À racheter »
- * checklist (D61) — the boat's Équipements tab and the checklist screen — so the row shape is
+ * checklist (D63) — the boat's Équipements tab and the checklist screen — so the row shape is
  * built in one place and the two surfaces can never drift apart.
  */
 export async function loadStockItems(

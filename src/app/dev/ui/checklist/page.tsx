@@ -7,9 +7,9 @@ import { TodoList } from "@/components/checklist/TodoList";
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
+import { QuickRestockAdd } from "@/components/parts/QuickRestockAdd";
 import { RestockChecklist } from "@/components/parts/RestockChecklist";
 import { devUiEnabled } from "@/lib/dev-ui";
-import { stockPath } from "@/lib/queries/boat-routes";
 import { toRestockList } from "@/lib/queries/stock";
 
 import { DevShell } from "../DevShell";
@@ -175,8 +175,7 @@ export default async function DevChecklistPage() {
         <PageHeader title={t("title")} />
         <SectionCard
           title={tr("title")}
-          actionHref={stockPath(DEV_BOAT_ID)}
-          actionLabel={tr("seeStock")}
+          action={<QuickRestockAdd boatId={DEV_BOAT_ID} />}
           footer={tr("subtitle")}
           bare
         >
