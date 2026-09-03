@@ -1131,6 +1131,16 @@
     "sectionEquipment": "Équipements à bord",
     "stockCount": "{count, plural, =0 {aucune pièce de rechange} one {# pièce de rechange} other {# pièces de rechange}}"
   },
+  "restock": {
+    "title": "À racheter",
+    "subtitle": "Les pièces au seuil ou en dessous, à racheter avant la prochaine sortie.",
+    "count": "{count, plural, one {# pièce à racheter} other {# pièces à racheter}}",
+    "supplier": "chez {name}",
+    "check": "Marquer rachetée : {name}",
+    "done": "« {name} » rachetée et remise à bord",
+    "empty": "Tout est racheté.",
+    "seeStock": "Voir le stock"
+  },
   "categories": {
     "title": "Catégories",
     "description": "Les systèmes du bateau. L'ordre est celui de la grille de checklist.",

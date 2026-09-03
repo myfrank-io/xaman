@@ -3,6 +3,7 @@ import { BoatTabs } from "@/components/boat/BoatTabs";
 import { EnginesTab } from "@/components/engines/EnginesTab";
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
 import { countLowStock } from "@/lib/parts";
+import { toRestockList } from "@/lib/queries/stock";
 
 import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import { SAMPLE_PARTS } from "../supplies/sample";
@@ -44,6 +45,7 @@ export default async function DevBoatPage({
             categories={SAMPLE_EQUIPMENT_CATEGORIES}
             stock={{
               parts: SAMPLE_PARTS,
+              lowParts: toRestockList(SAMPLE_PARTS),
               filter: "all",
               lowCount: countLowStock(SAMPLE_PARTS),
               totalCount: SAMPLE_PARTS.length,

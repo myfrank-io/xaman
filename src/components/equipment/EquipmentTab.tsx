@@ -8,6 +8,8 @@ import { PackageIcon } from "lucide-react";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ListRow } from "@/components/common/ListRow";
+import { SectionCard } from "@/components/common/SectionCard";
+import { RestockChecklist } from "@/components/parts/RestockChecklist";
 import { StockList, type StockItem } from "@/components/parts/StockList";
 import {
   Accordion,
@@ -42,6 +44,8 @@ export type CategorySummary = {
 /** Everything the stock section needs, read by the page and handed down as plain props. */
 export type StockData = {
   parts: StockItem[];
+  /** The low lines, whatever the list filter: the « À racheter » checklist (D61). */
+  lowParts: StockItem[];
   filter: StockFilter;
   lowCount: number;
   totalCount: number;
@@ -80,6 +84,7 @@ export function EquipmentTab({
 }) {
   const t = useTranslations("equipment");
   const ti = useTranslations("import");
+  const tr = useTranslations("restock");
   const active = items.filter((item) => !item.removedAt);
   const removed = items.filter((item) => item.removedAt);
   const quantityLabel = (count: number) => t("quantityShort", { count });
@@ -106,6 +111,24 @@ export function EquipmentTab({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
+      {/* « À racheter » first, when there is anything to buy back (D61): the parts at or under
+          their threshold, as a checklist to tick off before the next outing. Derived from the
+          same stock shown below — one source of truth, never a second entry. */}
+      {stock.lowParts.length > 0 ? (
+        <SectionCard
+          title={tr("title")}
+          action={
+            <span className="text-caption text-ink-2">
+              {tr("count", { count: stock.lowParts.length })}
+            </span>
+          }
+          footer={tr("subtitle")}
+          bare
+        >
+          <RestockChecklist boatId={boatId} parts={stock.lowParts} canWrite={canWrite} />
+        </SectionCard>
+      ) : null}
+
       {/* Same treatment as the engines: the toolbar led the list and cost the fold. */}
       <div className="order-last flex flex-wrap items-center justify-between gap-3 sm:order-none">
         {/* « 7 équipements · 5 pièces de rechange » repeats the tab badge 24 px above it and
