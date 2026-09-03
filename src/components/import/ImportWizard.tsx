@@ -38,6 +38,7 @@ import {
   type ImportEntity,
   type ImportReport,
 } from "@/lib/import/entities";
+import { PickPhoneContactsButton } from "@/components/import/PickPhoneContactsButton";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import {
   applyDefaults,
@@ -414,6 +415,14 @@ export function ImportWizard({
                 <UploadIcon />
                 {t("source.file")}
               </Button>
+              {/* Absent unless the browser can open the address book (Chromium on Android
+                  today; iOS keeps it behind a flag). Picking cards produces exactly the table
+                  a `.vcf` produces, so it goes through the same mapping and preview. */}
+              {entity === "contacts" ? (
+                <PickPhoneContactsButton
+                  onPicked={(picked, origin) => loadTable(picked, origin, true)}
+                />
+              ) : null}
               <Button type="button" variant="outline" onClick={downloadTemplate}>
                 <DownloadIcon />
                 {t("source.template")}

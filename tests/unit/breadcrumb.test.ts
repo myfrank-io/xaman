@@ -127,20 +127,20 @@ const ALL_PATHS = [
 ];
 
 describe("buildTrail", () => {
-  it("names the section on its own root, as the current page and not as a link", () => {
-    expect(at("/logs")).toEqual([{ key: "logs" }]);
-    expect(labels(at("/logs"))).toEqual(["Interventions"]);
-    expect(labels(at("/checklist"))).toEqual(["Checklist"]);
-    expect(labels(at("/boat"))).toEqual(["Bateau"]);
-    expect(current(at("/logs"))).toEqual(["Interventions"]);
+  it("gives a section root no trail at all: one crumb is not a trail", () => {
+    // « Checklist › » over a heading reading « Checklist », with the Checklist tab lit below,
+    // is the same word three times — and on a phone it costs a row of a screen that has few
+    // to spare. A trail earns its line only once it has somewhere to go back to.
+    expect(at("/logs")).toEqual([]);
+    expect(at("/checklist")).toEqual([]);
+    expect(at("/boat")).toEqual([]);
+    expect(at("/dashboard")).toEqual([]);
   });
 
-  it("leaves the dashboard without a trail, and never opens another one with it", () => {
-    // A lone « Tableau de bord » naming the screen you are looking at repeats the highlighted
-    // tab, and pushed the dark header down below a line of grey. Its own header is the title.
-    expect(at("/dashboard")).toEqual([]);
+  it("appears as soon as there is a way back up", () => {
     // The home of the boat is a tab, one tap away: it never prefixes another section either.
     expect(labels(at("/logs/new"))).toEqual(["Interventions", "Nouveau"]);
+    expect(current(at("/logs/new"))).toEqual(["Nouveau"]);
   });
 
   it("names the section and the step of a creation screen", () => {
@@ -165,10 +165,11 @@ describe("buildTrail", () => {
   });
 
   it("opens a « Plus » sheet section with its own crumb, never with the sheet", () => {
-    // The sheet is not a screen: naming it would put a link to nowhere in the trail.
-    expect(labels(at("/supplies"))).toEqual(["Dépenses"]);
-    expect(labels(at("/contacts"))).toEqual(["Intervenants"]);
-    expect(labels(at("/trash"))).toEqual(["Corbeille"]);
+    // The sheet is not a screen: naming it would put a link to nowhere in the trail. Their
+    // own roots carry no trail either, for the same reason every section root does not.
+    expect(at("/supplies")).toEqual([]);
+    expect(at("/contacts")).toEqual([]);
+    expect(at("/trash")).toEqual([]);
     expect(at(`/contacts/${CONTACT}/edit`)).toEqual([
       { key: "contacts", href: path("/contacts") },
       { key: "crumbs.record", href: path(`/contacts/${CONTACT}`) },
@@ -225,8 +226,9 @@ describe("buildTrail", () => {
   it("covers the screens outside the menu and the guided flows", () => {
     // The report opens from the settings; the import from the list in `?entity=`.
     expect(labels(at("/report"))).toEqual(["Paramètres", "Rapport"]);
-    // Without one — a hand-typed URL — it stands alone rather than guessing a list.
-    expect(at("/import")).toEqual([{ key: "crumbs.import" }]);
+    // Without one — a hand-typed URL — it has nowhere to go back to, so it carries no trail
+    // rather than guessing a list.
+    expect(at("/import")).toEqual([]);
     expect(labels(at("/logs/review"))).toEqual(["Interventions", "Reprise du carnet"]);
     expect(labels(at("/checklist/setup"))).toEqual(["Checklist", "Mise en route"]);
   });
@@ -259,11 +261,13 @@ describe("buildTrail", () => {
   });
 
   it("marks exactly one crumb as the current page, the last one, and names them all", () => {
-    // The dashboard is the one screen with no trail at all, on purpose: its own dark header
-    // carries the boat's name, and a crumb above it only pushed that header down.
-    for (const suffix of ALL_PATHS.filter((p) => p !== "/dashboard")) {
+    // A section root carries no trail: one crumb repeats the title above it and the tab below
+    // it. Every trail that does appear has at least two crumbs, names them all, and marks
+    // exactly one — the last — as the page.
+    for (const suffix of ALL_PATHS) {
       const trail = at(suffix);
-      expect(trail.length, suffix).toBeGreaterThan(0);
+      if (trail.length === 0) continue;
+      expect(trail.length, suffix).toBeGreaterThan(1);
       // `labels` throws on a key `fr.json` does not carry: no crumb ships without a word.
       expect(labels(trail).every(Boolean), suffix).toBe(true);
       expect(current(trail), suffix).toHaveLength(1);
@@ -305,6 +309,7 @@ describe("an import belongs to the list it is going into", () => {
   });
 
   it("ignores an entity the app does not serve", () => {
-    expect(at("/import", "n-importe-quoi")).toEqual([{ key: "crumbs.import" }]);
+    // No list to go back to, so no trail — never a lone « Importer » naming the screen itself.
+    expect(at("/import", "n-importe-quoi")).toEqual([]);
   });
 });

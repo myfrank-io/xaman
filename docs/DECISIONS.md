@@ -309,3 +309,34 @@ atteindre le bouton est inutilisable, et aucune des règles de l'audit ne l'aura
 **Restent sans preview**, et c'est assumé : `/invite/[token]` (une alerte et un bouton) et la
 fiche d'un prestataire (`PageHeader`, `SectionCard`, `ListRow`) — leurs primitives sont toutes
 auditées ailleurs, seule la composition ne l'est pas, et elle est en lecture seule.
+
+## 2026-09-03 — D52 : on choisit un prestataire dans le carnet d'adresses du téléphone
+
+**Question.** « On doit changer des contacts en vcf au lieu de les choisir dans nos contacts, fin
+allô on est sur tél. » Exporter une vCard depuis Contacts, la retrouver dans Fichiers, puis la
+sélectionner : cinq gestes pour un numéro.
+
+**Décision.** Un bouton « Choisir dans mes contacts » ouvre le carnet d'adresses via la Contact
+Picker API. Les fiches choisies produisent **exactement** la table qu'un `.vcf` produit
+(`CONTACT_HEADERS`), donc elles passent par le mapping, la détection de doublons et l'aperçu
+existants : aucun second chemin d'écriture.
+
+Le bouton est **absent** — pas désactivé — là où le navigateur n'expose pas le carnet. C'est le
+cas de la plupart des iPhone : Safari garde la Contact Picker derrière un drapeau
+(`Réglages › Safari › Avancé › Feature Flags`). Il n'existe aucune API web de repli sur iOS, et
+un bouton qui ne peut pas fonctionner coûte un geste pour rien. Chrome sur Android l'a par
+défaut : Emmanuel l'aura.
+
+Le mappage est couvert par `tests/unit/import-phone-contacts.test.ts` — le navigateur rend des
+listes qui peuvent être vides, contenir des chaînes vides ou autre chose que des chaînes, et
+c'est du code qu'aucune CI ne peut piloter sur un vrai téléphone.
+
+## 2026-09-03 — D53 : un fil d'Ariane d'un seul élément n'est pas un fil d'Ariane
+
+**Question.** Sur la checklist, le fil affichait « Checklist » au-dessus d'un titre « Checklist »
+pendant que l'onglet Checklist était allumé en bas. Trois fois le même mot, et sur téléphone une
+ligne entière d'un écran qui en a peu.
+
+**Décision.** `buildTrail` rend `[]` dès qu'il n'y a qu'un élément. Le tableau de bord était déjà
+exempté pour cette raison ; la règle devient générale. Un fil gagne sa ligne à partir du moment
+où il mène quelque part — c'est-à-dire à partir de deux éléments.
