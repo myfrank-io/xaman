@@ -1,49 +1,256 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTrail } from "@/components/layout/breadcrumb-trail";
+import { buildTrail, type Crumb } from "@/components/layout/breadcrumb-trail";
+import fr from "@/messages/fr.json";
 
 const BOAT = "0406f409-ac58-4ec4-af7e-ef8e1261ec54";
 const LOG = "8c3ba2b4-9b91-46ac-91f7-3f6de5078bae";
+const CATEGORY = "1f0a1c2d-3e4f-4a5b-8c9d-0e1f2a3b4c5d";
+const ITEM = "2a1b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5e";
+const ENGINE = "3b2c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6f";
+const PART = "4c3d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f";
+const PURCHASE = "5d4e6f7a-8b9c-4d0e-9f2a-3b4c5d6e7f80";
+const HAUL_OUT = "6e5f7a8b-9c0d-4e1f-8a3b-4c5d6e7f8091";
+const CONTACT = "7f6a8b9c-0d1e-4f2a-9b4c-5d6e7f809102";
+
 const at = (path: string) => buildTrail(`/boats/${BOAT}${path}`, BOAT);
+const path = (suffix: string) => `/boats/${BOAT}${suffix}`;
+
+/** Resolves the crumb key against `fr.json`: a key with no label fails the test. */
+function label(key: string): string {
+  const value = key
+    .split(".")
+    .reduce<unknown>(
+      (node, part) => (node as Record<string, unknown> | undefined)?.[part],
+      fr.nav as unknown,
+    );
+  if (typeof value !== "string") throw new Error(`no label in fr.json for nav.${key}`);
+  return value;
+}
+
+const labels = (trail: Crumb[]) => trail.map((crumb) => label(crumb.key));
+/** The crumbs rendered as the current page: the ones without a link. */
+const current = (trail: Crumb[]) => trail.filter((crumb) => !crumb.href).map((c) => label(c.key));
+
+/**
+ * Every screen served under `/boats/<id>` — one `page.tsx` each. A crumb that links to
+ * anything else is a 404 waiting for the person climbing back out.
+ */
+const SCREENS = new Set([
+  "dashboard",
+  "logs",
+  "logs/new",
+  "logs/review",
+  "logs/:id",
+  "logs/:id/edit",
+  "checklist",
+  "checklist/setup",
+  "checklist/:id",
+  "checklist/:id/new",
+  "checklist/:id/:id/edit",
+  "boat",
+  "boat/engines/new",
+  "boat/engines/:id",
+  "boat/engines/:id/edit",
+  "boat/equipment/new",
+  "boat/equipment/:id",
+  "boat/equipment/:id/edit",
+  "contacts",
+  "contacts/new",
+  "contacts/:id",
+  "contacts/:id/edit",
+  "haul-outs",
+  "haul-outs/new",
+  "haul-outs/:id",
+  "haul-outs/:id/edit",
+  "supplies",
+  "supplies/parts/new",
+  "supplies/parts/:id/edit",
+  "supplies/purchases/new",
+  "supplies/purchases/:id/edit",
+  "members",
+  "settings",
+  "trash",
+  "report",
+  "import",
+]);
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** `/boats/<id>/supplies?tab=stock` → `supplies`: the screen behind an href. */
+function screenOf(href: string): string {
+  const [route = ""] = href.split("?");
+  return route
+    .replace(`/boats/${BOAT}`, "")
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => (UUID.test(segment) ? ":id" : segment))
+    .join("/");
+}
+
+/** One entry per screen of the app, to check the invariants on all of them at once. */
+const ALL_PATHS = [
+  "/dashboard",
+  "/logs",
+  "/logs/new",
+  "/logs/review",
+  `/logs/${LOG}`,
+  `/logs/${LOG}/edit`,
+  "/checklist",
+  "/checklist/setup",
+  `/checklist/${CATEGORY}`,
+  `/checklist/${CATEGORY}/new`,
+  `/checklist/${CATEGORY}/${ITEM}/edit`,
+  "/boat",
+  "/boat/engines/new",
+  `/boat/engines/${ENGINE}`,
+  `/boat/engines/${ENGINE}/edit`,
+  "/boat/equipment/new",
+  "/contacts",
+  "/contacts/new",
+  `/contacts/${CONTACT}`,
+  `/contacts/${CONTACT}/edit`,
+  "/haul-outs",
+  "/haul-outs/new",
+  `/haul-outs/${HAUL_OUT}`,
+  `/haul-outs/${HAUL_OUT}/edit`,
+  "/supplies",
+  "/supplies/parts/new",
+  `/supplies/parts/${PART}/edit`,
+  "/supplies/purchases/new",
+  `/supplies/purchases/${PURCHASE}/edit`,
+  "/members",
+  "/settings",
+  "/trash",
+  "/report",
+  "/import",
+];
 
 describe("buildTrail", () => {
-  it("shows nothing on a tab root: the tab already says where you are", () => {
-    expect(at("/logs")).toEqual([]);
-    expect(at("/dashboard")).toEqual([]);
-    expect(at("")).toEqual([]);
+  it("names the section on its own root, as the current page and not as a link", () => {
+    expect(at("/logs")).toEqual([{ key: "logs" }]);
+    expect(labels(at("/logs"))).toEqual(["Journal"]);
+    expect(labels(at("/checklist"))).toEqual(["Checklist"]);
+    expect(labels(at("/boat"))).toEqual(["Bateau"]);
+    expect(current(at("/logs"))).toEqual(["Journal"]);
+  });
+
+  it("gives the dashboard its own crumb and opens no other trail with it", () => {
+    expect(at("/dashboard")).toEqual([{ key: "dashboard" }]);
+    expect(labels(at("/dashboard"))).toEqual(["Tableau de bord"]);
+    // The home of the boat is a tab, one tap away: it never prefixes another section.
+    expect(labels(at("/logs/new"))).toEqual(["Journal", "Nouveau"]);
   });
 
   it("names the section and the step of a creation screen", () => {
-    expect(at("/logs/new")).toEqual([
-      { key: "logs", href: `/boats/${BOAT}/logs` },
+    expect(at("/logs/new")).toEqual([{ key: "logs", href: path("/logs") }, { key: "crumbs.new" }]);
+    expect(current(at("/logs/new"))).toEqual(["Nouveau"]);
+  });
+
+  it("turns an id into « Fiche », current on the record and a link from its edit screen", () => {
+    expect(at(`/logs/${LOG}`)).toEqual([
+      { key: "logs", href: path("/logs") },
+      { key: "crumbs.record" },
+    ]);
+    expect(labels(at(`/logs/${LOG}`))).toEqual(["Journal", "Fiche"]);
+    expect(current(at(`/logs/${LOG}`))).toEqual(["Fiche"]);
+
+    expect(at(`/logs/${LOG}/edit`)).toEqual([
+      { key: "logs", href: path("/logs") },
+      { key: "crumbs.record", href: path(`/logs/${LOG}`) },
+      { key: "crumbs.edit" },
+    ]);
+    expect(current(at(`/logs/${LOG}/edit`))).toEqual(["Modifier"]);
+  });
+
+  it("opens a « Plus » sheet section with its own crumb, never with the sheet", () => {
+    // The sheet is not a screen: naming it would put a link to nowhere in the trail.
+    expect(labels(at("/supplies"))).toEqual(["Dépenses"]);
+    expect(labels(at("/contacts"))).toEqual(["Intervenants"]);
+    expect(labels(at("/trash"))).toEqual(["Corbeille"]);
+    expect(at(`/contacts/${CONTACT}/edit`)).toEqual([
+      { key: "contacts", href: path("/contacts") },
+      { key: "crumbs.record", href: path(`/contacts/${CONTACT}`) },
+      { key: "crumbs.edit" },
+    ]);
+    expect(current(at(`/contacts/${CONTACT}/edit`))).toEqual(["Modifier"]);
+  });
+
+  it("climbs out of a deep page: section, sub-list, record, step", () => {
+    expect(labels(at(`/boat/engines/${ENGINE}/edit`))).toEqual([
+      "Bateau",
+      "Moteurs",
+      "Fiche",
+      "Modifier",
+    ]);
+    // « Moteurs » is a tab of the boat screen, not a route of its own.
+    expect(at(`/boat/engines/${ENGINE}/edit`)[1]?.href).toBe(path("/boat?tab=engines"));
+    expect(current(at(`/boat/engines/${ENGINE}/edit`))).toEqual(["Modifier"]);
+  });
+
+  it("follows the nested lists of the supplies screen through their tab", () => {
+    expect(at("/supplies/parts/new")).toEqual([
+      { key: "supplies", href: path("/supplies") },
+      { key: "crumbs.parts", href: path("/supplies?tab=stock") },
       { key: "crumbs.new" },
+    ]);
+    // An achat has no screen of its own: no inert « Fiche » between the list and the form.
+    expect(labels(at(`/supplies/purchases/${PURCHASE}/edit`))).toEqual([
+      "Dépenses",
+      "Achats",
+      "Modifier",
     ]);
   });
 
-  it("turns an id into « Fiche » and keeps the record reachable from its edit screen", () => {
-    expect(at(`/logs/${LOG}/edit`)).toEqual([
-      { key: "logs", href: `/boats/${BOAT}/logs` },
-      { key: "crumbs.record", href: `/boats/${BOAT}/logs/${LOG}` },
+  it("hangs the haul-outs off the Journal, the tab they are reached from (D9)", () => {
+    expect(at("/haul-outs")).toEqual([{ key: "logs", href: path("/logs") }, { key: "haulOuts" }]);
+    expect(labels(at(`/haul-outs/${HAUL_OUT}/edit`))).toEqual([
+      "Journal",
+      "Sorties de l'eau",
+      "Fiche",
+      "Modifier",
+    ]);
+  });
+
+  it("keeps the checklist item out of the trail: only its category has a screen", () => {
+    expect(at(`/checklist/${CATEGORY}/${ITEM}/edit`)).toEqual([
+      { key: "checklist", href: path("/checklist") },
+      { key: "crumbs.record", href: path(`/checklist/${CATEGORY}`) },
       { key: "crumbs.edit" },
     ]);
   });
 
-  it("follows the nested lists of the supplies screen", () => {
-    expect(at("/supplies/parts/new")).toEqual([
-      { key: "supplies", href: `/boats/${BOAT}/supplies` },
-      { key: "crumbs.parts", href: `/boats/${BOAT}/supplies/parts` },
-      { key: "crumbs.new" },
-    ]);
+  it("covers the screens outside the menu and the guided flows", () => {
+    // The report opens from the settings; the import from the list in `?entity=`, unknown here.
+    expect(labels(at("/report"))).toEqual(["Paramètres", "Rapport"]);
+    expect(at("/import")).toEqual([{ key: "crumbs.import" }]);
+    expect(labels(at("/logs/review"))).toEqual(["Journal", "Reprise du carnet"]);
+    expect(labels(at("/checklist/setup"))).toEqual(["Checklist", "Mise en route"]);
   });
 
-  it("covers the guided flows", () => {
-    expect(at("/logs/review").at(-1)).toEqual({ key: "crumbs.review" });
-    expect(at("/checklist/setup").at(-1)).toEqual({ key: "crumbs.setup" });
-    expect(at("/import").at(-1)).toBeUndefined();
+  it("links only to screens the app serves, on every path", () => {
+    for (const suffix of ALL_PATHS) {
+      for (const crumb of at(suffix)) {
+        if (crumb.href)
+          expect(SCREENS, `${suffix} → ${crumb.href}`).toContain(screenOf(crumb.href));
+      }
+    }
+  });
+
+  it("marks exactly one crumb as the current page, the last one, and names them all", () => {
+    for (const suffix of ALL_PATHS) {
+      const trail = at(suffix);
+      expect(trail.length, suffix).toBeGreaterThan(0);
+      // `labels` throws on a key `fr.json` does not carry: no crumb ships without a word.
+      expect(labels(trail).every(Boolean), suffix).toBe(true);
+      expect(current(trail), suffix).toHaveLength(1);
+      expect(trail.at(-1)?.href, suffix).toBeUndefined();
+    }
   });
 
   it("ignores a path that is not this boat's", () => {
     expect(buildTrail("/boats/other/logs/new", BOAT)).toEqual([]);
     expect(buildTrail("/login", BOAT)).toEqual([]);
+    expect(at("")).toEqual([]);
   });
 });
