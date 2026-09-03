@@ -7,11 +7,13 @@ import { ChecklistGrid, toCategoryProgress } from "@/components/checklist/Checkl
 import { ChecklistViewTabs } from "@/components/checklist/ChecklistViewTabs";
 import { TodoList, type TodoFilter } from "@/components/checklist/TodoList";
 import { toChecklistRow } from "@/components/checklist/rows";
+import { PlusIcon } from "lucide-react";
+
 import { PageHeader } from "@/components/common/PageHeader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
-import { checklistSetupPath, importPath } from "@/lib/queries/boat-routes";
+import { checklistSetupPath, importPath, newChecklistItemPath } from "@/lib/queries/boat-routes";
 import { completionContext } from "@/lib/queries/completion-context";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,9 +89,19 @@ export default async function ChecklistPage({
         subtitle={t("subtitle")}
         actions={
           can(boatRole, "write") ? (
-            <Button asChild variant="outline">
-              <Link href={importPath(boatId, "completions") as Route}>{ti("action")}</Link>
-            </Button>
+            <>
+              <Button asChild variant="outline">
+                <Link href={importPath(boatId, "completions") as Route}>{ti("action")}</Link>
+              </Button>
+              {/* A point needs a category, but that is a field of the form, not a condition for
+                  opening it (A9): from here the form asks which. */}
+              <Button asChild>
+                <Link href={newChecklistItemPath(boatId) as Route}>
+                  <PlusIcon />
+                  {t("addItem")}
+                </Link>
+              </Button>
+            </>
           ) : undefined
         }
       />
