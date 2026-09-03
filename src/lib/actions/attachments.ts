@@ -50,23 +50,32 @@ export async function saveAttachment(input: unknown): Promise<ActionResult<Saved
     .maybeSingle();
   if (readError) return fail(dbErrorKey(readError));
 
-  const { error } = await supabase.from("attachments").upsert(
-    {
-      id: values.id,
-      boat_id: values.boatId,
-      entity_type: values.ownerType,
-      entity_id: values.ownerId,
-      storage_path: values.storagePath,
-      file_name: values.fileName,
-      mime_type: values.mimeType,
-      size_bytes: values.sizeBytes,
-      caption: values.caption,
-      deleted_at: null,
-      updated_by: userId,
-      ...(existing ? {} : { created_by: userId }),
-    },
-    { onConflict: "id" },
-  );
+  const row = {
+    id: values.id,
+    boat_id: values.boatId,
+    entity_type: values.ownerType,
+    entity_id: values.ownerId,
+    storage_path: values.storagePath,
+    file_name: values.fileName,
+    mime_type: values.mimeType,
+    size_bytes: values.sizeBytes,
+    caption: values.caption,
+    deleted_at: null,
+    updated_by: userId,
+  };
+
+  // A document that exists is UPDATEd, never upserted (D42) — see `saveLog`:
+  // `attachments_insert` checks `created_by = auth.uid()`, and that check runs on the proposed
+  // row before the conflict is resolved, so re-saving someone else's document would be refused.
+  const { error } = existing
+    ? await supabase
+        .from("attachments")
+        .update(row)
+        .eq("id", values.id)
+        .eq("boat_id", values.boatId)
+    : await supabase
+        .from("attachments")
+        .upsert({ ...row, created_by: userId }, { onConflict: "id" });
   if (error) return fail(dbErrorKey(error));
 
   revalidateOwner(values.boatId, values.ownerType, values.ownerId);
@@ -90,6 +99,7 @@ export async function saveAttachments(input: unknown): Promise<ActionResult<{ co
   const { data: existing, error: readError } = await supabase
     .from("attachments")
     .select("id")
+    .eq("boat_id", boatId)
     .in(
       "id",
       items.map((item) => item.id),
@@ -97,24 +107,40 @@ export async function saveAttachments(input: unknown): Promise<ActionResult<{ co
   if (readError) return fail(dbErrorKey(readError));
   const known = new Set((existing ?? []).map((row) => row.id));
 
-  const { error } = await supabase.from("attachments").upsert(
-    items.map((item) => ({
-      id: item.id,
-      boat_id: boatId,
-      entity_type: item.ownerType,
-      entity_id: item.ownerId,
-      storage_path: item.storagePath,
-      file_name: item.fileName,
-      mime_type: item.mimeType,
-      size_bytes: item.sizeBytes,
-      caption: item.caption,
-      deleted_at: null,
-      updated_by: userId,
-      ...(known.has(item.id) ? {} : { created_by: userId }),
-    })),
-    { onConflict: "id" },
-  );
-  if (error) return fail(dbErrorKey(error));
+  const rowOf = (item: (typeof items)[number]) => ({
+    id: item.id,
+    boat_id: boatId,
+    entity_type: item.ownerType,
+    entity_id: item.ownerId,
+    storage_path: item.storagePath,
+    file_name: item.fileName,
+    mime_type: item.mimeType,
+    size_bytes: item.sizeBytes,
+    caption: item.caption,
+    deleted_at: null,
+    updated_by: userId,
+  });
+
+  // Two writes rather than one upsert (D42), for the reason spelled out in `saveLog`: the
+  // INSERT check `created_by = auth.uid()` is evaluated on every proposed row, so a batch
+  // holding one document created by someone else would be refused whole. The new ones go in
+  // together; the ones already there are updated, which is the policy that describes editing.
+  const fresh = items.filter((item) => !known.has(item.id));
+  if (fresh.length > 0) {
+    const { error: insertError } = await supabase.from("attachments").upsert(
+      fresh.map((item) => ({ ...rowOf(item), created_by: userId })),
+      { onConflict: "id" },
+    );
+    if (insertError) return fail(dbErrorKey(insertError));
+  }
+  for (const item of items.filter((entry) => known.has(entry.id))) {
+    const { error: updateError } = await supabase
+      .from("attachments")
+      .update(rowOf(item))
+      .eq("id", item.id)
+      .eq("boat_id", boatId);
+    if (updateError) return fail(dbErrorKey(updateError));
+  }
 
   for (const owner of new Set(items.map((item) => `${item.ownerType}:${item.ownerId}`))) {
     const [type, id] = owner.split(":");

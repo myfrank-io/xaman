@@ -1544,3 +1544,62 @@ describe("trash for parts and contacts (0012)", () => {
     expect(after.contact_id).toBeNull();
   });
 });
+
+/**
+ * D42 — why a Server Action never upserts a row it knows already exists.
+ *
+ * `maintenance_logs_insert` (and the same policy on `attachments`, `checklist_completions`
+ * and `engine_hour_readings`) checks `created_by = auth.uid()`. Postgres evaluates that
+ * WITH CHECK against the row **proposed** by an `insert … on conflict do update`, before it
+ * ever looks at the conflicting row. So an upsert that deliberately leaves `created_by` out —
+ * which E10-4 requires, « créé par » must keep naming whoever wrote the line — is refused for
+ * everyone, the owner of the boat included.
+ *
+ * That is not a policy to loosen: it is what stops a `pro` from filing a line under someone
+ * else's name. The action is what must change, and these cases pin both halves.
+ */
+describe("editing an existing row (D42)", () => {
+  const UPSERT_WITHOUT_CREATED_BY = `
+    insert into public.maintenance_logs (id, boat_id, title, status, performed_at, updated_by)
+    values ($1, $2, 'Réécrit par un upsert', 'done', current_date, auth.uid())
+    on conflict (id) do update
+      set title = excluded.title, status = excluded.status,
+          performed_at = excluded.performed_at, updated_by = excluded.updated_by`;
+
+  it("refuses the upsert an owner would have been allowed to do as an update", async () => {
+    const upsert = await run(U.owner, UPSERT_WITHOUT_CREATED_BY, [LOG_OWNER, BOAT]);
+    expect(upsert.ok).toBe(false);
+    if (!upsert.ok) expect(upsert.code).toBe("42501");
+
+    // The very same edit, expressed as the UPDATE it really is, goes through.
+    expect(
+      await run(U.owner, "update public.maintenance_logs set title = $2 where id = $1", [
+        LOG_OWNER,
+        "Réécrit par un update",
+      ]),
+    ).toEqual({ ok: true, rowCount: 1 });
+  });
+
+  it("refuses it for an editor too, on a line someone else created", async () => {
+    const upsert = await run(U.editor, UPSERT_WITHOUT_CREATED_BY, [LOG_PRO, BOAT]);
+    expect(upsert.ok).toBe(false);
+    if (!upsert.ok) expect(upsert.code).toBe("42501");
+
+    expect(
+      await run(U.editor, "update public.maintenance_logs set title = $2 where id = $1", [
+        LOG_PRO,
+        "Corrigé par l'éditeur",
+      ]),
+    ).toEqual({ ok: true, rowCount: 1 });
+  });
+
+  it("still lets creation upsert, so a double tap writes one row (rule 11)", async () => {
+    const NEW_ID = "00000000-0000-0000-0000-0000000042a1";
+    const create = `
+      insert into public.maintenance_logs (id, boat_id, title, status, performed_at, created_by, updated_by)
+      values ($1, $2, 'Créée deux fois', 'done', current_date, auth.uid(), auth.uid())
+      on conflict (id) do update set title = excluded.title`;
+    expect(await run(U.owner, create, [NEW_ID, BOAT])).toEqual({ ok: true, rowCount: 1 });
+    expect(await run(U.owner, create, [NEW_ID, BOAT])).toEqual({ ok: true, rowCount: 1 });
+  });
+});

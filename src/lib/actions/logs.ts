@@ -45,31 +45,40 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     .from("maintenance_logs")
     .select("id, updated_at")
     .eq("id", id)
+    .eq("boat_id", boatId)
     .maybeSingle();
   if (readError) return fail(dbErrorKey(readError));
   if (existing && expectedUpdatedAt && existing.updated_at !== expectedUpdatedAt) {
     return fail("errors.conflict");
   }
 
-  const { error } = await supabase.from("maintenance_logs").upsert(
-    {
-      id,
-      boat_id: boatId,
-      title: values.title,
-      category_id: values.categoryId,
-      status: values.status,
-      performed_at: values.performedAt,
-      cost: values.cost,
-      contact_id: values.contactId,
-      equipment_id: values.equipmentId,
-      haul_out_id: values.haulOutId,
-      notes: values.notes,
-      updated_by: userId,
-      // created_by is never overwritten: the footer « créé par » must stay true (E10-4)
-      ...(existing ? {} : { created_by: userId }),
-    },
-    { onConflict: "id" },
-  );
+  const row = {
+    id,
+    boat_id: boatId,
+    title: values.title,
+    category_id: values.categoryId,
+    status: values.status,
+    performed_at: values.performedAt,
+    cost: values.cost,
+    contact_id: values.contactId,
+    equipment_id: values.equipmentId,
+    haul_out_id: values.haulOutId,
+    notes: values.notes,
+    updated_by: userId,
+  };
+
+  // A line that exists is UPDATEd, never upserted (D42). `maintenance_logs_insert` checks
+  // `created_by = auth.uid()`, and Postgres runs that check against the proposed row *before*
+  // it resolves the conflict — so an upsert that leaves `created_by` alone, as E10-4 requires
+  // (« créé par » must stay true), is refused for everyone, the owner included. The UPDATE
+  // policy is the one that says who may edit an existing line; it is the one that must apply.
+  // Creation keeps the upsert: the id is drawn when the form opens, so a double tap writes one
+  // row (rule 11), and `created_by` is the signed-in user, which the INSERT check accepts.
+  const { error } = existing
+    ? await supabase.from("maintenance_logs").update(row).eq("id", id).eq("boat_id", boatId)
+    : await supabase
+        .from("maintenance_logs")
+        .upsert({ ...row, created_by: userId }, { onConflict: "id" });
   if (error) return fail(dbErrorKey(error));
 
   // ---- engine readings ------------------------------------------------------------------
