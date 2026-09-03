@@ -662,7 +662,8 @@
       "view": "Voir",
       "attachments": "Photos et documents",
       "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
-      "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants."
+      "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants.",
+      "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}"
     },
     "detail": {
       "fields": {
