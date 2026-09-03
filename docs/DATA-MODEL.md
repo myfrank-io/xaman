@@ -657,3 +657,14 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 
 - **0009** : les privilèges par défaut de Supabase donnent `EXECUTE` à `anon` à la création de chaque fonction, et `revoke … from public` ne retire pas ce grant explicite. La migration retire `EXECUTE` à `PUBLIC` et `anon` sur **toutes** les fonctions de `public` (sauf `get_invitation_preview` et `boat_id_from_storage_path`, points d'entrée anonymes voulus), et à `authenticated` sur les fonctions trigger et les fonctions réservées au service (`purge_trash`, `weekly_digest_payload`, `enqueue_weekly_digest`) ; privilèges par défaut ajustés pour les fonctions futures. Toute nouvelle fonction doit garder cette règle (conseillers Supabase 0028 / 0029).
 - **0010** : `parts.checked_at` (date de la dernière vérification) et `adjust_part_quantity(p_part_id, p_delta)` : +/− atomique depuis la liste (`quantity = greatest(0, quantity + delta)`, `checked_at = current_date`), `security invoker` donc soumis à la politique `parts_update` (owner / editor) ; delta nul refusé (`invalid_delta`), ligne inaccessible → `part_not_found`. Les pièces n'ont pas de corbeille : suppression physique après confirmation (D10, donnée déclarative).
+
+### Conseillers de sécurité Supabase — avertissements acceptés
+
+`get_advisors(security)` signale en `WARN` toutes les fonctions `security definer` de `public` appelables via `/rest/v1/rpc/…`. **C'est le modèle voulu, ne pas « corriger » :**
+
+- `is_platform_admin`, `is_boat_member`, `boat_role`, `is_boat_owner`, `can_write_boat`, `can_contribute_boat`, `shares_boat_with` — helpers de la RLS. Ils **doivent** être `security definer` (ils lisent `boat_members` et `profiles`, tables elles-mêmes protégées) et rester exécutables par `authenticated` : chaque écran appelle `boat_role` en RPC pour connaître son rôle. Chacun ne renvoie qu'un booléen ou un rôle sur le bateau demandé.
+- `accept_invitation`, `apply_checklist_template`, `mark_log_reviewed` — vérifient elles-mêmes l'autorisation (e-mail de l'invitation, `can_write_boat`) avant d'écrire.
+- `get_invitation_preview` reste exécutable par `anon` : c'est le point d'entrée de la page publique `/invite/[token]`, et depuis `0007` elle masque l'adresse.
+- `adjust_part_quantity` (`0010`) est `security invoker` et n'apparaît donc pas : la politique `parts_update` décide.
+
+`auth_leaked_password_protection` est sans objet : l'authentification se fait par code OTP, l'app n'a pas de mot de passe.
