@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, XIcon } from "lucide-react";
 
 import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
-import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DiscardDialog } from "@/components/forms/DiscardDialog";
@@ -85,7 +84,6 @@ export function ChecklistItemForm({
   const [pending, startTransition] = useTransition();
   const [newId] = useState(() => crypto.randomUUID());
   const [categoryId, setCategoryId] = useState(item?.categoryId ?? defaultCategoryId);
-  const [changingCategory, setChangingCategory] = useState(false);
   const [label, setLabel] = useState(item?.label ?? "");
   const [preset, setPreset] = useState<Preset>(item ? presetOf(item.intervalMonths) : "12");
   const [otherMonths, setOtherMonths] = useState(
@@ -216,29 +214,17 @@ export function ChecklistItemForm({
       </Field>
       <div className="grid gap-2">
         <Label>{t("category")}</Label>
-        {changingCategory ? (
-          <CategoryChips
-            categories={categories}
-            value={categoryId}
-            onValueChange={(next) => {
-              touch(setCategoryId)(next);
-              setChangingCategory(false);
-            }}
-            label={t("category")}
-          />
-        ) : (
-          <div className="flex min-h-11 items-center gap-3">
-            {category ? (
-              <span className="inline-flex items-center gap-2 text-body font-medium">
-                <CategoryDot color={category.color} />
-                {category.name}
-              </span>
-            ) : null}
-            <Button type="button" variant="link" onClick={() => setChangingCategory(true)}>
-              {t("change")}
-            </Button>
-          </div>
-        )}
+        {/* The chips are shown outright. They used to hide behind a « changer » link, which on
+            a point created from the checklist root — where no category is preselected — left
+            the field as the bare word « changer » under a label, naming neither the current
+            choice nor the fact that one is required. Rule 13 of CLAUDE.md is chips for
+            categories, and eight of them cost one row: there is nothing to save by folding. */}
+        <CategoryChips
+          categories={categories}
+          value={categoryId}
+          onValueChange={touch(setCategoryId)}
+          label={t("category")}
+        />
         {errors.categoryId ? (
           <p className="text-caption text-state-overdue-fg">{errors.categoryId}</p>
         ) : null}

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactsList } from "@/components/contacts/ContactsList";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
@@ -60,12 +61,36 @@ export default async function DevContactsPage() {
   const t = await getTranslations("contacts");
   return (
     <DevShell>
-      <div className="mx-auto flex max-w-3xl flex-col gap-8 p-4 sm:p-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-4 sm:p-6">
         <PageHeader title={t("title")} subtitle={t("count", { count: CONTACTS.length })} />
         <ContactsList boatId={DEV_BOAT_ID} contacts={CONTACTS} canWrite />
         <SectionCard title={t("picker.provider")} bare>
           <div className="rounded-xl border border-border bg-surface p-5">
             <ContactPickerDemo boatId={DEV_BOAT_ID} contacts={CONTACTS} />
+          </div>
+        </SectionCard>
+        {/* The form itself had no preview: the trade is a row of chips plus a free field
+            behind « Autre » (D44), which is the control most likely to spill on a phone. */}
+        {/* Rendered bare, exactly as `/contacts/new` renders it: its action bar bleeds into
+            the page padding with a negative margin, so nesting it in a padded card pushes the
+            whole column sideways — a defect of the preview, not of the form. */}
+        <SectionCard title={t("edit")} bare>
+          <div>
+            <ContactForm
+              boatId={DEV_BOAT_ID}
+              contact={{
+                id: "00000000-0000-4000-8000-0000000000c1",
+                name: "Chantier Naval du Guip — Brest",
+                specialty: "Chantier carénage",
+                company: "Le Guip",
+                phone: "02 98 00 00 00",
+                email: "contact@chantier-naval-du-guip.example.fr",
+                address: "1 quai du Commandant Malbert, 29200 Brest",
+                notes: "Demander Yann. Créneau de carénage à réserver six mois à l'avance.",
+                updatedAt: "2026-09-03T08:00:00.000Z",
+              }}
+              usedSpecialties={["Gréeur", "Peintre coque"]}
+            />
           </div>
         </SectionCard>
       </div>

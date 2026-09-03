@@ -72,8 +72,11 @@ export default async function HomePage() {
           </nav>
         </header>
 
+        {/* A grid item defaults to `min-width: auto`, so the widest unbroken line — the
+            letter-spaced eyebrow — set the column and pushed the hero 3 px off a 320 px
+            screen. `min-w-0` lets the column be the screen, and the text wrap. */}
         <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 pt-12 pb-16 lg:grid-cols-2 lg:items-center lg:gap-12 lg:px-8 lg:pt-16 lg:pb-24">
-          <div className="flex flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-6">
             <p className="text-overline text-brass-light uppercase">{t("hero.eyebrow")}</p>
             <h1 className="max-w-2xl text-[2rem] leading-[1.15] font-semibold tracking-tight sm:text-[2.5rem] lg:text-[3rem]">
               {t("hero.title")}

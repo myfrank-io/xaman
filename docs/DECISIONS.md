@@ -219,3 +219,50 @@ Format : date · question · décision · raison. Claude Code ajoute une ligne �
 | 2026-09-03 | Plancher mobile | **320 px** vérifié en CI, en plus de 360 et 390 | L'app n'avait jamais été mesurée sous 390. C'est à 320 qu'un bloc incapable de rétrécir se révèle : trois débordements du document entier n'existaient qu'à cette largeur, et iOS Safari y répond en dézoomant toute la page |
 | 2026-09-03 | Onglet « Interventions » dans la barre du bas | Libellé **conservé** ; seule la largeur est corrigée (`min-w-0`) | L'audit proposait de revenir à « Journal », plus court, pour tenir à 320 px. C'est le renommage que Joseph a demandé ce matin : la largeur se règle en laissant l'onglet rétrécir, pas en défaisant une décision produit |
 | 2026-09-03 | Tableaux d'import et de reprise sur téléphone | Les cellules se replient sous `sm`, les largeurs minimales ne s'appliquent qu'à partir de `sm`, et **une ligne dit que le tableau se fait glisser** | Sept colonnes ne tiennent pas dans 328 px en restant un tableau : la prévisualisation mesurait 1 200 px, soit cinq écrans à traverser pour lire une ligne. Le repli ramène deux tableaux sur trois sous 570 px ; le troisième défile toujours, et un tableau qui défile sans le dire se lit comme un tableau à trois colonnes. Le passage en fiches empilées sur téléphone reste ouvert : c'est mieux, mais c'est une réécriture des deux écrans, et importer un tableur depuis un téléphone n'est pas le geste courant |
+
+## 2026-09-03 — D46 : la catégorie d'un point de checklist s'affiche en chips, jamais repliée
+
+**Question.** Sur le formulaire d'un point de checklist, le champ « Catégorie » affichait la
+catégorie courante suivie d'un lien « changer ». Ouvert depuis la racine de la checklist, aucune
+catégorie n'est présélectionnée : le champ se réduisait alors au seul mot « changer » sous son
+libellé, sans dire ce qu'il change ni qu'un choix est obligatoire.
+
+**Décision.** Les chips sont affichées d'emblée, l'état replié est supprimé. La règle 13 de
+`CLAUDE.md` dit déjà « catégories = chips » ; huit chips tiennent en deux lignes, il n'y avait
+rien à gagner à les replier. La clé `checklist.form.change` disparaît.
+
+## 2026-09-03 — D47 : l'unité d'un champ numérique est une boîte de la ligne, pas un calque
+
+**Question.** `Input` posait son suffixe en `absolute` et réservait `pr-10`, soit 40 px. Cela
+suffit pour « h » ou « € », pas pour « h moteur » (62 px) ni « mois » : la valeur, alignée à
+droite, se dessinait par-dessus son unité — le formulaire de checklist affichait « h200teur »
+pour deux cents heures moteur.
+
+**Décision.** Le champ et son unité sont deux boîtes d'une même ligne flex, la bordure et
+l'anneau de focus passant sur le conteneur. La réservation devient exacte pour n'importe quelle
+unité, dans n'importe quelle langue.
+
+## 2026-09-03 — D48 : l'audit tactile mesure les boîtes, pas `document.scrollWidth`
+
+**Question.** `globals.css` pose `overflow-x: clip` sur `html` et `body` pour qu'une boîte trop
+large ne fasse pas glisser la page entière. Effet de bord : `document.scrollWidth` ne dépasse
+plus jamais la fenêtre, donc la seule assertion de débordement de l'audit était vide depuis ce
+commit. Elle passait sur une carte qui sortait de 129 px d'un écran de 320.
+
+**Décision.** L'audit parcourt les boîtes et signale celles dont le bord droit dépasse la
+fenêtre, en ignorant celles contenues dans un conteneur qui défile ou rogne à l'intérieur de
+l'écran (les tableaux de l'import, de la relecture et du rapport défilent volontairement).
+Trois débordements réels ont été trouvés et corrigés : la page d'accueil, le sélecteur de
+bateau et les cartes de membres.
+
+## 2026-09-03 — D49 : dates lointaines — molette native seule, sans puces
+
+**Question.** La règle 13 impose « dates = puces + roulette native » (`DateField`). Quatre
+champs utilisent encore un `<input type="date">` nu : date de pose d'un moteur ou d'un
+équipement, « valide jusqu'au » d'une réalisation, « dernière réalisation connue » d'un point.
+
+**Décision.** Ils restent nus. Les puces de `DateField` sont « Aujourd'hui » et « Hier » : pour
+une date d'installation vieille de plusieurs années ou une échéance future, elles sont au mieux
+inutiles, au pire des valeurs invalides (« valide jusqu'au » exige une date postérieure à la
+réalisation). La règle vise le cas courant — « quand l'as-tu fait » — et il est respecté. Les
+deux cellules de date de la table de relecture restent nues pour la même raison de place.

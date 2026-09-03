@@ -60,6 +60,33 @@ const SEMANTIC = [
   ["En retard", "--state-overdue", "--state-overdue-fg", "--state-overdue-tint"],
 ] as const;
 
+/** The whole gallery, in reading order. Kept in step with tests/e2e/touch-audit.spec.ts. */
+const PREVIEWS: { href: string; label: string }[] = [
+  { href: "/dev/ui/dashboard", label: "Tableau de bord" },
+  { href: "/dev/ui/checklist", label: "Checklist" },
+  { href: "/dev/ui/checklist-setup", label: "Checklist · mise en route" },
+  { href: "/dev/ui/checklist-form", label: "Checklist · nouveau point" },
+  { href: "/dev/ui/logs", label: "Interventions" },
+  { href: "/dev/ui/attachments", label: "Documents et pièces jointes" },
+  { href: "/dev/ui/boat", label: "Bateau" },
+  { href: "/dev/ui/boat/engine", label: "Bateau · fiche moteur" },
+  { href: "/dev/ui/boat/engine-form", label: "Bateau · formulaire moteur" },
+  { href: "/dev/ui/boat/equipment-form", label: "Bateau · formulaire équipement" },
+  { href: "/dev/ui/boat/settings", label: "Bateau · paramètres" },
+  { href: "/dev/ui/supplies", label: "Achats et stock" },
+  { href: "/dev/ui/haul-outs", label: "Sorties de l'eau" },
+  { href: "/dev/ui/contacts", label: "Prestataires" },
+  { href: "/dev/ui/members", label: "Équipage" },
+  { href: "/dev/ui/report", label: "Rapport d'état" },
+  { href: "/dev/ui/trash", label: "Corbeille" },
+  { href: "/dev/ui/import", label: "Import" },
+  { href: "/dev/ui/review", label: "Relecture" },
+  { href: "/dev/ui/boats", label: "Choix du bateau" },
+  { href: "/dev/ui/profile", label: "Mon compte" },
+  { href: "/dev/ui/reset-password", label: "Nouveau mot de passe" },
+  { href: "/dev/ui/install", label: "Installer l'application" },
+];
+
 function Section({
   title,
   description,
@@ -125,6 +152,24 @@ export default async function DevUiPage() {
             </Button>
           }
         />
+
+        {/* Every preview page, in one place. There is no other way to find them: the audit
+            reads its own list, and a screen with no preview is a screen nobody looks at —
+            which is how six of them went months without being opened on a phone. */}
+        <Section title="Écrans">
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {PREVIEWS.map((preview) => (
+              <li key={preview.href}>
+                <a
+                  href={preview.href}
+                  className="flex min-h-11 items-center rounded-lg border border-border tap-feedback bg-surface px-3 py-2 text-body hover:bg-accent"
+                >
+                  {preview.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Section>
 
         <Section title={t("sections.brand")}>
           <div className="grid gap-4 sm:grid-cols-2">

@@ -33,7 +33,7 @@ export async function AppPreview() {
   ];
 
   return (
-    <figure className="m-0 flex flex-col gap-3">
+    <figure className="m-0 flex min-w-0 flex-col gap-3">
       <div className="overflow-hidden rounded-2xl border border-on-navy-border bg-surface shadow-2xl">
         <div className="border-b border-border bg-surface-2 px-4 py-3">
           <p className="text-label text-foreground">{t("boat")}</p>

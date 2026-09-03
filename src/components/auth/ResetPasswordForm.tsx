@@ -22,14 +22,24 @@ import { createClient } from "@/lib/supabase/client";
  * Reaching this screen only works with the session the link opened; without it the form is not
  * even shown, because a « save » that silently does nothing is worse than a refusal.
  */
-export function ResetPasswordForm() {
+export function ResetPasswordForm({
+  /**
+   * Skips the session probe and pins the state. Only `/dev/ui/reset-password` passes it: this
+   * screen exists solely at the end of a recovery link, so without the seam the preview — and
+   * therefore the touch audit — could never see either of its two faces.
+   */
+  initialState,
+}: {
+  initialState?: "ok" | "expired";
+} = {}) {
   const t = useTranslations("auth.reset");
   const router = useRouter();
-  const [ready, setReady] = useState<"checking" | "ok" | "expired">("checking");
+  const [ready, setReady] = useState<"checking" | "ok" | "expired">(initialState ?? "checking");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
+    if (initialState) return;
     const supabase = createClient();
     let cancelled = false;
     void supabase.auth.getSession().then(({ data }) => {
@@ -38,7 +48,7 @@ export function ResetPasswordForm() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialState]);
 
   const form = useForm<NewPasswordInput>({
     resolver: zodResolver(newPasswordSchema),
