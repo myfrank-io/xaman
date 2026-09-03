@@ -127,15 +127,20 @@ export function MembersList({
               key={m.userId}
               className={cn("flex flex-wrap items-center gap-3 p-4", expired && "bg-surface-2")}
             >
-              <div className="min-w-0 flex-1">
-                <p className={cn("truncate font-medium", expired && "text-ink-3")}>
+              {/* Mobile-first: a name, an e-mail, a role menu and a bin do not fit one phone
+                  row. Measured at 390 px, the 160 px select and the bin left ~150 px for the
+                  identity, so every member read « Xavier Mari… / xavier.marin… » — a list of
+                  people where nobody can be told apart. The identity takes the whole row below
+                  `sm` and the controls drop under it; from `sm` the single line comes back. */}
+              <div className="min-w-0 flex-1 basis-full sm:basis-0">
+                <p className={cn("font-medium break-words sm:truncate", expired && "text-ink-3")}>
                   {m.fullName ?? m.email}
                   {m.userId === currentUserId ? (
                     <span className="ml-2 text-sm text-muted-foreground">{t("you")}</span>
                   ) : null}
                 </p>
                 {m.fullName ? (
-                  <p className="truncate text-sm text-muted-foreground">{m.email}</p>
+                  <p className="text-sm break-all text-muted-foreground sm:truncate">{m.email}</p>
                 ) : null}
                 {m.validUntil ? (
                   <p
@@ -151,7 +156,7 @@ export function MembersList({
                 ) : null}
               </div>
               {canManage ? (
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
                   {expired ? (
                     <Button
                       type="button"
@@ -163,19 +168,23 @@ export function MembersList({
                       {t("reactivate")}
                     </Button>
                   ) : null}
-                  <NativeSelect
-                    aria-label={t("roleLabel")}
-                    className="w-40"
-                    value={m.role}
-                    disabled={pending}
-                    onChange={(e) => onRoleChange(m, e.target.value as BoatRole)}
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>
-                        {t(`roles.${r}`)}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                  {/* The select is sized by this box, not by a class on itself: NativeSelect
+                      draws its chevron against a `w-full` wrapper, so a width put on the
+                      control leaves the arrow floating at the far right of the row. */}
+                  <div className="min-w-36 flex-1 sm:w-40 sm:flex-none">
+                    <NativeSelect
+                      aria-label={t("roleLabel")}
+                      value={m.role}
+                      disabled={pending}
+                      onChange={(e) => onRoleChange(m, e.target.value as BoatRole)}
+                    >
+                      {ROLES.map((r) => (
+                        <option key={r} value={r}>
+                          {t(`roles.${r}`)}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"

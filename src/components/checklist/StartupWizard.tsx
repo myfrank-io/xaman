@@ -50,17 +50,24 @@ export function StartupWizard({
   boatId,
   engines,
   categories,
+  /**
+   * Opens the wizard on a given step. Only `/dev/ui/checklist-setup` passes it: steps 2 and 3
+   * are behind a button, so the touch audit only ever saw step 1 — and step 2 is the dense one,
+   * eighty points with a toggle each.
+   */
+  initialStep,
 }: {
   boatId: string;
   engines: WizardEngine[];
   categories: WizardCategory[];
+  initialStep?: 1 | 2 | 3;
 }) {
   const t = useTranslations("checklist.wizard");
   const tu = useTranslations("units");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [step, setStep] = useState<1 | 2 | 3>(engines.length > 0 ? 1 : 2);
+  const [step, setStep] = useState<1 | 2 | 3>(initialStep ?? (engines.length > 0 ? 1 : 2));
   const [readingIds] = useState(
     () => new Map(engines.map((engine) => [engine.id, crypto.randomUUID()])),
   );

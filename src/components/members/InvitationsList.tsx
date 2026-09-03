@@ -56,8 +56,11 @@ export function InvitationsList({
       <ul className="divide-y rounded-xl border bg-card shadow-sm">
         {visible.map((i) => (
           <li key={i.id} className="flex flex-wrap items-center gap-3 p-4">
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{i.email}</p>
+            {/* Same shape as a member row, same fix: an invitation is identified by an e-mail
+                address, which is the longest string in the app and the first thing a phone
+                cuts. It gets the whole row, and the badge and « Annuler » go underneath. */}
+            <div className="min-w-0 flex-1 basis-full sm:basis-0">
+              <p className="font-medium break-all sm:truncate">{i.email}</p>
               <p className="text-sm text-muted-foreground">
                 {t(`roles.${i.role}`)} ·{" "}
                 {i.status === "expired"
@@ -66,12 +69,14 @@ export function InvitationsList({
                 {i.validUntil ? ` · ${t("validUntil", { date: formatDate(i.validUntil) })}` : ""}
               </p>
             </div>
-            <Badge variant={i.status === "expired" ? "outline" : "secondary"}>
-              {t(`invitations.status.${i.status}`)}
-            </Badge>
-            <Button variant="ghost" disabled={pending} onClick={() => revoke(i.id)}>
-              {t("invitations.revoke")}
-            </Button>
+            <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
+              <Badge variant={i.status === "expired" ? "outline" : "secondary"}>
+                {t(`invitations.status.${i.status}`)}
+              </Badge>
+              <Button variant="ghost" disabled={pending} onClick={() => revoke(i.id)}>
+                {t("invitations.revoke")}
+              </Button>
+            </div>
           </li>
         ))}
       </ul>
