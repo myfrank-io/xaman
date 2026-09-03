@@ -20,13 +20,7 @@ import {
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 
 export type TrashKind =
-  | "log"
-  | "purchase"
-  | "haulOut"
-  | "part"
-  | "contact"
-  | "attachment"
-  | "equipment";
+  "log" | "purchase" | "haulOut" | "part" | "contact" | "attachment" | "equipment";
 
 const ACTIONS = {
   log: restoreLog,

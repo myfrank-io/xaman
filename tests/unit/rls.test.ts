@@ -1574,10 +1574,9 @@ describe("trash for equipment (0013)", () => {
         await c.query("set local role service_role");
         await c.query("update public.equipment set deleted_at = now() where id = $1", [EQUIP]);
         await c.query("set local role authenticated");
-        const res = await c.query(
-          "select count(*)::int as n from public.equipment where id = $1",
-          [EQUIP],
-        );
+        const res = await c.query("select count(*)::int as n from public.equipment where id = $1", [
+          EQUIP,
+        ]);
         return Number(res.rows[0]?.n);
       });
     // The trash screen is a plain select with `deleted_at is not null`: no policy hides the row.
