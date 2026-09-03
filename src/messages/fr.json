@@ -612,7 +612,8 @@
       "status": "Statut",
       "allStatuses": "Tous les statuts",
       "review": "À vérifier {count}",
-      "contact": "Intervenant : {name}"
+      "contact": "Intervenant : {name}",
+      "fromStock": "Stock (pièces utilisées)"
     },
     "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
     "loadMore": "Charger plus",

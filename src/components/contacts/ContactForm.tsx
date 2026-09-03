@@ -56,9 +56,12 @@ const OTHER = "__other";
 export function ContactForm({
   boatId,
   contact,
+  usedSpecialties = [],
 }: {
   boatId: string;
   contact: ContactFormValues | null;
+  /** Trades already on this boat: each becomes a chip, so one typed once comes back. */
+  usedSpecialties?: string[];
 }) {
   const t = useTranslations("contacts");
   const ts = useTranslations("contacts.specialties");
@@ -68,9 +71,9 @@ export function ContactForm({
   const [pending, startTransition] = useTransition();
   const [newId] = useState(() => crypto.randomUUID());
   const label = (key: ContactSpecialty) => ts(key);
-  const options = specialtyOptions(label);
+  const options = specialtyOptions(label, usedSpecialties);
   const [otherMode, setOtherMode] = useState(
-    contact ? !isListedSpecialty(contact.specialty, label) : false,
+    contact ? !isListedSpecialty(contact.specialty, label, usedSpecialties) : false,
   );
 
   const form = useForm<ContactFormState, unknown, ContactOutput>({

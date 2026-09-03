@@ -11,6 +11,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { STOCK_FILTER } from "@/lib/logs-filters";
 import { LOG_STATUSES } from "@/lib/schemas/logs";
 import { importDocumentsPath, logsPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
@@ -120,6 +121,9 @@ export function LogsToolbar({
                 {category.name}
               </option>
             ))}
+            {/* Stock stands beside the boat's systems in this list without being one of them:
+                it selects the jobs that took something from the stock. */}
+            <option value={STOCK_FILTER}>{t("filters.fromStock")}</option>
           </NativeSelect>
         </div>
         <div className="w-44 max-w-full">

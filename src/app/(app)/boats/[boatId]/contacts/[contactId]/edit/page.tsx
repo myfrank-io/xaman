@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { can, type BoatRole } from "@/lib/permissions";
+import { usedSpecialties } from "@/lib/queries/contact-specialties";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditContactPage({
@@ -16,9 +17,11 @@ export default async function EditContactPage({
     supabase.from("contacts").select("*").eq("id", contactId).eq("boat_id", boatId).maybeSingle(),
   ]);
   if (!role || !can(role as BoatRole, "write") || !contact) notFound();
+  const used = await usedSpecialties(supabase, boatId);
   return (
     <ContactForm
       boatId={boatId}
+      usedSpecialties={used}
       contact={{
         id: contact.id,
         name: contact.name,

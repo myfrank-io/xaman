@@ -139,11 +139,8 @@ export default async function BoatPage({
 
   // `?tab=identity` still arrives from an old link: it now lands on the default list, with
   // the identity right above it (D37).
-  const activeTab: BoatTab = isBoatTab(tab)
-    ? tab
-    : engineRows.some((engine) => engine.isActive)
-      ? "engines"
-      : "equipment";
+  // Équipements is the default (D39); an explicit `?tab=` still wins.
+  const activeTab: BoatTab = isBoatTab(tab) ? tab : "equipment";
 
   return (
     <div className="flex flex-col gap-6">

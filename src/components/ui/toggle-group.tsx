@@ -23,6 +23,11 @@ function ToggleGroup({
   );
 }
 
+/**
+ * Never give an item an empty `value`: Radix uses the empty string to mean « nothing
+ * selected », so such an item can never show as on and the group reads as inert. An « all »
+ * or « any » choice needs a real word of its own, mapped back to nothing by the caller.
+ */
 function ToggleGroupItem({
   className,
   children,
