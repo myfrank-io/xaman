@@ -8,15 +8,25 @@ import { Undo2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { restoreHaulOut, restoreLog, restorePurchase } from "@/lib/actions/trash";
+import {
+  restoreContact,
+  restoreHaulOut,
+  restoreLog,
+  restorePart,
+  restorePurchase,
+  restoreTrashedAttachment,
+} from "@/lib/actions/trash";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 
-export type TrashKind = "log" | "purchase" | "haulOut";
+export type TrashKind = "log" | "purchase" | "haulOut" | "part" | "contact" | "attachment";
 
 const ACTIONS = {
   log: restoreLog,
   purchase: restorePurchase,
   haulOut: restoreHaulOut,
+  part: restorePart,
+  contact: restoreContact,
+  attachment: restoreTrashedAttachment,
 } as const;
 
 /** « Restaurer » (E3-5): `deleted_at = null`, and the parked hour readings come back with it. */

@@ -1329,4 +1329,218 @@ describe("parts stock (0010)", () => {
     const pro = await run(U.pro, "delete from public.parts where id = $1", [PART]);
     expect(pro).toEqual({ ok: true, rowCount: 0 });
   });
+
+  it("adjusting a trashed part fails: the + / − of the list cannot touch the trash", async () => {
+    // One connection throughout: a second one would block on the row this transaction locked.
+    const message = await as(U.owner, async (c) => {
+      await c.query("update public.parts set deleted_at = now() where id = $1", [PART]);
+      try {
+        await c.query("select public.adjust_part_quantity($1, 1)", [PART]);
+        return "ok";
+      } catch (e) {
+        return String((e as { message?: string }).message);
+      }
+    });
+    // The trashed row is invisible to the function even though the caller may write the table.
+    expect(message).toContain("part_not_found");
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// The trash covers the stock and the directory (migration 0012, D40 / D41)
+// ---------------------------------------------------------------------------------------------
+describe("trash for parts and contacts (0012)", () => {
+  const PART = "00000000-0000-0000-0000-000000006001";
+  const CONTACT = "00000000-0000-0000-0000-00000000d001";
+
+  it.each([
+    ["parts", PART],
+    ["contacts", CONTACT],
+  ] as const)(
+    "%s: owner and editor may trash and restore; pro, viewer and stranger may not",
+    async (table, id) => {
+      const trash = (u: User) =>
+        run(u, `update public.${table} set deleted_at = now() where id = $1`, [id]);
+      const restore = (u: User) =>
+        run(u, `update public.${table} set deleted_at = null where id = $1`, [id]);
+
+      expect(await trash(U.owner)).toEqual({ ok: true, rowCount: 1 });
+      expect(await trash(U.editor)).toEqual({ ok: true, rowCount: 1 });
+      expect(await trash(U.admin)).toEqual({ ok: true, rowCount: 1 });
+      // A pro or a viewer has no update right at all on these tables: zero rows, not an error.
+      expect(await trash(U.pro)).toEqual({ ok: true, rowCount: 0 });
+      expect(await trash(U.viewer)).toEqual({ ok: true, rowCount: 0 });
+      expect(await trash(U.stranger)).toEqual({ ok: true, rowCount: 0 });
+
+      expect(await restore(U.owner)).toEqual({ ok: true, rowCount: 1 });
+      expect(await restore(U.editor)).toEqual({ ok: true, rowCount: 1 });
+      expect(await restore(U.pro)).toEqual({ ok: true, rowCount: 0 });
+      expect(await restore(U.viewer)).toEqual({ ok: true, rowCount: 0 });
+    },
+  );
+
+  it.each([
+    ["parts", PART],
+    ["contacts", CONTACT],
+  ] as const)("%s: a trashed row is still readable by every member", async (table, id) => {
+    const seen = async (u: User) =>
+      as(u, async (c) => {
+        await c.query("set local role service_role");
+        await c.query(`update public.${table} set deleted_at = now() where id = $1`, [id]);
+        await c.query("set local role authenticated");
+        const res = await c.query(`select count(*)::int as n from public.${table} where id = $1`, [
+          id,
+        ]);
+        return Number(res.rows[0]?.n);
+      });
+    // The trash screen is a plain select with `deleted_at is not null`: no policy hides the row.
+    expect(await seen(U.owner)).toBe(1);
+    expect(await seen(U.editor)).toBe(1);
+    expect(await seen(U.stranger)).toBe(0);
+    expect(await count(null, table)).toBe(-1);
+  });
+
+  it.each([
+    ["parts", PART],
+    ["contacts", CONTACT],
+  ] as const)(
+    "%s: the natural key ignores the trash, so a re-import can re-create what was removed",
+    async (table, id) => {
+      const result = await as(U.owner, async (c) => {
+        const ref = await c.query(
+          `select boat_id, external_ref from public.${table} where id = $1`,
+          [id],
+        );
+        const row = ref.rows[0] as { boat_id: string; external_ref: string };
+        await c.query(`update public.${table} set deleted_at = now() where id = $1`, [id]);
+        const columns =
+          table === "parts"
+            ? "(boat_id, name, external_ref, created_by)"
+            : "(boat_id, name, specialty, external_ref, created_by)";
+        const values =
+          table === "parts"
+            ? "($1, 'Re-imported', $2, $3)"
+            : "($1, 'Re-imported', 'Autre', $2, $3)";
+        try {
+          await c.query(`insert into public.${table} ${columns} values ${values}`, [
+            row.boat_id,
+            row.external_ref,
+            U.owner.id,
+          ]);
+          return "ok";
+        } catch (e) {
+          return String((e as { code?: string }).code);
+        }
+      });
+      // Before 0012 this raised 23505 against a row the person could no longer see.
+      expect(result).toBe("ok");
+    },
+  );
+
+  it("a live row still cannot take an external_ref another live row holds", async () => {
+    const result = await as(U.owner, async (c) => {
+      const ref = await c.query("select boat_id, external_ref from public.parts where id = $1", [
+        PART,
+      ]);
+      const row = ref.rows[0] as { boat_id: string; external_ref: string };
+      try {
+        await c.query(
+          "insert into public.parts (boat_id, name, external_ref, created_by) values ($1, 'Doublon', $2, $3)",
+          [row.boat_id, row.external_ref, U.owner.id],
+        );
+        return "ok";
+      } catch (e) {
+        return String((e as { code?: string }).code);
+      }
+    });
+    expect(result).toBe("23505");
+  });
+
+  it("the dashboard stops counting a trashed part as missing from the stock", async () => {
+    const counts = await as(U.owner, async (c) => {
+      const before = await c.query(
+        "select low_stock_parts from public.boat_dashboard_stats where boat_id = $1",
+        [BOAT],
+      );
+      await c.query("update public.parts set deleted_at = now() where id = $1", [PART]);
+      const after = await c.query(
+        "select low_stock_parts from public.boat_dashboard_stats where boat_id = $1",
+        [BOAT],
+      );
+      return {
+        before: Number(before.rows[0]?.low_stock_parts),
+        after: Number(after.rows[0]?.low_stock_parts),
+      };
+    });
+    // The seeded part is below its threshold, so it counted before and must not count after.
+    expect(counts.before).toBe(1);
+    expect(counts.after).toBe(0);
+  });
+
+  it("purge_trash removes parts, contacts and attachments past 30 days, and nothing younger", async () => {
+    const result = await as(null, async (c) => {
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.parts set deleted_at = now() - interval '31 days' where id = $1",
+        [PART],
+      );
+      await c.query(
+        "update public.contacts set deleted_at = now() - interval '31 days' where id = $1",
+        [CONTACT],
+      );
+      await c.query(
+        "update public.attachments set deleted_at = now() - interval '31 days' where id = $1",
+        [ATT_OWNER],
+      );
+      const fresh = await c.query(
+        "insert into public.parts (boat_id, name, deleted_at, created_by) values ($1, 'Hier', now() - interval '1 day', $2) returning id",
+        [BOAT, U.owner.id],
+      );
+      await c.query("select public.purge_trash()");
+      const left = await c.query(
+        `select
+           (select count(*)::int from public.parts where id = $1) as part,
+           (select count(*)::int from public.contacts where id = $2) as contact,
+           (select count(*)::int from public.attachments where id = $3) as attachment,
+           (select count(*)::int from public.parts where id = $4) as fresh_part`,
+        [PART, CONTACT, ATT_OWNER, fresh.rows[0].id],
+      );
+      return left.rows[0] as Record<string, number>;
+    });
+    expect(result.part).toBe(0);
+    expect(result.contact).toBe(0);
+    expect(result.attachment).toBe(0);
+    expect(result.fresh_part).toBe(1);
+  });
+
+  it("purge_trash stays out of reach of authenticated and anon", async () => {
+    for (const user of [U.owner, U.admin, null]) {
+      const result = await run(user, "select public.purge_trash()");
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe("42501");
+    }
+  });
+
+  it("purging a contact leaves the history and only severs the link", async () => {
+    const after = await as(U.owner, async (c) => {
+      await c.query("update public.maintenance_logs set contact_id = $2 where id = $1", [
+        LOG_OWNER,
+        CONTACT,
+      ]);
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.contacts set deleted_at = now() - interval '31 days' where id = $1",
+        [CONTACT],
+      );
+      await c.query("select public.purge_trash()");
+      const res = await c.query(
+        "select title, contact_id from public.maintenance_logs where id = $1",
+        [LOG_OWNER],
+      );
+      return res.rows[0] as { title: string; contact_id: string | null };
+    });
+    // `on delete set null`: the intervention survives, only the pointer goes.
+    expect(after.title).toBeTruthy();
+    expect(after.contact_id).toBeNull();
+  });
 });

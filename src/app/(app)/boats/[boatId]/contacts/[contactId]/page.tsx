@@ -40,7 +40,14 @@ export default async function ContactPage({
     { count: haulOutsCount },
   ] = await Promise.all([
     supabase.rpc("boat_role", { p_boat_id: boatId }),
-    supabase.from("contacts").select("*").eq("id", contactId).eq("boat_id", boatId).maybeSingle(),
+    // A trashed provider has left the directory: their card is restored from /trash, not here.
+    supabase
+      .from("contacts")
+      .select("*")
+      .eq("id", contactId)
+      .eq("boat_id", boatId)
+      .is("deleted_at", null)
+      .maybeSingle(),
     supabase
       .from("maintenance_logs_view")
       .select("id, title, performed_at, cost, category_color", { count: "exact" })

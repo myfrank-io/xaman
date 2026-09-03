@@ -130,6 +130,7 @@ export default async function SuppliesPage({
         .from("contacts")
         .select("id, name, specialty, company, phone")
         .eq("boat_id", boatId)
+        .is("deleted_at", null)
         .order("name"),
       kind === "gas" || gasEntry
         ? supabase

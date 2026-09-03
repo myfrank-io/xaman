@@ -77,7 +77,7 @@ export async function importRows(input: {
         .eq("boat_id", boatId)
         .eq("is_active", true),
       descriptor.matchesContacts
-        ? supabase.from("contacts").select("id, name").eq("boat_id", boatId)
+        ? supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null)
         : Promise.resolve({ data: [] as { id: string; name: string }[] }),
       // The checklist points and the engines a line may name (E12-4).
       loadImportCatalog(supabase, boatId, descriptor),

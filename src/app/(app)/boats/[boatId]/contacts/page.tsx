@@ -21,6 +21,7 @@ export default async function ContactsPage({ params }: { params: Promise<{ boatI
       .from("contacts")
       .select("id, name, specialty, company, phone, email")
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("name"),
   ]);
   if (!role) notFound();

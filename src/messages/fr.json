@@ -581,12 +581,29 @@
     "sections": {
       "logs": "Interventions",
       "purchases": "Achats",
-      "haulOuts": "Sorties de l'eau"
+      "haulOuts": "Sorties de l'eau",
+      "parts": "Pièces détachées",
+      "contacts": "Intervenants",
+      "attachments": "Photos et documents"
     },
     "restored": "Élément restauré",
     "purgeNote": "La corbeille est purgée chaque nuit : au-delà de 30 jours, la suppression est définitive.",
     "emptyDescription": "Les éléments supprimés y restent 30 jours.",
-    "haulOutLabel": "Sortie de l'eau du {date}"
+    "haulOutLabel": "Sortie de l'eau du {date}",
+    "partQuantity": "{quantity} {unit} en stock",
+    "attachmentOwner": {
+      "maintenance_log": "Document d'une intervention",
+      "purchase": "Document d'un achat",
+      "other": "Document du bateau"
+    },
+    "purge": {
+      "action": "Supprimer définitivement : {label}",
+      "title": "Supprimer définitivement « {label} » ?",
+      "description": "Cette ligne ne sera plus récupérable. Sans rien faire, elle disparaîtra d'elle-même au bout de 30 jours.",
+      "descriptionContact": "Cet intervenant ne sera plus récupérable, et les interventions, achats et sorties de l'eau qui le mentionnent perdront le lien vers sa fiche. Ils gardent tout le reste de leur historique.",
+      "confirm": "Supprimer définitivement",
+      "done": "Supprimé définitivement"
+    }
   },
   "logs": {
     "title": "Interventions",
@@ -800,7 +817,7 @@
       "undo": "Annuler",
       "undone": "Réalisation annulée",
       "deleteTitle": "Supprimer cette réalisation ?",
-      "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle.",
+      "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle. Cette suppression est définitive : elle ne passe pas par la corbeille.",
       "deleted": "Réalisation supprimée",
       "addDetails": "+ Ajouter les détails"
     },
@@ -831,7 +848,7 @@
       "duplicate": "Un point actif de cette catégorie porte déjà ce libellé.",
       "saved": "Point enregistré",
       "disableTitle": "Désactiver {label} ?",
-      "disableDescription": "Le point sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}.",
+      "disableDescription": "Le point sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}. Rien n'est supprimé : vous pourrez le réactiver.",
       "disabled": "Point désactivé",
       "enabled": "Point réactivé"
     },
@@ -981,7 +998,7 @@
       "edit": "Modifier le relevé",
       "delete": "Supprimer le relevé",
       "deleteTitle": "Supprimer ce relevé ?",
-      "deleteDescription": "Le relevé de {hours} du {date} sera supprimé. Les échéances en heures seront recalculées.",
+      "deleteDescription": "Le relevé de {hours} du {date} sera supprimé. Les échéances en heures seront recalculées. Cette suppression est définitive : elle ne passe pas par la corbeille.",
       "deleted": "Relevé supprimé",
       "updated": "Relevé modifié",
       "noEngine": "Aucun moteur actif : ajoutez d'abord un moteur."
@@ -1025,7 +1042,7 @@
     "noHistory": "Aucune intervention liée à cet équipement.",
     "remove": "Déposer",
     "removeTitle": "Déposer {name} ?",
-    "removeDescription": "L'équipement quitte l'inventaire à la date indiquée. Sa fiche et son historique restent consultables.",
+    "removeDescription": "L'équipement quitte l'inventaire à la date indiquée. Sa fiche et son historique restent consultables, et vous pourrez le remettre à bord.",
     "removedOn": "Déposé le {date}",
     "removedAt": "Date de dépose",
     "removedSection": "{count, plural, one {# équipement déposé} other {# équipements déposés}}",
@@ -1082,10 +1099,11 @@
       },
       "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
       "delete": {
-        "action": "Supprimer la pièce",
-        "title": "Supprimer « {name} » ?",
-        "description": "La ligne disparaît du stock. Les achats qui la mentionnent sont conservés.",
-        "done": "Pièce supprimée."
+        "action": "Mettre à la corbeille",
+        "title": "Mettre « {name} » à la corbeille ?",
+        "description": "La ligne quitte le stock et reste 30 jours dans la corbeille, où vous pouvez la restaurer. Les achats qui la mentionnent sont conservés.",
+        "done": "Pièce mise à la corbeille",
+        "restored": "Pièce restaurée"
       }
     },
     "stockSection": "Pièces détachées",
@@ -1111,7 +1129,7 @@
     "moveDown": "Descendre",
     "archive": "Archiver",
     "archiveTitle": "Archiver {name} ?",
-    "archiveDescription": "{count, plural, =0 {Aucun point de checklist actif dans cette catégorie.} one {# point de checklist actif est dans cette catégorie.} other {# points de checklist actifs sont dans cette catégorie.}}",
+    "archiveDescription": "{count, plural, =0 {Aucun point de checklist actif dans cette catégorie.} one {# point de checklist actif est dans cette catégorie.} other {# points de checklist actifs sont dans cette catégorie.}} Rien n'est supprimé : la catégorie passe dans les archives, d'où vous pouvez la réactiver.",
     "archiveItems": "Archiver aussi les points",
     "moveItems": "Déplacer les points vers…",
     "target": "Catégorie de destination",
@@ -1242,11 +1260,12 @@
       "seeAll": "Voir tout"
     },
     "delete": {
-      "action": "Supprimer",
-      "title": "Supprimer {name} ?",
-      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} garderont leur historique mais perdront le lien vers cet intervenant. Cette suppression est définitive.",
-      "confirm": "Supprimer",
-      "done": "Intervenant supprimé"
+      "action": "Mettre à la corbeille",
+      "title": "Mettre {name} à la corbeille ?",
+      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} gardent leur historique et le lien vers cet intervenant. Il quitte l'annuaire et reste 30 jours dans la corbeille, où vous pouvez le restaurer.",
+      "confirm": "Mettre à la corbeille",
+      "done": "Intervenant mis à la corbeille",
+      "restored": "Intervenant restauré"
     }
   },
   "report": {

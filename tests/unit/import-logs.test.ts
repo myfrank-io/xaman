@@ -193,6 +193,10 @@ describe("imported history is never taken on trust", () => {
   it("skips trashed rows when matching, so a deliberate deletion is not revived", () => {
     expect(logs.softDeleted).toBe(true);
     expect(purchases.softDeleted).toBe(true);
+    // D40 / D41: the stock and the directory joined the trash, so they match live rows only.
+    expect(descriptorOf("parts").softDeleted).toBe(true);
+    expect(descriptorOf("contacts").softDeleted).toBe(true);
+    // Equipment is not deleted at all — it carries a `removed_at` date and stays in the list.
     expect(descriptorOf("equipment").softDeleted).toBeUndefined();
   });
 });

@@ -232,11 +232,14 @@ Les « systèmes » du bateau. Instanciés depuis le modèle, modifiables (renom
 | phone / email | text | | |
 | address | text | | |
 | notes | text | | |
+| deleted_at | timestamptz | null | corbeille 30 jours (`0012`, D41) |
 | external_ref | text | | seed |
 | created_by / updated_by / created_at / updated_at | | | |
-| unique | (boat_id, external_ref) | | |
+| unique | (boat_id, external_ref) **`where deleted_at is null`** | index partiel (`0012`) | une ligne à la corbeille ne bloque plus un réimport |
 
-Suppression : toutes les FK vers `contacts` sont `on delete set null` ; l'UI affiche le nombre de références avant de confirmer.
+Index : `contacts_boat_live_idx (boat_id, specialty) where deleted_at is null` (l'annuaire), `contacts_trash_idx (boat_id, deleted_at desc) where deleted_at is not null` (la corbeille).
+
+Suppression : mise à la corbeille (`deleted_at`), restaurable 30 jours. Toutes les FK vers `contacts` sont `on delete set null`, mais elles ne se déclenchent qu'à la **purge** : tant que la ligne est à la corbeille, les interventions, achats, pièces et sorties de l'eau gardent le lien vers l'intervenant. L'UI affiche le nombre de références avant de confirmer, et le dialogue de suppression définitive annonce la perte du lien.
 
 ### 3.12 `maintenance_logs` (journal des interventions)
 
@@ -384,9 +387,14 @@ Index : `(checklist_item_id, completed_at desc)`.
 | supplier_contact_id | uuid | FK contacts on delete set null | |
 | notes | text | | |
 | checked_at | date | null | dernier jour où la quantité a été comptée ou ajustée (`0010`, D10) ; null = jamais vérifiée |
+| deleted_at | timestamptz | null | corbeille 30 jours (`0012`, D40 — renverse D10) |
 | external_ref | text | | |
 | created_by / updated_by / created_at / updated_at | | | |
-| unique | (boat_id, external_ref) | | |
+| unique | (boat_id, external_ref) **`where deleted_at is null`** | index partiel (`0012`) | une pièce à la corbeille ne bloque plus un réimport |
+
+Index : `parts_boat_live_idx (boat_id, category_id) where deleted_at is null` (la liste du stock), `parts_trash_idx (boat_id, deleted_at desc) where deleted_at is not null` (la corbeille).
+
+Suppression : mise à la corbeille (`deleted_at`), restaurable 30 jours. `adjust_part_quantity()` refuse une ligne à la corbeille (`part_not_found`), et `boat_dashboard_stats.low_stock_parts` ne la compte plus.
 
 ### 3.18 `haul_outs` (sorties de l'eau)
 
@@ -479,7 +487,8 @@ create function apply_checklist_template(p_boat_id uuid, p_template_id uuid, p_e
 -- puis vide pending_engine_hours.
 create function mark_log_reviewed(p_log_id uuid, p_hours_override jsonb default null) returns void ...;
 
--- Purge de la corbeille : supprime physiquement maintenance_logs / purchases / haul_outs dont deleted_at < now() - 30 jours
+-- Purge de la corbeille : supprime physiquement attachments / maintenance_logs / purchases /
+-- haul_outs / parts / contacts dont deleted_at < now() - 30 jours (0012)
 -- (pg_cron quotidien si disponible, sinon appelée par une Server Action admin).
 create function purge_trash() returns int ...;
 
@@ -516,7 +525,7 @@ RLS **activée sur toutes les tables**. Modèle général pour une table métier
 | update | `can_write_boat(boat_id)` — ou, pour les mêmes quatre tables : `using (boat_role(boat_id) = 'pro' and created_by = auth.uid())` **`with check (deleted_at is null)`** sur `maintenance_logs` et, depuis `0011`, sur `attachments` (un pro ne peut pas mettre à la corbeille, même ce qu'il a ajouté) |
 | delete | `can_write_boat(boat_id)` (les pro ne suppriment pas, même leurs lignes) |
 
-Les tables sans contribution `pro` (`purchases`, `parts`, `haul_outs`, `contacts`, `equipment`, `engines`, `boat_categories`, `checklist_items`) suivent strictement `can_write_boat` pour insert/update/delete.
+Les tables sans contribution `pro` (`purchases`, `parts`, `haul_outs`, `contacts`, `equipment`, `engines`, `boat_categories`, `checklist_items`) suivent strictement `can_write_boat` pour insert/update/delete. La mise à la corbeille de `parts` et `contacts` (`0012`) est un `update` : elle est donc déjà réservée à owner / editor sans politique nouvelle, et un `pro` ou un `viewer` n'y touche aucune ligne.
 
 Cas particuliers :
 - `profiles` : select pour soi-même et pour les profils partageant au moins un bateau avec soi (nécessaire pour afficher « qui a fait » ; un `pro` voit donc les noms des co-membres mais pas la page Membres — accepté, documenté) ; update soi-même uniquement ; `revoke update (is_platform_admin) on profiles from authenticated`.
@@ -569,7 +578,7 @@ La même logique est implémentée en TypeScript dans `src/lib/checklist-status.
 Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `purchase_kind = null`), `purchases` (`amount`, `date = purchased_at`, `source = 'purchase'`, `purchase_kind = kind`), `haul_outs` (`cost`, `date = started_at`, `source = 'haul_out'`, `purchase_kind = null`), non supprimés, montant non null. Colonnes : `boat_id`, `category_id` (null → « Non catégorisé »), `category_name`, `source`, `purchase_kind`, `date`, `amount`, `currency`, `entity_id`. Agrégation par période côté requête ; le tableau E5-5 croise `category_name` × (`source`, `purchase_kind`).
 
 ### 6.6 `boat_dashboard_stats`
-Par bateau : `overdue_items`, `soon_items`, `planned_logs`, `in_progress_logs`, `urgent_logs`, `ytd_expenses`, `last_haul_out_at`, `months_since_haul_out`, `low_stock_parts`.
+Par bateau : `overdue_items`, `soon_items`, `planned_logs`, `in_progress_logs`, `urgent_logs`, `ytd_expenses`, `last_haul_out_at`, `months_since_haul_out`, `low_stock_parts` (pièces à la corbeille exclues depuis `0012`).
 
 ## 7. Realtime
 Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `checklist_completions`, `engine_hour_readings`, `purchases`, `parts`, `haul_outs`, `contacts`. Le client ouvre un canal par bateau avec filtre `boat_id=eq.{id}` sur ces 8 tables et invalide les queries TanStack correspondantes. La RLS s'applique aux événements Realtime (Supabase le garantit pour les tables avec RLS).
@@ -670,7 +679,8 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 
 - **0009** : les privilèges par défaut de Supabase donnent `EXECUTE` à `anon` à la création de chaque fonction, et `revoke … from public` ne retire pas ce grant explicite. La migration retire `EXECUTE` à `PUBLIC` et `anon` sur **toutes** les fonctions de `public` (sauf `get_invitation_preview` et `boat_id_from_storage_path`, points d'entrée anonymes voulus), et à `authenticated` sur les fonctions trigger et les fonctions réservées au service (`purge_trash`, `weekly_digest_payload`, `enqueue_weekly_digest`) ; privilèges par défaut ajustés pour les fonctions futures. Toute nouvelle fonction doit garder cette règle (conseillers Supabase 0028 / 0029).
 - **0011** : pièces jointes (E10-1). La table, ses politiques et le bucket existaient depuis `0001` / `0002` ; la migration ajoute `caption` et `deleted_at`, lie le chemin de stockage au bateau par contrainte, restreint les types, remplace la politique `attachments_update` par la forme exacte de `maintenance_logs_update` (le `deleted_at is null` du pro), ajoute `attachments_owner_guard()` et `cleanup_attachments()`, retire les documents à la corbeille de `maintenance_logs_view.attachments_count` (le trombone du journal) et durcit le bucket. Les deux fonctions sont des triggers : `EXECUTE` retiré à `PUBLIC`, `anon` et `authenticated` (règle de `0009`).
-- **0010** : `parts.checked_at` (date de la dernière vérification) et `adjust_part_quantity(p_part_id, p_delta)` : +/− atomique depuis la liste (`quantity = greatest(0, quantity + delta)`, `checked_at = current_date`), `security invoker` donc soumis à la politique `parts_update` (owner / editor) ; delta nul refusé (`invalid_delta`), ligne inaccessible → `part_not_found`. Les pièces n'ont pas de corbeille : suppression physique après confirmation (D10, donnée déclarative).
+- **0010** : `parts.checked_at` (date de la dernière vérification) et `adjust_part_quantity(p_part_id, p_delta)` : +/− atomique depuis la liste (`quantity = greatest(0, quantity + delta)`, `checked_at = current_date`), `security invoker` donc soumis à la politique `parts_update` (owner / editor) ; delta nul refusé (`invalid_delta`), ligne inaccessible → `part_not_found`. ~~Les pièces n'ont pas de corbeille~~ — renversé par `0012` (D40).
+- **0012** : la corbeille couvre tout ce qui porte l'historique ou l'inventaire du bateau (D40 / D41). Ajoute `parts.deleted_at` et `contacts.deleted_at`, remplace leurs `unique (boat_id, external_ref)` par des index uniques **partiels** `where deleted_at is null` (sans quoi un réimport après mise à la corbeille levait `23505` contre une ligne invisible), ajoute les index « vivants » et « corbeille » des deux tables, fait refuser une ligne à la corbeille par `adjust_part_quantity()`, retire les pièces à la corbeille de `boat_dashboard_stats.low_stock_parts`, et étend `purge_trash()` à `parts`, `contacts` **et `attachments`** (qui portaient `deleted_at` depuis `0011` sans qu'aucune purge ne les nomme). Aucune politique RLS nouvelle : `parts` et `contacts` sont des tables owner / editor dont l'`update` est déjà `can_write_boat` des deux côtés.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés
 

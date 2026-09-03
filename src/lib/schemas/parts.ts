@@ -44,4 +44,5 @@ export const adjustPartQuantitySchema = z.object({
     .refine((value) => value !== 0, { message: "invalid" }),
 });
 
-export const deletePartSchema = z.object({ boatId: uuid, partId: uuid });
+/** Move a part to the trash, or bring it back from « Annuler » (D40). */
+export const trashPartSchema = z.object({ boatId: uuid, partId: uuid });

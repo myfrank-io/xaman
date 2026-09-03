@@ -399,6 +399,8 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
   contacts: {
     key: "contacts",
     table: "contacts",
+    // D41: same rule as the stock — a provider put in the trash stays there.
+    softDeleted: true,
     keyColumns: "id, name",
     existingKey: (row) => fold(row.name),
     naturalKey: (row) => fold(row.name),
@@ -488,6 +490,8 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
   parts: {
     key: "parts",
     table: "parts",
+    // D40: the stock has a trash now, so a line someone removed is not « already there ».
+    softDeleted: true,
     keyColumns: "id, name",
     existingKey: (row) => fold(row.name),
     naturalKey: (row) => fold(row.name),

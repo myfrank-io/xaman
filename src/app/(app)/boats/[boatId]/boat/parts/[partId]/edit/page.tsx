@@ -18,7 +18,13 @@ export default async function EditPartPage({
   const supabase = await createClient();
   const [{ data: role }, { data: part }, context] = await Promise.all([
     supabase.rpc("boat_role", { p_boat_id: boatId }),
-    supabase.from("parts").select("*").eq("id", partId).eq("boat_id", boatId).maybeSingle(),
+    supabase
+      .from("parts")
+      .select("*")
+      .eq("id", partId)
+      .eq("boat_id", boatId)
+      .is("deleted_at", null)
+      .maybeSingle(),
     partFormContext(supabase, boatId),
   ]);
   if (!role || !can(role as BoatRole, "write") || !part) notFound();
