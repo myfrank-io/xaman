@@ -1606,7 +1606,9 @@
       "equipment": "Voir les équipements",
       "parts": "Voir le stock",
       "logs": "Retour aux interventions",
-      "purchases": "Retour aux achats"
+      "purchases": "Retour aux achats",
+      "completions": "Retour à la checklist",
+      "readings": "Retour aux moteurs"
     },
     "errors": {
       "empty": "Le tableau est vide.",
@@ -1629,7 +1631,19 @@
       "noDate": "Date manquante",
       "noAmount": "Montant manquant",
       "badAmount": "Montant illisible (attendu 42,90)",
-      "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous."
+      "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous.",
+      "futureDate": "Date dans le futur",
+      "noItem": "Point de checklist manquant",
+      "unknownItem": "Aucun point de la checklist de ce bateau ne porte ce nom",
+      "ambiguousItem": "Plusieurs points portent ce nom : précisez lequel dans le fichier",
+      "noEngine": "Moteur manquant",
+      "unknownEngine": "Aucun moteur de ce bateau ne porte ce nom",
+      "ambiguousEngine": "Plusieurs moteurs portent ce nom : précisez lequel dans le fichier",
+      "noEngineHours": "Heures moteur manquantes : ce point se suit en heures",
+      "noHours": "Heures manquantes",
+      "badHours": "Heures illisibles ou hors limites (attendu 1250,5)",
+      "hoursBackwards": "Compteur en baisse par rapport à un relevé antérieur. Corrigez la valeur, ou déclarez le remplacement du compteur sur la fiche du moteur.",
+      "badDueDate": "« Valide jusqu'au » doit être après la date de réalisation"
     },
     "entities": {
       "contacts": {
@@ -1656,6 +1670,16 @@
         "title": "Importer des achats",
         "help": "Une ligne par achat ou par facture. Le libellé, la date et le montant sont obligatoires. Un relevé bancaire ou un export comptable s'importe tel quel ; la colonne « Référence », si votre fichier en a une, évite les doublons d'un import à l'autre.",
         "placeholder": "Achat\tAcheté le\tMontant\tType\tFournisseur\nFiltre à huile Volvo\t02/06/2026\t42,90\tPièce\tAccastillage Diffusion"
+      },
+      "completions": {
+        "title": "Importer des points de checklist faits",
+        "help": "Une ligne par point coché. La colonne « Point de checklist » est rapprochée des points de ce bateau par leur nom, accents et majuscules ignorés : un nom inconnu ou porté par deux points est refusé et listé, jamais rattaché au hasard. La date est obligatoire ; les heures moteur le sont pour un point suivi en heures, et deviennent alors un relevé du compteur.",
+        "placeholder": "Point de checklist\tFait le\tHeures moteur\tFait par\nVidange huile moteur — Bâbord\t14/06/2026\t1250\tXavier"
+      },
+      "readings": {
+        "title": "Importer des relevés d'heures",
+        "help": "Une ligne par relevé de compteur. La colonne « Moteur » est rapprochée des moteurs de ce bateau par leur nom (« bâbord » et « tribord » sont compris) ; un nom inconnu est refusé. Un compteur ne fait que monter : une valeur inférieure à un relevé antérieur est refusée — si le compteur a réellement été remplacé, déclarez-le sur la fiche du moteur avant d'importer.",
+        "placeholder": "Moteur\tRelevé le\tHeures\nMoteur bâbord\t14/06/2026\t1250,5"
       }
     }
   },

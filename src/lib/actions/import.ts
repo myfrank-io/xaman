@@ -3,13 +3,17 @@
 import { revalidatePath } from "next/cache";
 
 import { dbErrorKey, fail, ok, type ActionResult } from "@/lib/actions/result";
+import { loadImportCatalog } from "@/lib/import/catalog";
 import {
   buildDatabaseRow,
   cellText,
+  createMatcher,
   descriptorOf,
   IMPORT_MAX_ROWS,
+  IMPORT_NAME_MAX,
   isImportEntity,
   rejectionReason,
+  rememberRow,
   type ImportReport,
   type ImportRow,
   type RejectedRow,
@@ -32,6 +36,8 @@ const LANDS_ON = {
   contacts: "contacts",
   equipment: "boat",
   parts: "supplies",
+  completions: "checklist",
+  readings: "boat",
 } as const;
 
 export async function importRows(input: {
@@ -62,16 +68,28 @@ export async function importRows(input: {
   // rather than quietly reviving what someone chose to remove.
   if (descriptor.softDeleted) query = query.is("deleted_at", null);
 
-  const [{ data: existing }, { data: categories }, { data: contacts }] = await Promise.all([
-    query as unknown as Promise<{ data: Record<string, unknown>[] | null }>,
-    supabase.from("boat_categories").select("id, name").eq("boat_id", boatId).eq("is_active", true),
-    descriptor.matchesContacts
-      ? supabase.from("contacts").select("id, name").eq("boat_id", boatId)
-      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-  ]);
+  const [{ data: existing }, { data: categories }, { data: contacts }, catalog] = await Promise.all(
+    [
+      query as unknown as Promise<{ data: Record<string, unknown>[] | null }>,
+      supabase
+        .from("boat_categories")
+        .select("id, name")
+        .eq("boat_id", boatId)
+        .eq("is_active", true),
+      descriptor.matchesContacts
+        ? supabase.from("contacts").select("id, name").eq("boat_id", boatId)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      // The checklist points and the engines a line may name (E12-4).
+      loadImportCatalog(supabase, boatId, descriptor),
+    ],
+  );
 
+  // An empty key means « never match this row » (a reading owned by an intervention): it must
+  // not become an entry that some other line could land on.
   const byKey = new Map(
-    (existing ?? []).map((row) => [descriptor.existingKey(row), String(row.id)]),
+    (existing ?? [])
+      .map((row) => [descriptor.existingKey(row), String(row.id)] as const)
+      .filter(([key]) => key !== ""),
   );
   const categoryByName = new Map(
     (categories ?? []).map((category) => [normaliseHeader(category.name), category.id]),
@@ -79,6 +97,9 @@ export async function importRows(input: {
   const contactByName = new Map(
     (contacts ?? []).map((contact) => [normaliseHeader(contact.name), contact.id]),
   );
+  // Stateful on purpose: an accepted reading joins the boat's own, so a sheet that contradicts
+  // itself further down is caught against its own earlier lines.
+  const match = createMatcher(catalog);
 
   const rejected: RejectedRow[] = [];
   // Two batches, never one: a new row carries created_by and an update must not overwrite it,
@@ -89,13 +110,14 @@ export async function importRows(input: {
   rows.forEach((row, index) => {
     const line = index + 1;
     // One validator for the preview and for the write: what the screen announced is written.
-    const reason = rejectionReason(entity, row);
+    const reason = rejectionReason(entity, row, match);
     if (reason) {
       rejected.push({ line, reason, values: row });
       return;
     }
-    const name = cellText(row.name, 120) ?? "";
-    const key = descriptor.naturalKey({ ...row, name });
+    rememberRow(entity, row, match);
+    const name = cellText(row.name, IMPORT_NAME_MAX) ?? "";
+    const key = descriptor.naturalKey({ ...row, name }, match);
     const known = byKey.get(key);
     // A generated id keeps the write idempotent and every object of the batch identical.
     const id = known ?? crypto.randomUUID();
@@ -107,6 +129,7 @@ export async function importRows(input: {
         isNew: !known,
         categoryId: categoryByName.get(normaliseHeader(row.category ?? "")) ?? null,
         contactId: (provider: string) => contactByName.get(normaliseHeader(provider)) ?? null,
+        match,
       }),
     );
 
@@ -124,7 +147,9 @@ export async function importRows(input: {
     if (error) return fail(dbErrorKey(error));
   }
 
-  revalidatePath(boatPath(boatId, LANDS_ON[entity]));
+  // "layout": what lands on a screen shows on the screens below it too — a completion changes
+  // the checklist grid and every category page under it.
+  revalidatePath(boatPath(boatId, LANDS_ON[entity]), "layout");
   revalidatePath(boatPath(boatId, "dashboard"));
   return ok({ created: creations.length, updated: updates.length, rejected });
 }
