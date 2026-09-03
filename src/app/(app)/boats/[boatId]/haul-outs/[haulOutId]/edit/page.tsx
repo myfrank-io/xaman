@@ -25,6 +25,7 @@ export default async function EditHaulOutPage({
       .from("contacts")
       .select("id, name, specialty, company, phone")
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("name"),
   ]);
   if (!role || !can(role as BoatRole, "write") || !haulOut) notFound();

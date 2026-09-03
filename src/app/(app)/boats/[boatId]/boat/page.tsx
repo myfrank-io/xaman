@@ -68,8 +68,9 @@ export default async function BoatPage({
         "id, name, reference, quantity, min_quantity, unit, location, category_id, supplier_contact_id, checked_at",
       )
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("name"),
-    supabase.from("contacts").select("id, name").eq("boat_id", boatId),
+    supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;

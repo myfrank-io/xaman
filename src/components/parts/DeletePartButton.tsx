@@ -7,14 +7,16 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { undoToast } from "@/components/common/UndoToast";
 import { Button } from "@/components/ui/button";
-import { deletePart } from "@/lib/actions/parts";
+import { trashPart, untrashPart } from "@/lib/actions/parts";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { stockPath } from "@/lib/queries/boat-routes";
 
 /**
- * Deleting a part (E5-4, D10): the stock is declarative, so no trash — a confirmation that
- * names the line, then the row is gone. Lives on the edit page only, never on the list.
+ * « Mettre à la corbeille » a part (E5-4, D40 reversing D10): a confirmation that names the
+ * line, then an 8 s toast carrying the undo — and `/trash` behind it for 30 days. Lives on the
+ * edit page only, never on the list.
  */
 export function DeletePartButton({
   boatId,
@@ -26,6 +28,7 @@ export function DeletePartButton({
   name: string;
 }) {
   const t = useTranslations("equipment.stock.delete");
+  const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,13 +36,26 @@ export function DeletePartButton({
 
   function confirm() {
     startTransition(async () => {
-      const result = await deletePart({ boatId, partId });
+      const result = await trashPart({ boatId, partId });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
       setOpen(false);
-      toast.success(t("done"));
+      undoToast({
+        message: t("done"),
+        undoLabel: tc("undo"),
+        onUndo: () => {
+          void untrashPart({ boatId, partId }).then((restored) => {
+            if (!restored.ok) {
+              toast.error(errorMessage(restored.error));
+              return;
+            }
+            toast.success(t("restored"));
+            router.refresh();
+          });
+        },
+      });
       router.push(stockPath(boatId) as Parameters<typeof router.push>[0]);
       router.refresh();
     });

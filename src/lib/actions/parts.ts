@@ -5,14 +5,16 @@ import { revalidatePath } from "next/cache";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { todayString } from "@/lib/format";
 import { boatPath } from "@/lib/queries/boat-routes";
-import { adjustPartQuantitySchema, deletePartSchema, upsertPartSchema } from "@/lib/schemas/parts";
+import { adjustPartQuantitySchema, trashPartSchema, upsertPartSchema } from "@/lib/schemas/parts";
 import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
 
-// The stock tab and the dashboard recap (low_stock_parts) read the parts.
+// The stock list (Bateau › Équipements since D34, not Dépenses) and the dashboard recap
+// (low_stock_parts) both read the parts; the trash screen hangs off the boat layout.
 function revalidateStockScreens(boatId: string) {
-  revalidatePath(boatPath(boatId, "supplies"));
+  revalidatePath(boatPath(boatId, "boat"));
   revalidatePath(boatPath(boatId, "dashboard"));
+  revalidatePath(boatPath(boatId, "trash"));
 }
 
 /**
@@ -33,6 +35,7 @@ export async function upsertPart(input: unknown): Promise<ActionResult<{ partId:
     .from("parts")
     .select("id, updated_at")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (readError) return fail(dbErrorKey(readError));
   if (existing && expectedUpdatedAt && existing.updated_at !== expectedUpdatedAt) {
@@ -86,9 +89,13 @@ export async function adjustPartQuantity(
   return ok({ quantity: Number(data) });
 }
 
-/** Physical deletion after confirmation (D10): the stock is declarative, it has no trash. */
-export async function deletePart(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(deletePartSchema, input);
+/**
+ * Move a part to the trash (D40, reversing D10). A spare part is an object aboard, not a
+ * scratch note: it goes where the interventions, the purchases and the haul-outs go, and comes
+ * back from « Annuler » or from the trash screen for 30 days.
+ */
+export async function trashPart(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(trashPartSchema, input);
   if (!parsed.ok) return parsed.result;
   const { boatId, partId } = parsed.data;
 
@@ -96,14 +103,37 @@ export async function deletePart(input: unknown): Promise<ActionResult> {
   const userId = await currentUserId(supabase);
   if (!userId) return fail("errors.forbidden");
 
-  const { data, error } = await supabase
+  const { error, count } = await supabase
     .from("parts")
-    .delete()
+    .update({ deleted_at: new Date().toISOString(), updated_by: userId }, { count: "exact" })
     .eq("id", partId)
     .eq("boat_id", boatId)
-    .select("id");
+    .is("deleted_at", null);
   if (error) return fail(dbErrorKey(error));
-  if (!data || data.length === 0) return fail("errors.forbidden");
+  if (!count) return fail("errors.forbidden");
+
+  revalidateStockScreens(boatId);
+  return ok(undefined);
+}
+
+/** « Annuler » of the toast: the same one-column write the other soft deletes use. */
+export async function untrashPart(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(trashPartSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, partId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { error, count } = await supabase
+    .from("parts")
+    .update({ deleted_at: null, updated_by: userId }, { count: "exact" })
+    .eq("id", partId)
+    .eq("boat_id", boatId)
+    .not("deleted_at", "is", null);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
 
   revalidateStockScreens(boatId);
   return ok(undefined);

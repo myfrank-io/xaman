@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { boatPath, contactPath } from "@/lib/queries/boat-routes";
-import { deleteContactSchema, upsertContactSchema } from "@/lib/schemas/contacts";
+import { trashContactSchema, upsertContactSchema } from "@/lib/schemas/contacts";
 import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
 
@@ -28,6 +28,7 @@ export async function upsertContact(
     .from("contacts")
     .select("id, updated_at")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (readError) return fail(dbErrorKey(readError));
   if (existing && expectedUpdatedAt && existing.updated_at !== expectedUpdatedAt) {
@@ -56,23 +57,62 @@ export async function upsertContact(
   return ok({ contactId: id, name: values.name, specialty: values.specialty });
 }
 
-// Physical delete: every FK to contacts is `on delete set null`, the UI shows the counts first.
-export async function deleteContact(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(deleteContactSchema, input);
+// Every screen that offers the directory in a picker, plus the trash the row lands in.
+function revalidateContactReferences(boatId: string) {
+  revalidatePath(boatPath(boatId, "contacts"));
+  revalidatePath(boatPath(boatId, "logs"), "layout");
+  revalidatePath(boatPath(boatId, "supplies"));
+  revalidatePath(boatPath(boatId, "boat"));
+  revalidatePath(boatPath(boatId, "trash"));
+}
+
+/**
+ * Move a provider to the trash (D41). The hard delete this replaces fired `on delete set null`
+ * on every intervention, purchase, part and haul-out naming them: the history lost the name and
+ * nothing could put it back. Trashing keeps every link; only the purge, 30 days later, severs
+ * them — which is what the confirmation now says.
+ */
+export async function trashContact(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(trashContactSchema, input);
   if (!parsed.ok) return parsed.result;
   const { boatId, contactId } = parsed.data;
 
   const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
   const { error, count } = await supabase
     .from("contacts")
-    .delete({ count: "exact" })
+    .update({ deleted_at: new Date().toISOString(), updated_by: userId }, { count: "exact" })
     .eq("id", contactId)
-    .eq("boat_id", boatId);
+    .eq("boat_id", boatId)
+    .is("deleted_at", null);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
 
-  revalidatePath(boatPath(boatId, "contacts"));
-  revalidatePath(boatPath(boatId, "logs"), "layout");
-  revalidatePath(boatPath(boatId, "supplies"));
+  revalidateContactReferences(boatId);
+  return ok(undefined);
+}
+
+/** « Annuler » of the toast, before the trash screen takes over. */
+export async function untrashContact(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(trashContactSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, contactId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { error, count } = await supabase
+    .from("contacts")
+    .update({ deleted_at: null, updated_by: userId }, { count: "exact" })
+    .eq("id", contactId)
+    .eq("boat_id", boatId)
+    .not("deleted_at", "is", null);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+
+  revalidateContactReferences(boatId);
   return ok(undefined);
 }
