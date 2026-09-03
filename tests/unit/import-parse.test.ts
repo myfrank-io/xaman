@@ -103,8 +103,8 @@ describe("applyMapping and missingRequired", () => {
   });
 
   it("names the required fields still unmapped", () => {
-    expect(missingRequired(FIELDS, guessMapping(["Nom"], FIELDS))).toEqual(["Spécialité"]);
-    expect(missingRequired(FIELDS, guessMapping(["Nom", "Spécialité"], FIELDS))).toEqual([]);
+    expect(missingRequired(FIELDS, guessMapping(["Nom"], FIELDS), {})).toEqual(["Spécialité"]);
+    expect(missingRequired(FIELDS, guessMapping(["Nom", "Spécialité"], FIELDS), {})).toEqual([]);
   });
 });
 

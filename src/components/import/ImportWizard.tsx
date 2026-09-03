@@ -82,7 +82,7 @@ export function ImportWizard({
     load(await file.text());
   }
 
-  const missing = useMemo(() => missingRequired(fields, mapping), [fields, mapping]);
+  const missing = useMemo(() => missingRequired(fields, mapping, {}), [fields, mapping]);
   const rows = table?.rows ?? [];
   const tooMany = rows.length > IMPORT_MAX_ROWS;
 

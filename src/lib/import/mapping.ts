@@ -24,9 +24,20 @@ export type FieldDescriptor = {
   aliases?: string[];
   required?: boolean;
   help?: string;
+  /**
+   * Field that may be given one value for the whole file. « Ces 40 contacts sont tous des
+   * chantiers » is one word typed once, not forty cells added to the spreadsheet — and a
+   * contact card exported from a phone carries no trade at all.
+   */
+  allowDefault?: boolean;
+  /** Cell written into the downloadable blank template (E12-7). */
+  sample?: string;
 };
 
 export type ColumnMapping = Record<string, number | null>;
+
+/** Value used for a field when its cell is empty, keyed by field. */
+export type FieldDefaults = Record<string, string>;
 
 /**
  * Best-effort mapping: exact match on the normalised header first, then a header that starts
@@ -73,12 +84,39 @@ export function applyMapping(
   return values;
 }
 
-/** Required fields left unmapped: the import cannot start until they are chosen. */
-export function missingRequired(fields: FieldDescriptor[], mapping: ColumnMapping): string[] {
+/**
+ * Fills the blanks with the value chosen for the whole file. Applied to the preview and to
+ * the rows sent, so what is shown is exactly what is written.
+ */
+export function applyDefaults(
+  values: Record<string, string>,
+  fields: FieldDescriptor[],
+  defaults: FieldDefaults,
+): Record<string, string> {
+  const filled = { ...values };
+  for (const field of fields) {
+    if (!field.allowDefault) continue;
+    const fallback = (defaults[field.key] ?? "").trim();
+    if (fallback !== "" && (filled[field.key] ?? "").trim() === "") filled[field.key] = fallback;
+  }
+  return filled;
+}
+
+/**
+ * Required fields the import cannot start without: neither a column of the file nor a value
+ * chosen for the whole file fills them.
+ */
+export function missingRequired(
+  fields: FieldDescriptor[],
+  mapping: ColumnMapping,
+  defaults: FieldDefaults,
+): string[] {
   return fields
-    .filter(
-      (field) =>
-        field.required && (mapping[field.key] === null || mapping[field.key] === undefined),
-    )
+    .filter((field) => {
+      if (!field.required) return false;
+      const mapped = mapping[field.key];
+      if (mapped !== null && mapped !== undefined) return false;
+      return !(field.allowDefault && (defaults[field.key] ?? "").trim() !== "");
+    })
     .map((field) => field.label);
 }
