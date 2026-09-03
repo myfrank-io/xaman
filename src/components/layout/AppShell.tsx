@@ -75,7 +75,7 @@ export async function AppShell({
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-10 lg:pb-16 print:max-w-none print:gap-0 print:p-0"
+        className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pt-3 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:gap-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-10 lg:pb-16 print:max-w-none print:gap-0 print:p-0"
       >
         {boatId ? (
           <Suspense fallback={null}>

@@ -28,20 +28,31 @@ export function InstallDialog({
 }) {
   const t = useTranslations("install");
   const tc = useTranslations("common");
+  /**
+   * One instruction per browser, because the gesture genuinely differs and a wrong menu name
+   * is worse than none. Safari never fires `beforeinstallprompt` on either platform, so there
+   * is no button to offer there — only the system gesture, named exactly.
+   */
   const hint = prompt.standalone
     ? t("installed")
-    : prompt.ios
-      ? t("iosHint")
-      : prompt.promptEvent
-        ? t("androidHint")
-        : t("otherHint");
+    : prompt.promptEvent
+      ? t("androidHint")
+      : prompt.platform === "ios"
+        ? t("iosHint")
+        : prompt.platform === "macSafari"
+          ? t("macSafariHint")
+          : prompt.platform === "firefox"
+            ? t("firefoxHint")
+            : t("otherHint");
   /**
-   * Without a captured prompt there is no button, so the text has to carry the whole answer —
-   * and the commonest reason a Chromium browser withholds the prompt is that the application
-   * is already installed, which « nothing happened » does not suggest to anyone.
+   * Without a button the text carries the whole answer, and the commonest reason a Chromium
+   * browser withholds the prompt is that the app is already installed — which « nothing
+   * happened » suggests to nobody.
    */
   const secondHint =
-    !prompt.standalone && !prompt.ios && !prompt.promptEvent ? t("otherHintAlready") : null;
+    !prompt.standalone && !prompt.promptEvent && prompt.platform === "chromium"
+      ? t("otherHintAlready")
+      : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,6 +62,10 @@ export function InstallDialog({
           <DialogDescription>{hint}</DialogDescription>
         </DialogHeader>
         {secondHint ? <p className="text-caption text-ink-2">{secondHint}</p> : null}
+        {/* Which build is this? One tap, no dev tools — see NEXT_PUBLIC_BUILD in next.config. */}
+        <p className="num text-caption text-ink-3">
+          {t("build", { build: process.env.NEXT_PUBLIC_BUILD ?? "dev" })}
+        </p>
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">
