@@ -714,7 +714,8 @@
         "restored": "Intervention restaurée"
       }
     },
-    "attachments": "{count, plural, one {# document joint} other {# documents joints}}"
+    "attachments": "{count, plural, one {# document joint} other {# documents joints}}",
+    "subtitle": "Ce qui a été fait à bord. Une intervention peut valider des points de la checklist."
   },
   "checklist": {
     "title": "Checklist",
@@ -858,7 +859,8 @@
       "later": "Plus tard",
       "kept": "{kept} / {total} points suivis",
       "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
-    }
+    },
+    "subtitle": "Ce qui doit être fait, et quand. Cocher un point écrit l'intervention."
   },
   "validation": {
     "required": "Champ obligatoire.",

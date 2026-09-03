@@ -168,7 +168,7 @@ export default async function LogsPage({
           It wraps under the title on a phone rather than shrinking below 44 px. */}
       <PageHeader
         title={t("title")}
-        subtitle={t("results", { count: total })}
+        subtitle={filtered ? t("results", { count: total }) : t("subtitle")}
         actions={
           canContribute ? (
             <>

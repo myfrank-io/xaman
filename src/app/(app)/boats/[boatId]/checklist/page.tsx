@@ -84,6 +84,7 @@ export default async function ChecklistPage({
           (E12-4) — comme sur Interventions et Dépenses. */}
       <PageHeader
         title={t("title")}
+        subtitle={t("subtitle")}
         actions={
           can(boatRole, "write") ? (
             <Button asChild variant="outline">
