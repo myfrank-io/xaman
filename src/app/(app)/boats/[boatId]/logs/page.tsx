@@ -169,6 +169,8 @@ export default async function LogsPage({
       <PageHeader
         title={t("title")}
         subtitle={filtered ? t("results", { count: total }) : t("subtitle")}
+        // A result count is feedback, not onboarding: it stays on a phone. The prose does not.
+        subtitleClassName={filtered ? "block" : undefined}
         actions={
           canContribute ? (
             <>

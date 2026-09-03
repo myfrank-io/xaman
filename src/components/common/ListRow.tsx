@@ -48,31 +48,35 @@ export function ListRow({
 }: ListRowProps) {
   const rule = categoryColor ? <CategoryBar color={categoryColor} className="my-2" /> : null;
   /**
-   * Mobile-first: the title owns the row, and the badge and the trailing value drop underneath
-   * it on a phone rather than competing with it.
+   * Two lines on a phone, three columns from `sm`.
    *
-   * Measured at 360 px before this: the badge (96 px) and the trailing value (106 px) were both
-   * `shrink-0`, so with the gaps they claimed 242 px of a 210 px row and the title — the only
-   * part that says what the line IS — was rendered **zero pixels wide**. Three columns do not
-   * fit on a phone; from `sm` they do, and the original layout comes back.
+   * First pass gave the phone three stacked blocks — title, metadata, then a line of its own
+   * for the badge and the value. That fixed a title rendered zero pixels wide (the badge and
+   * the value were both `shrink-0` and claimed 242 px of a 210 px row) but traded it for a
+   * documented 64 px row rendering at 131 px, measured, and 165 px when the badge wrapped:
+   * nine checklist rows filled 1 180 px, so two fit a screen. The row now folds the value onto
+   * the title line and the badge onto the metadata line — 87 px measured, nothing removed. From
+   * `sm` the three columns come back byte-identical.
    */
   const content = (
     <>
       {/* Fixed left column from `sm` so the titles line up down the list. */}
       {lead ? <div className="hidden shrink-0 items-center sm:flex sm:w-26">{lead}</div> : null}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="line-clamp-2 text-body font-medium break-words text-foreground sm:truncate">
-          {title}
-        </div>
-        {meta ? (
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-ink-2 sm:flex-nowrap sm:truncate">
-            {meta}
+        {/* Line one on a phone: the title, with the value beside it rather than under it. */}
+        <div className="flex min-w-0 items-baseline gap-2 sm:block">
+          <div className="line-clamp-1 min-w-0 flex-1 text-body font-medium break-words text-foreground sm:line-clamp-none sm:truncate">
+            {title}
           </div>
-        ) : null}
-        {lead || trailing ? (
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 sm:hidden">
-            {lead}
-            {trailing}
+          {trailing ? (
+            <div className="shrink-0 text-right text-caption text-ink-2 sm:hidden">{trailing}</div>
+          ) : null}
+        </div>
+        {/* Line two: the badge leads the metadata instead of costing a line of its own. */}
+        {lead || meta ? (
+          <div className="mt-0.5 flex min-w-0 items-center gap-x-1.5 overflow-hidden text-caption text-ink-2 sm:truncate">
+            {lead ? <span className="shrink-0 sm:hidden">{lead}</span> : null}
+            <span className="flex min-w-0 items-center gap-x-1.5 truncate">{meta}</span>
           </div>
         ) : null}
       </div>

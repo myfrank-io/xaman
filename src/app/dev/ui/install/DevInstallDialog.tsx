@@ -23,6 +23,7 @@ export function DevInstallDialog() {
         prompt={{
           ready: true,
           standalone: false,
+          platform: "ios",
           ios: true,
           sessions: 2,
           dismissed: false,

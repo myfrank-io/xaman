@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { INSTALL_PROMPT_EVENT, INSTALL_PROMPT_KEY } from "@/components/pwa/install-prompt-capture";
+import { canPrompt, detectPlatform, type InstallPlatform } from "@/components/pwa/platform";
 
 const SESSIONS_KEY = "xaman.pwa.sessions";
 const COUNTED_KEY = "xaman.pwa.counted";
@@ -28,6 +29,9 @@ export type InstallState = {
   /** false until the browser has been inspected (server render, first paint). */
   ready: boolean;
   standalone: boolean;
+  /** Which browser, and therefore which gesture installs an app in it. */
+  platform: InstallPlatform;
+  /** Kept for the callers that only ask « is this an iPhone ». */
   ios: boolean;
   sessions: number;
   dismissed: boolean;
@@ -43,6 +47,7 @@ export function useInstallPrompt() {
   const [state, setState] = useState<InstallState>({
     ready: false,
     standalone: false,
+    platform: "other",
     ios: false,
     sessions: 0,
     dismissed: false,
@@ -54,9 +59,11 @@ export function useInstallPrompt() {
       const standalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         (navigator as Navigator & { standalone?: boolean }).standalone === true;
-      const ios =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const platform = detectPlatform(
+        navigator.userAgent,
+        navigator.platform,
+        navigator.maxTouchPoints,
+      );
       let sessions = 0;
       let dismissed = false;
       try {
@@ -74,7 +81,8 @@ export function useInstallPrompt() {
         ...current,
         ready: true,
         standalone,
-        ios,
+        platform,
+        ios: platform === "ios",
         sessions,
         dismissed,
         // The event has almost always fired before this component mounts, so read it rather
@@ -123,7 +131,16 @@ export function useInstallPrompt() {
     setState((current) => ({ ...current, dismissed: true }));
   }, []);
 
-  const installable = state.ready && !state.standalone && (state.ios || state.promptEvent !== null);
+  /**
+   * Installable means « there is a way in from here », by our button or by the system menu.
+   * Safari has no prompt event on either platform but installs perfectly well by hand; Firefox
+   * installs no web app on desktop, so claiming otherwise would only waste a tap.
+   */
+  const byHand = state.platform === "ios" || state.platform === "macSafari";
+  const installable =
+    state.ready &&
+    !state.standalone &&
+    (byHand || (canPrompt(state.platform) && state.promptEvent !== null));
   return {
     ...state,
     installable,

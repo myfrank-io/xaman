@@ -340,3 +340,70 @@ ligne entière d'un écran qui en a peu.
 **Décision.** `buildTrail` rend `[]` dès qu'il n'y a qu'un élément. Le tableau de bord était déjà
 exempté pour cette raison ; la règle devient générale. Un fil gagne sa ligne à partir du moment
 où il mène quelque part — c'est-à-dire à partir de deux éléments.
+
+## 2026-09-03 — D54 : le téléphone n'est pas un iPad étroit — densité mesurée, pas ressentie
+
+**Question.** « C'est toujours pas la folie le mobile responsive. Trop gros trop zoomé, bloc pas
+simple à utiliser, pas instinctif. Tu es très très loin du compte. »
+
+Les audits précédents vérifiaient deux choses : est-ce que ça déborde, et les cibles font-elles
+44 px. Les deux passaient — pendant que l'écran montrait deux éléments. **La densité n'était
+mesurée par rien.** Mesures à 390 × 844 :
+
+| Écran | Chrome avant la 1re donnée | Éléments visibles |
+|---|---|---|
+| Tableau de bord | 819 px sur 844 | **0** sur 6 |
+| Interventions | 526 px | 1 sur 6 |
+| Bateau | 403 px (48 % de l'écran) | 6 en-têtes, **0 équipement** |
+| Checklist | 296 px, 175 px par tuile | 2 sur 9 |
+
+**Décision.** Une règle unique, appliquée partout : *le téléphone montre les données, l'iPad
+montre les données et leur explication.* En pratique :
+
+1. **Le sous-titre d'un `PageHeader` est de la prose d'accueil** : `hidden sm:block` par défaut.
+   Écrit pour qui découvre l'écran, payé à chaque visite pendant des années. Échappatoire
+   `subtitleClassName` pour les sous-titres qui portent une donnée vivante — « 12 résultats » est
+   un retour, pas de l'accueil.
+2. **Une carte par élément est juste pour trois éléments, pas pour neuf.** La grille de la
+   checklist devient une liste bordée sur téléphone, la grille revient à partir de `sm`. Le
+   pourcentage rejoint la ligne de compte, puisque la barre n'est pas dessinée là : la
+   progression est le sujet de l'écran, elle ne peut pas être ce qu'on supprime.
+3. **Une ligne de liste tient sur deux lignes**, pas trois : la valeur rejoint le titre, le badge
+   rejoint les métadonnées. Rien n'est retiré.
+4. **Un bloc de filtres ne prend pas trois lignes** : une seule ligne qui défile sur téléphone.
+5. **« Importer » n'est pas une action de téléphone** : `hidden sm:inline-flex`. Coller un
+   tableur se fait à un bureau ; le « + » reste entier.
+6. **Une barre d'outils qui précède les données peut les suivre** : `order-last sm:order-none`.
+7. **Le rythme vertical est celui de l'écran** : `gap-6` → `gap-4 sm:gap-6`, `pt-6` → `pt-3 sm:pt-6`.
+
+**Contrainte tenue sur chaque point** : l'iPad, portrait et paysage, reste identique — mesuré
+avant/après, pas supposé. Les cibles restent à 44 px ; la densité ne vient jamais d'un bouton
+rétréci.
+
+**Rejeté.** Passer le `<h1>` en `sr-only` sur téléphone (le gain mesuré était nul et on perd
+l'orientation) ; et rendre le bouton d'action primaire au `PrimaryActionSheet` sur les
+interventions — cela révise D35 et touche l'iPad portrait, donc cela se demande, cela ne se
+décide pas ici.
+
+## 2026-09-03 — D55 : une instruction d'installation par navigateur
+
+**Question.** « Le PWA ne fonctionne plus… ça ne download rien et c'est toujours le même texte. »
+Le service worker n'y était pour rien : les navigations sont en `NetworkFirst` (vérifié dans le
+`sw.js` de production), donc en ligne le réseau gagne et rien n'est servi périmé.
+
+La vraie cause : le code n'avait que **deux** branches, « iOS » et « tout le reste », et donnait
+à « tout le reste » les instructions de Chrome. Sur un Mac dans Safari cela nomme une entrée de
+menu qui n'existe pas — et Safari n'émet jamais `beforeinstallprompt`, donc il n'y aura jamais de
+bouton non plus.
+
+**Décision.** `detectPlatform()` distingue iOS, macOS Safari, Chromium et Firefox, et chaque cas
+a sa phrase : Partager → Sur l'écran d'accueil ; Partager → Ajouter au Dock ; l'icône de la barre
+d'adresse (plus « l'application est peut-être déjà installée », raison la plus fréquente d'un
+refus silencieux) ; et pour Firefox, qu'il n'installe pas d'application web. La fonction est pure
+et testée contre de vraies chaînes d'user-agent (`tests/unit/pwa-platform.test.ts`) — deviner ces
+chaînes est exactement ce qui a produit le défaut.
+
+**Et un tampon de version.** `NEXT_PUBLIC_BUILD` (le commit) s'affiche dans le dialogue
+d'installation. « C'est toujours le même texte » était indécidable sans lui : ni lui ni moi ne
+pouvions distinguer un déploiement pas encore arrivé d'un correctif qui ne marche pas — et nous
+nous sommes trompés chacun une fois dans la journée.
