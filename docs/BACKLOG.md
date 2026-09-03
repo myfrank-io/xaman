@@ -121,9 +121,9 @@ Règle produit : partout où l'app stocke une liste, on doit pouvoir l'importer.
 - [x] **E12-2 (M, 1)** Écran `/boats/[boatId]/import` + entrée « Importer » sur chaque liste concernée.
 - [x] **E12-3 (M, 1)** Descripteurs : contacts, équipements, pièces en stock.
 - [ ] **E12-4 (S, 1)** Descripteurs : points de checklist, achats / dépenses, interventions du journal, relevés d'heures.
-- [ ] **E12-5 (S, 1)** Fichiers `.xlsx` (analyseur chargé à la demande, hors du bundle principal).
-- [ ] **E12-6 (S, 1)** Contacts depuis une fiche `.vcf` (carnet d'adresses iOS / Android exporté).
-- [ ] **E12-7 (C, 1)** Modèle vierge téléchargeable par entité (les bons en-têtes, une ligne d'exemple).
+- [x] **E12-5 (S, 1)** Fichiers `.xlsx` (analyseur chargé à la demande, hors du bundle principal).
+- [x] **E12-6 (S, 1)** Contacts depuis une fiche `.vcf` (carnet d'adresses iOS / Android exporté).
+- [x] **E12-7 (C, 1)** Modèle vierge téléchargeable par entité (les bons en-têtes, une ligne d'exemple).
 
 ## E13 — Reprises d'interface signalées à l'usage
 
@@ -132,3 +132,4 @@ Règle produit : partout où l'app stocke une liste, on doit pouvoir l'importer.
 - [x] **E13-3** Respiration : marges hautes et basses de la zone de contenu augmentées (`pt-6 / lg:pt-10`, bas `8rem / 4rem`).
 - [x] **E13-4** Libellés de boutons rognés : une puce ne rétrécit plus sous son texte (`grow basis-auto` + plancher 44 px) et un groupe passe à la ligne. L'audit tactile échoue désormais sur tout libellé plus large que son bouton.
 - [x] **E13-5** Fil d'Ariane depuis les catégories du menu : tout fil commence à la section de l'écran (onglet, feuille « Plus », menu compte), y compris sur la racine d'une section où la miette nomme la page. Les sorties de l'eau s'accrochent au Journal, le rapport aux Paramètres ; les sous-listes visent l'onglet qui les sert (`/boat?tab=engines`, `/supplies?tab=stock`) pour qu'aucune miette cliquable ne mène à un 404.
+- [x] **E13-6** Écran d'import repris en trois étapes qui se replient : la source se résume à une ligne dès qu'un tableau est lu, la correspondance se fait colonne par colonne (en-tête du fichier, premières valeurs réelles, champ alimenté, mention « deviné », colonnes explicitement laissées de côté), et l'aperçu annonce créations, reconnaissances et refus **avant** l'écriture. Signalé à l'usage : « l'import est dégueu, il faut gérer le mapping ».

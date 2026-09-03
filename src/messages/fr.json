@@ -1523,11 +1523,24 @@
     "run": "{count, plural, one {Importer # ligne} other {Importer # lignes}}",
     "done": "{created, plural, =0 {Aucune création} one {# création} other {# créations}} · {updated, plural, =0 {aucune mise à jour} one {# mise à jour} other {# mises à jour}}.",
     "action": "Importer",
+    "steps": {
+      "source": "1 · Votre tableau",
+      "mapping": "2 · Vos colonnes",
+      "preview": "3 · Aperçu et import"
+    },
     "source": {
       "title": "Votre tableau",
-      "file": "Choisir un fichier (.csv, .tsv)",
+      "file": "Choisir un fichier (.csv, .tsv, .xlsx, .vcf)",
+      "formats": "Tableur Excel (.xlsx, .xlsm), fichier .csv ou .tsv, fiche de contact .vcf exportée d'un téléphone.",
       "or": "ou",
-      "paste": "Coller les cellules copiées depuis Excel"
+      "paste": "Coller les cellules copiées depuis Excel",
+      "template": "Télécharger un modèle",
+      "templateHelp": "Un fichier vierge avec les bons en-têtes et une ligne d'exemple, à remplir puis à réimporter.",
+      "summary": "{rows, plural, one {# ligne lue} other {# lignes lues}} · {columns, plural, one {# colonne} other {# colonnes}} · {origin}",
+      "pasted": "cellules collées",
+      "change": "Changer de fichier",
+      "keep": "Continuer avec ce tableau",
+      "sheet": "Feuille à importer"
     },
     "empty": {
       "title": "Rien à importer pour le moment",
@@ -1535,14 +1548,29 @@
     },
     "mapping": {
       "title": "Colonnes",
-      "help": "Vérifiez la correspondance devinée depuis vos en-têtes. Une colonne « Ignorer » n'est pas importée.",
-      "none": "Ignorer",
+      "help": "Une carte par colonne de votre fichier. Vérifiez ce que chacune alimente : ce qui reste sur « Ne pas importer » est laissé de côté.",
+      "none": "Ne pas importer",
       "column": "Colonne {index}",
-      "missing": "Colonnes obligatoires à renseigner : {fields}."
+      "missing": "Colonnes obligatoires à renseigner : {fields}.",
+      "field": "Alimente le champ",
+      "ignored": "Non importée",
+      "guessed": "Deviné",
+      "required": "Obligatoire",
+      "samples": "Dans votre fichier",
+      "emptyColumn": "Colonne vide",
+      "unmapped": "Champs sans colonne : {fields}.",
+      "defaults": "Valeurs pour tout le fichier",
+      "defaultsHelp": "Écrites dans les lignes où la cellule est vide. Une fiche de contact ne porte pas de métier : il se saisit ici, une fois pour toutes.",
+      "defaultValue": "Valeur par défaut"
     },
     "preview": {
       "title": "{count, plural, one {# ligne détectée} other {# lignes détectées}}",
-      "more": "{count, plural, one {et # autre ligne} other {et # autres lignes}}."
+      "more": "{count, plural, one {et # autre ligne} other {et # autres lignes}}.",
+      "plan": "{created, plural, =0 {Aucune ligne ne sera créée} one {# ligne sera créée} other {# lignes seront créées}}, {updated, plural, =0 {aucune reconnue} one {# reconnue et mise à jour} other {# reconnues et mises à jour}}, {rejected, plural, =0 {aucune refusée} one {# refusée} other {# refusées}}.",
+      "state": "État",
+      "new": "Nouvelle",
+      "updated": "Mise à jour",
+      "rejected": "Refusée"
     },
     "report": {
       "title": "Import terminé",
@@ -1562,7 +1590,17 @@
       "noSpecialty": "Spécialité manquante",
       "badEmail": "Adresse e-mail invalide",
       "badDate": "Date illisible (attendu 12/03/2026)",
-      "xlsxNotYet": "Les fichiers Excel arrivent bientôt. En attendant, sélectionnez vos cellules dans Excel, copiez-les et collez-les ci-dessous."
+      "legacyExcel": "Ce fichier est un ancien Excel (.xls). Ouvrez-le, puis « Enregistrer sous » au format .xlsx — ou copiez les cellules et collez-les ci-dessous.",
+      "notAZip": "Ce fichier n'est pas un classeur Excel lisible. Réenregistrez-le au format .xlsx depuis Excel, Numbers ou LibreOffice.",
+      "zip64": "Ce classeur est trop volumineux pour être ouvert ici. Enregistrez la feuille utile dans un nouveau fichier .xlsx.",
+      "truncated": "Le fichier est incomplet : son transfert s'est interrompu. Sélectionnez-le à nouveau.",
+      "compression": "Ce classeur utilise une compression illisible ici. Réenregistrez-le au format .xlsx depuis Excel.",
+      "noDecompressor": "Ce navigateur ne sait pas ouvrir les classeurs Excel. Mettez-le à jour, ou copiez les cellules et collez-les ci-dessous.",
+      "notAWorkbook": "Ce fichier compressé n'est pas un classeur Excel.",
+      "noSheet": "Ce classeur ne contient aucune feuille lisible.",
+      "tooLarge": "Ce classeur contient trop de cellules. Ne gardez que la feuille et les colonnes utiles, puis réessayez.",
+      "unreadable": "Ce fichier n'a pas pu être lu. Réessayez, ou copiez les cellules et collez-les ci-dessous.",
+      "noTable": "Aucun tableau n'a été trouvé dans ce fichier : la première ligne doit contenir les en-têtes de colonnes."
     },
     "entities": {
       "contacts": {
