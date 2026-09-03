@@ -15,6 +15,13 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: t("name") },
     formatDetection: { telephone: false },
+    other: {
+      // `appleWebApp.capable` only emits the modern `mobile-web-app-capable`, which iOS ignores.
+      // Safari reads the manifest first, but falls back to this tag when it cannot (a slow or
+      // failed manifest fetch on a phone connection) — and without it « Sur l'écran d'accueil »
+      // gives a bookmark that opens in Safari with the address bar instead of the app.
+      "apple-mobile-web-app-capable": "yes",
+    },
   };
 }
 
@@ -30,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} className="h-full antialiased">
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="flex min-h-full min-w-0 flex-col font-sans">
         <NextIntlClientProvider>
           <PwaProvider>{children}</PwaProvider>
           <Toaster />

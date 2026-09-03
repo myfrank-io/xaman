@@ -59,7 +59,7 @@ export function ChecklistMatches({
                 className="min-w-0 flex-1 cursor-pointer select-none"
               >
                 <span className="block text-body font-medium text-foreground">{item.label}</span>
-                <span className="mt-0.5 block truncate text-caption text-ink-2">
+                <span className="mt-0.5 block text-caption [overflow-wrap:anywhere] text-ink-2">
                   {missingHours
                     ? t("needHours", { engine: item.engineLabel ?? "" })
                     : [

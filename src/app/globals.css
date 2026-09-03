@@ -494,10 +494,16 @@
     /* iOS Safari: prevent text-size inflation and rubber-band overscroll in standalone mode */
     -webkit-text-size-adjust: 100%;
     overscroll-behavior-y: none;
+    /* A last net under the mobile-first layout: one element that refuses to shrink used to make
+       the WHOLE page scroll sideways, and iOS Safari answers that by shrinking the viewport to
+       fit — every screen suddenly zoomed out. `clip`, never `hidden`: `hidden` would make this
+       a scroll container and kill `position: sticky` on the top bar. */
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
   }
 }
 

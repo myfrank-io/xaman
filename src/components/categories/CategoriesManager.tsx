@@ -118,7 +118,10 @@ export function CategoriesManager({
         {active.map((category, index) => (
           <li
             key={category.id}
-            className="flex min-h-16 items-center gap-3 border-b border-border px-4 py-2 last:border-b-0"
+            // Mobile-first: three 44 px controls plus the icon left 112 px for the name at 360 px,
+            // so « Hydraulique & Circuits » read « Hydrauli… » and the systems could not be told
+            // apart. They take a line of their own on a phone and sit back inline from `sm`.
+            className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-2 last:border-b-0"
           >
             <CategoryIcon color={category.color} icon={category.icon} />
             <div className="min-w-0 flex-1">
@@ -128,7 +131,7 @@ export function CategoriesManager({
               </div>
             </div>
             {canWrite ? (
-              <>
+              <div className="flex w-full items-center justify-end gap-1 sm:w-auto sm:gap-3">
                 <Button
                   type="button"
                   variant="ghost"
@@ -164,7 +167,7 @@ export function CategoriesManager({
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </>
+              </div>
             ) : null}
           </li>
         ))}

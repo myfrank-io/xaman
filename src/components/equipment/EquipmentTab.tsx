@@ -150,9 +150,9 @@ export function EquipmentTab({
           {groups.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionTrigger>
-                <span className="flex min-w-0 items-center gap-2">
+                <span className="flex min-w-0 flex-1 items-center gap-2">
                   {group.color ? <CategoryDot color={group.color} /> : null}
-                  <span className="truncate">{group.name}</span>
+                  <span className="min-w-0 truncate">{group.name}</span>
                   <span className="num text-caption font-medium text-ink-3">
                     {group.items.length}
                   </span>
@@ -172,9 +172,9 @@ export function EquipmentTab({
           ))}
           <AccordionItem value={STOCK_KEY}>
             <AccordionTrigger>
-              <span className="flex min-w-0 items-center gap-2">
+              <span className="flex min-w-0 flex-1 items-center gap-2">
                 <PackageIcon className="size-4 shrink-0 text-ink-2" aria-hidden />
-                <span className="truncate">{t("stockSection")}</span>
+                <span className="min-w-0 truncate">{t("stockSection")}</span>
                 <span className="num text-caption font-medium text-ink-3">{stock.totalCount}</span>
                 {/* Visible on the closed row: « sous le seuil » means « à racheter ». */}
                 {stock.lowCount > 0 ? (

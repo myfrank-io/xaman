@@ -65,7 +65,7 @@ export function ListRow({
           {title}
         </div>
         {meta ? (
-          <div className="mt-0.5 flex items-center gap-1.5 truncate text-caption text-ink-2">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-caption text-ink-2 sm:flex-nowrap sm:truncate">
             {meta}
           </div>
         ) : null}

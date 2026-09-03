@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // Rectangle at 8 px, never a pill: a pill reads « marketing tag », a soft
 // rectangle reads « instrument label » (art-direction §6.2).
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-md border font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3.5",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-md border font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3.5",
   {
     variants: {
       variant: {

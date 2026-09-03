@@ -44,15 +44,17 @@ function EngineChip({
         </span>
       )}
       {stale ? (
-        <span className="inline-flex items-center gap-1 text-caption text-state-soon-on-dark">
+        // The triangle says « à mettre à jour » on its own; the words cost 102 px, which a
+        // 320 px screen does not have to give. They come back from `sm`.
+        <span className="inline-flex shrink-0 items-center gap-1 text-caption text-state-soon-on-dark">
           <TriangleAlertIcon className="size-3.5" aria-hidden />
-          {t("stale")}
+          <span className="sr-only sm:not-sr-only">{t("stale")}</span>
         </span>
       ) : null}
     </>
   );
   const className =
-    "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-on-navy-border bg-on-navy-surface px-3 text-label text-on-navy";
+    "inline-flex min-h-11 max-w-full min-w-0 items-center gap-2 rounded-lg border border-on-navy-border bg-on-navy-surface px-3 text-label text-on-navy";
   if (!onOpen) return <div className={className}>{content}</div>;
   return (
     <button

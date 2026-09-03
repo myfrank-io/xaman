@@ -1424,7 +1424,10 @@
       "linesTitle": "Toutes les lignes",
       "linesEmpty": "Aucune ligne sur cette période.",
       "paidFor": "Payé pour",
-      "subtitle": "Interventions, achats et sorties de l'eau : une seule liste."
+      "subtitle": "Interventions, achats et sorties de l'eau : une seule liste.",
+      "filters": {
+        "title": "Filtres"
+      }
     },
     "purchases": {
       "title": "Achats",

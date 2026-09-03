@@ -45,9 +45,12 @@ const darkToneClasses: Record<NonNullable<StatCardProps["tone"]>, string> = {
 function figureSize(value: React.ReactNode): string {
   if (typeof value !== "string" && typeof value !== "number") return "text-num-lg";
   const length = String(value).length;
+  // One size smaller below `sm`. The thresholds above were measured against the narrowest tile
+  // an iPad produces (137 px of content); a 320 px phone gives the same tile 108 px, where
+  // « 4 321,50 € » broke and left the € alone on a second line — the one wrap this must avoid.
   if (length > 11) return "text-num-sm";
-  if (length > 9) return "text-num-md";
-  return "text-num-lg";
+  if (length > 9) return "text-num-sm sm:text-num-md";
+  return "text-num-md sm:text-num-lg";
 }
 
 // Dark variant is an opaque tile (`--on-navy-surface`), never `bg-white/10 backdrop-blur`:
