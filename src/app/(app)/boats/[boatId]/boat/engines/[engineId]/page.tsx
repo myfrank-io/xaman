@@ -35,6 +35,7 @@ export default async function EnginePage({
     supabase
       .from("engine_current_hours")
       .select("hours, read_at, reading_id")
+      .eq("boat_id", boatId)
       .eq("engine_id", engineId)
       .maybeSingle(),
     supabase
@@ -42,6 +43,7 @@ export default async function EnginePage({
       .select(
         "id, label, category_id, interval_months, interval_hours, status, days_remaining, hours_remaining, current_hours, last_completed_at, last_engine_hours, sort_order",
       )
+      .eq("boat_id", boatId)
       .eq("engine_id", engineId)
       .order("sort_order"),
     supabase

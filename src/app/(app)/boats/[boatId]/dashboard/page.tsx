@@ -133,7 +133,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const itemIds = queueRows.filter((row) => row.kind === "item").map((row) => row.id);
   let statusRows: StatusViewRow[] = [];
   if (itemIds.length > 0) {
-    const { data } = await supabase.from("checklist_item_status").select("*").in("id", itemIds);
+    const { data } = await supabase
+      .from("checklist_item_status")
+      .select("*")
+      .eq("boat_id", boatId)
+      .in("id", itemIds);
     statusRows = data ?? [];
   }
   const statusById = new Map(statusRows.map((row) => [row.id ?? "", row]));
@@ -252,7 +256,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       {/* 1 — dark header: identity, state, 4 tiles, engine strip */}
       {/* Bleeds to all three edges: the dashboard carries no trail (see `buildTrail`), so there
           is nothing above for this band to paint over — which is what it used to do. */}
-      <header className="-mx-4 -mt-3 bg-header-gradient px-4 pt-5 pb-4 text-on-navy sm:-mx-6 sm:-mt-4 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-5">
+      <header className="-mx-4 -mt-3 bg-header-gradient px-4 pt-5 pb-4 text-on-navy brass-rule sm:-mx-6 sm:-mt-4 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-h1">{boat.name}</h1>

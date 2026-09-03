@@ -8,7 +8,9 @@ import { hasSupabaseEnv } from "@/lib/env";
 import { boatKeys } from "@/lib/queries/keys";
 import { createClient } from "@/lib/supabase/client";
 
-// Tables published on supabase_realtime (DATA-MODEL.md §7)
+// Tables published on supabase_realtime (DATA-MODEL.md §7). engines and boat_categories are here
+// because checklist_item_status reads them: a lone counter reset (D12), engine disable (D14) or
+// category toggle must reach a second device live, not only when some other table also changes.
 export const REALTIME_TABLES = [
   "maintenance_logs",
   "checklist_items",
@@ -18,6 +20,8 @@ export const REALTIME_TABLES = [
   "parts",
   "haul_outs",
   "contacts",
+  "engines",
+  "boat_categories",
 ] as const;
 
 // One channel per boat: any change on the boat's tables invalidates the boat's queries and

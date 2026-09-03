@@ -32,13 +32,12 @@ import {
 } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
-export type CreateKey = "log" | "hourReading" | "gas" | "purchase" | "haulOut";
+export type CreateKey = "hourReading" | "gas" | "purchase" | "haulOut";
 
 /** Dynamic subtitles, computed server-side and passed down as plain strings. */
 export type PrimaryActionHints = Partial<Record<CreateKey, string>>;
 
 const ENTRY_ICONS: Record<CreateKey, LucideIcon> = {
-  log: NotebookPenIcon,
   hourReading: GaugeIcon,
   gas: FlameIcon,
   purchase: EuroIcon,
@@ -46,23 +45,22 @@ const ENTRY_ICONS: Record<CreateKey, LucideIcon> = {
 };
 
 /** Fixed subtitles; the dynamic ones (last reading, last bottle) arrive in `hints`. */
-type HintKey = "logHint" | "purchaseHint" | "haulOutHint";
+type HintKey = "purchaseHint" | "haulOutHint";
 
 const HINT_KEYS: Partial<Record<CreateKey, HintKey>> = {
-  log: "logHint",
   purchase: "purchaseHint",
   haulOut: "haulOutHint",
 };
 
-// Order = frequency of use (ux-flows §1.4). The intervention leads: it is the dominant act.
-const ALL_KEYS: CreateKey[] = ["log", "hourReading", "gas", "purchase", "haulOut"];
-// A `pro` only records his own work: two entries, the others are absent (not greyed).
-const PRO_KEYS: CreateKey[] = ["log", "hourReading"];
+// The "other" acts, ordered by frequency of use (ux-flows §1.4). The intervention is the dominant
+// act and already has its own named button above the sheet, so it is NOT listed here — a second
+// path to it would break "one path per action" (D19, AUDIT §7.2.1).
+const OTHER_KEYS: CreateKey[] = ["hourReading", "gas", "purchase", "haulOut"];
+// A `pro` only records his own work: the intervention (its button) and an hour reading.
+const PRO_KEYS: CreateKey[] = ["hourReading"];
 
 function entryHref(key: CreateKey, boatId: string): string {
   switch (key) {
-    case "log":
-      return newLogPath(boatId);
     case "hourReading":
       return hourReadingPath(boatId);
     case "gas":
@@ -143,7 +141,7 @@ export function PrimaryActionSheet({
       (segments[0] === "supplies" && segments.length > 1));
 
   const direct = inBoat ? directTarget(segments, boatId, role) : null;
-  const keys = role === "pro" ? PRO_KEYS : ALL_KEYS;
+  const keys = role === "pro" ? PRO_KEYS : OTHER_KEYS;
 
   if (hidden) return null;
 

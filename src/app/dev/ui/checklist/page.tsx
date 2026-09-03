@@ -7,10 +7,14 @@ import { TodoList } from "@/components/checklist/TodoList";
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
+import { RestockChecklist } from "@/components/parts/RestockChecklist";
 import { devUiEnabled } from "@/lib/dev-ui";
+import { stockPath } from "@/lib/queries/boat-routes";
+import { toRestockList } from "@/lib/queries/stock";
 
 import { DevShell } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
+import { SAMPLE_PARTS } from "../supplies/sample";
 
 const DEV_BOAT_ID = "00000000-0000-4000-8000-000000000000";
 const MEMBERS = [
@@ -163,11 +167,26 @@ const COMPLETIONS: CompletionRow[] = [
 export default async function DevChecklistPage() {
   if (!devUiEnabled()) notFound();
   const t = await getTranslations("checklist");
+  const tr = await getTranslations("restock");
+  const lowParts = toRestockList(SAMPLE_PARTS);
   return (
     <DevShell>
       <div className="flex flex-col gap-10">
         <PageHeader title={t("title")} />
-        <ChecklistGrid boatId={DEV_BOAT_ID} categories={PROGRESS} stock={{ total: 0, low: 0 }} />
+        <SectionCard
+          title={tr("title")}
+          actionHref={stockPath(DEV_BOAT_ID)}
+          actionLabel={tr("seeStock")}
+          footer={tr("subtitle")}
+          bare
+        >
+          <RestockChecklist boatId={DEV_BOAT_ID} parts={lowParts} canWrite />
+        </SectionCard>
+        <ChecklistGrid
+          boatId={DEV_BOAT_ID}
+          categories={PROGRESS}
+          stock={{ total: SAMPLE_PARTS.length, low: lowParts.length }}
+        />
         <SectionCard title={t("filters.todo")} bare>
           <TodoList
             boatId={DEV_BOAT_ID}

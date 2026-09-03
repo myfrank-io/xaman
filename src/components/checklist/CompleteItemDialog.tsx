@@ -216,6 +216,7 @@ function CompleteForm({
         action: completeChecklistItem,
         enqueue: outbox.enqueue,
         online,
+        allowQueue: true,
       });
       if (outcome.status === "full") {
         toast.error(to("queueFull"));

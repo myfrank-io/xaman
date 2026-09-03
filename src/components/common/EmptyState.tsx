@@ -42,7 +42,7 @@ export function EmptyState({
           {icon}
         </div>
       ) : null}
-      <h2 className="text-h2">{title}</h2>
+      <h2 className="font-display text-h1">{title}</h2>
       {description ? <p className="mt-2 max-w-sm text-body text-ink-2">{description}</p> : null}
       {action || secondaryAction ? (
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">

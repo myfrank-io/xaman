@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   CameraIcon,
@@ -33,6 +34,7 @@ import {
   updateAttachmentCaption,
 } from "@/lib/actions/attachments";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import { boatKeys } from "@/lib/queries/keys";
 import type { AttachmentItem } from "@/lib/queries/use-attachments";
 import {
   ATTACHMENT_ACCEPT,
@@ -126,6 +128,14 @@ export function AttachmentPicker({
   const t = useTranslations("attachments");
   const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
+  const queryClient = useQueryClient();
+  // The read-only gallery on the detail sheet reads the same attachments query; refresh it once a
+  // document is really written or removed, so it never sits stale behind its 10-minute staleTime.
+  const invalidateAttachments = useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: boatKeys.attachments(boatId, owner.type, owner.id),
+    });
+  }, [queryClient, boatId, owner.type, owner.id]);
   const [items, setItems] = useState<PickedAttachment[]>(() => initial.map(fromStored));
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
@@ -226,9 +236,10 @@ export function AttachmentPicker({
         }
         const url = await signedUrlFor(uploaded.storagePath);
         patch(item.id, { stage: "done", persisted: true, previewUrl: url ?? item.previewUrl });
+        invalidateAttachments();
       }
     },
-    [boatId, owner, deferred, patch, errorMessage],
+    [boatId, owner, deferred, patch, errorMessage, invalidateAttachments],
   );
 
   function retry(item: PickedAttachment) {
@@ -249,13 +260,16 @@ export function AttachmentPicker({
       return;
     }
     setItems((current) => current.filter((row) => row.id !== item.id));
+    invalidateAttachments();
     undoToast({
       message: t("removed"),
       undoLabel: tc("undo"),
       onUndo: () => {
         void restoreAttachment({ boatId, attachmentId: item.id }).then((restored) => {
-          if (restored.ok) setItems((current) => [...current, item]);
-          else toast.error(errorMessage(restored.error));
+          if (restored.ok) {
+            setItems((current) => [...current, item]);
+            invalidateAttachments();
+          } else toast.error(errorMessage(restored.error));
         });
       },
     });
@@ -273,6 +287,7 @@ export function AttachmentPicker({
       return;
     }
     patch(item.id, { savedCaption: caption.trim() });
+    invalidateAttachments();
   }
 
   const busy = items.some((item) => item.stage !== "done" && item.stage !== "error");
