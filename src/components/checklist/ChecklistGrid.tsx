@@ -48,7 +48,7 @@ export async function ChecklistGrid({
 }: {
   boatId: string;
   categories: CategoryProgress[];
-  /** Absent when the boat holds no parts: an empty card would only take a place. */
+  /** Shown even at zero: the card is the way into the stock, so it must exist before it does. */
   stock?: StockSummary | null;
 }) {
   const t = await getTranslations("checklist.card");
@@ -119,7 +119,11 @@ export async function ChecklistGrid({
             <p className="num text-caption text-ink-2">{t("stockParts", { count: stock.total })}</p>
           </div>
           <p className="mt-auto text-caption text-ink-2">
-            {stock.low > 0 ? t("stockToBuy") : t("stockComplete")}
+            {stock.total === 0
+              ? t("stockEmpty")
+              : stock.low > 0
+                ? t("stockToBuy")
+                : t("stockComplete")}
           </p>
         </Link>
       ) : null}

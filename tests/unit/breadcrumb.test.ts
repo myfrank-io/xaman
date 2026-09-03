@@ -135,10 +135,11 @@ describe("buildTrail", () => {
     expect(current(at("/logs"))).toEqual(["Interventions"]);
   });
 
-  it("gives the dashboard its own crumb and opens no other trail with it", () => {
-    expect(at("/dashboard")).toEqual([{ key: "dashboard" }]);
-    expect(labels(at("/dashboard"))).toEqual(["Tableau de bord"]);
-    // The home of the boat is a tab, one tap away: it never prefixes another section.
+  it("leaves the dashboard without a trail, and never opens another one with it", () => {
+    // A lone « Tableau de bord » naming the screen you are looking at repeats the highlighted
+    // tab, and pushed the dark header down below a line of grey. Its own header is the title.
+    expect(at("/dashboard")).toEqual([]);
+    // The home of the boat is a tab, one tap away: it never prefixes another section either.
     expect(labels(at("/logs/new"))).toEqual(["Interventions", "Nouveau"]);
   });
 
@@ -258,7 +259,9 @@ describe("buildTrail", () => {
   });
 
   it("marks exactly one crumb as the current page, the last one, and names them all", () => {
-    for (const suffix of ALL_PATHS) {
+    // The dashboard is the one screen with no trail at all, on purpose: its own dark header
+    // carries the boat's name, and a crumb above it only pushed that header down.
+    for (const suffix of ALL_PATHS.filter((p) => p !== "/dashboard")) {
       const trail = at(suffix);
       expect(trail.length, suffix).toBeGreaterThan(0);
       // `labels` throws on a key `fr.json` does not carry: no crumb ships without a word.

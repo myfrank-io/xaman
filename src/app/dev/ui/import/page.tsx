@@ -35,6 +35,17 @@ const READINGS_SAMPLE = [
   "Moteur tribord\t14/06/2026\t1204,5\t",
 ].join("\n");
 
+/**
+ * A directory exported from a phone: names and numbers, and no trade column at all. That is
+ * the file the « valeurs pour tout le fichier » block exists for (D44).
+ */
+const CONTACTS_SAMPLE = [
+  "Nom\tTéléphone\tE-mail",
+  "Chantier du Guip\t02 98 00 00 00\tcontact@guip.example",
+  "Voilerie Le Bihan\t02 98 11 11 11\t",
+  "Accastillage Diffusion\t02 98 22 22 22\tlorient@accastillage.example",
+].join("\n");
+
 /** The two engines the sample names, as the import screen would read them from the boat. */
 const READINGS_CATALOG: ImportCatalog = {
   engines: [
@@ -96,6 +107,23 @@ export default async function DevImportPage() {
             entity="contacts"
             backHref="/dev/ui"
             backLabel={t("back.contacts")}
+          />
+        </section>
+
+        <section className="flex flex-col gap-6">
+          <div>
+            <h2 className="text-h2">Spécialité choisie pour tout le fichier</h2>
+            <p className="mt-1 text-caption text-ink-2">
+              Un annuaire exporté d&apos;un téléphone : des noms, des numéros, aucun métier. Il se
+              choisit une fois — les sept métiers intégrés, ceux du bateau, ou un nouveau (D44).
+            </p>
+          </div>
+          <ImportWizard
+            boatId={DEV_BOAT_ID}
+            entity="contacts"
+            backHref="/dev/ui"
+            backLabel={t("back.contacts")}
+            initialText={CONTACTS_SAMPLE}
             catalog={{ specialties: ["Accastilleur", "Peintre"] }}
           />
         </section>

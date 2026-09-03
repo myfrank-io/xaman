@@ -764,7 +764,8 @@
       "stockParts": "{count, plural, =0 {aucune pièce} one {# pièce} other {# pièces}}",
       "stockLow": "{count, plural, one {# sous le seuil} other {# sous le seuil}}",
       "stockToBuy": "À racheter avant la prochaine sortie",
-      "stockComplete": "Rien à racheter"
+      "stockComplete": "Rien à racheter",
+      "stockEmpty": "Ajouter les pièces que vous gardez à bord"
     },
     "todoEmpty": {
       "title": "Rien à traiter",

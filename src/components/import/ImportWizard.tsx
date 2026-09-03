@@ -259,6 +259,9 @@ export function ImportWizard({
     setReport(null);
   }
 
+  // One page can hold several wizards (the /dev/ui gallery does): the id carries the entity so
+  // the label points at its own field rather than at the first one on the page.
+  const pasteId = `import-paste-${entity}`;
   const defaultFields = useMemo(() => fields.filter((field) => field.allowDefault), [fields]);
   const tc = useTranslations("contacts.specialties");
   /**
@@ -420,9 +423,9 @@ export function ImportWizard({
               <p>{t("source.templateHelp")}</p>
             </div>
             <span className="text-caption text-ink-3">{t("source.or")}</span>
-            <Label htmlFor="import-paste">{t("source.paste")}</Label>
+            <Label htmlFor={pasteId}>{t("source.paste")}</Label>
             <Textarea
-              id="import-paste"
+              id={pasteId}
               rows={4}
               value={raw}
               spellCheck={false}

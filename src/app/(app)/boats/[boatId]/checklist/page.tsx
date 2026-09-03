@@ -70,17 +70,16 @@ export default async function ChecklistPage({
     (row) => row.intervalMonths !== null || row.intervalHours !== null || row.status !== "never",
   ).length;
 
+  // Always shown, empty stock included: the card is also the way in. Hiding it on a boat with
+  // no part yet left « pièces détachées » nowhere to be found from here — reported at the
+  // tiller — and that is exactly the boat that most needs the door (D43).
   const partRows = parts ?? [];
-  const stock =
-    partRows.length > 0
-      ? {
-          total: partRows.length,
-          low: partRows.filter(
-            (part) =>
-              (part.min_quantity ?? 0) > 0 && (part.quantity ?? 0) <= (part.min_quantity ?? 0),
-          ).length,
-        }
-      : null;
+  const stock = {
+    total: partRows.length,
+    low: partRows.filter(
+      (part) => (part.min_quantity ?? 0) > 0 && (part.quantity ?? 0) <= (part.min_quantity ?? 0),
+    ).length,
+  };
 
   const totalInterval = categories.reduce((sum, category) => sum + category.total, 0);
   const neverRecorded = categories.reduce((sum, category) => sum + category.neverRecorded, 0);
