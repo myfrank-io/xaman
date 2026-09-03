@@ -35,6 +35,13 @@ export function InstallDialog({
       : prompt.promptEvent
         ? t("androidHint")
         : t("otherHint");
+  /**
+   * Without a captured prompt there is no button, so the text has to carry the whole answer —
+   * and the commonest reason a Chromium browser withholds the prompt is that the application
+   * is already installed, which « nothing happened » does not suggest to anyone.
+   */
+  const secondHint =
+    !prompt.standalone && !prompt.ios && !prompt.promptEvent ? t("otherHintAlready") : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,6 +50,7 @@ export function InstallDialog({
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{hint}</DialogDescription>
         </DialogHeader>
+        {secondHint ? <p className="text-caption text-ink-2">{secondHint}</p> : null}
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">

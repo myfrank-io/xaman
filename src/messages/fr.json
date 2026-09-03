@@ -1227,7 +1227,8 @@
     "title": "Installer Xaman sur l'écran d'accueil",
     "iosHint": "Dans Safari : Partager, puis « Sur l'écran d'accueil ».",
     "androidHint": "L'application s'ouvre en plein écran, sans barre d'adresse.",
-    "otherHint": "Dans le menu du navigateur : « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+    "otherHint": "Dans Chrome ou Edge : l'icône d'installation à droite de la barre d'adresse, ou le menu ⋮ puis « Installer Xaman ».",
+    "otherHintAlready": "Si cette icône n'apparaît pas, l'application est probablement déjà installée : ouvrez-la depuis le Dock ou l'écran d'accueil.",
     "installed": "Xaman est déjà installé sur cet appareil.",
     "install": "Installer",
     "later": "Plus tard"
