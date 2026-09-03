@@ -29,7 +29,7 @@ export default async function ChecklistPage({
 }) {
   const [{ boatId }, { view, filter }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
-  const [{ data: role }, { data: progress }, { data: status }, { data: engines }] =
+  const [{ data: role }, { data: progress }, { data: status }, { data: engines }, { data: parts }] =
     await Promise.all([
       supabase.rpc("boat_role", { p_boat_id: boatId }),
       supabase
@@ -43,6 +43,12 @@ export default async function ChecklistPage({
         .eq("boat_id", boatId)
         .in("status", ["overdue", "soon", "never"]),
       supabase.from("engines").select("id, label").eq("boat_id", boatId),
+      // The stock closes the grid: what is aboard, and what is under its threshold (D43).
+      supabase
+        .from("parts")
+        .select("quantity, min_quantity")
+        .eq("boat_id", boatId)
+        .is("deleted_at", null),
     ]);
   if (!role) notFound();
   const boatRole = role as BoatRole;
@@ -63,6 +69,18 @@ export default async function ChecklistPage({
   const todoCount = rows.filter(
     (row) => row.intervalMonths !== null || row.intervalHours !== null || row.status !== "never",
   ).length;
+
+  const partRows = parts ?? [];
+  const stock =
+    partRows.length > 0
+      ? {
+          total: partRows.length,
+          low: partRows.filter(
+            (part) =>
+              (part.min_quantity ?? 0) > 0 && (part.quantity ?? 0) <= (part.min_quantity ?? 0),
+          ).length,
+        }
+      : null;
 
   const totalInterval = categories.reduce((sum, category) => sum + category.total, 0);
   const neverRecorded = categories.reduce((sum, category) => sum + category.neverRecorded, 0);
@@ -117,7 +135,7 @@ export default async function ChecklistPage({
       ) : null}
       <ChecklistViewTabs boatId={boatId} view={activeView} todoCount={todoCount} />
       {activeView === "grid" ? (
-        <ChecklistGrid boatId={boatId} categories={categories} />
+        <ChecklistGrid boatId={boatId} categories={categories} stock={stock} />
       ) : (
         <TodoList
           boatId={boatId}

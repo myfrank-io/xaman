@@ -13,7 +13,7 @@ const PURCHASE = "5d4e6f7a-8b9c-4d0e-9f2a-3b4c5d6e7f80";
 const HAUL_OUT = "6e5f7a8b-9c0d-4e1f-8a3b-4c5d6e7f8091";
 const CONTACT = "7f6a8b9c-0d1e-4f2a-9b4c-5d6e7f809102";
 
-const at = (path: string) => buildTrail(`/boats/${BOAT}${path}`, BOAT);
+const at = (path: string, entity?: string) => buildTrail(`/boats/${BOAT}${path}`, BOAT, entity);
 const path = (suffix: string) => `/boats/${BOAT}${suffix}`;
 
 /** Resolves the crumb key against `fr.json`: a key with no label fails the test. */
@@ -222,8 +222,9 @@ describe("buildTrail", () => {
   });
 
   it("covers the screens outside the menu and the guided flows", () => {
-    // The report opens from the settings; the import from the list in `?entity=`, unknown here.
+    // The report opens from the settings; the import from the list in `?entity=`.
     expect(labels(at("/report"))).toEqual(["Paramètres", "Rapport"]);
+    // Without one — a hand-typed URL — it stands alone rather than guessing a list.
     expect(at("/import")).toEqual([{ key: "crumbs.import" }]);
     expect(labels(at("/logs/review"))).toEqual(["Interventions", "Reprise du carnet"]);
     expect(labels(at("/checklist/setup"))).toEqual(["Checklist", "Mise en route"]);
@@ -271,5 +272,36 @@ describe("buildTrail", () => {
     expect(buildTrail("/boats/other/logs/new", BOAT)).toEqual([]);
     expect(buildTrail("/login", BOAT)).toEqual([]);
     expect(at("")).toEqual([]);
+  });
+});
+
+/**
+ * The import screen is the one screen whose section the path cannot tell: `/import` is the
+ * same address for the seven lists, and only `?entity=` says which. Reported at the tiller —
+ * « il manque le fil d'Ariane et la catégorie dans laquelle on est dans le menu de gauche ».
+ */
+describe("an import belongs to the list it is going into", () => {
+  it("opens the trail on that list, and names the tab when the list is one", () => {
+    expect(labels(at("/import", "logs"))).toEqual(["Interventions", "Importer"]);
+    expect(labels(at("/import", "purchases"))).toEqual(["Dépenses", "Importer"]);
+    expect(labels(at("/import", "contacts"))).toEqual(["Intervenants", "Importer"]);
+    expect(labels(at("/import", "completions"))).toEqual(["Checklist", "Importer"]);
+    // The three lists that live in a tab of Bateau name that tab: the way back is the list.
+    expect(labels(at("/import", "readings"))).toEqual(["Bateau", "Moteurs", "Importer"]);
+    expect(labels(at("/import", "equipment"))).toEqual(["Bateau", "Équipements", "Importer"]);
+    expect(labels(at("/import", "parts"))).toEqual(["Bateau", "Stock", "Importer"]);
+  });
+
+  it("links every crumb but the last, and to an address that exists", () => {
+    const trail = at("/import", "readings");
+    expect(trail.map((crumb) => crumb.href)).toEqual([
+      path("/boat"),
+      path("/boat?tab=engines"),
+      undefined,
+    ]);
+  });
+
+  it("ignores an entity the app does not serve", () => {
+    expect(at("/import", "n-importe-quoi")).toEqual([{ key: "crumbs.import" }]);
   });
 });

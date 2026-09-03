@@ -759,7 +759,12 @@
       "overdue": "{count, plural, one {# en retard} other {# en retard}}",
       "neverDone": "jamais fait",
       "upToDate": "à jour",
-      "punctual": "{count, plural, one {# contrôle ponctuel} other {# contrôles ponctuels}}"
+      "punctual": "{count, plural, one {# contrôle ponctuel} other {# contrôles ponctuels}}",
+      "stockTitle": "Stock",
+      "stockParts": "{count, plural, =0 {aucune pièce} one {# pièce} other {# pièces}}",
+      "stockLow": "{count, plural, one {# sous le seuil} other {# sous le seuil}}",
+      "stockToBuy": "À racheter avant la prochaine sortie",
+      "stockComplete": "Rien à racheter"
     },
     "todoEmpty": {
       "title": "Rien à traiter",

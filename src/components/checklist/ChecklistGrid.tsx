@@ -1,12 +1,16 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { PackageIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { Badge } from "@/components/ui/badge";
-import { categoryPath } from "@/lib/queries/boat-routes";
+import { categoryPath, stockPath } from "@/lib/queries/boat-routes";
 import type { Database } from "@/types/database";
+
+/** What the stock card says: how many parts are aboard, and how many are under their threshold. */
+export type StockSummary = { total: number; low: number };
 
 export type CategoryProgress = {
   id: string;
@@ -40,9 +44,12 @@ export function toCategoryProgress(row: CategoryProgressRow): CategoryProgress {
 export async function ChecklistGrid({
   boatId,
   categories,
+  stock,
 }: {
   boatId: string;
   categories: CategoryProgress[];
+  /** Absent when the boat holds no parts: an empty card would only take a place. */
+  stock?: StockSummary | null;
 }) {
   const t = await getTranslations("checklist.card");
   return (
@@ -87,6 +94,35 @@ export async function ChecklistGrid({
           </Link>
         );
       })}
+
+      {/* The stock closes the grid. It is not a system and carries no progress bar — nothing is
+          « due » about a shelf — but it is what you look for while planning the work these
+          cards describe, so it sits where the eye already is rather than two taps away. Neutral
+          on purpose: a category colour here would read as a ninth system (rule 12). */}
+      {stock ? (
+        <Link
+          href={stockPath(boatId) as Route}
+          className="flex min-h-36 flex-col gap-3 rounded-xl border border-border tap-feedback bg-surface p-4 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-surface-2 text-ink-2">
+              <PackageIcon className="size-5" aria-hidden />
+            </span>
+            {stock.low > 0 ? (
+              <Badge variant="destructive" size="sm">
+                {t("stockLow", { count: stock.low })}
+              </Badge>
+            ) : null}
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-h3 leading-tight">{t("stockTitle")}</h2>
+            <p className="num text-caption text-ink-2">{t("stockParts", { count: stock.total })}</p>
+          </div>
+          <p className="mt-auto text-caption text-ink-2">
+            {stock.low > 0 ? t("stockToBuy") : t("stockComplete")}
+          </p>
+        </Link>
+      ) : null}
     </div>
   );
 }
