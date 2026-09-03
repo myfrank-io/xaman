@@ -68,6 +68,7 @@ export default async function NewLogPage({
       .select("category_id")
       .eq("id", prefill.equipmentId)
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .maybeSingle();
     prefill.categoryId = item?.category_id ?? undefined;
   }

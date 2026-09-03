@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { boatPath, equipmentPath } from "@/lib/queries/boat-routes";
 import {
+  deleteEquipmentSchema,
   removeEquipmentSchema,
   restoreEquipmentSchema,
   upsertEquipmentSchema,
@@ -105,6 +106,34 @@ export async function restoreEquipment(input: unknown): Promise<ActionResult> {
     .update({ removed_at: null, updated_by: userId }, { count: "exact" })
     .eq("id", equipmentId)
     .eq("boat_id", boatId);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+
+  revalidateEquipmentScreens(boatId, equipmentId);
+  return ok(undefined);
+}
+
+/**
+ * « Supprimer » — the trash, distinct from « Déposer » (removed_at).
+ *
+ * Déposer takes a real fitting off the boat and keeps its sheet for the history. Supprimer is
+ * for a mistaken creation: it goes to the corbeille like every other object (D61), restorable
+ * for 30 days, then purged. A row already trashed is left alone so a double tap deletes once.
+ */
+export async function deleteEquipment(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(deleteEquipmentSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, equipmentId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+  const { error, count } = await supabase
+    .from("equipment")
+    .update({ deleted_at: new Date().toISOString(), updated_by: userId }, { count: "exact" })
+    .eq("id", equipmentId)
+    .eq("boat_id", boatId)
+    .is("deleted_at", null);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
 

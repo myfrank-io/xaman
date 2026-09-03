@@ -15,10 +15,18 @@ import {
   restorePart,
   restorePurchase,
   restoreTrashedAttachment,
+  restoreTrashedEquipment,
 } from "@/lib/actions/trash";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 
-export type TrashKind = "log" | "purchase" | "haulOut" | "part" | "contact" | "attachment";
+export type TrashKind =
+  | "log"
+  | "purchase"
+  | "haulOut"
+  | "part"
+  | "contact"
+  | "attachment"
+  | "equipment";
 
 const ACTIONS = {
   log: restoreLog,
@@ -27,6 +35,7 @@ const ACTIONS = {
   part: restorePart,
   contact: restoreContact,
   attachment: restoreTrashedAttachment,
+  equipment: restoreTrashedEquipment,
 } as const;
 
 /** « Restaurer » (E3-5): `deleted_at = null`, and the parked hour readings come back with it. */

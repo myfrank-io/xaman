@@ -42,3 +42,9 @@ export const restoreEquipmentSchema = z.object({
   boatId: uuid,
   equipmentId: uuid,
 });
+
+// « Supprimer » (D61): the trash, not « Déposer ». No date — it is deleted now.
+export const deleteEquipmentSchema = z.object({
+  boatId: uuid,
+  equipmentId: uuid,
+});

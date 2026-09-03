@@ -53,6 +53,7 @@ export default async function BoatPage({
       .from("equipment")
       .select("id, name, brand, model, quantity, category_id, installed_at, removed_at")
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("sort_order")
       .order("name"),
     supabase

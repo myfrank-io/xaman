@@ -16,7 +16,13 @@ function revalidateBoat(boatId: string) {
 
 /** Every table that has a trash (rule 9, D40). */
 export type Restorable =
-  "maintenance_logs" | "purchases" | "haul_outs" | "parts" | "contacts" | "attachments";
+  | "maintenance_logs"
+  | "purchases"
+  | "haul_outs"
+  | "parts"
+  | "contacts"
+  | "attachments"
+  | "equipment";
 
 // Soft delete only (rule 9): restoring is `deleted_at = null`, nothing is ever re-created.
 // RLS reserves it to owner / editor; a pro never sees the trash.
@@ -97,6 +103,11 @@ export async function restoreTrashedAttachment(input: unknown): Promise<ActionRe
   return restore("attachments", input);
 }
 
+/** D61: « Supprimer » un équipement le met ici, distinct de « Déposer » (removed_at). */
+export async function restoreTrashedEquipment(input: unknown): Promise<ActionResult> {
+  return restore("equipment", input);
+}
+
 export async function purgeLog(input: unknown): Promise<ActionResult> {
   return purge("maintenance_logs", input);
 }
@@ -116,6 +127,11 @@ export async function purgePart(input: unknown): Promise<ActionResult> {
 /** Purging a contact is what fires `on delete set null`: the dialog says so before it happens. */
 export async function purgeContact(input: unknown): Promise<ActionResult> {
   return purge("contacts", input);
+}
+
+/** D61: `maintenance_logs.equipment_id` is `on delete set null`, so history keeps its title. */
+export async function purgeEquipment(input: unknown): Promise<ActionResult> {
+  return purge("equipment", input);
 }
 
 /**
