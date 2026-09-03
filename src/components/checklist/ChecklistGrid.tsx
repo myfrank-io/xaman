@@ -134,7 +134,7 @@ export async function ChecklistGrid({
               .join(" · ")}
             badge={
               category.overdue > 0 ? (
-                <Badge variant="destructive" size="sm">
+                <Badge variant="danger" size="sm">
                   {t("overdue", { count: category.overdue })}
                 </Badge>
               ) : undefined
@@ -172,7 +172,7 @@ export async function ChecklistGrid({
           meta={t("stockParts", { count: stock.total })}
           badge={
             stock.low > 0 ? (
-              <Badge variant="destructive" size="sm">
+              <Badge variant="danger" size="sm">
                 {t("stockLow", { count: stock.low })}
               </Badge>
             ) : undefined

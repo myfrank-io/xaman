@@ -19,7 +19,7 @@
 
   /* --------------------------------------------------- neutrals (hue 215) */
   --n-0: #ffffff; /* cards, sheets, fields                                  */
-  --n-25: #f7f9fb; /* application background        - 1.06:1 vs white       */
+  --n-25: #f6f5f1; /* application background — warm chart paper, not cool   */
   --n-50: #eff3f7; /* secondary surface, muted      - 1.12:1                */
   --n-100: #e3e9f0; /* quiet separator              - 1.22:1                */
   --n-200: #d2dae4; /* default border               - 1.41:1                */
@@ -42,14 +42,25 @@
   /* Brass is a BRAND accent: logo, login screen, empty states, overlines on
      dark. Never on data: never a status, a category or an alert. */
 
-  --header-gradient: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+  --header-gradient:
+    radial-gradient(
+      120% 140% at 100% 0%,
+      color-mix(in oklab, var(--navy-light) 82%, #2c4d78) 0%,
+      transparent 55%
+    ),
+    linear-gradient(150deg, var(--navy-deep) 0%, var(--navy) 42%, var(--navy-light) 100%);
+  /* The signature: a fine brass rule along the bottom of every navy header — the gilt line on
+     a dark logbook cover. Kept low so it reads as a finish, never as an alert. */
+  --brass-hairline: color-mix(in oklab, var(--brass-light) 48%, transparent);
 
   /* ------------------------------------------------------ surfaces / ink */
-  --background: #f7f9fb;
-  --foreground: #0c1b33; /* 16.31:1 on the background                       */
+  /* The canvas is warm chart paper; cards stay pure white on top of it, so an instrument
+     surface reads crisply against the ground the way a chart sits on a table. */
+  --background: #f6f5f1;
+  --foreground: #0c1b33; /* 15.9:1 on the background                        */
   --surface: #ffffff;
-  --surface-2: #eff3f7;
-  --surface-sunken: #f7f9fb;
+  --surface-2: #edece7;
+  --surface-sunken: #f1f0ec;
   --ink-2: #4a5b72; /* secondary text     - 6.57:1 on the background        */
   --ink-3: #63748a; /* meta, placeholder  - 4.53:1 on the background        */
 
@@ -70,7 +81,7 @@
   --border: #d2dae4;
   --border-strong: #b3becc;
   --input: #b3becc; /* field border, deliberately stronger than --border    */
-  --ring: #1d4ed8; /* focus - 6.70:1 on white                               */
+  --ring: #1b5e96; /* focus — marine azure, not the default framework blue   */
 
   --sidebar: #ffffff;
   --sidebar-foreground: #0c1b33;
@@ -79,7 +90,7 @@
   --sidebar-accent: #e3e9f0;
   --sidebar-accent-foreground: #0c1b33;
   --sidebar-border: #d2dae4;
-  --sidebar-ring: #1d4ed8;
+  --sidebar-ring: #1b5e96;
 
   /* ------------------------------------------ surfaces laid on the header */
   --on-navy: #ffffff; /* 17.21:1                                            */
@@ -169,9 +180,15 @@
   --cat-fallback: #63748a; /* category without a colour                     */
 
   /* ------------------------------------------------------- typography */
+  /* Manrope carries the whole UI; the system stack is only the fallback while the face loads
+     or if it ever fails. Fraunces is the display voice — wordmark, big titles, empty states —
+     and falls back to the sans so a screen never loses its hierarchy. */
   --font-family-sans:
-    ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    var(--font-sans-var), ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-family-display:
+    var(--font-display-var), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Times New Roman", serif;
   --font-family-mono:
     ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
@@ -292,6 +309,7 @@
   --radius-2xl: 1.25rem; /* 20 px - sheet, dialog                           */
 
   --font-sans: var(--font-family-sans);
+  --font-display: var(--font-family-display);
   --font-mono: var(--font-family-mono);
 
   --text-overline: var(--fs-overline);
@@ -490,6 +508,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* The display voice, applied by scale rather than by hand: every H1-sized title — the boat
+     name, a screen heading, the login, the report — is set in Fraunces. Numbers keep the sans
+     (`text-display` is a figure, not a title, and is deliberately left out). */
+  .text-h1 {
+    font-family: var(--font-family-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.011em;
+  }
   html {
     /* iOS Safari: prevent text-size inflation and rubber-band overscroll in standalone mode */
     -webkit-text-size-adjust: 100%;
@@ -513,6 +539,12 @@
 
 @utility bg-header-gradient {
   background-image: var(--header-gradient);
+  background-color: var(--navy);
+}
+
+/* The gilt line. Add it to any navy header edge that meets the content below. */
+@utility brass-rule {
+  box-shadow: inset 0 -1px 0 0 var(--brass-hairline);
 }
 
 /*

@@ -7,16 +7,17 @@ import type { Database } from "@/types/database";
 
 export type LogStatus = Database["public"]["Enums"]["log_status"];
 
-// « Le plein est réservé à l'action requise » (art-direction §3.6 rule 2):
-// Urgent and En cours are solid, Planifié and Terminé are tinted.
-// A solid badge is filled with the `-fg` token, the only one that keeps white
-// text above 5:1 (`--status-in-progress` alone gives 3.19:1).
+// One badge language, not two: every status is a tinted chip — soft `-tint` fill, `-fg` text
+// and icon (measured ≥ 5:1 on the tint), a `-border` hairline. A wall of solid red reads as a
+// dashboard in alarm; the tint keeps the instrument calm while the icon, the border and the
+// red figure beside it still carry the urgency. Colour is never alone — the label spells it out.
 // Full class strings so Tailwind can see them (no dynamic class construction).
 const statusClasses: Record<LogStatus, string> = {
   planned: "border-status-planned-border bg-status-planned-tint text-status-planned-fg",
-  in_progress: "border-transparent bg-status-in-progress-fg text-white dark:text-navy",
+  in_progress:
+    "border-status-in-progress-border bg-status-in-progress-tint text-status-in-progress-fg",
   done: "border-status-done-border bg-status-done-tint text-status-done-fg",
-  urgent: "border-transparent bg-status-urgent-fg text-white dark:text-navy",
+  urgent: "border-status-urgent-border bg-status-urgent-tint text-status-urgent-fg",
 };
 
 const statusDotClasses: Record<LogStatus, string> = {

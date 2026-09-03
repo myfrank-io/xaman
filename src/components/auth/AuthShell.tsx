@@ -23,7 +23,7 @@ export async function AuthShell({
 
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="bg-header-gradient px-6 safe-pt-8 pb-10 text-on-navy">
+      <header className="bg-header-gradient px-6 safe-pt-8 pb-10 text-on-navy brass-rule">
         <div className="mx-auto w-full max-w-md">
           <p className="text-overline text-brass-light uppercase">{ta("eyebrow")}</p>
           <Link

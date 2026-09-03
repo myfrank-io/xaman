@@ -16,6 +16,12 @@ const badgeVariants = cva(
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         destructive: "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90",
         outline: "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        // Tinted status chips — the calm counterpart to `destructive`: a soft fill, a coloured
+        // hairline, coloured text (all measured ≥ 5:1 on the tint). A count that reports a
+        // problem without turning the surface into an alarm.
+        danger: "border-danger-border bg-danger-tint text-danger-fg",
+        warning: "border-warning-border bg-warning-tint text-warning-fg",
+        success: "border-success-border bg-success-tint text-success-fg",
       },
       size: {
         /** 12 px — metadata only. */

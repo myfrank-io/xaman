@@ -6,13 +6,15 @@ import { cn } from "@/lib/utils";
 
 export type ChecklistState = "never" | "ok" | "soon" | "overdue";
 
-// Solid for what demands an action (Bientôt, En retard), tinted for the rest.
-// Solid uses the `-fg` token so white text stays above 5:1 (art-direction §7.4).
+// One badge language for every state: a tinted chip (`-tint` fill, `-fg` text/icon ≥ 5:1,
+// `-border` hairline). « En retard » and « Bientôt » no longer shout in solid red across the
+// whole list — the icon, the border and the red figure at the row's end carry the urgency,
+// and the label names the state so colour is never working alone.
 const stateClasses: Record<ChecklistState, string> = {
   never: "border-state-never-border bg-state-never-tint text-state-never-fg",
   ok: "border-state-ok-border bg-state-ok-tint text-state-ok-fg",
-  soon: "border-transparent bg-state-soon-fg text-white dark:text-navy",
-  overdue: "border-transparent bg-state-overdue-fg text-white dark:text-navy",
+  soon: "border-state-soon-border bg-state-soon-tint text-state-soon-fg",
+  overdue: "border-state-overdue-border bg-state-overdue-tint text-state-overdue-fg",
 };
 
 export const stateDotClasses: Record<ChecklistState, string> = {
