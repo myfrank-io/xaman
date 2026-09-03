@@ -28,6 +28,8 @@ const PAGES = [
   "/dev/ui/review",
   "/dev/ui/import",
   "/dev/ui/install",
+  // The account screen had no preview at all until D45 put a password card on it.
+  "/dev/ui/profile",
 ];
 
 const MIN_TARGET = 44;
