@@ -4,10 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { dbErrorKey, fail, ok, type ActionResult } from "@/lib/actions/result";
 import {
-  cellDate,
-  cellNumber,
+  buildDatabaseRow,
   cellText,
-  cellPurchaseKind,
   descriptorOf,
   IMPORT_MAX_ROWS,
   isImportEntity,
@@ -101,88 +99,16 @@ export async function importRows(input: {
     const known = byKey.get(key);
     // A generated id keeps the write idempotent and every object of the batch identical.
     const id = known ?? crypto.randomUUID();
-    const target = known ? updates : creations;
-    const category = categoryByName.get(normaliseHeader(row.category ?? "")) ?? null;
-    // Each table names its subject differently: `name`, `title`, `designation`.
-    const base = {
-      id,
-      boat_id: boatId,
-      notes: cellText(row.notes, 2000),
-      updated_by: userId,
-      ...(known ? {} : { created_by: userId }),
-      ...(descriptor.needsReview ? { needs_review: true } : {}),
-    };
-
-    if (entity === "contacts") {
-      target.push({
-        ...base,
-        name,
-        specialty: cellText(row.specialty, 60),
-        company: cellText(row.company, 120),
-        phone: cellText(row.phone, 40),
-        email: cellText(row.email, 160),
-        address: cellText(row.address, 300),
-      });
-    } else if (entity === "equipment") {
-      const quantity = cellNumber(row.quantity);
-      target.push({
-        ...base,
-        name,
-        category_id: category,
-        brand: cellText(row.brand, 80),
-        model: cellText(row.model, 80),
-        serial: cellText(row.serial, 80),
-        quantity: quantity === null ? 1 : Math.max(0, Math.round(quantity)),
-        installed_at: cellDate(row.installedAt),
-      });
-    } else if (entity === "parts") {
-      const quantity = cellNumber(row.quantity);
-      const minQuantity = cellNumber(row.minQuantity);
-      target.push({
-        ...base,
-        name,
-        reference: cellText(row.reference, 80),
-        quantity: quantity === null ? 0 : Math.max(0, quantity),
-        min_quantity: minQuantity === null ? 0 : Math.max(0, minQuantity),
-        unit: cellText(row.unit, 12) ?? "pc",
-        location: cellText(row.location, 80),
-        category_id: category,
-      });
-    } else if (entity === "logs") {
-      // A provider that matches a contact of the boat is linked; one that matches nothing is
-      // copied into the notes rather than dropped, and the line is « à vérifier » anyway.
-      const provider = cellText(row.provider, 120);
-      const contactId = provider ? (contactByName.get(normaliseHeader(provider)) ?? null) : null;
-      const unmatched = provider && !contactId ? `Prestataire : ${provider}` : null;
-      target.push({
-        ...base,
-        title: name,
-        notes: [base.notes, unmatched].filter(Boolean).join("\n") || null,
-        performed_at: cellDate(row.date),
-        category_id: category,
-        contact_id: contactId,
-        cost: cellNumber(row.cost),
-        external_ref: cellText(row.reference, 120),
-        status: "done",
-      });
-    } else {
-      const quantity = cellNumber(row.quantity);
-      const supplier = cellText(row.supplier, 120);
-      target.push({
-        ...base,
-        designation: name,
-        purchased_at: cellDate(row.date),
-        amount: cellNumber(row.amount),
-        kind: cellPurchaseKind(row.kind),
-        quantity: quantity === null || quantity <= 0 ? 1 : quantity,
-        supplier_name: supplier,
-        supplier_contact_id: supplier
-          ? (contactByName.get(normaliseHeader(supplier)) ?? null)
-          : null,
-        category_id: category,
-        external_ref: cellText(row.reference, 120),
-      });
-    }
+    (known ? updates : creations).push(
+      buildDatabaseRow(entity, row, {
+        id,
+        boatId,
+        userId,
+        isNew: !known,
+        categoryId: categoryByName.get(normaliseHeader(row.category ?? "")) ?? null,
+        contactId: (provider: string) => contactByName.get(normaliseHeader(provider)) ?? null,
+      }),
+    );
 
     // Two lines of the file naming the same thing: the second updates the first, never a
     // duplicate — and the id is now known.

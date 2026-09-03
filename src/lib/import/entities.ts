@@ -427,3 +427,120 @@ export type ImportReport = {
   updated: number;
   rejected: RejectedRow[];
 };
+
+/**
+ * What the Server Action needs from the boat to turn a mapped row into a database row.
+ * Passed in rather than looked up here, so this stays a pure function and can be tested
+ * against the real schema without a session.
+ */
+export type RowContext = {
+  id: string;
+  boatId: string;
+  userId: string | null;
+  /** A creation carries `created_by`; an update must not overwrite it. */
+  isNew: boolean;
+  categoryId: string | null;
+  /** A provider's name → the id of a contact of the boat, or null. */
+  contactId: (name: string) => string | null;
+};
+
+/**
+ * A mapped row becomes the object written to `descriptor.table`.
+ *
+ * Pure and exported on purpose: `tests/unit/import-write.test.ts` writes what this returns
+ * into the real schema. That is how the « Prochaine échéance » column was caught — it had
+ * been removed from `maintenance_logs` by migration 0004, and nothing but a real insert
+ * could have told us.
+ */
+export function buildDatabaseRow(
+  entity: ImportEntity,
+  row: ImportRow,
+  context: RowContext,
+): Record<string, unknown> {
+  const name = cellText(row.name, 120) ?? "";
+  const notes = cellText(row.notes, 2000);
+  // Each table names its subject differently: `name`, `title`, `designation`.
+  const base = {
+    id: context.id,
+    boat_id: context.boatId,
+    notes,
+    updated_by: context.userId,
+    ...(context.isNew ? { created_by: context.userId } : {}),
+    ...(ENTITY_DESCRIPTORS[entity].needsReview ? { needs_review: true } : {}),
+  };
+
+  if (entity === "contacts") {
+    return {
+      ...base,
+      name,
+      specialty: cellText(row.specialty, 60),
+      company: cellText(row.company, 120),
+      phone: cellText(row.phone, 40),
+      email: cellText(row.email, 160),
+      address: cellText(row.address, 300),
+    };
+  }
+
+  if (entity === "equipment") {
+    const quantity = cellNumber(row.quantity);
+    return {
+      ...base,
+      name,
+      category_id: context.categoryId,
+      brand: cellText(row.brand, 80),
+      model: cellText(row.model, 80),
+      serial: cellText(row.serial, 80),
+      quantity: quantity === null ? 1 : Math.max(0, Math.round(quantity)),
+      installed_at: cellDate(row.installedAt),
+    };
+  }
+
+  if (entity === "parts") {
+    const quantity = cellNumber(row.quantity);
+    const minQuantity = cellNumber(row.minQuantity);
+    return {
+      ...base,
+      name,
+      reference: cellText(row.reference, 80),
+      quantity: quantity === null ? 0 : Math.max(0, quantity),
+      min_quantity: minQuantity === null ? 0 : Math.max(0, minQuantity),
+      unit: cellText(row.unit, 12) ?? "pc",
+      location: cellText(row.location, 80),
+      category_id: context.categoryId,
+    };
+  }
+
+  if (entity === "logs") {
+    // A provider that matches a contact of the boat is linked; one that matches nothing is
+    // copied into the notes rather than dropped, and the line is « à vérifier » anyway.
+    const provider = cellText(row.provider, 120);
+    const contactId = provider ? context.contactId(provider) : null;
+    const unmatched = provider && !contactId ? `Prestataire : ${provider}` : null;
+    return {
+      ...base,
+      title: name,
+      notes: [notes, unmatched].filter(Boolean).join("\n") || null,
+      performed_at: cellDate(row.date),
+      category_id: context.categoryId,
+      contact_id: contactId,
+      cost: cellNumber(row.cost),
+      external_ref: cellText(row.reference, 120),
+      status: "done",
+    };
+  }
+
+  const quantity = cellNumber(row.quantity);
+  const supplier = cellText(row.supplier, 120);
+  return {
+    ...base,
+    designation: name,
+    purchased_at: cellDate(row.date),
+    amount: cellNumber(row.amount),
+    kind: cellPurchaseKind(row.kind),
+    quantity: quantity === null || quantity <= 0 ? 1 : quantity,
+    supplier_name: supplier,
+    supplier_contact_id: supplier ? context.contactId(supplier) : null,
+    category_id: context.categoryId,
+    external_ref: cellText(row.reference, 120),
+  };
+}
