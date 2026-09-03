@@ -120,7 +120,7 @@ Règle produit : partout où l'app stocke une liste, on doit pouvoir l'importer.
 - [x] **E12-1 (M, 2)** Moteur d'import : analyse `.csv` / `.tsv` / collage Excel, détection du séparateur, correspondance automatique des colonnes par en-tête (accents et casse ignorés), aperçu des 10 premières lignes, validation zod ligne à ligne, upsert idempotent sur la clé naturelle, rapport « N créées · M mises à jour · K refusées » avec motifs et export CSV des refus.
 - [x] **E12-2 (M, 1)** Écran `/boats/[boatId]/import` + entrée « Importer » sur chaque liste concernée.
 - [x] **E12-3 (M, 1)** Descripteurs : contacts, équipements, pièces en stock.
-- [ ] **E12-4 (S, 1)** Descripteurs : points de checklist, achats / dépenses, interventions du journal, relevés d'heures.
+- [~] **E12-4 (S, 1)** Descripteurs : **interventions** et **achats / dépenses** faits — clé « libellé + date » ou référence du fichier, prestataire rapproché des contacts, tout arrive « à vérifier ». Restent à faire : points de checklist et relevés d'heures, qui demandent l'identité d'un point ou d'un moteur qu'un tableur porte rarement ; à traiter avec l'assistant de mise en route plutôt qu'avec l'import générique.
 - [x] **E12-5 (S, 1)** Fichiers `.xlsx` (analyseur chargé à la demande, hors du bundle principal).
 - [x] **E12-6 (S, 1)** Contacts depuis une fiche `.vcf` (carnet d'adresses iOS / Android exporté).
 - [x] **E12-7 (C, 1)** Modèle vierge téléchargeable par entité (les bons en-têtes, une ligne d'exemple).
