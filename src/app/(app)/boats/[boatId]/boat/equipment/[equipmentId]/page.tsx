@@ -28,6 +28,7 @@ export default async function EquipmentPage({
       .select("*, boat_categories(id, name, color)")
       .eq("id", equipmentId)
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase

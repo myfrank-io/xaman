@@ -1545,6 +1545,95 @@ describe("trash for parts and contacts (0012)", () => {
   });
 });
 
+describe("trash for equipment (0014)", () => {
+  const EQUIP = "00000000-0000-0000-0000-00000000f001";
+
+  it("owner and editor may trash and restore; pro, viewer and stranger may not", async () => {
+    const trash = (u: User) =>
+      run(u, "update public.equipment set deleted_at = now() where id = $1", [EQUIP]);
+    const restore = (u: User) =>
+      run(u, "update public.equipment set deleted_at = null where id = $1", [EQUIP]);
+
+    expect(await trash(U.owner)).toEqual({ ok: true, rowCount: 1 });
+    expect(await trash(U.editor)).toEqual({ ok: true, rowCount: 1 });
+    expect(await trash(U.admin)).toEqual({ ok: true, rowCount: 1 });
+    // A pro or a viewer has no update right on equipment: zero rows, not an error.
+    expect(await trash(U.pro)).toEqual({ ok: true, rowCount: 0 });
+    expect(await trash(U.viewer)).toEqual({ ok: true, rowCount: 0 });
+    expect(await trash(U.stranger)).toEqual({ ok: true, rowCount: 0 });
+
+    expect(await restore(U.owner)).toEqual({ ok: true, rowCount: 1 });
+    expect(await restore(U.editor)).toEqual({ ok: true, rowCount: 1 });
+    expect(await restore(U.pro)).toEqual({ ok: true, rowCount: 0 });
+    expect(await restore(U.viewer)).toEqual({ ok: true, rowCount: 0 });
+  });
+
+  it("a trashed equipment is still readable by every member", async () => {
+    const seen = async (u: User) =>
+      as(u, async (c) => {
+        await c.query("set local role service_role");
+        await c.query("update public.equipment set deleted_at = now() where id = $1", [EQUIP]);
+        await c.query("set local role authenticated");
+        const res = await c.query("select count(*)::int as n from public.equipment where id = $1", [
+          EQUIP,
+        ]);
+        return Number(res.rows[0]?.n);
+      });
+    // The trash screen is a plain select with `deleted_at is not null`: no policy hides the row.
+    expect(await seen(U.owner)).toBe(1);
+    expect(await seen(U.editor)).toBe(1);
+    expect(await seen(U.stranger)).toBe(0);
+    expect(await count(null, "equipment")).toBe(-1);
+  });
+
+  it("purge_trash removes equipment past 30 days, and nothing younger", async () => {
+    const result = await as(null, async (c) => {
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.equipment set deleted_at = now() - interval '31 days' where id = $1",
+        [EQUIP],
+      );
+      const fresh = await c.query(
+        "insert into public.equipment (boat_id, name, deleted_at, created_by) values ($1, 'Hier', now() - interval '1 day', $2) returning id",
+        [BOAT, U.owner.id],
+      );
+      await c.query("select public.purge_trash()");
+      const left = await c.query(
+        `select
+           (select count(*)::int from public.equipment where id = $1) as equip,
+           (select count(*)::int from public.equipment where id = $2) as fresh_equip`,
+        [EQUIP, fresh.rows[0].id],
+      );
+      return left.rows[0] as Record<string, number>;
+    });
+    expect(result.equip).toBe(0);
+    expect(result.fresh_equip).toBe(1);
+  });
+
+  it("purging an equipment leaves the history and only severs the link", async () => {
+    const after = await as(U.owner, async (c) => {
+      await c.query("update public.maintenance_logs set equipment_id = $2 where id = $1", [
+        LOG_OWNER,
+        EQUIP,
+      ]);
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.equipment set deleted_at = now() - interval '31 days' where id = $1",
+        [EQUIP],
+      );
+      await c.query("select public.purge_trash()");
+      const res = await c.query(
+        "select title, equipment_id from public.maintenance_logs where id = $1",
+        [LOG_OWNER],
+      );
+      return res.rows[0] as { title: string; equipment_id: string | null };
+    });
+    // `on delete set null`: the intervention survives, only the pointer goes.
+    expect(after.title).toBeTruthy();
+    expect(after.equipment_id).toBeNull();
+  });
+});
+
 /**
  * D42 — why a Server Action never upserts a row it knows already exists.
  *

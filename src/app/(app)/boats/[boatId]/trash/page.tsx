@@ -44,9 +44,11 @@ function daysLeft(deletedAt: string): number {
  * intervenants and documents — soft-deleted less than 30 days ago. The toast that carried
  * « Annuler » is gone by now; this screen is the real safety net.
  *
- * What is deliberately absent: a system, a point de checklist, a moteur and un équipement are
- * archived rather than deleted and come back from their own screen; removing a member is not
- * deleting data, and their interventions stay in the logbook.
+ * Un équipement supprimé arrive ici comme le reste (D61) ; « Déposer » (le sortir du bateau, il
+ * reste consultable) est un autre geste, sur sa fiche. What stays deliberately absent: a system,
+ * a point de checklist and un moteur are archived rather than deleted and come back from their
+ * own screen; removing a member is not deleting data, and their interventions stay in the
+ * logbook.
  */
 export default async function TrashPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
@@ -63,6 +65,7 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
     { data: parts },
     { data: contacts },
     { data: attachments },
+    { data: equipment },
   ] = await Promise.all([
     supabase
       .from("maintenance_logs_trash_view")
@@ -100,6 +103,13 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
     supabase
       .from("attachments")
       .select("id, file_name, caption, entity_type, deleted_at")
+      .eq("boat_id", boatId)
+      .not("deleted_at", "is", null)
+      .gt("deleted_at", since)
+      .order("deleted_at", { ascending: false }),
+    supabase
+      .from("equipment")
+      .select("id, name, brand, model, deleted_at")
       .eq("boat_id", boatId)
       .not("deleted_at", "is", null)
       .gt("deleted_at", since)
@@ -167,6 +177,14 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
     deletedAt: row.deleted_at ?? "",
     deletedByName: null,
   }));
+  const equipmentEntries: TrashEntry[] = (equipment ?? []).map((row) => ({
+    id: row.id,
+    title: row.name,
+    meta: [row.brand, row.model].filter(Boolean).join(" "),
+    amount: null,
+    deletedAt: row.deleted_at ?? "",
+    deletedByName: null,
+  }));
 
   const sections: { key: TrashKind; title: string; entries: TrashEntry[] }[] = [
     { key: "log", title: t("sections.logs"), entries: logEntries },
@@ -174,6 +192,7 @@ export default async function TrashPage({ params }: { params: Promise<{ boatId: 
     { key: "haulOut", title: t("sections.haulOuts"), entries: haulOutEntries },
     { key: "part", title: t("sections.parts"), entries: partEntries },
     { key: "contact", title: t("sections.contacts"), entries: contactEntries },
+    { key: "equipment", title: t("sections.equipment"), entries: equipmentEntries },
     { key: "attachment", title: t("sections.attachments"), entries: attachmentEntries },
   ];
   const total = sections.reduce((sum, section) => sum + section.entries.length, 0);

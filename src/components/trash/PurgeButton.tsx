@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   purgeAttachment,
   purgeContact,
+  purgeEquipment,
   purgeHaulOut,
   purgeLog,
   purgePart,
@@ -26,6 +27,7 @@ const ACTIONS = {
   part: purgePart,
   contact: purgeContact,
   attachment: purgeAttachment,
+  equipment: purgeEquipment,
 } as const;
 
 /**

@@ -6,13 +6,15 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ChevronLeftIcon, PencilIcon, PlusIcon } from "lucide-react";
+import { ChevronLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ListRow } from "@/components/common/ListRow";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatusBadge, type LogStatus } from "@/components/common/StatusBadge";
+import { undoToast } from "@/components/common/UndoToast";
 import { Field } from "@/components/forms/Field";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -27,7 +29,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { removeEquipment, restoreEquipment } from "@/lib/actions/equipment";
+import { deleteEquipment, removeEquipment, restoreEquipment } from "@/lib/actions/equipment";
+import { restoreTrashedEquipment } from "@/lib/actions/trash";
 import { formatCurrency, formatDate, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatTabPath, editEquipmentPath, logPath, newLogPath } from "@/lib/queries/boat-routes";
@@ -76,6 +79,7 @@ export function EquipmentSheet({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [removing, setRemoving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [removedAt, setRemovedAt] = useState(() => todayString());
 
   const subtitle = [
@@ -108,6 +112,33 @@ export function EquipmentSheet({
         return;
       }
       toast.success(t("restored"));
+      router.refresh();
+    });
+  }
+
+  function trash() {
+    startTransition(async () => {
+      const result = await deleteEquipment({ boatId, equipmentId: item.id });
+      if (!result.ok) {
+        toast.error(errorMessage(result.error));
+        return;
+      }
+      setDeleting(false);
+      undoToast({
+        message: t("trash.done"),
+        undoLabel: t("trash.undo"),
+        onUndo: () => {
+          void restoreTrashedEquipment({ boatId, id: item.id }).then((undo) => {
+            if (!undo.ok) {
+              toast.error(errorMessage(undo.error));
+              return;
+            }
+            toast.success(t("trash.restored"));
+            router.refresh();
+          });
+        },
+      });
+      router.push(boatTabPath(boatId, "equipment") as Parameters<typeof router.push>[0]);
       router.refresh();
     });
   }
@@ -155,6 +186,10 @@ export function EquipmentSheet({
                     {t("remove")}
                   </Button>
                 )}
+                <Button type="button" variant="ghost" onClick={() => setDeleting(true)}>
+                  <Trash2Icon />
+                  {t("trash.action")}
+                </Button>
               </>
             ) : undefined
           }
@@ -260,6 +295,16 @@ export function EquipmentSheet({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={t("trash.title")}
+        description={t("trash.description", { name: item.name })}
+        confirmLabel={t("trash.confirm")}
+        pending={pending}
+        onConfirm={trash}
+      />
     </div>
   );
 }

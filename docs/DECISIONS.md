@@ -558,3 +558,35 @@ besoin du carnet natif ; c'était un problème de visibilité, pas de capacité 
 
 `tests/e2e/contact-picker.spec.ts` vérifie désormais aussi que la légende **ne** renvoie **pas**
 vers « Feature Flags » — c'est l'assertion qui manquait.
+
+## 2026-09-03 — D62 : l'équipement rejoint la corbeille (supprimer ≠ déposer)
+
+**Question.** « On ne peut supprimer aucun équipement. » Un équipement créé par erreur (un
+« Test ») restait à l'inventaire sans issue : la fiche n'offrait que « Déposer » — poser
+`removed_at`, qui sort la pièce du bateau mais garde sa fiche pour l'historique. Aucune façon
+d'annuler une création.
+
+**Constat.** La corbeille de D40/D41 couvrait tout ce que l'application peut retirer —
+interventions, achats, sorties de l'eau, pièces de stock, intervenants, documents — et laissait
+délibérément l'équipement de côté, au motif qu'un équipement s'archive (se dépose), il ne se
+supprime pas. C'est vrai d'une pièce réelle ; ça n'offre aucune sortie pour une faute de frappe.
+Les pièces détachées avaient fait exactement ce pas en 0012.
+
+**Décision.** L'équipement reçoit le même traitement (migration `0014_equipment_trash.sql`), et
+garde « Déposer » à côté pour le cas réel. Deux colonnes, deux sens :
+
+- `removed_at` (« Déposé le ») = la pièce quitte physiquement le bateau, sa fiche et son
+  historique restent à l'inventaire, on pourra la remettre à bord.
+- `deleted_at` (la corbeille) = suppression d'une création erronée, 30 jours puis purge
+  définitive (`purge_trash`), restaurable entre-temps.
+
+Une pièce peut être déposée puis, plus tard, supprimée : les deux dates ne se recouvrent pas.
+
+La fiche gagne un bouton « Mettre à la corbeille » (fantôme, `Trash2Icon`) à côté de
+« Modifier » et « Déposer / Remettre à bord », avec confirmation et `undoToast` — le même geste
+que pour une intervention (`LogActions`). `maintenance_logs.equipment_id` étant en
+`on delete set null`, purger un équipement coupe le lien mais laisse l'historique intact.
+
+`tests/unit/rls.test.ts` couvre l'équipement supprimé comme les pièces : qui peut le mettre à la
+corbeille et le restaurer, sa lisibilité par tout membre, la purge à 30 jours, et l'historique
+préservé après purge.

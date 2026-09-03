@@ -1125,6 +1125,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           external_ref: string | null
           id: string
           installed_at: string | null
@@ -1145,6 +1146,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           external_ref?: string | null
           id?: string
           installed_at?: string | null
@@ -1165,6 +1167,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           external_ref?: string | null
           id?: string
           installed_at?: string | null

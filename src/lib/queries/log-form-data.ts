@@ -65,6 +65,7 @@ export async function logFormData(
       .from("equipment")
       .select("id, name, brand, removed_at")
       .eq("boat_id", boatId)
+      .is("deleted_at", null)
       .order("name"),
     supabase
       .from("haul_outs")

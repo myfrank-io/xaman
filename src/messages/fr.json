@@ -595,6 +595,7 @@
       "haulOuts": "Sorties de l'eau",
       "parts": "Pièces détachées",
       "contacts": "Intervenants",
+      "equipment": "Équipements",
       "attachments": "Photos et documents"
     },
     "restored": "Élément restauré",
@@ -1065,6 +1066,15 @@
     "restore": "Remettre à bord",
     "restored": "Équipement remis à bord",
     "removed": "Équipement déposé",
+    "trash": {
+      "action": "Mettre à la corbeille",
+      "title": "Mettre cet équipement à la corbeille ?",
+      "description": "« {name} » restera 30 jours dans la corbeille. Sa fiche et son historique d'interventions restent consultables, et l'équipement pourra être restauré.",
+      "confirm": "Mettre à la corbeille",
+      "done": "Équipement mis à la corbeille",
+      "undo": "Annuler",
+      "restored": "Équipement restauré"
+    },
     "saved": "Équipement enregistré",
     "installedOn": "installé le {date}",
     "quantityShort": "× {count}",
