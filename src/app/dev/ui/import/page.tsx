@@ -96,6 +96,7 @@ export default async function DevImportPage() {
             entity="contacts"
             backHref="/dev/ui"
             backLabel={t("back.contacts")}
+            catalog={{ specialties: ["Accastilleur", "Peintre"] }}
           />
         </section>
       </div>

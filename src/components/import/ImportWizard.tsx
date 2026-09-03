@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/common/EmptyState";
+import { specialtyOptions } from "@/components/contacts/specialties";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,9 @@ import { templateCsv, templateFileName } from "@/lib/import/template";
 import { parseContactCards, isContactCardFile } from "@/lib/import/vcard";
 import { isLegacyExcelFile, isSpreadsheetFile, readWorkbook, type Sheet } from "@/lib/import/xlsx";
 import { cn } from "@/lib/utils";
+
+/** « Autre » chip: never the empty string, which Radix reads as « nothing selected ». */
+const OTHER_TRADE = "__other__";
 
 const PREVIEW_ROWS = 8;
 const NO_FIELD = "";
@@ -256,6 +260,17 @@ export function ImportWizard({
   }
 
   const defaultFields = useMemo(() => fields.filter((field) => field.allowDefault), [fields]);
+  const tc = useTranslations("contacts.specialties");
+  /**
+   * A trade is chosen, not spelled (D44): the seven built-ins plus every trade this boat
+   * already uses, and « Autre » to name a new one — the same list the contact form offers,
+   * from the same reader, so the two screens can never disagree.
+   */
+  const specialtyChips = useMemo(
+    () => specialtyOptions((key) => tc(key), catalog?.specialties ?? []),
+    [tc, catalog?.specialties],
+  );
+  const chipsFor = (key: string): string[] => (key === "specialty" ? specialtyChips : []);
   const missing = useMemo(
     () => missingRequired(fields, mapping, defaults),
     [fields, mapping, defaults],
@@ -548,22 +563,64 @@ export function ImportWizard({
                   <p className="text-caption text-ink-2">{t("mapping.defaultsHelp")}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {defaultFields.map((field) => (
-                    <div key={field.key} className="flex flex-col gap-1.5">
-                      <Label htmlFor={`default-${field.key}`}>{field.label}</Label>
-                      <Input
-                        id={`default-${field.key}`}
-                        value={defaults[field.key] ?? ""}
-                        placeholder={t("mapping.defaultValue")}
-                        autoComplete="off"
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          setDefaults((current) => ({ ...current, [field.key]: value }));
-                          setReport(null);
-                        }}
-                      />
-                    </div>
-                  ))}
+                  {defaultFields.map((field) => {
+                    const chips = chipsFor(field.key);
+                    const current = defaults[field.key] ?? "";
+                    const listed = chips.includes(current);
+                    const setValue = (value: string) => {
+                      setDefaults((state) => ({ ...state, [field.key]: value }));
+                      setReport(null);
+                    };
+                    // A field with a known list is picked from it; « Autre » opens the box that
+                    // names a new one, exactly as the contact form does (D44).
+                    if (chips.length > 0) {
+                      return (
+                        <div key={field.key} className="flex flex-col gap-2 sm:col-span-2">
+                          <Label>{field.label}</Label>
+                          <ToggleGroup
+                            type="single"
+                            value={listed ? current : current === "" ? "" : OTHER_TRADE}
+                            onValueChange={(value) => {
+                              if (value === "") return;
+                              setValue(value === OTHER_TRADE ? "" : value);
+                            }}
+                            className="flex flex-wrap gap-2"
+                          >
+                            {chips.map((chip) => (
+                              <ToggleGroupItem key={chip} value={chip} className="min-h-11">
+                                {chip}
+                              </ToggleGroupItem>
+                            ))}
+                            <ToggleGroupItem value={OTHER_TRADE} className="min-h-11">
+                              {tc("other")}
+                            </ToggleGroupItem>
+                          </ToggleGroup>
+                          {!listed ? (
+                            <Input
+                              id={`default-${field.key}`}
+                              value={current}
+                              placeholder={t("mapping.newSpecialty")}
+                              autoComplete="off"
+                              autoCapitalize="sentences"
+                              onChange={(event) => setValue(event.target.value)}
+                            />
+                          ) : null}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={field.key} className="flex flex-col gap-1.5">
+                        <Label htmlFor={`default-${field.key}`}>{field.label}</Label>
+                        <Input
+                          id={`default-${field.key}`}
+                          value={current}
+                          placeholder={t("mapping.defaultValue")}
+                          autoComplete="off"
+                          onChange={(event) => setValue(event.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}

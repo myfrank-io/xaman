@@ -1612,7 +1612,8 @@
       "unmapped": "Champs sans colonne : {fields}.",
       "defaults": "Valeurs pour tout le fichier",
       "defaultsHelp": "Écrites dans les lignes où la cellule est vide. Une fiche de contact ne porte pas de métier : il se saisit ici, une fois pour toutes.",
-      "defaultValue": "Valeur par défaut"
+      "defaultValue": "Valeur par défaut",
+      "newSpecialty": "Nommer une nouvelle spécialité"
     },
     "preview": {
       "title": "{count, plural, one {# ligne détectée} other {# lignes détectées}}",
