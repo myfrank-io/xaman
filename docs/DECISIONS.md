@@ -524,3 +524,24 @@ l'objection au bouton mort ne s'y applique pas.
 Règle générale qui en sort : **le silence n'est pas une réponse acceptable pour une capacité
 absente.** Si l'application ne peut pas faire quelque chose sur cet appareil, elle le dit à
 l'endroit où on la cherche.
+
+## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
+
+**Question.** « Je suis sûr que c'est faux, il y a plein de solutions pour importer des contacts
+directement. » La légende de D60 conseillait `Réglages › Safari › Avancé › Feature Flags ›
+Contact Picker API`.
+
+**Vérifié.** Le fait technique de D52/D57 tient : `navigator.contacts.select()` n'existe que sur
+Chromium/Android et sur Safari iOS derrière un drapeau expérimental ; aucune API web (Contact
+Picker **ni** Web Share Target) ne lit le carnet d'adresses depuis Safari iOS standard. Il n'y a
+donc pas d'API manquée. Mais **le conseil de D60 était faible** : nommer un drapeau WebKit
+expérimental (instable, qui saute entre versions d'iOS) à un propriétaire non technique, c'est du
+théâtre — personne ne l'activera, et ce n'était pas la vraie réponse à son besoin.
+
+**Décision.** La légende ne pointe plus vers le drapeau. Elle nomme les voies **réellement**
+universelles, qui existent déjà : saisir le prestataire à la main sur le formulaire, ou importer
+sa fiche `.vcf` / la liste depuis un tableur. « Ne jamais retaper un prestataire » n'a jamais eu
+besoin du carnet natif ; c'était un problème de visibilité, pas de capacité manquante.
+
+`tests/e2e/contact-picker.spec.ts` vérifie désormais aussi que la légende **ne** renvoie **pas**
+vers « Feature Flags » — c'est l'assertion qui manquait.
