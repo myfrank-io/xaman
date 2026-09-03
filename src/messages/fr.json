@@ -4,12 +4,6 @@
     "tagline": "Carnet d'entretien numérique et partagé pour bateaux",
     "eyebrow": "Carnet d'entretien"
   },
-  "home": {
-    "eyebrow": "Carnet d'entretien",
-    "title": "Xaman",
-    "subtitle": "Le carnet d'entretien numérique et partagé de votre bateau.",
-    "status": "L'application est en cours de construction. La connexion sera disponible prochainement."
-  },
   "common": {
     "loading": "Chargement…",
     "save": "Enregistrer",
@@ -457,7 +451,27 @@
     "backOnline": "De nouveau en ligne",
     "refresh": "Actualiser",
     "pendingWrites": "{count, plural, one {# modification non enregistrée} other {# modifications non enregistrées}}",
-    "retryLabel": "Hors ligne — réessayer"
+    "retryLabel": "Hors ligne — réessayer",
+    "savedOnDevice": "Enregistré sur l'iPad. À renvoyer quand le réseau revient.",
+    "queueFull": "20 saisies attendent déjà sur l'iPad. Renvoyez-les avant d'en ajouter une autre.",
+    "saveOnDevice": "Enregistrer sur l'appareil",
+    "outbox": {
+      "title": "{count, plural, one {# saisie en attente} other {# saisies en attente}}",
+      "help": "Ces lignes sont sur l'iPad, pas encore sur le serveur. Renvoyez-les dès que le réseau revient.",
+      "full": "La file est pleine ({limit} saisies). Renvoyez-les avant d'en ajouter une autre.",
+      "send": "Tout renvoyer",
+      "waiting": "Sans réseau",
+      "sent": "{count, plural, one {# saisie envoyée} other {# saisies envoyées}}.",
+      "failed": "{count, plural, one {# saisie n'est pas passée} other {# saisies ne sont pas passées}}. Elles restent sur l'iPad.",
+      "discard": "Supprimer : {label}",
+      "discarded": "Saisie supprimée de l'iPad.",
+      "kinds": {
+        "log": "Intervention",
+        "purchase": "Achat",
+        "part": "Pièce",
+        "completion": "Point coché"
+      }
+    }
   },
   "trash": {
     "title": "Corbeille",

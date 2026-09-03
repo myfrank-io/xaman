@@ -13,6 +13,7 @@ import { ProgressBar } from "@/components/common/ProgressBar";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatCard } from "@/components/common/StatCard";
 import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
+import { OutboxCard } from "@/components/offline/OutboxCard";
 import { DashboardBanner } from "@/components/dashboard/DashboardBanner";
 import { EngineStrip } from "@/components/dashboard/EngineStrip";
 import { UpcomingList, type UpcomingEntry } from "@/components/dashboard/UpcomingList";
@@ -242,6 +243,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
 
   return (
     <div className="flex flex-col gap-6">
+      {/* 0 — what is on the iPad and not yet on the server comes before anything else (E9-1b) */}
+      <OutboxCard boatId={boatId} />
       {/* 1 — dark header: identity, state, 4 tiles, engine strip */}
       <header className="-mx-4 -mt-4 bg-header-gradient px-4 pt-5 pb-4 text-on-navy sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">

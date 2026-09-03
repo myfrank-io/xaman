@@ -19,8 +19,11 @@ import { formResolver } from "@/components/forms/form-resolver";
 import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useDraft } from "@/components/forms/use-draft";
 import { useFieldError } from "@/components/forms/use-field-error";
+import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { ChecklistMatches } from "@/components/logs/ChecklistMatches";
+import { useOutbox } from "@/components/offline/use-outbox";
+import { useOnline } from "@/components/common/use-online";
 import { EngineHoursSection } from "@/components/logs/EngineHoursSection";
 import { TitleSuggestions } from "@/components/logs/TitleSuggestions";
 import { useTitleSuggestions } from "@/components/logs/use-title-suggestions";
@@ -101,9 +104,12 @@ export function LogForm({
   const tc = useTranslations("common");
   const ts = useTranslations("logStatus");
   const errorMessage = useErrorMessage();
+  const to = useTranslations("offline");
   const fieldError = useFieldError();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const outbox = useOutbox(boatId);
+  const { online } = useOnline();
   const [newId] = useState(() => crypto.randomUUID());
 
   const initialHours = engines.map((engine) => ({
@@ -229,11 +235,33 @@ export function LogForm({
   function onSubmit(values: LogOutput) {
     setServerError(null);
     startTransition(async () => {
-      const result = await saveLog(values);
-      if (!result.ok) {
-        setServerError(errorMessage(result.error));
+      // A new intervention typed at sea is kept on the iPad rather than lost (E9-1b, D25);
+      // an edit is sent or it fails, because replaying it later could overwrite a colleague.
+      const outcome = await submitOrQueue({
+        kind: "log",
+        boatId,
+        id: values.id,
+        label: values.title,
+        values,
+        action: saveLog,
+        enqueue: outbox.enqueue,
+        online: online || Boolean(log),
+      });
+      if (outcome.status === "full") {
+        setServerError(to("queueFull"));
         return;
       }
+      if (outcome.status === "queued") {
+        draft.clear();
+        toast.success(to("savedOnDevice"));
+        router.push(logsPath(boatId) as Parameters<typeof router.push>[0]);
+        return;
+      }
+      if (outcome.status === "refused") {
+        setServerError(errorMessage(outcome.error));
+        return;
+      }
+      const result = { ok: true as const, data: outcome.data };
       draft.clear();
       const reading = result.data.readings[0];
       const engine = reading ? engines.find((row) => row.id === reading.engineId) : undefined;
@@ -544,6 +572,7 @@ export function LogForm({
 
       <FormActionBar
         pending={pending}
+        queueable={!log}
         onCancel={() =>
           guard.leave(() => {
             draft.clear();

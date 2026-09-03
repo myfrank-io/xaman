@@ -17,7 +17,10 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { formResolver } from "@/components/forms/form-resolver";
 import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
+import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
+import { useOnline } from "@/components/common/use-online";
+import { useOutbox } from "@/components/offline/use-outbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericField } from "@/components/ui/numeric-field";
@@ -79,10 +82,13 @@ export function PartForm({
   const t = useTranslations("supplies.stock");
   const tu = useTranslations("supplies.stock.units");
   const errorMessage = useErrorMessage();
+  const to = useTranslations("offline");
   const fieldError = useFieldError();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [newId] = useState(() => crypto.randomUUID());
+  const outbox = useOutbox(boatId);
+  const { online } = useOnline();
 
   const form = useForm<PartFormState, unknown, PartOutput>({
     resolver: formResolver<PartFormState, PartOutput>(upsertPartSchema),
@@ -117,12 +123,25 @@ export function PartForm({
 
   function onSubmit(values: PartOutput) {
     startTransition(async () => {
-      const result = await upsertPart(values);
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
+      const outcome = await submitOrQueue({
+        kind: "part",
+        boatId,
+        id: values.id,
+        label: values.name,
+        values,
+        action: upsertPart,
+        enqueue: outbox.enqueue,
+        online: online || Boolean(part),
+      });
+      if (outcome.status === "full") {
+        toast.error(to("queueFull"));
         return;
       }
-      toast.success(t("saved"));
+      if (outcome.status === "refused") {
+        toast.error(errorMessage(outcome.error));
+        return;
+      }
+      toast.success(outcome.status === "queued" ? to("savedOnDevice") : t("saved"));
       router.push(backHref as Parameters<typeof router.push>[0]);
       router.refresh();
     });
@@ -276,6 +295,7 @@ export function PartForm({
       <p className="text-caption text-ink-3">{t("checkedHelp")}</p>
       <FormActionBar
         pending={pending}
+        queueable={!part}
         onCancel={() =>
           guard.leave(() => router.push(backHref as Parameters<typeof router.push>[0]))
         }
