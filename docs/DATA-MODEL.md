@@ -482,16 +482,30 @@ create function accept_invitation(p_token text) returns uuid ...;
 --  * p_engine_id non null → ne (re)génère que les points de ce moteur (action « Générer les points de ce moteur »).
 create function apply_checklist_template(p_boat_id uuid, p_template_id uuid, p_engine_id uuid default null) returns void ...;
 
--- Ouverture d'un carnet (security definer, D64) : crée le bateau, inscrit l'appelant comme owner,
--- crée ses moteurs puis instancie le modèle — dans la même transaction.
+-- Ouverture d'un carnet (security definer, D65) : crée le bateau à partir de SON IDENTITÉ, inscrit
+-- l'appelant comme owner, crée ses moteurs et copie les systèmes de la coque — même transaction.
+--  * identité et plan d'entretien sont deux questions (D65) : aucun modèle ici, et
+--    `checklist_template_id` reste **null** — c'est le marqueur « pas encore de plan » que
+--    l'écran Checklist lit pour proposer le choix ;
+--  * builder et model sont du texte libre : un bateau dont le constructeur ne publie rien
+--    s'écrit quand même exactement ;
+--  * les catégories sont copiées du modèle générique de la coque (`generic_template_for_boat_type`)
+--    car un bateau sans `boat_categories` est inutilisable (catégorie obligatoire à la saisie,
+--    `checklist_items.category_id` en `on delete restrict`) ;
 --  * idempotente sur p_boat_id : un rejeu par le même owner renvoie le bateau sans rien changer
 --    (double tap = un seul carnet) ; tout autre id existant lève `forbidden` ;
---  * le modèle est obligatoire et doit être `is_public` (ou l'appelant admin) : aucun bateau vide ;
---  * type, builder et model sont recopiés du modèle (l'identité reste éditable ensuite) ;
---  * p_engines = [{label, position}] (6 max) créés AVANT le modèle, sans quoi les points à
---    intervalle en heures — qui sont tous `engine_scope <> 'none'` — ne seraient pas générés ;
+--  * p_engines = [{label, position}] (6 max) créés à la création, sans quoi un plan choisi plus
+--    tard n'aurait aucun point à intervalle en heures (tous `engine_scope <> 'none'`) ;
 --  * plafond de 20 bateaux possédés (`boat_limit`), garde-fou que « seul l'admin crée » assurait.
-create function create_boat(p_boat_id uuid, p_name text, p_template_id uuid, p_engines jsonb default '[]') returns uuid ...;
+create function create_boat(p_boat_id uuid, p_name text, p_type boat_type, p_builder text default null, p_model text default null, p_engines jsonb default '[]') returns uuid ...;
+
+-- Les systèmes d'un bateau sans plan d'entretien (D65) : copie les seules catégories d'un modèle.
+-- Même clé de conflit que `apply_checklist_template`, donc un plan choisi ensuite les relie au
+-- lieu de les dupliquer, et un renommage fait entre-temps survit.
+create function apply_template_categories(p_boat_id uuid, p_template_id uuid) returns int ...;
+
+-- Le modèle générique décrivant une coque (D65) : trimaran → catamaran, semi-rigide → moteur.
+create function generic_template_for_boat_type(p_type boat_type) returns uuid ...;
 
 -- Validation d'une ligne importée (owner/editor) : needs_review = false et, si pending_engine_hours non null,
 -- crée un engine_hour_readings (source 'import') par moteur avec p_hours_override (jsonb, optionnel) pour corriger,
@@ -540,7 +554,7 @@ Les tables sans contribution `pro` (`purchases`, `parts`, `haul_outs`, `contacts
 
 Cas particuliers :
 - `profiles` : select pour soi-même et pour les profils partageant au moins un bateau avec soi (nécessaire pour afficher « qui a fait » ; un `pro` voit donc les noms des co-membres mais pas la page Membres — accepté, documenté) ; update soi-même uniquement ; `revoke update (is_platform_admin) on profiles from authenticated`.
-- `boats` : select `is_boat_member(id)` ; insert `is_platform_admin()` — **la table reste fermée**, la création d'un bateau par son propriétaire passe par `create_boat` (D64, `0015`), seule porte qui garantit qu'un bateau naît toujours avec son owner et sa checklist ; update `can_write_boat(id)` ; delete `is_boat_owner(id)`.
+- `boats` : select `is_boat_member(id)` ; insert `is_platform_admin()` — **la table reste fermée**, la création d'un bateau par son propriétaire passe par `create_boat` (D65, `0015` + `0017`), seule porte qui garantit qu'un bateau naît toujours avec son owner et ses systèmes ; update `can_write_boat(id)` ; delete `is_boat_owner(id)`.
 - `boat_members` : select `can_write_boat(boat_id)` (owner + editor voient la liste) **ou** `user_id = auth.uid()` (sa propre ligne) ; insert/update/delete `is_boat_owner(boat_id)` (+ trigger dernier owner).
 - `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.

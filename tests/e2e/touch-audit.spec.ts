@@ -38,6 +38,8 @@ const PAGES = [
   // The first screen of anyone who signs up without an invitation (D64), and one nobody on the
   // team can reach any more: every account here already has a boat.
   "/dev/ui/boats/new",
+  // The second half of the split onboarding (D65): only ever seen on a brand-new boat.
+  "/dev/ui/checklist-plan",
   "/dev/ui/members",
   "/dev/ui/report",
   "/dev/ui/reset-password",
