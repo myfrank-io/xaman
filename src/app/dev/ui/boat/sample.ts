@@ -8,6 +8,7 @@ import type {
 } from "@/components/engines/EngineSheet";
 import type { EngineSummary } from "@/components/engines/EnginesTab";
 import type { CategorySummary, EquipmentSummary } from "@/components/equipment/EquipmentTab";
+import type { BoatModelOption } from "@/lib/boat-models";
 
 import { DEV_BOAT_ID } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
@@ -21,6 +22,7 @@ export const SAMPLE_BOAT: Boat = {
   builder: "Marsaudon Composites",
   model: "ORC 50",
   hull_number: "25",
+  registration: "HY 512340",
   year: 2019,
   type: "catamaran",
   flag: "France",
@@ -324,5 +326,68 @@ export const SAMPLE_CATEGORY_ROWS: CategoryRow[] = [
     isActive: false,
     activeItems: 0,
     updatedAt: NOW,
+  },
+];
+
+/**
+ * A slice of the model catalogue (D69), enough to exercise every branch of the suggestions:
+ * two yards sharing a model name, a row with no draft because the series has two keels, and one
+ * with nothing but a length.
+ */
+export const SAMPLE_BOAT_MODELS: BoatModelOption[] = [
+  {
+    id: "00000000-0000-4000-8000-0000000000b0",
+    builder: "Marsaudon Composites",
+    model: "ORC 50",
+    boatType: "catamaran",
+    yearFrom: 2017,
+    yearTo: null,
+    lengthM: 15.24,
+    beamM: 8.2,
+    draftM: 1.35,
+  },
+  {
+    id: "00000000-0000-4000-8000-0000000000b1",
+    builder: "Bénéteau",
+    model: "Oceanis 46.1",
+    boatType: "monohull_sail",
+    yearFrom: 2018,
+    yearTo: null,
+    lengthM: 14.6,
+    beamM: 4.5,
+    draftM: null,
+  },
+  {
+    id: "00000000-0000-4000-8000-0000000000b2",
+    builder: "Bénéteau",
+    model: "First 40",
+    boatType: "monohull_sail",
+    yearFrom: 2010,
+    yearTo: 2015,
+    lengthM: 12.0,
+    beamM: 3.85,
+    draftM: null,
+  },
+  {
+    id: "00000000-0000-4000-8000-0000000000b3",
+    builder: "Lagoon",
+    model: "Lagoon 42",
+    boatType: "catamaran",
+    yearFrom: 2016,
+    yearTo: null,
+    lengthM: 12.8,
+    beamM: 7.7,
+    draftM: 1.25,
+  },
+  {
+    id: "00000000-0000-4000-8000-0000000000b4",
+    builder: "Jeanneau",
+    model: "Merry Fisher 795",
+    boatType: "motor",
+    yearFrom: 2019,
+    yearTo: null,
+    lengthM: 7.6,
+    beamM: null,
+    draftM: null,
   },
 ];

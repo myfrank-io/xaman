@@ -19,14 +19,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createBoat } from "@/lib/actions/boat";
 import {
+  builderSuggestions,
+  findModel,
+  findModelById,
+  modelSuggestions,
+  type BoatModelOption,
+} from "@/lib/boat-models";
+import {
   ENGINE_COUNT_CHOICES,
   TENDER_CHOICES,
   asksAboutTender,
-  builderSuggestions,
   defaultEngineCount,
-  modelSuggestions,
   newBoatEngines,
-  type TemplateOption,
   type TenderChoice,
 } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -38,7 +42,7 @@ import { boatTypeSchema, createBoatSchema } from "@/lib/schemas/boat";
  * field: it is built at submit time from the count and the hull, so what the person answers is
  * « combien » and what the server gets is a list of engines with their positions.
  */
-const newBoatFormSchema = createBoatSchema.omit({ engines: true });
+const newBoatFormSchema = createBoatSchema.omit({ engines: true, boatModelId: true });
 type NewBoatOutput = z.output<typeof newBoatFormSchema>;
 
 type NewBoatFormState = {
@@ -61,14 +65,16 @@ type NewBoatFormState = {
  * to file their boat under « générique » at sign-up. Constructeur and Modèle are free text with
  * suggestions: a Neel 47 is written as a Neel 47 even though we have no Neel plan.
  *
- * The hull type is the one thing the server needs, because it is what gives the boat its eight
- * systems — and it also pre-sets the engine count, so the common case costs no tap at all.
+ * The suggestions come from the catalogue of production models (D69), so tapping « Lagoon 42 »
+ * writes the yard, sets the hull type, sets the number of engines that hull usually carries and
+ * hands the server the dimensions — four fields for one tap. Nothing is locked by it: every field
+ * stays editable, and a boat the catalogue has never heard of is created exactly the same way.
  *
  * This is the only step that can be reached without a boat, and the only one that writes one. It
  * therefore ends the moment `create_boat` answers: everything after it happens inside a carnet
  * that exists, which is what makes steps 2 and 3 resumable from their own address.
  */
-export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
+export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
   const t = useTranslations("boats.new");
   const tb = useTranslations("boatType");
   const te = useTranslations("engines.onboarding");
@@ -100,13 +106,13 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
   const builder = useWatch({ control: form.control, name: "builder" });
   const model = useWatch({ control: form.control, name: "model" });
 
-  const builders = useMemo(() => builderSuggestions(templates, builder), [templates, builder]);
-  const models = useMemo(
-    () => modelSuggestions(templates, builder, model),
-    [templates, builder, model],
+  const builders = useMemo(() => builderSuggestions(models, builder), [models, builder]);
+  const suggestedModels = useMemo(
+    () => modelSuggestions(models, builder, model),
+    [models, builder, model],
   );
 
-  function chooseType(next: string) {
+  function setType(next: string) {
     form.setValue("type", next, { shouldValidate: form.formState.isSubmitted });
     // The hull knows how many engines it usually carries. A count already corrected by hand is
     // never overwritten.
@@ -116,11 +122,28 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
     }
   }
 
+  /**
+   * A tapped model says more than the type toggle does, so it sets the toggle rather than being
+   * checked against it — and it fills the yard, which is what saves the second field.
+   */
+  function pickModel(id: string) {
+    const row = findModelById(models, id);
+    if (!row) return;
+    form.setValue("model", row.model, { shouldDirty: true });
+    form.setValue("builder", row.builder, { shouldDirty: true });
+    setType(row.boatType);
+  }
+
   function onSubmit(values: NewBoatOutput) {
     const count = Number(form.getValues("engineCount"));
+    // Resolved from the text rather than remembered from the tap: someone who typed « Lagoon 42 »
+    // in full named the same boat as someone who tapped it, and an edit after a tap simply stops
+    // matching. Nothing to keep in sync, nothing to go stale.
+    const known = findModel(models, values.builder ?? "", values.model ?? "");
     startTransition(async () => {
       const result = await createBoat({
         ...values,
+        boatModelId: known?.id ?? null,
         engines: newBoatEngines(
           count,
           values.type,
@@ -162,6 +185,66 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         />
       </Field>
 
+      <div className="flex flex-col gap-2">
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* The chips sit under the field rather than inside it: `help` is the line the anatomy
+              reserves for « Facultatif », and burying it below a row of chips left it floating at
+              the bottom of a column stretched by the other one. */}
+          <div className="flex flex-col gap-2">
+            <Field
+              id="boat-builder"
+              label={t("builder")}
+              help={t("optional")}
+              error={fieldError(errors.builder)}
+            >
+              <Input
+                id="boat-builder"
+                autoCapitalize="words"
+                autoComplete="off"
+                enterKeyHint="next"
+                placeholder={t(`examples.${type}.builder` as "examples.other.builder")}
+                {...form.register("builder")}
+              />
+            </Field>
+            {/* Its own accessible name: a `<ul aria-label="Constructeur">` beside an input of
+                that name gives a screen reader two different things under one label. */}
+            <SuggestionChips
+              options={builders}
+              label={t("builderSuggestions")}
+              onPick={(option) => form.setValue("builder", option.key, { shouldDirty: true })}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Field
+              id="boat-model"
+              label={t("model")}
+              help={t("optional")}
+              error={fieldError(errors.model)}
+            >
+              <Input
+                id="boat-model"
+                autoCapitalize="words"
+                autoComplete="off"
+                enterKeyHint="next"
+                placeholder={t(`examples.${type}.model` as "examples.other.model")}
+                {...form.register("model")}
+              />
+            </Field>
+            <SuggestionChips
+              options={suggestedModels}
+              label={t("modelSuggestions")}
+              onPick={(option) => pickModel(option.key)}
+            />
+          </div>
+        </div>
+        {/* Said once for the pair rather than twice side by side. */}
+        <p className="text-caption text-ink-3">{t("identityHelp")}</p>
+      </div>
+
+      {/* After the model, not before it: tapping « Lagoon 42 » answers this question, so what is
+          left here is a confirmation. Asking first would have made the tap look like it overrode
+          something the person had just chosen. */}
       <Field id="boat-type" label={t("type")} help={t("typeHelp")} error={fieldError(errors.type)}>
         <Controller
           control={form.control}
@@ -171,7 +254,7 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
               type="single"
               value={field.value}
               aria-label={t("type")}
-              onValueChange={(next) => next && chooseType(next)}
+              onValueChange={(next) => next && setType(next)}
             >
               {boatTypeSchema.options.map((option) => (
                 <ToggleGroupItem key={option} value={option} id={`boat-type-${option}`}>
@@ -182,58 +265,6 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
           )}
         />
       </Field>
-
-      <div className="flex flex-col gap-2">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field
-            id="boat-builder"
-            label={t("builder")}
-            help={t("optional")}
-            error={fieldError(errors.builder)}
-          >
-            <div className="flex flex-col gap-2">
-              <Input
-                id="boat-builder"
-                autoCapitalize="words"
-                autoComplete="off"
-                enterKeyHint="next"
-                placeholder={t(`examples.${type}.builder` as "examples.other.builder")}
-                {...form.register("builder")}
-              />
-              <SuggestionChips
-                options={builders}
-                label={t("builder")}
-                onPick={(value) => form.setValue("builder", value, { shouldDirty: true })}
-              />
-            </div>
-          </Field>
-
-          <Field
-            id="boat-model"
-            label={t("model")}
-            help={t("optional")}
-            error={fieldError(errors.model)}
-          >
-            <div className="flex flex-col gap-2">
-              <Input
-                id="boat-model"
-                autoCapitalize="words"
-                autoComplete="off"
-                enterKeyHint="next"
-                placeholder={t(`examples.${type}.model` as "examples.other.model")}
-                {...form.register("model")}
-              />
-              <SuggestionChips
-                options={models}
-                label={t("model")}
-                onPick={(value) => form.setValue("model", value, { shouldDirty: true })}
-              />
-            </div>
-          </Field>
-        </div>
-        {/* Said once for the pair rather than twice side by side. */}
-        <p className="text-caption text-ink-3">{t("identityHelp")}</p>
-      </div>
 
       <Field id="boat-engines-1" label={t("engines")} help={t("enginesHelp")}>
         <Controller

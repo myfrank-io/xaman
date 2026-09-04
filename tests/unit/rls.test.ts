@@ -310,6 +310,49 @@ describe("insert", () => {
     expect((await run(U.admin, sql, ["t-admin"])).ok).toBe(true);
     expect((await run(U.owner, sql, ["t-owner"])).ok).toBe(false);
   });
+
+  // D69, migration 0019. A published catalogue: it holds nobody's data, so it carries no boat_id
+  // and everyone signed in reads it — but only the platform admin decides what it contains.
+  it("boat models: written by the platform admin only", async () => {
+    const sql =
+      "insert into public.boat_models (external_ref, builder, model, boat_type) values ($1, 'Chantier', 'M', 'motor')";
+    expect((await run(U.admin, sql, ["bm-admin"])).ok, "admin").toBe(true);
+    expect((await run(U.owner, sql, ["bm-owner"])).ok, "owner").toBe(false);
+    expect((await run(U.viewer, sql, ["bm-viewer"])).ok, "viewer").toBe(false);
+    expect((await run(U.stranger, sql, ["bm-stranger"])).ok, "stranger").toBe(false);
+    expect(await count(null, "boat_models")).toBe(-1);
+  });
+
+  /**
+   * Read side, in one transaction so the rows written here are the rows read back: an active model
+   * is the same catalogue for everyone signed in, and a model retired from seed/boat-models.json
+   * — deactivated by the data migration, never deleted — stops being suggested. The query in
+   * `src/lib/queries/boat-models.ts` knows nothing about `is_active`; this policy is what hides it.
+   */
+  it("boat models: active rows are public, deactivated ones are the admin's alone", async () => {
+    const seen = await as(U.admin, async (c) => {
+      await c.query(
+        `insert into public.boat_models (external_ref, builder, model, boat_type, is_active) values
+           ('bm-live', 'Chantier', 'Publié', 'motor', true),
+           ('bm-retired', 'Chantier', 'Retiré', 'motor', false)`,
+      );
+      const refs = async () => {
+        const res = await c.query(
+          "select external_ref from public.boat_models where external_ref like 'bm-%' order by external_ref",
+        );
+        return res.rows.map((r) => (r as { external_ref: string }).external_ref);
+      };
+      const admin = await refs();
+      // Same transaction, another identity — exactly what PostgREST does per request.
+      await c.query("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: U.stranger.id, email: U.stranger.email, role: "authenticated" }),
+      ]);
+      return { admin, stranger: await refs() };
+    });
+
+    expect(seen.admin).toEqual(["bm-live", "bm-retired"]);
+    expect(seen.stranger).toEqual(["bm-live"]);
+  });
 });
 
 /**
@@ -439,6 +482,70 @@ describe("create_boat", () => {
     expect(out.plan).not.toBeNull();
     // 70 template points, 10 of them engine-scoped: 9 inboard × 2 engines, 1 outboard skipped.
     expect(Number(out.items)).toBe(78);
+  });
+
+  /**
+   * D69. Tapping « Lagoon 42 » in the suggestions is worth more than the two words it types: the
+   * catalogue already knows the hull's dimensions, and the boat opens carrying them.
+   *
+   * The client sends the row's id, never the measurements — so what is stored is what the
+   * catalogue says, and an id naming nothing (or naming a retired row) is ignored rather than
+   * fatal: a boat must open whatever happens to the catalogue.
+   */
+  it("copies the dimensions of the model that was tapped, and only those", async () => {
+    const LIVE = "00000000-0000-0000-0000-0000000000c1";
+    const RETIRED = "00000000-0000-0000-0000-0000000000c2";
+    const UNKNOWN = "00000000-0000-0000-0000-0000000000c9";
+
+    const out = await as(U.admin, async (c) => {
+      await c.query(
+        `insert into public.boat_models (id, external_ref, builder, model, boat_type, length_m, beam_m, draft_m, is_active) values
+           ($1, 'bm-lagoon-42', 'Lagoon', 'Lagoon 42', 'catamaran', 12.80, 7.70, 1.25, true),
+           ($2, 'bm-gone', 'Chantier', 'Retiré', 'catamaran', 9.99, 4.44, 1.11, false)`,
+        [LIVE, RETIRED],
+      );
+      await c.query("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: U.stranger.id, email: U.stranger.email, role: "authenticated" }),
+      ]);
+
+      const open = async (boatId: string, modelId: string | null) => {
+        await c.query(
+          "select public.create_boat($1::uuid, $2, 'catamaran'::public.boat_type, $3, $4, '[]'::jsonb, $5::uuid)",
+          [boatId, "Bateau", "Écrit à la main", "42 à moi", modelId],
+        );
+        const res = await c.query(
+          "select builder, model, length_m, beam_m, draft_m from public.boats where id = $1",
+          [boatId],
+        );
+        return res.rows[0] as {
+          builder: string;
+          model: string;
+          length_m: string | null;
+          beam_m: string | null;
+          draft_m: string | null;
+        };
+      };
+
+      return {
+        tapped: await open("00000000-0000-0000-0000-00000000b0f2", LIVE),
+        retired: await open("00000000-0000-0000-0000-00000000b0f3", RETIRED),
+        unknown: await open("00000000-0000-0000-0000-00000000b0f4", UNKNOWN),
+        typed: await open("00000000-0000-0000-0000-00000000b0f5", null),
+      };
+    });
+
+    expect(Number(out.tapped.length_m)).toBe(12.8);
+    expect(Number(out.tapped.beam_m)).toBe(7.7);
+    expect(Number(out.tapped.draft_m)).toBe(1.25);
+    // The visible fields stay what the form shows: the catalogue never overwrites an edit.
+    expect(out.tapped.builder).toBe("Écrit à la main");
+    expect(out.tapped.model).toBe("42 à moi");
+
+    for (const boat of [out.retired, out.unknown, out.typed]) {
+      expect(boat.length_m).toBeNull();
+      expect(boat.beam_m).toBeNull();
+      expect(boat.draft_m).toBeNull();
+    }
   });
 
   // Rule 11 / D18: the form draws the id when it opens, so the second tap of a double tap is

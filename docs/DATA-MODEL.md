@@ -104,7 +104,8 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | name | text | not null | « Xaman » |
 | builder | text | | « Marsaudon Composites » |
 | model | text | | « ORC 50 » |
-| hull_number | text | | « 25 » |
+| hull_number | text | | numéro de série du chantier — « 25 » |
+| registration | text | | immatriculation délivrée par les affaires maritimes (D69, `0018`). Texte libre : aucune liste de référence, aucun registre consultable. Distincte de `hull_number` et de `sail_number` |
 | year | int | | |
 | type | boat_type | not null default 'monohull_sail' | |
 | flag | text | | pavillon |
@@ -117,6 +118,29 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | external_ref | text | unique, null | clé d'idempotence du seed (`xaman`) |
 | created_by / updated_by | uuid | FK profiles | |
 | created_at / updated_at | timestamptz | | |
+
+### 3.4 bis `boat_models` — catalogue de modèles (D69, `0019`)
+
+Table de **référence**, pas une table métier : **pas de `boat_id`** (elle ne porte la donnée de
+personne), comme `checklist_templates`. Lisible par tout compte connecté quand `is_active`, écrite
+par le seul admin plateforme. Source : `seed/boat-models.json` → `pnpm gen:boat-models` → migration `0020`
+(596 modèles, 63 chantiers au premier chargement).
+
+| Colonne | Type | Contraintes | Notes |
+|---|---|---|---|
+| id | uuid | PK | |
+| external_ref | text | not null unique | clé d'upsert, dérivée du couple — `beneteau-oceanis-40-1` |
+| builder | text | not null | « Bénéteau » |
+| model | text | not null | « Oceanis 40.1 » — sans le chantier |
+| boat_type | boat_type | not null | |
+| year_from / year_to | int | check `year_to >= year_from` | `year_to` null = encore produit |
+| length_m / beam_m / draft_m | numeric(5,2) | null | **indicatives, souvent nulles** : un nom de modèle ne détermine pas une coque (« Oceanis 40 » = 11,80 à 12,15 m selon l'année et la quille). Une valeur non confirmée par deux écritures indépendantes est laissée nulle |
+| is_active | boolean | not null default true | un modèle retiré du JSON est désactivé, jamais supprimé |
+| created_at / updated_at | timestamptz | | |
+| UNIQUE | (builder, model) | | |
+
+Consommé par `create_boat(p_boat_model_id)` (`0021`), qui en copie **les dimensions et rien
+d'autre** : nom, type, constructeur et modèle restent ce que le formulaire affiche.
 
 ### 3.5 `boat_members`
 
@@ -558,6 +582,7 @@ Cas particuliers :
 - `boat_members` : select `can_write_boat(boat_id)` (owner + editor voient la liste) **ou** `user_id = auth.uid()` (sa propre ligne) ; insert/update/delete `is_boat_owner(boat_id)` (+ trigger dernier owner).
 - `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.
+- `boat_models` : select tout utilisateur authentifié où `is_active` (ou `is_platform_admin()`) ; write `is_platform_admin()`. Catalogue publié, sans `boat_id` : aucune donnée de locataire à cloisonner.
 - `organizations*` : V1, select/write `is_platform_admin()` uniquement.
 - Storage bucket `boat-files` (privé) : policies sur le préfixe `boats/{boat_id}/` avec les mêmes fonctions (select membre ; insert contribute ; delete write). Depuis `0011` le bucket porte aussi `file_size_limit = 10 Mo` et `allowed_mime_types = {image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf}` : un client cassé ne peut pas écrire ce que la table refuserait. Les URL sont **signées** (1 h), jamais publiques.
 - Vues : toutes en `security_invoker = true` ; elles n'ont pas de politique propre, la RLS des tables s'applique.

@@ -312,6 +312,54 @@ export type Database = {
           },
         ]
       }
+      boat_models: {
+        Row: {
+          beam_m: number | null
+          boat_type: Database["public"]["Enums"]["boat_type"]
+          builder: string
+          created_at: string
+          draft_m: number | null
+          external_ref: string
+          id: string
+          is_active: boolean
+          length_m: number | null
+          model: string
+          updated_at: string
+          year_from: number | null
+          year_to: number | null
+        }
+        Insert: {
+          beam_m?: number | null
+          boat_type: Database["public"]["Enums"]["boat_type"]
+          builder: string
+          created_at?: string
+          draft_m?: number | null
+          external_ref: string
+          id?: string
+          is_active?: boolean
+          length_m?: number | null
+          model: string
+          updated_at?: string
+          year_from?: number | null
+          year_to?: number | null
+        }
+        Update: {
+          beam_m?: number | null
+          boat_type?: Database["public"]["Enums"]["boat_type"]
+          builder?: string
+          created_at?: string
+          draft_m?: number | null
+          external_ref?: string
+          id?: string
+          is_active?: boolean
+          length_m?: number | null
+          model?: string
+          updated_at?: string
+          year_from?: number | null
+          year_to?: number | null
+        }
+        Relationships: []
+      }
       boats: {
         Row: {
           beam_m: number | null
@@ -331,6 +379,7 @@ export type Database = {
           notes: string | null
           organization_id: string | null
           photo_path: string | null
+          registration: string | null
           sail_number: string | null
           type: Database["public"]["Enums"]["boat_type"]
           updated_at: string
@@ -355,6 +404,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string | null
           photo_path?: string | null
+          registration?: string | null
           sail_number?: string | null
           type?: Database["public"]["Enums"]["boat_type"]
           updated_at?: string
@@ -379,6 +429,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string | null
           photo_path?: string | null
+          registration?: string | null
           sail_number?: string | null
           type?: Database["public"]["Enums"]["boat_type"]
           updated_at?: string
@@ -2360,6 +2411,7 @@ export type Database = {
       create_boat: {
         Args: {
           p_boat_id: string
+          p_boat_model_id?: string
           p_builder?: string
           p_engines?: Json
           p_model?: string

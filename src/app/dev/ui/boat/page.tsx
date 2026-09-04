@@ -9,6 +9,7 @@ import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import { SAMPLE_PARTS } from "../supplies/sample";
 import {
   SAMPLE_BOAT,
+  SAMPLE_BOAT_MODELS,
   SAMPLE_ENGINES,
   SAMPLE_EQUIPMENT,
   SAMPLE_EQUIPMENT_CATEGORIES,
@@ -29,7 +30,12 @@ export default async function DevBoatPage({
   return (
     <DevShell>
       <div className="flex flex-col gap-6">
-        <BoatIdentity boat={SAMPLE_BOAT} canEdit templateName="ORC 50 (Marsaudon)" />
+        <BoatIdentity
+          boat={SAMPLE_BOAT}
+          canEdit
+          templateName="ORC 50 (Marsaudon)"
+          models={SAMPLE_BOAT_MODELS}
+        />
         <BoatTabs
           boatId={DEV_BOAT_ID}
           active={only ?? "engines"}

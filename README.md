@@ -31,6 +31,13 @@ Le schéma vit dans `supabase/migrations/` (jamais de modification manuelle en p
 - Pile Supabase locale (Docker) : `supabase start`, puis `pnpm db:reset` (migrations + `supabase/seed.sql`), `pnpm db:types` pour régénérer `src/types/database.ts`.
 - Sans Docker : un PostgreSQL 16 sur `127.0.0.1:54322` (utilisateur `postgres`) et le shim `tests/support/supabase-shim.sql` (rôles `anon` / `authenticated` / `service_role`, `auth.uid()`, tables Storage). Créer une base, appliquer le shim puis les migrations dans l'ordre, puis `supabase/seed.sql`. Types : `pnpm db:types:url` (via postgres-meta, `DATABASE_URL` requis).
 
+### Contenu publié (catalogue et modèles génériques)
+Deux jeux de données sont livrés par des **migrations générées**, parce que la production ne joue
+jamais le script de seed : les modèles de checklist génériques (`seed/generic-checklists.json` →
+`pnpm gen:templates` → `0016`) et le catalogue de modèles de série
+(`seed/boat-models.json` → `pnpm gen:boat-models` → `0020`). Le JSON est le fichier qu'on modifie ;
+le SQL se régénère, et les tests de parité échouent si les deux divergent.
+
 ### Données Xaman
 `pnpm seed:xaman` charge `seed/*.json` (modèle ORC 50, bateau, moteurs, équipements, intervenants, historique du carnet avec les lignes « à vérifier »). Idempotent : deux exécutions donnent le même résultat. Avec `NEXT_PUBLIC_SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`, les comptes sont créés par invitation Supabase Auth ; sinon directement dans `auth.users` (local seulement).
 
