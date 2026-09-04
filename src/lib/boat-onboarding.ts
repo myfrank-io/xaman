@@ -1,3 +1,4 @@
+import { boatPath, importDocumentsPath, importPath } from "@/lib/queries/boat-routes";
 import type { BoatType } from "@/lib/schemas/boat";
 import type { EnginePosition } from "@/lib/schemas/engines";
 
@@ -142,4 +143,42 @@ function unique(values: (string | null)[]): string[] {
     if (trimmed) seen.add(trimmed);
   }
   return [...seen].sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+/**
+ * « J'ai déjà un carnet » (D66).
+ *
+ * Almost nobody starts from nothing: there is a booklet in the chart table, a spreadsheet on a
+ * laptop, or a folder of invoices. Asked here, in one pre-set toggle, the answer is worth more
+ * than anywhere else — it decides the screen the carnet opens on, so the history is loaded while
+ * the person is still in the mood to load it, instead of being found six screens away in a month.
+ *
+ * The question is about the **format**, never about the content: each format has one reader in
+ * the app already, and this simply names it.
+ */
+export const EXISTING_LOG_FORMATS = ["none", "spreadsheet", "paper"] as const;
+export type ExistingLogFormat = (typeof EXISTING_LOG_FORMATS)[number];
+
+export function isExistingLogFormat(value: string): value is ExistingLogFormat {
+  return (EXISTING_LOG_FORMATS as readonly string[]).includes(value);
+}
+
+/**
+ * Where « Ouvrir le carnet » lands, given the format.
+ *
+ * - a spreadsheet — Excel, `.csv`, or the export of another app, which is always one of the two —
+ *   goes to the interventions import (E12-1): the file, then « Importer », and the whole history
+ *   is in, every line flagged « à vérifier » so nothing imported is taken for gospel (D10);
+ * - paper goes to the document import (E10-1): the pages and the invoices are photographed, and
+ *   each photo becomes an intervention to complete rather than a line to retype;
+ * - « rien à reprendre » goes where the creation always went, the dashboard, whose « carnet neuf »
+ *   block takes it from there.
+ *
+ * `from=new` is not decoration: it tells the import screen that the way back is the dashboard of
+ * a boat created seconds ago, not the list of a carnet the person has never seen.
+ */
+export function existingLogDestination(format: ExistingLogFormat, boatId: string): string {
+  if (format === "spreadsheet") return importPath(boatId, "logs", { from: "new" });
+  if (format === "paper") return importDocumentsPath(boatId, { from: "new" });
+  return boatPath(boatId, "dashboard");
 }

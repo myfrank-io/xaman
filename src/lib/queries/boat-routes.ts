@@ -69,8 +69,11 @@ export function logsPath(
  * « Importer des documents » (E10-1): a batch of invoices and photos dropped at once, each
  * attached to an intervention or turned into one.
  */
-export function importDocumentsPath(boatId: string): string {
-  return `${boatPath(boatId, "logs")}/documents`;
+export function importDocumentsPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`${boatPath(boatId, "logs")}/documents`, query);
 }
 
 /** « Reprise du carnet » (E3-7): the guided review of the imported rows. */
@@ -186,8 +189,9 @@ export function editPartPath(boatId: string, partId: string): string {
 export function importPath(
   boatId: string,
   entity: "logs" | "purchases" | "contacts" | "equipment" | "parts" | "completions" | "readings",
+  query?: Record<string, string | number | undefined>,
 ): string {
-  return withQuery(`/boats/${boatId}/import`, { entity });
+  return withQuery(`/boats/${boatId}/import`, { entity, ...query });
 }
 
 export function boatTabPath(

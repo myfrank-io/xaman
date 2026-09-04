@@ -125,6 +125,7 @@ Règle produit : partout où l'app stocke une liste, on doit pouvoir l'importer.
 - [x] **E12-5 (S, 1)** Fichiers `.xlsx` (analyseur chargé à la demande, hors du bundle principal).
 - [x] **E12-6 (S, 1)** Contacts depuis une fiche `.vcf` (carnet d'adresses iOS / Android exporté).
 - [x] **E12-7 (C, 1)** Modèle vierge téléchargeable par entité (les bons en-têtes, une ligne d'exemple).
+- [x] **E12-8 (S, 1)** « Vous avez déjà un carnet d'entretien ? » sur `/boats/new` (D66) : puces *Rien à reprendre* / *Excel ou CSV* / *Papier ou photos*, pré-réglées sur la première ; le format choisi décide de l'écran sur lequel le carnet s'ouvre — import des interventions (E12-1), import de documents (E10-1) ou tableau de bord — et le bouton devient « Ouvrir le carnet et importer ». `from=new` renvoie l'assistant vers le tableau de bord du bateau tout neuf.
 
 ## E13 — Reprises d'interface signalées à l'usage
 
