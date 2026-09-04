@@ -123,8 +123,8 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 
 Table de **référence**, pas une table métier : **pas de `boat_id`** (elle ne porte la donnée de
 personne), comme `checklist_templates`. Lisible par tout compte connecté quand `is_active`, écrite
-par le seul admin plateforme. Source : `seed/boat-models.json` → `scripts/gen-boat-models-migration.mjs`
-→ migration `0020`.
+par le seul admin plateforme. Source : `seed/boat-models.json` → `pnpm gen:boat-models` → migration `0020`
+(596 modèles, 63 chantiers au premier chargement).
 
 | Colonne | Type | Contraintes | Notes |
 |---|---|---|---|

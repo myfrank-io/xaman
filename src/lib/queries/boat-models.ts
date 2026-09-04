@@ -6,8 +6,10 @@ import type { Database } from "@/types/database";
 /**
  * The whole catalogue, once (0019, 0020).
  *
- * A few hundred rows of six short columns — small enough to hand to the client in one go and
- * match there, which is what lets a chip appear on the keystroke rather than after a round trip.
+ * The whole catalogue goes to the client in one go and is matched there, which is what lets a chip
+ * appear on the keystroke rather than after a round trip. Measured at 596 models: 109 KB of JSON,
+ * 7.7 KB over the wire once compressed. Dropping the three dimensions — which only the Bateau
+ * screen reads — would save 4.5 KB of that, and is not worth two shapes of the same query.
  * `boat_models_select` shows only active rows to anyone but the platform admin, so a model retired
  * from `seed/boat-models.json` stops being suggested without the query knowing anything about it.
  */

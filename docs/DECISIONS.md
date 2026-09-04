@@ -936,18 +936,37 @@ puce écrit le chantier, règle le type de coque, en déduit le nombre de moteur
 dimensions — quatre champs pour un geste. Le type de coque est passé **après** constructeur et
 modèle : la puce y répond, il ne reste qu'à confirmer.
 
+**Ce que le catalogue contient**, à la première charge : **596 modèles, 63 chantiers** — 340
+monocoques à voile, 105 catamarans, 96 bateaux à moteur, 49 semi-rigides, 6 trimarans. 109 Ko de
+JSON, 7,7 Ko une fois compressés : le tout part au client d'un coup et la recherche se fait là,
+ce qui fait apparaître une puce à la frappe plutôt qu'après un aller-retour.
+
 **Les dimensions ne sont pas fiables, et le disent.** Un nom de modèle ne détermine pas une coque :
 « Oceanis 40 » couvre des certificats ORC de 1991 à 2020 mesurant de 11,80 m à 12,15 m, et la
 plupart des séries existent en deux versions de quille. Chaque ligne a donc été écrite **deux fois,
 indépendamment** ; une dimension sur laquelle les deux passages ne s'accordaient pas à 25–35 cm
 près est laissée **nulle** plutôt que moyennée en mensonge plausible, et un modèle qu'un seul
-passage connaissait est écarté. Côté app, un modèle ne remplit **que les champs restés vides** —
+passage connaissait est écarté. Sur 1 248 candidats, 596 ont survécu à l'accord ; 16 ont été
+écartés pour longueurs divergentes, et le tirant d'eau est nul sur 591 lignes — c'est la
+conséquence assumée d'avoir demandé de l'omettre dès que la série existe en plusieurs quilles. Côté app, un modèle ne remplit **que les champs restés vides** —
 jamais une mesure prise sur le bateau.
 
 **Le client envoie une référence, pas des mesures.** `create_boat` reçoit `p_boat_model_id`
 (migration `0021`) et lit lui-même les dimensions ; un id inconnu ou désactivé est ignoré, jamais
 fatal. Nom, type, constructeur et modèle restent ce que le formulaire affiche : la fonction
 n'écrase pas un champ que la personne vient de corriger.
+
+**Ce qu'il manque encore, et qui se comble par le JSON.** Un agent critique a relu le catalogue :
+absents ou sous-représentés, le milieu de gamme moteur italien (Cranchi, Sessa, Rio, Invictus), le
+gros motoryacht de Côte d'Azur (Sunseeker, Princess, Fairline, Riva), la vague day-boat (Pardo,
+De Antonio, Saxdor, Fjord), les bateaux typés méditerranéens (Sasga Menorquin, llaüts, gozzi), et
+tout un pan de semi-rigides italiens (Zar Formenti, Sacs, Pirelli). Aucune annexe pliable non plus,
+alors que c'est un équipement dont on tient l'entretien. Ça s'ajoute au JSON, ça ne demande pas de
+code.
+
+Deux corrections tirées de cette relecture ont été appliquées : « Targa » est écrit **Botnia
+Targa** (sinon il se range dans la même liste que la gamme Targa de Fairline) et « Valiant » est
+écrit **Valiant Boats** (les semi-rigides, homonymes des monocoques de Valiant Yachts).
 
 **Ce qui reste à faire, et qui ne coûte pas une ligne de code** : demander à Xav une photo de son
 certificat d'enregistrement. La lecture du certificat est la seule piste d'auto-remplissage

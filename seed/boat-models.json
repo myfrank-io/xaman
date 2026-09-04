@@ -1,0 +1,4563 @@
+{
+  "models": [
+    {
+      "builder": "Absolute",
+      "model": "47 Fly",
+      "boatType": "motor",
+      "lengthM": 14.6,
+      "beamM": 4.43
+    },
+    {
+      "builder": "Absolute",
+      "model": "Navetta 48",
+      "boatType": "motor",
+      "lengthM": 14.9,
+      "beamM": 4.53
+    },
+    {
+      "builder": "Absolute",
+      "model": "52 Fly",
+      "boatType": "motor",
+      "lengthM": 15.88,
+      "beamM": 4.65
+    },
+    {
+      "builder": "Absolute",
+      "model": "Navetta 52",
+      "boatType": "motor",
+      "lengthM": 16.08,
+      "beamM": 4.8
+    },
+    {
+      "builder": "Absolute",
+      "model": "Navetta 58",
+      "boatType": "motor",
+      "lengthM": 17.7,
+      "beamM": 5
+    },
+    {
+      "builder": "Absolute",
+      "model": "58 Fly",
+      "boatType": "motor",
+      "lengthM": 17.9,
+      "beamM": 4.93
+    },
+    {
+      "builder": "Absolute",
+      "model": "60 Fly",
+      "boatType": "motor",
+      "lengthM": 18.5,
+      "beamM": 5
+    },
+    {
+      "builder": "Absolute",
+      "model": "Navetta 64",
+      "boatType": "motor",
+      "lengthM": 19.5,
+      "beamM": 5.3
+    },
+    {
+      "builder": "Allures",
+      "model": "39.9",
+      "boatType": "monohull_sail",
+      "lengthM": 12.09,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Allures",
+      "model": "40.9",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 12.36,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Allures",
+      "model": "44",
+      "boatType": "monohull_sail",
+      "yearFrom": 2006,
+      "lengthM": 13.35,
+      "beamM": 4.28
+    },
+    {
+      "builder": "Allures",
+      "model": "45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 13.83,
+      "beamM": 4.4
+    },
+    {
+      "builder": "Allures",
+      "model": "45.9",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 13.99,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Allures",
+      "model": "51",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 15.58,
+      "beamM": 4.72
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 32",
+      "boatType": "monohull_sail",
+      "lengthM": 9.75,
+      "beamM": 3.35
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 345",
+      "boatType": "monohull_sail",
+      "lengthM": 10.38,
+      "beamM": 3.58
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 365",
+      "boatType": "monohull_sail",
+      "lengthM": 11.13,
+      "beamM": 3.8
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 370",
+      "boatType": "monohull_sail",
+      "lengthM": 11.35,
+      "beamM": 3.95
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 385",
+      "boatType": "monohull_sail",
+      "lengthM": 11.65,
+      "beamM": 3.88
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 395",
+      "boatType": "monohull_sail",
+      "lengthM": 12.1,
+      "beamM": 4.03
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 400",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 12.33,
+      "beamM": 4.18
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 430",
+      "boatType": "monohull_sail",
+      "lengthM": 13.1,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 435",
+      "boatType": "monohull_sail",
+      "lengthM": 13.15,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 445",
+      "boatType": "monohull_sail",
+      "lengthM": 13.55,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 455",
+      "boatType": "monohull_sail",
+      "lengthM": 13.93,
+      "beamM": 4.43
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 490",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 14.92,
+      "beamM": 4.65
+    },
+    {
+      "builder": "Alubat",
+      "model": "Ovni 495",
+      "boatType": "monohull_sail",
+      "lengthM": 15.03,
+      "beamM": 4.63
+    },
+    {
+      "builder": "Amel",
+      "model": "Sharki",
+      "boatType": "monohull_sail",
+      "yearFrom": 1979,
+      "yearTo": 1988,
+      "lengthM": 11.9,
+      "beamM": 3.9
+    },
+    {
+      "builder": "Amel",
+      "model": "Maramu",
+      "boatType": "monohull_sail",
+      "yearTo": 1989,
+      "lengthM": 13.8,
+      "beamM": 4.1
+    },
+    {
+      "builder": "Amel",
+      "model": "Santorin",
+      "boatType": "monohull_sail",
+      "yearFrom": 1989,
+      "yearTo": 1998,
+      "lengthM": 13.95,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Amel",
+      "model": "50",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 15.45,
+      "beamM": 4.9
+    },
+    {
+      "builder": "Amel",
+      "model": "Super Maramu",
+      "boatType": "monohull_sail",
+      "yearFrom": 1989,
+      "yearTo": 1999,
+      "lengthM": 15.75,
+      "beamM": 4.71
+    },
+    {
+      "builder": "Amel",
+      "model": "Mango",
+      "boatType": "monohull_sail",
+      "yearFrom": 1979,
+      "yearTo": 1986,
+      "lengthM": 15.8,
+      "beamM": 4.47
+    },
+    {
+      "builder": "Amel",
+      "model": "Super Maramu 2000",
+      "boatType": "monohull_sail",
+      "yearFrom": 1999,
+      "yearTo": 2005,
+      "lengthM": 15.9,
+      "beamM": 4.76
+    },
+    {
+      "builder": "Amel",
+      "model": "54",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "yearTo": 2012,
+      "lengthM": 16.7,
+      "beamM": 4.9
+    },
+    {
+      "builder": "Amel",
+      "model": "55",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "yearTo": 2017,
+      "lengthM": 16.95,
+      "beamM": 4.93
+    },
+    {
+      "builder": "Amel",
+      "model": "60",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 18.3,
+      "beamM": 5.32
+    },
+    {
+      "builder": "Amel",
+      "model": "64",
+      "boatType": "monohull_sail",
+      "lengthM": 19.6,
+      "beamM": 5.38
+    },
+    {
+      "builder": "Axopar",
+      "model": "25",
+      "boatType": "motor",
+      "yearFrom": 2022,
+      "lengthM": 7.9,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Axopar",
+      "model": "28",
+      "boatType": "motor",
+      "yearFrom": 2014,
+      "lengthM": 8.75
+    },
+    {
+      "builder": "Axopar",
+      "model": "37",
+      "boatType": "motor",
+      "yearFrom": 2016,
+      "lengthM": 11.25,
+      "beamM": 3.28
+    },
+    {
+      "builder": "Axopar",
+      "model": "45",
+      "boatType": "motor",
+      "yearFrom": 2022,
+      "lengthM": 13.88,
+      "beamM": 3.98
+    },
+    {
+      "builder": "Azimut",
+      "model": "Atlantis 34",
+      "boatType": "motor",
+      "lengthM": 10.53,
+      "beamM": 3.43
+    },
+    {
+      "builder": "Azimut",
+      "model": "Atlantis 43",
+      "boatType": "motor",
+      "lengthM": 13.15,
+      "beamM": 4.03
+    },
+    {
+      "builder": "Azimut",
+      "model": "Magellano 43",
+      "boatType": "motor",
+      "lengthM": 13.3,
+      "beamM": 4.3
+    },
+    {
+      "builder": "Azimut",
+      "model": "Atlantis 51",
+      "boatType": "motor",
+      "lengthM": 15.6,
+      "beamM": 4.47
+    },
+    {
+      "builder": "Azimut",
+      "model": "Magellano 53",
+      "boatType": "motor",
+      "lengthM": 16.25,
+      "beamM": 4.8
+    },
+    {
+      "builder": "Azimut",
+      "model": "S6",
+      "boatType": "motor",
+      "lengthM": 17.9,
+      "beamM": 4.68
+    },
+    {
+      "builder": "Azimut",
+      "model": "Magellano 66",
+      "boatType": "motor",
+      "lengthM": 20.05,
+      "beamM": 5.5
+    },
+    {
+      "builder": "Bali",
+      "model": "4.0",
+      "boatType": "catamaran",
+      "yearFrom": 2014,
+      "yearTo": 2020,
+      "lengthM": 11.92,
+      "beamM": 6.52
+    },
+    {
+      "builder": "Bali",
+      "model": "4.1",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 12.22
+    },
+    {
+      "builder": "Bali",
+      "model": "Catspace",
+      "boatType": "catamaran",
+      "yearFrom": 2020,
+      "lengthM": 12.4,
+      "beamM": 6.91
+    },
+    {
+      "builder": "Bali",
+      "model": "4.2",
+      "boatType": "catamaran",
+      "yearFrom": 2021,
+      "lengthM": 12.75,
+      "beamM": 7.05
+    },
+    {
+      "builder": "Bali",
+      "model": "4.3",
+      "boatType": "catamaran",
+      "yearFrom": 2015,
+      "yearTo": 2021,
+      "lengthM": 12.85,
+      "beamM": 7.07
+    },
+    {
+      "builder": "Bali",
+      "model": "4.5",
+      "boatType": "catamaran",
+      "yearFrom": 2014,
+      "yearTo": 2021,
+      "lengthM": 13.6,
+      "beamM": 7.44
+    },
+    {
+      "builder": "Bali",
+      "model": "4.6",
+      "boatType": "catamaran",
+      "yearFrom": 2021,
+      "lengthM": 14.05,
+      "beamM": 7.6
+    },
+    {
+      "builder": "Bali",
+      "model": "4.8",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 14.82,
+      "beamM": 7.82
+    },
+    {
+      "builder": "Bali",
+      "model": "5.4",
+      "boatType": "catamaran",
+      "yearFrom": 2017,
+      "lengthM": 16.61,
+      "beamM": 8.63
+    },
+    {
+      "builder": "Bavaria",
+      "model": "30 Cruiser",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "lengthM": 9.45,
+      "beamM": 3.22
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 33",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 9.99,
+      "beamM": 3.42
+    },
+    {
+      "builder": "Bavaria",
+      "model": "33 Cruiser",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "lengthM": 10.2,
+      "beamM": 3.4
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 34",
+      "boatType": "monohull_sail",
+      "lengthM": 10.5,
+      "beamM": 3.65
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 36",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 11.33,
+      "beamM": 3.7
+    },
+    {
+      "builder": "Bavaria",
+      "model": "37 Cruiser",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "lengthM": 11.35,
+      "beamM": 3.67
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 37",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 11.4,
+      "beamM": 3.84
+    },
+    {
+      "builder": "Bavaria",
+      "model": "C38",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 11.68,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 40",
+      "boatType": "monohull_sail",
+      "yearFrom": 2009,
+      "lengthM": 12.35,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 41",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 12.35,
+      "beamM": 4
+    },
+    {
+      "builder": "Bavaria",
+      "model": "C42",
+      "boatType": "monohull_sail",
+      "yearFrom": 2020,
+      "lengthM": 12.83,
+      "beamM": 4.24
+    },
+    {
+      "builder": "Bavaria",
+      "model": "42 Cruiser",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 12.95,
+      "beamM": 4.02
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 13.7,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Bavaria",
+      "model": "C45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 13.83,
+      "beamM": 4.42
+    },
+    {
+      "builder": "Bavaria",
+      "model": "46 Cruiser",
+      "boatType": "monohull_sail",
+      "lengthM": 14.18,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 46",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 14.27,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Bavaria",
+      "model": "C50",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 15.03,
+      "beamM": 4.68
+    },
+    {
+      "builder": "Bavaria",
+      "model": "50 Cruiser",
+      "boatType": "monohull_sail",
+      "yearFrom": 2006,
+      "lengthM": 15.4,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 51",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 15.57,
+      "beamM": 4.67
+    },
+    {
+      "builder": "Bavaria",
+      "model": "Cruiser 56",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 17,
+      "beamM": 4.99
+    },
+    {
+      "builder": "Bavaria",
+      "model": "C57",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 17.23,
+      "beamM": 5.03
+    },
+    {
+      "builder": "Bombard",
+      "model": "Sunrider 650",
+      "boatType": "rib",
+      "lengthM": 6.5,
+      "beamM": 2.47
+    },
+    {
+      "builder": "Botnia Targa",
+      "model": "32",
+      "boatType": "motor",
+      "lengthM": 10.3,
+      "beamM": 3.25
+    },
+    {
+      "builder": "Botnia Targa",
+      "model": "37",
+      "boatType": "motor",
+      "lengthM": 11.77,
+      "beamM": 3.65
+    },
+    {
+      "builder": "Brig",
+      "model": "Navigator 610",
+      "boatType": "rib",
+      "lengthM": 6.1,
+      "beamM": 2.43
+    },
+    {
+      "builder": "Brig",
+      "model": "Eagle 6.7",
+      "boatType": "rib",
+      "lengthM": 6.7,
+      "beamM": 2.6
+    },
+    {
+      "builder": "Brig",
+      "model": "Navigator 730",
+      "boatType": "rib",
+      "lengthM": 7.3,
+      "beamM": 2.71
+    },
+    {
+      "builder": "Brig",
+      "model": "Navigator 785",
+      "boatType": "rib",
+      "lengthM": 7.85,
+      "beamM": 2.85
+    },
+    {
+      "builder": "Brig",
+      "model": "Eagle 8",
+      "boatType": "rib",
+      "lengthM": 8,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Brig",
+      "model": "Eagle 10",
+      "boatType": "rib",
+      "lengthM": 10,
+      "beamM": 3.4
+    },
+    {
+      "builder": "BWA",
+      "model": "Sport 22 GT",
+      "boatType": "rib",
+      "lengthM": 6.88,
+      "beamM": 2.65
+    },
+    {
+      "builder": "BWA",
+      "model": "Sport 28 GT",
+      "boatType": "rib",
+      "lengthM": 8.55,
+      "beamM": 3.05
+    },
+    {
+      "builder": "BWA",
+      "model": "Sport 34 GT",
+      "boatType": "rib",
+      "lengthM": 10.5,
+      "beamM": 3.5
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Flyer 6",
+      "boatType": "motor",
+      "yearFrom": 2016,
+      "lengthM": 6.08,
+      "beamM": 2.45
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 20",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 6.2,
+      "beamM": 2.5
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 210",
+      "boatType": "monohull_sail",
+      "yearFrom": 1993,
+      "lengthM": 6.43,
+      "beamM": 2.5
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 21.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2001,
+      "lengthM": 6.5,
+      "beamM": 2.53
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Barracuda 7",
+      "boatType": "motor",
+      "lengthM": 6.92,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Flyer 7",
+      "boatType": "motor",
+      "lengthM": 6.92,
+      "beamM": 2.6
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Antares 7",
+      "boatType": "motor",
+      "lengthM": 7.1,
+      "beamM": 2.57
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 235",
+      "boatType": "monohull_sail",
+      "yearFrom": 1985,
+      "lengthM": 7.1,
+      "beamM": 2.5
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 24",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 7.33,
+      "beamM": 2.53
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Flyer 8",
+      "boatType": "motor",
+      "lengthM": 7.6
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Antares 8",
+      "boatType": "motor",
+      "lengthM": 8,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 27",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 8.25,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 27.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 8.32,
+      "beamM": 2.95
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 285",
+      "boatType": "monohull_sail",
+      "yearFrom": 1986,
+      "lengthM": 8.6,
+      "beamM": 3.05
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Flyer 9",
+      "boatType": "motor",
+      "yearFrom": 2019,
+      "lengthM": 8.65,
+      "beamM": 3
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Barracuda 9",
+      "boatType": "motor",
+      "lengthM": 8.68,
+      "beamM": 3
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Antares 9",
+      "boatType": "motor",
+      "lengthM": 9.02,
+      "beamM": 3.07
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 305",
+      "boatType": "monohull_sail",
+      "yearFrom": 1984,
+      "lengthM": 9.38,
+      "beamM": 3.25
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 311",
+      "boatType": "monohull_sail",
+      "yearFrom": 1999,
+      "lengthM": 9.38,
+      "beamM": 3.3
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 30.1",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 9.48,
+      "beamM": 3.29
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 310",
+      "boatType": "monohull_sail",
+      "yearFrom": 1993,
+      "lengthM": 9.5,
+      "beamM": 3.25
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 31",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 9.5,
+      "beamM": 3.29
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 31.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2000,
+      "lengthM": 9.66,
+      "beamM": 3.27
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 320",
+      "boatType": "monohull_sail",
+      "yearFrom": 1988,
+      "lengthM": 9.7,
+      "beamM": 3.26
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 321",
+      "boatType": "monohull_sail",
+      "yearFrom": 1994,
+      "lengthM": 9.73,
+      "beamM": 3.3
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Gran Turismo 32",
+      "boatType": "motor",
+      "yearFrom": 2019,
+      "lengthM": 9.78,
+      "beamM": 3.25
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 331",
+      "boatType": "monohull_sail",
+      "yearFrom": 1999,
+      "lengthM": 10.01,
+      "beamM": 3.44
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 345",
+      "boatType": "monohull_sail",
+      "yearFrom": 1984,
+      "lengthM": 10.3,
+      "beamM": 3.53
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 343",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "lengthM": 10.33,
+      "beamM": 3.51
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 34.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2002,
+      "lengthM": 10.35,
+      "beamM": 3.45
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 34",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 10.35,
+      "beamM": 3.59
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 350",
+      "boatType": "monohull_sail",
+      "yearFrom": 1986,
+      "lengthM": 10.35,
+      "beamM": 3.48
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 351",
+      "boatType": "monohull_sail",
+      "yearFrom": 1993,
+      "lengthM": 10.43,
+      "beamM": 3.53
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 35",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 10.53,
+      "beamM": 3.76
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 35.1",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 10.53,
+      "beamM": 3.76
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 34.1",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 10.55,
+      "beamM": 3.57
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 35",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 10.6,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 35s5",
+      "boatType": "monohull_sail",
+      "yearFrom": 1989,
+      "lengthM": 10.6,
+      "beamM": 3.6
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 361",
+      "boatType": "monohull_sail",
+      "yearFrom": 1999,
+      "lengthM": 10.9,
+      "beamM": 3.69
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 36.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2000,
+      "lengthM": 11.11,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Gran Turismo 36",
+      "boatType": "motor",
+      "lengthM": 11.2,
+      "beamM": 3.63
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 36",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 11.25,
+      "beamM": 3.78
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Swift Trawler 35",
+      "boatType": "motor",
+      "lengthM": 11.3,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 375",
+      "boatType": "monohull_sail",
+      "yearFrom": 1985,
+      "lengthM": 11.33,
+      "beamM": 3.65
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 37",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 11.35,
+      "beamM": 3.88
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 373",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 11.35,
+      "beamM": 3.78
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 38",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 11.5,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 38.1",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 11.5,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 381",
+      "boatType": "monohull_sail",
+      "yearFrom": 1996,
+      "lengthM": 11.5,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 390",
+      "boatType": "monohull_sail",
+      "lengthM": 11.88,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 393",
+      "boatType": "monohull_sail",
+      "yearFrom": 2002,
+      "lengthM": 11.98,
+      "beamM": 3.96
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 40.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 1999,
+      "lengthM": 12.18,
+      "beamM": 3.86
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 40",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 12.2,
+      "beamM": 4.02
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 40",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 12.26,
+      "beamM": 3.92
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Gran Turismo 41",
+      "boatType": "motor",
+      "yearFrom": 2020,
+      "lengthM": 12.3,
+      "beamM": 3.9
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 405",
+      "boatType": "monohull_sail",
+      "yearFrom": 1985,
+      "lengthM": 12.35,
+      "beamM": 3.93
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 411",
+      "boatType": "monohull_sail",
+      "yearFrom": 1997,
+      "lengthM": 12.35,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 41",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 12.43,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 41.1",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 12.43,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 42s7",
+      "boatType": "monohull_sail",
+      "yearFrom": 1994,
+      "lengthM": 12.8,
+      "beamM": 3.97
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 423",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 12.85,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 430",
+      "boatType": "monohull_sail",
+      "yearFrom": 1987,
+      "lengthM": 12.98,
+      "beamM": 4.15
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 43",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 13.2,
+      "beamM": 4.23
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 440",
+      "boatType": "monohull_sail",
+      "yearFrom": 1991,
+      "lengthM": 13.35,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 44",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 13.43,
+      "beamM": 4.3
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 44.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2004,
+      "lengthM": 13.46,
+      "beamM": 4.1
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 13.68,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Swift Trawler 44",
+      "boatType": "motor",
+      "lengthM": 13.68,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 45f5",
+      "boatType": "monohull_sail",
+      "yearFrom": 1989,
+      "lengthM": 13.77,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 13.85,
+      "beamM": 4.49
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 461",
+      "boatType": "monohull_sail",
+      "yearFrom": 1997,
+      "lengthM": 13.99,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 46",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 14.15,
+      "beamM": 4.45
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 473",
+      "boatType": "monohull_sail",
+      "yearFrom": 2001,
+      "lengthM": 14.3,
+      "beamM": 4.37
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "First 47.7",
+      "boatType": "monohull_sail",
+      "yearFrom": 2000,
+      "lengthM": 14.31,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 46.1",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 14.6,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 48",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 14.65,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Gran Turismo 49",
+      "boatType": "motor",
+      "yearFrom": 2012,
+      "lengthM": 14.95,
+      "beamM": 4.38
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Swift Trawler 48",
+      "boatType": "motor",
+      "lengthM": 15.1,
+      "beamM": 4.53
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Swift Trawler 50",
+      "boatType": "motor",
+      "yearFrom": 2013,
+      "lengthM": 15.4,
+      "beamM": 4.65
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 523",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 16,
+      "beamM": 4.76
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis Yacht 54",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 16.65,
+      "beamM": 4.97
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 55",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 16.78,
+      "beamM": 4.96
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis 60",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 18.3,
+      "beamM": 5.22
+    },
+    {
+      "builder": "Bénéteau",
+      "model": "Oceanis Yacht 62",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 19.09,
+      "beamM": 5.34
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 650",
+      "boatType": "rib",
+      "lengthM": 6.5,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 700",
+      "boatType": "rib",
+      "lengthM": 7,
+      "beamM": 2.7
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 750",
+      "boatType": "rib",
+      "lengthM": 7.5,
+      "beamM": 2.85
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 775",
+      "boatType": "rib",
+      "lengthM": 7.75,
+      "beamM": 2.92
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 900",
+      "boatType": "rib",
+      "lengthM": 9,
+      "beamM": 3.15
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 1000",
+      "boatType": "rib",
+      "lengthM": 9.97,
+      "beamM": 3.43
+    },
+    {
+      "builder": "Capelli",
+      "model": "Tempest 1200",
+      "boatType": "rib",
+      "lengthM": 11.98,
+      "beamM": 3.9
+    },
+    {
+      "builder": "Catana",
+      "model": "42",
+      "boatType": "catamaran",
+      "lengthM": 12.64,
+      "beamM": 7.05
+    },
+    {
+      "builder": "Catana",
+      "model": "431",
+      "boatType": "catamaran",
+      "yearFrom": 1996,
+      "lengthM": 13.02,
+      "beamM": 7.15
+    },
+    {
+      "builder": "Catana",
+      "model": "47",
+      "boatType": "catamaran",
+      "lengthM": 14.15,
+      "beamM": 7.7
+    },
+    {
+      "builder": "Catana",
+      "model": "471",
+      "boatType": "catamaran",
+      "yearFrom": 1997,
+      "lengthM": 14.33,
+      "beamM": 7.65
+    },
+    {
+      "builder": "Catana",
+      "model": "50",
+      "boatType": "catamaran",
+      "yearFrom": 2005,
+      "lengthM": 15.05,
+      "beamM": 7.95
+    },
+    {
+      "builder": "Catana",
+      "model": "OC 50",
+      "boatType": "catamaran",
+      "yearFrom": 2021,
+      "lengthM": 15.12,
+      "beamM": 7.95
+    },
+    {
+      "builder": "Catana",
+      "model": "521",
+      "boatType": "catamaran",
+      "yearFrom": 1998,
+      "lengthM": 15.77,
+      "beamM": 8.2
+    },
+    {
+      "builder": "Contest",
+      "model": "42CS",
+      "boatType": "monohull_sail",
+      "lengthM": 12.95,
+      "beamM": 4.05
+    },
+    {
+      "builder": "Contest",
+      "model": "44CS",
+      "boatType": "monohull_sail",
+      "lengthM": 13.55,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Contest",
+      "model": "48CS",
+      "boatType": "monohull_sail",
+      "lengthM": 14.88,
+      "beamM": 4.47
+    },
+    {
+      "builder": "Contest",
+      "model": "50CS",
+      "boatType": "monohull_sail",
+      "lengthM": 15.43,
+      "beamM": 4.6
+    },
+    {
+      "builder": "Contest",
+      "model": "55CS",
+      "boatType": "monohull_sail",
+      "lengthM": 16.9,
+      "beamM": 4.93
+    },
+    {
+      "builder": "Contest",
+      "model": "57CS",
+      "boatType": "monohull_sail",
+      "lengthM": 17.55,
+      "beamM": 5.03
+    },
+    {
+      "builder": "Contest",
+      "model": "62CS",
+      "boatType": "monohull_sail",
+      "lengthM": 19.02,
+      "beamM": 5.35
+    },
+    {
+      "builder": "Contest",
+      "model": "67CS",
+      "boatType": "monohull_sail",
+      "lengthM": 20.53,
+      "beamM": 5.53
+    },
+    {
+      "builder": "Contest",
+      "model": "72CS",
+      "boatType": "monohull_sail",
+      "lengthM": 22.05,
+      "beamM": 5.88
+    },
+    {
+      "builder": "Dehler",
+      "model": "30 one design",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 9.25,
+      "beamM": 3.15
+    },
+    {
+      "builder": "Dehler",
+      "model": "34",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 10.35,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Dehler",
+      "model": "38",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 11.35,
+      "beamM": 3.75
+    },
+    {
+      "builder": "Dehler",
+      "model": "42",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 12.8,
+      "beamM": 4.06
+    },
+    {
+      "builder": "Dehler",
+      "model": "46",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 14.15,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Dufour",
+      "model": "310 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 9.35,
+      "beamM": 3.38
+    },
+    {
+      "builder": "Dufour",
+      "model": "34 Performance",
+      "boatType": "monohull_sail",
+      "yearFrom": 2004,
+      "lengthM": 10.3,
+      "beamM": 3.45
+    },
+    {
+      "builder": "Dufour",
+      "model": "350 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 10.33,
+      "beamM": 3.54
+    },
+    {
+      "builder": "Dufour",
+      "model": "360 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 10.73,
+      "beamM": 3.65
+    },
+    {
+      "builder": "Dufour",
+      "model": "36 Classic",
+      "boatType": "monohull_sail",
+      "yearFrom": 1997,
+      "lengthM": 10.93,
+      "beamM": 3.61
+    },
+    {
+      "builder": "Dufour",
+      "model": "37",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 11.35,
+      "beamM": 3.95
+    },
+    {
+      "builder": "Dufour",
+      "model": "375 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2009,
+      "lengthM": 11.35,
+      "beamM": 3.8
+    },
+    {
+      "builder": "Dufour",
+      "model": "382 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 11.48,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Dufour",
+      "model": "390 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 11.8,
+      "beamM": 4
+    },
+    {
+      "builder": "Dufour",
+      "model": "40 Performance",
+      "boatType": "monohull_sail",
+      "lengthM": 12.15,
+      "beamM": 3.9
+    },
+    {
+      "builder": "Dufour",
+      "model": "405 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 12.27,
+      "beamM": 4.03
+    },
+    {
+      "builder": "Dufour",
+      "model": "41",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 12.35,
+      "beamM": 4.24
+    },
+    {
+      "builder": "Dufour",
+      "model": "410 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 12.35,
+      "beamM": 4.15
+    },
+    {
+      "builder": "Dufour",
+      "model": "425 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "lengthM": 12.85,
+      "beamM": 4.15
+    },
+    {
+      "builder": "Dufour",
+      "model": "430 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 13.1,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Dufour",
+      "model": "445 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2009,
+      "lengthM": 13.43,
+      "beamM": 4.29
+    },
+    {
+      "builder": "Dufour",
+      "model": "460 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 14.08,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Dufour",
+      "model": "470",
+      "boatType": "monohull_sail",
+      "yearFrom": 2020,
+      "lengthM": 14.3,
+      "beamM": 4.6
+    },
+    {
+      "builder": "Dufour",
+      "model": "48 Catamaran",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 14.6,
+      "beamM": 7.78
+    },
+    {
+      "builder": "Dufour",
+      "model": "500 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 15.05,
+      "beamM": 4.71
+    },
+    {
+      "builder": "Dufour",
+      "model": "512 Grand Large",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 15.35,
+      "beamM": 4.8
+    },
+    {
+      "builder": "Dufour",
+      "model": "530",
+      "boatType": "monohull_sail",
+      "yearFrom": 2020,
+      "lengthM": 16.08,
+      "beamM": 4.99
+    },
+    {
+      "builder": "Dufour",
+      "model": "61",
+      "boatType": "monohull_sail",
+      "yearFrom": 2021,
+      "lengthM": 18.65,
+      "beamM": 5.38
+    },
+    {
+      "builder": "Elan",
+      "model": "31",
+      "boatType": "monohull_sail",
+      "lengthM": 9.38,
+      "beamM": 3.2
+    },
+    {
+      "builder": "Elan",
+      "model": "333",
+      "boatType": "monohull_sail",
+      "yearFrom": 2001,
+      "lengthM": 9.99,
+      "beamM": 3.35
+    },
+    {
+      "builder": "Elan",
+      "model": "350",
+      "boatType": "monohull_sail",
+      "yearFrom": 2009,
+      "lengthM": 10.4,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Elan",
+      "model": "Impression 40",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 12.1,
+      "beamM": 4
+    },
+    {
+      "builder": "Elan",
+      "model": "400",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 12.13,
+      "beamM": 3.88
+    },
+    {
+      "builder": "Elan",
+      "model": "450",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 13.63,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Elan",
+      "model": "GT5",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 13.85,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Elan",
+      "model": "Impression 45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 13.85,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Elan",
+      "model": "Impression 50",
+      "boatType": "monohull_sail",
+      "lengthM": 15.1,
+      "beamM": 4.65
+    },
+    {
+      "builder": "Excess",
+      "model": "11",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 11.33,
+      "beamM": 6.2
+    },
+    {
+      "builder": "Excess",
+      "model": "12",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 11.86,
+      "beamM": 6.74
+    },
+    {
+      "builder": "Excess",
+      "model": "13",
+      "boatType": "catamaran",
+      "yearFrom": 2023,
+      "lengthM": 12.76,
+      "beamM": 7.13
+    },
+    {
+      "builder": "Excess",
+      "model": "14",
+      "boatType": "catamaran",
+      "yearFrom": 2021,
+      "lengthM": 13.36,
+      "beamM": 7.57
+    },
+    {
+      "builder": "Feeling",
+      "model": "850",
+      "boatType": "monohull_sail",
+      "lengthM": 8.5,
+      "beamM": 3
+    },
+    {
+      "builder": "Feeling",
+      "model": "920",
+      "boatType": "monohull_sail",
+      "lengthM": 9.2,
+      "beamM": 3.2
+    },
+    {
+      "builder": "Feeling",
+      "model": "32",
+      "boatType": "monohull_sail",
+      "lengthM": 9.75,
+      "beamM": 3.33
+    },
+    {
+      "builder": "Feeling",
+      "model": "1040",
+      "boatType": "monohull_sail",
+      "lengthM": 10.4,
+      "beamM": 3.5
+    },
+    {
+      "builder": "Feeling",
+      "model": "1090",
+      "boatType": "monohull_sail",
+      "lengthM": 10.9,
+      "beamM": 3.6
+    },
+    {
+      "builder": "Feeling",
+      "model": "39",
+      "boatType": "monohull_sail",
+      "lengthM": 11.93,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Feeling",
+      "model": "1350",
+      "boatType": "monohull_sail",
+      "lengthM": 13.5,
+      "beamM": 4.15
+    },
+    {
+      "builder": "Feeling",
+      "model": "486",
+      "boatType": "monohull_sail",
+      "lengthM": 14.65,
+      "beamM": 4.43
+    },
+    {
+      "builder": "Ferretti",
+      "model": "460",
+      "boatType": "motor",
+      "lengthM": 14.25,
+      "beamM": 4.28
+    },
+    {
+      "builder": "Ferretti",
+      "model": "550",
+      "boatType": "motor",
+      "lengthM": 17,
+      "beamM": 4.78
+    },
+    {
+      "builder": "Ferretti",
+      "model": "720",
+      "boatType": "motor",
+      "lengthM": 21.95,
+      "beamM": 5.6
+    },
+    {
+      "builder": "Ferretti",
+      "model": "780",
+      "boatType": "motor",
+      "lengthM": 23.83,
+      "beamM": 5.88
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Tobago 35",
+      "boatType": "catamaran",
+      "yearFrom": 1991,
+      "yearTo": 1998,
+      "lengthM": 10.55,
+      "beamM": 5.9
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Mahé 36",
+      "boatType": "catamaran",
+      "yearFrom": 2007,
+      "lengthM": 10.83,
+      "beamM": 6
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Louisiane 37",
+      "boatType": "catamaran",
+      "lengthM": 11.25,
+      "beamM": 6.15
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Antigua 37",
+      "boatType": "catamaran",
+      "lengthM": 11.32,
+      "beamM": 6.23
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Athena 38",
+      "boatType": "catamaran",
+      "yearFrom": 1995,
+      "yearTo": 2007,
+      "lengthM": 11.57,
+      "beamM": 6.35
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Lucia 40",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "yearTo": 2021,
+      "lengthM": 11.73,
+      "beamM": 6.63
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Lavezzi 40",
+      "boatType": "catamaran",
+      "yearFrom": 2003,
+      "yearTo": 2010,
+      "lengthM": 11.75,
+      "beamM": 6.58
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Isla 40",
+      "boatType": "catamaran",
+      "yearFrom": 2020,
+      "lengthM": 11.93,
+      "beamM": 6.63
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Lipari 41",
+      "boatType": "catamaran",
+      "yearFrom": 2010,
+      "yearTo": 2015,
+      "lengthM": 11.98,
+      "beamM": 6.63
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Astréa 42",
+      "boatType": "catamaran",
+      "yearFrom": 2018,
+      "lengthM": 12.58,
+      "beamM": 7.1
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Venezia 42",
+      "boatType": "catamaran",
+      "yearFrom": 1993,
+      "yearTo": 2001,
+      "lengthM": 12.6,
+      "beamM": 6.95
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Belize 43",
+      "boatType": "catamaran",
+      "yearFrom": 1999,
+      "yearTo": 2005,
+      "lengthM": 12.9,
+      "beamM": 7.15
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Orana 44",
+      "boatType": "catamaran",
+      "yearFrom": 2007,
+      "yearTo": 2012,
+      "lengthM": 13.11,
+      "beamM": 7.3
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Helia 44",
+      "boatType": "catamaran",
+      "yearFrom": 2012,
+      "yearTo": 2017,
+      "lengthM": 13.3,
+      "beamM": 7.4
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Casamance 44",
+      "boatType": "catamaran",
+      "lengthM": 13.35,
+      "beamM": 7.15
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Elba 45",
+      "boatType": "catamaran",
+      "yearFrom": 2018,
+      "lengthM": 13.57,
+      "beamM": 7.5
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Bahia 46",
+      "boatType": "catamaran",
+      "yearFrom": 1997,
+      "yearTo": 2005,
+      "lengthM": 13.88,
+      "beamM": 7.6
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Saona 47",
+      "boatType": "catamaran",
+      "yearFrom": 2017,
+      "yearTo": 2022,
+      "lengthM": 13.94,
+      "beamM": 7.52
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Tanna 47",
+      "boatType": "catamaran",
+      "yearFrom": 2021,
+      "lengthM": 14.08,
+      "beamM": 7.65
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Salina 48",
+      "boatType": "catamaran",
+      "yearFrom": 2006,
+      "yearTo": 2012,
+      "lengthM": 14.48,
+      "beamM": 7.8
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Saba 50",
+      "boatType": "catamaran",
+      "yearFrom": 2014,
+      "yearTo": 2019,
+      "lengthM": 14.98,
+      "beamM": 8.05
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Aura 51",
+      "boatType": "catamaran",
+      "yearFrom": 2021,
+      "lengthM": 15.38,
+      "beamM": 8.09
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Sanya 57",
+      "boatType": "catamaran",
+      "yearFrom": 2011,
+      "yearTo": 2016,
+      "lengthM": 17.07,
+      "beamM": 8.61
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Marquises 56",
+      "boatType": "catamaran",
+      "yearFrom": 1992,
+      "lengthM": 17.1,
+      "beamM": 8.4
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Samana 59",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 17.7
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Eleuthera 60",
+      "boatType": "catamaran",
+      "lengthM": 18.45,
+      "beamM": 9.4
+    },
+    {
+      "builder": "Fountaine Pajot",
+      "model": "Alegria 67",
+      "boatType": "catamaran",
+      "yearFrom": 2018,
+      "lengthM": 20.2,
+      "beamM": 9.89
+    },
+    {
+      "builder": "Garcia",
+      "model": "Exploration 45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 13.97,
+      "beamM": 4.4
+    },
+    {
+      "builder": "Garcia",
+      "model": "Passoa 47",
+      "boatType": "monohull_sail",
+      "lengthM": 14.3,
+      "beamM": 4.3
+    },
+    {
+      "builder": "Garcia",
+      "model": "Exploration 52",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 16.02,
+      "beamM": 4.85
+    },
+    {
+      "builder": "Garcia",
+      "model": "Exploration 60",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 18.3,
+      "beamM": 5.3
+    },
+    {
+      "builder": "Gib'Sea",
+      "model": "282",
+      "boatType": "monohull_sail",
+      "lengthM": 8.55,
+      "beamM": 3
+    },
+    {
+      "builder": "Gib'Sea",
+      "model": "302",
+      "boatType": "monohull_sail",
+      "lengthM": 9.15,
+      "beamM": 3.2
+    },
+    {
+      "builder": "Gib'Sea",
+      "model": "372",
+      "boatType": "monohull_sail",
+      "lengthM": 11.33,
+      "beamM": 3.78
+    },
+    {
+      "builder": "Gib'Sea",
+      "model": "402",
+      "boatType": "monohull_sail",
+      "lengthM": 12.2,
+      "beamM": 3.95
+    },
+    {
+      "builder": "Gib'Sea",
+      "model": "442",
+      "boatType": "monohull_sail",
+      "lengthM": 13.43,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Gib'Sea",
+      "model": "51",
+      "boatType": "monohull_sail",
+      "lengthM": 15.5,
+      "beamM": 4.6
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "37",
+      "boatType": "monohull_sail",
+      "lengthM": 11.25,
+      "beamM": 3.6
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "39",
+      "boatType": "monohull_sail",
+      "yearFrom": 2006,
+      "lengthM": 11.88,
+      "beamM": 3.78
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "40",
+      "boatType": "monohull_sail",
+      "lengthM": 12.2,
+      "beamM": 3.88
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "42 LC",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 12.83,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "43",
+      "boatType": "monohull_sail",
+      "lengthM": 13.05,
+      "beamM": 4.07
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 13.83,
+      "beamM": 4.18
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "46 LC",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 14.2,
+      "beamM": 4.45
+    },
+    {
+      "builder": "Grand Soleil",
+      "model": "52 LC",
+      "boatType": "monohull_sail",
+      "lengthM": 15.85,
+      "beamM": 4.82
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "310",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 9.75,
+      "beamM": 3.26
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "34",
+      "boatType": "monohull_sail",
+      "yearFrom": 1990,
+      "lengthM": 10.33,
+      "beamM": 3.33
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "342",
+      "boatType": "monohull_sail",
+      "lengthM": 10.45,
+      "beamM": 3.42
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "340",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 10.61,
+      "beamM": 3.5
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "352",
+      "boatType": "monohull_sail",
+      "lengthM": 10.63,
+      "beamM": 3.36
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "36",
+      "boatType": "monohull_sail",
+      "yearFrom": 1989,
+      "lengthM": 11.05,
+      "beamM": 3.46
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "372",
+      "boatType": "monohull_sail",
+      "yearFrom": 2009,
+      "yearTo": 2017,
+      "lengthM": 11.45,
+      "beamM": 3.68
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "39",
+      "boatType": "monohull_sail",
+      "yearFrom": 1993,
+      "yearTo": 2003,
+      "lengthM": 11.94,
+      "beamM": 3.8
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "40",
+      "boatType": "monohull_sail",
+      "yearFrom": 1998,
+      "yearTo": 2008,
+      "lengthM": 12.33,
+      "beamM": 3.88
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "400",
+      "boatType": "monohull_sail",
+      "lengthM": 12.4,
+      "beamM": 4.11
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "40C",
+      "boatType": "monohull_sail",
+      "lengthM": 12.48,
+      "beamM": 4.04
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "412",
+      "boatType": "monohull_sail",
+      "lengthM": 12.88,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "43",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 13.2,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "44",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 13.63,
+      "beamM": 4.33
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "46",
+      "boatType": "monohull_sail",
+      "yearFrom": 1990,
+      "yearTo": 2002,
+      "lengthM": 14.08,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "50",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 15.48,
+      "beamM": 4.71
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "53",
+      "boatType": "monohull_sail",
+      "yearFrom": 1996,
+      "lengthM": 16.1,
+      "beamM": 4.57
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "54",
+      "boatType": "monohull_sail",
+      "lengthM": 16.68,
+      "beamM": 4.82
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "55",
+      "boatType": "monohull_sail",
+      "lengthM": 16.9,
+      "beamM": 4.84
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "62",
+      "boatType": "monohull_sail",
+      "lengthM": 18.95,
+      "beamM": 5.13
+    },
+    {
+      "builder": "Hallberg-Rassy",
+      "model": "64",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 19.55,
+      "beamM": 5.32
+    },
+    {
+      "builder": "Hanse",
+      "model": "315",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 9.55,
+      "beamM": 3.35
+    },
+    {
+      "builder": "Hanse",
+      "model": "320",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 9.7,
+      "beamM": 3.35
+    },
+    {
+      "builder": "Hanse",
+      "model": "341",
+      "boatType": "monohull_sail",
+      "yearFrom": 1999,
+      "lengthM": 10.38,
+      "beamM": 3.38
+    },
+    {
+      "builder": "Hanse",
+      "model": "348",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 10.42,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Hanse",
+      "model": "355",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 10.7,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Hanse",
+      "model": "370",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 11.33,
+      "beamM": 3.75
+    },
+    {
+      "builder": "Hanse",
+      "model": "385",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 11.48,
+      "beamM": 3.92
+    },
+    {
+      "builder": "Hanse",
+      "model": "388",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 11.52,
+      "beamM": 3.92
+    },
+    {
+      "builder": "Hanse",
+      "model": "400",
+      "boatType": "monohull_sail",
+      "yearFrom": 2005,
+      "lengthM": 12.15,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Hanse",
+      "model": "415",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 12.4,
+      "beamM": 4.14
+    },
+    {
+      "builder": "Hanse",
+      "model": "418",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 12.4,
+      "beamM": 4.17
+    },
+    {
+      "builder": "Hanse",
+      "model": "430",
+      "boatType": "monohull_sail",
+      "yearFrom": 2006,
+      "lengthM": 13.08,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Hanse",
+      "model": "445",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 13.4,
+      "beamM": 4.38
+    },
+    {
+      "builder": "Hanse",
+      "model": "458",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 13.95,
+      "beamM": 4.42
+    },
+    {
+      "builder": "Hanse",
+      "model": "460",
+      "boatType": "monohull_sail",
+      "yearFrom": 2020,
+      "lengthM": 14.25,
+      "beamM": 4.79
+    },
+    {
+      "builder": "Hanse",
+      "model": "495",
+      "boatType": "monohull_sail",
+      "lengthM": 15,
+      "beamM": 4.75
+    },
+    {
+      "builder": "Hanse",
+      "model": "505",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 15.33,
+      "beamM": 4.75
+    },
+    {
+      "builder": "Hanse",
+      "model": "508",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 15.33,
+      "beamM": 4.79
+    },
+    {
+      "builder": "Hanse",
+      "model": "510",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 15.48,
+      "beamM": 4.89
+    },
+    {
+      "builder": "Hanse",
+      "model": "575",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 17.35,
+      "beamM": 5.2
+    },
+    {
+      "builder": "Hanse",
+      "model": "588",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 17.5,
+      "beamM": 5.23
+    },
+    {
+      "builder": "Hanse",
+      "model": "675",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 20.53,
+      "beamM": 5.63
+    },
+    {
+      "builder": "Highfield",
+      "model": "Patrol 660",
+      "boatType": "rib",
+      "lengthM": 6.57,
+      "beamM": 2.57
+    },
+    {
+      "builder": "Highfield",
+      "model": "Sport 660",
+      "boatType": "rib",
+      "lengthM": 6.57,
+      "beamM": 2.57
+    },
+    {
+      "builder": "Highfield",
+      "model": "Sport 700",
+      "boatType": "rib",
+      "lengthM": 7,
+      "beamM": 2.68
+    },
+    {
+      "builder": "Highfield",
+      "model": "Patrol 760",
+      "boatType": "rib",
+      "lengthM": 7.6,
+      "beamM": 2.83
+    },
+    {
+      "builder": "Highfield",
+      "model": "Sport 760",
+      "boatType": "rib",
+      "lengthM": 7.6,
+      "beamM": 2.83
+    },
+    {
+      "builder": "Highfield",
+      "model": "Patrol 860",
+      "boatType": "rib",
+      "lengthM": 8.6,
+      "beamM": 3.05
+    },
+    {
+      "builder": "Italia Yachts",
+      "model": "10.98",
+      "boatType": "monohull_sail",
+      "lengthM": 10.98,
+      "beamM": 3.6
+    },
+    {
+      "builder": "Italia Yachts",
+      "model": "11.98",
+      "boatType": "monohull_sail",
+      "lengthM": 11.98,
+      "beamM": 3.88
+    },
+    {
+      "builder": "Italia Yachts",
+      "model": "12.98",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 12.98,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Italia Yachts",
+      "model": "13.98",
+      "boatType": "monohull_sail",
+      "lengthM": 13.98,
+      "beamM": 4.3
+    },
+    {
+      "builder": "Italia Yachts",
+      "model": "14.98",
+      "boatType": "monohull_sail",
+      "lengthM": 14.98,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Cap Camarat 6.5 WA",
+      "boatType": "motor",
+      "lengthM": 6.44,
+      "beamM": 2.51
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Merry Fisher 695",
+      "boatType": "motor",
+      "lengthM": 6.68,
+      "beamM": 2.54
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Cap Camarat 7.5 WA",
+      "boatType": "motor",
+      "lengthM": 7.39,
+      "beamM": 2.62
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Merry Fisher 795",
+      "boatType": "motor",
+      "yearFrom": 2016,
+      "lengthM": 7.6,
+      "beamM": 2.9
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Cap Camarat 8.5 WA",
+      "boatType": "motor",
+      "lengthM": 8.32,
+      "beamM": 2.84
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Merry Fisher 855",
+      "boatType": "motor",
+      "lengthM": 8.34,
+      "beamM": 2.92
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Merry Fisher 895",
+      "boatType": "motor",
+      "yearFrom": 2017,
+      "lengthM": 8.9,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "NC 895",
+      "boatType": "motor",
+      "yearFrom": 2019,
+      "lengthM": 8.9,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Cap Camarat 9.0 WA",
+      "boatType": "motor",
+      "lengthM": 8.91,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "NC 9",
+      "boatType": "motor",
+      "yearFrom": 2010,
+      "lengthM": 8.92,
+      "beamM": 3.08
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Fast 30 One Design",
+      "boatType": "monohull_sail",
+      "yearFrom": 2023,
+      "lengthM": 9.14,
+      "beamM": 3.33
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Leader 30",
+      "boatType": "motor",
+      "lengthM": 9.27,
+      "beamM": 3.15
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 319",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 9.66,
+      "beamM": 3.44
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Fast 3200",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 9.92,
+      "beamM": 3.35
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Leader 33",
+      "boatType": "motor",
+      "lengthM": 10.03,
+      "beamM": 3.3
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Fast 3300",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 10.05,
+      "beamM": 3.4
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 34.2",
+      "boatType": "monohull_sail",
+      "yearFrom": 1995,
+      "lengthM": 10.2,
+      "beamM": 3.4
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Leader 10.5",
+      "boatType": "motor",
+      "lengthM": 10.25,
+      "beamM": 3.3
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Cap Camarat 10.5 WA",
+      "boatType": "motor",
+      "lengthM": 10.28,
+      "beamM": 3.31
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 35",
+      "boatType": "monohull_sail",
+      "yearFrom": 2001,
+      "lengthM": 10.33,
+      "beamM": 3.47
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 349",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 10.34,
+      "beamM": 3.44
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 350",
+      "boatType": "monohull_sail",
+      "yearFrom": 2022,
+      "lengthM": 10.35,
+      "beamM": 3.63
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Merry Fisher 1095",
+      "boatType": "motor",
+      "yearFrom": 2016,
+      "lengthM": 10.53,
+      "beamM": 3.38
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 36.2",
+      "boatType": "monohull_sail",
+      "yearFrom": 1995,
+      "lengthM": 10.83,
+      "beamM": 3.57
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Fast 3600",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 11,
+      "beamM": 3.6
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Leader 36",
+      "boatType": "motor",
+      "lengthM": 11.1,
+      "beamM": 3.59
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "NC 11",
+      "boatType": "motor",
+      "yearFrom": 2011,
+      "lengthM": 11.2,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 37",
+      "boatType": "monohull_sail",
+      "lengthM": 11.25,
+      "beamM": 3.69
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 380",
+      "boatType": "monohull_sail",
+      "yearFrom": 2020,
+      "lengthM": 11.25,
+      "beamM": 3.78
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 379",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 11.34,
+      "beamM": 3.76
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 389",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 11.34,
+      "beamM": 3.76
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "NC 37",
+      "boatType": "motor",
+      "lengthM": 11.42,
+      "beamM": 3.76
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 39i",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 11.78,
+      "beamM": 3.89
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Cap Camarat 12.5 WA",
+      "boatType": "motor",
+      "lengthM": 12.02,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Merry Fisher 1295 Fly",
+      "boatType": "motor",
+      "lengthM": 12.3,
+      "beamM": 3.9
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 409",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 12.34,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 419",
+      "boatType": "monohull_sail",
+      "yearFrom": 2015,
+      "lengthM": 12.34,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 410",
+      "boatType": "monohull_sail",
+      "yearFrom": 2019,
+      "lengthM": 12.35,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 42i",
+      "boatType": "monohull_sail",
+      "yearFrom": 2006,
+      "lengthM": 12.84,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 42.2",
+      "boatType": "monohull_sail",
+      "yearFrom": 1995,
+      "lengthM": 12.9,
+      "beamM": 4
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 43",
+      "boatType": "monohull_sail",
+      "lengthM": 13.13,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 439",
+      "boatType": "monohull_sail",
+      "yearFrom": 2011,
+      "lengthM": 13.2,
+      "beamM": 4.24
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 44i",
+      "boatType": "monohull_sail",
+      "yearFrom": 2007,
+      "lengthM": 13.25,
+      "beamM": 4.24
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 440",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 13.39,
+      "beamM": 4.29
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 449",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 13.39,
+      "beamM": 4.27
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 45",
+      "boatType": "monohull_sail",
+      "lengthM": 13.78,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 45.2",
+      "boatType": "monohull_sail",
+      "yearFrom": 1997,
+      "lengthM": 13.85,
+      "beamM": 4.31
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 469",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 14.15,
+      "beamM": 4.49
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 479",
+      "boatType": "monohull_sail",
+      "yearFrom": 2014,
+      "lengthM": 14.3,
+      "beamM": 4.49
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "NC 14",
+      "boatType": "motor",
+      "lengthM": 14.35,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 490",
+      "boatType": "monohull_sail",
+      "yearFrom": 2018,
+      "lengthM": 14.85,
+      "beamM": 4.49
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 49",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 14.98,
+      "beamM": 4.49
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 509",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 15.38,
+      "beamM": 4.69
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Yacht 51",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 15.57,
+      "beamM": 4.76
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Sun Odyssey 52.2",
+      "boatType": "monohull_sail",
+      "yearFrom": 1996,
+      "lengthM": 15.8,
+      "beamM": 4.69
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Yacht 54",
+      "boatType": "monohull_sail",
+      "yearFrom": 2017,
+      "lengthM": 16.52,
+      "beamM": 4.92
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Yacht 55",
+      "boatType": "monohull_sail",
+      "yearFrom": 2021,
+      "lengthM": 16.8,
+      "beamM": 4.99
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Yacht 58",
+      "boatType": "monohull_sail",
+      "lengthM": 17.69,
+      "beamM": 5.07
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Yacht 60",
+      "boatType": "monohull_sail",
+      "yearFrom": 2020,
+      "lengthM": 18.55,
+      "beamM": 5.36
+    },
+    {
+      "builder": "Jeanneau",
+      "model": "Yacht 65",
+      "boatType": "monohull_sail",
+      "lengthM": 20.13,
+      "beamM": 5.45
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Clubman 21",
+      "boatType": "rib",
+      "lengthM": 6.38,
+      "beamM": 2.5
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Coaster 650",
+      "boatType": "rib",
+      "lengthM": 6.5,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Clubman 24",
+      "boatType": "rib",
+      "lengthM": 7.38,
+      "beamM": 2.85
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Clubman 26",
+      "boatType": "rib",
+      "lengthM": 8,
+      "beamM": 2.97
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Clubman 28",
+      "boatType": "rib",
+      "lengthM": 8.6,
+      "beamM": 3.05
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Clubman 30",
+      "boatType": "rib",
+      "lengthM": 9.35,
+      "beamM": 3.3
+    },
+    {
+      "builder": "Joker Boat",
+      "model": "Clubman 35",
+      "boatType": "rib",
+      "lengthM": 10.8,
+      "beamM": 3.55
+    },
+    {
+      "builder": "JPK",
+      "model": "960",
+      "boatType": "monohull_sail",
+      "lengthM": 9.6,
+      "beamM": 3.33
+    },
+    {
+      "builder": "JPK",
+      "model": "998",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 9.98,
+      "beamM": 3.48
+    },
+    {
+      "builder": "JPK",
+      "model": "1010",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 10.1,
+      "beamM": 3.55
+    },
+    {
+      "builder": "JPK",
+      "model": "1030",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 10.3,
+      "beamM": 3.6
+    },
+    {
+      "builder": "JPK",
+      "model": "1080",
+      "boatType": "monohull_sail",
+      "yearFrom": 2013,
+      "lengthM": 10.8,
+      "beamM": 3.68
+    },
+    {
+      "builder": "JPK",
+      "model": "1180",
+      "boatType": "monohull_sail",
+      "lengthM": 11.8,
+      "beamM": 3.93
+    },
+    {
+      "builder": "Lagoon",
+      "model": "380",
+      "boatType": "catamaran",
+      "yearFrom": 1999,
+      "lengthM": 11.55,
+      "beamM": 6.53,
+      "draftM": 1.15
+    },
+    {
+      "builder": "Lagoon",
+      "model": "39",
+      "boatType": "catamaran",
+      "yearFrom": 2013,
+      "yearTo": 2017,
+      "lengthM": 11.55,
+      "beamM": 6.79
+    },
+    {
+      "builder": "Lagoon",
+      "model": "40",
+      "boatType": "catamaran",
+      "yearFrom": 2018,
+      "lengthM": 11.74,
+      "beamM": 6.76
+    },
+    {
+      "builder": "Lagoon",
+      "model": "400",
+      "boatType": "catamaran",
+      "yearFrom": 2010,
+      "yearTo": 2018,
+      "lengthM": 11.97,
+      "beamM": 7.25,
+      "draftM": 1.21
+    },
+    {
+      "builder": "Lagoon",
+      "model": "410",
+      "boatType": "catamaran",
+      "yearFrom": 1997,
+      "yearTo": 2006,
+      "lengthM": 12.3,
+      "beamM": 7.16
+    },
+    {
+      "builder": "Lagoon",
+      "model": "420",
+      "boatType": "catamaran",
+      "yearFrom": 2006,
+      "yearTo": 2010,
+      "lengthM": 12.73,
+      "beamM": 7.34
+    },
+    {
+      "builder": "Lagoon",
+      "model": "42",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "lengthM": 12.8,
+      "beamM": 7.7,
+      "draftM": 1.25
+    },
+    {
+      "builder": "Lagoon",
+      "model": "43",
+      "boatType": "catamaran",
+      "yearFrom": 2024,
+      "lengthM": 13.03,
+      "beamM": 7.48
+    },
+    {
+      "builder": "Lagoon",
+      "model": "440",
+      "boatType": "catamaran",
+      "yearFrom": 2004,
+      "yearTo": 2012,
+      "lengthM": 13.61,
+      "beamM": 7.7
+    },
+    {
+      "builder": "Lagoon",
+      "model": "450",
+      "boatType": "catamaran",
+      "yearFrom": 2010,
+      "yearTo": 2019,
+      "lengthM": 13.96,
+      "beamM": 7.87,
+      "draftM": 1.3
+    },
+    {
+      "builder": "Lagoon",
+      "model": "46",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 13.99,
+      "beamM": 7.96
+    },
+    {
+      "builder": "Lagoon",
+      "model": "50",
+      "boatType": "catamaran",
+      "yearFrom": 2017,
+      "lengthM": 14.76,
+      "beamM": 8.1
+    },
+    {
+      "builder": "Lagoon",
+      "model": "500",
+      "boatType": "catamaran",
+      "yearFrom": 2004,
+      "yearTo": 2016,
+      "lengthM": 15.54,
+      "beamM": 8.55,
+      "draftM": 1.4
+    },
+    {
+      "builder": "Lagoon",
+      "model": "52",
+      "boatType": "catamaran",
+      "yearFrom": 2013,
+      "yearTo": 2019,
+      "lengthM": 15.85,
+      "beamM": 8.6
+    },
+    {
+      "builder": "Lagoon",
+      "model": "55",
+      "boatType": "catamaran",
+      "lengthM": 16.7
+    },
+    {
+      "builder": "Lagoon",
+      "model": "570",
+      "boatType": "catamaran",
+      "yearFrom": 1999,
+      "yearTo": 2008,
+      "lengthM": 17.07,
+      "beamM": 9.1
+    },
+    {
+      "builder": "Lagoon",
+      "model": "620",
+      "boatType": "catamaran",
+      "yearFrom": 2010,
+      "lengthM": 18.9,
+      "beamM": 10
+    },
+    {
+      "builder": "Lagoon",
+      "model": "Sixty 5",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 19.81,
+      "beamM": 9.91
+    },
+    {
+      "builder": "Lagoon",
+      "model": "Seventy 7",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "lengthM": 23.8,
+      "beamM": 11
+    },
+    {
+      "builder": "Leopard",
+      "model": "39",
+      "boatType": "catamaran",
+      "yearFrom": 2011,
+      "yearTo": 2015,
+      "lengthM": 11.69,
+      "beamM": 6.65
+    },
+    {
+      "builder": "Leopard",
+      "model": "40",
+      "boatType": "catamaran",
+      "yearFrom": 2005,
+      "yearTo": 2009,
+      "lengthM": 11.99,
+      "beamM": 6.7
+    },
+    {
+      "builder": "Leopard",
+      "model": "42",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 12.67,
+      "beamM": 7
+    },
+    {
+      "builder": "Leopard",
+      "model": "43",
+      "boatType": "catamaran",
+      "yearFrom": 2005,
+      "yearTo": 2010,
+      "lengthM": 12.92,
+      "beamM": 6.9
+    },
+    {
+      "builder": "Leopard",
+      "model": "44",
+      "boatType": "catamaran",
+      "yearFrom": 2011,
+      "yearTo": 2016,
+      "lengthM": 13.33,
+      "beamM": 7.25
+    },
+    {
+      "builder": "Leopard",
+      "model": "45",
+      "boatType": "catamaran",
+      "lengthM": 13.69,
+      "beamM": 7.28
+    },
+    {
+      "builder": "Leopard",
+      "model": "46",
+      "boatType": "catamaran",
+      "yearFrom": 2007,
+      "yearTo": 2012,
+      "lengthM": 14.01,
+      "beamM": 7.32
+    },
+    {
+      "builder": "Leopard",
+      "model": "47",
+      "boatType": "catamaran",
+      "yearFrom": 2002,
+      "yearTo": 2009,
+      "lengthM": 14.25,
+      "beamM": 7.55
+    },
+    {
+      "builder": "Leopard",
+      "model": "48",
+      "boatType": "catamaran",
+      "yearFrom": 2012,
+      "yearTo": 2017,
+      "lengthM": 14.68,
+      "beamM": 7.7
+    },
+    {
+      "builder": "Leopard",
+      "model": "50",
+      "boatType": "catamaran",
+      "yearFrom": 2017,
+      "lengthM": 14.95,
+      "beamM": 7.9
+    },
+    {
+      "builder": "Lomac",
+      "model": "Adrenalina 8.5",
+      "boatType": "rib",
+      "lengthM": 8.5,
+      "beamM": 3
+    },
+    {
+      "builder": "Malö",
+      "model": "39",
+      "boatType": "monohull_sail",
+      "lengthM": 11.93,
+      "beamM": 3.75
+    },
+    {
+      "builder": "Malö",
+      "model": "41",
+      "boatType": "monohull_sail",
+      "lengthM": 12.53,
+      "beamM": 3.93
+    },
+    {
+      "builder": "Malö",
+      "model": "42",
+      "boatType": "monohull_sail",
+      "lengthM": 12.88,
+      "beamM": 3.99
+    },
+    {
+      "builder": "Malö",
+      "model": "43",
+      "boatType": "monohull_sail",
+      "lengthM": 13.2,
+      "beamM": 4.07
+    },
+    {
+      "builder": "Malö",
+      "model": "45",
+      "boatType": "monohull_sail",
+      "lengthM": 13.8,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Malö",
+      "model": "46",
+      "boatType": "monohull_sail",
+      "lengthM": 14.15,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Marsaudon Composites",
+      "model": "ORC 42",
+      "boatType": "catamaran",
+      "yearFrom": 2018,
+      "lengthM": 12.8,
+      "beamM": 7.25
+    },
+    {
+      "builder": "Marsaudon Composites",
+      "model": "TS 42",
+      "boatType": "catamaran",
+      "lengthM": 12.8,
+      "beamM": 7.25
+    },
+    {
+      "builder": "Marsaudon Composites",
+      "model": "ORC 50",
+      "boatType": "catamaran",
+      "yearFrom": 2015,
+      "lengthM": 15.12,
+      "beamM": 8
+    },
+    {
+      "builder": "Moody",
+      "model": "33",
+      "boatType": "monohull_sail",
+      "lengthM": 9.95,
+      "beamM": 3.38
+    },
+    {
+      "builder": "Moody",
+      "model": "376",
+      "boatType": "monohull_sail",
+      "lengthM": 11.38,
+      "beamM": 3.75
+    },
+    {
+      "builder": "Moody",
+      "model": "40",
+      "boatType": "monohull_sail",
+      "lengthM": 12.2,
+      "beamM": 3.9
+    },
+    {
+      "builder": "Moody",
+      "model": "42",
+      "boatType": "monohull_sail",
+      "lengthM": 12.8,
+      "beamM": 3.98
+    },
+    {
+      "builder": "Moody",
+      "model": "44",
+      "boatType": "monohull_sail",
+      "lengthM": 13.4,
+      "beamM": 4.18
+    },
+    {
+      "builder": "Moody",
+      "model": "46",
+      "boatType": "monohull_sail",
+      "lengthM": 14.05,
+      "beamM": 4.28
+    },
+    {
+      "builder": "More Boats",
+      "model": "40",
+      "boatType": "monohull_sail",
+      "lengthM": 12.2,
+      "beamM": 4
+    },
+    {
+      "builder": "More Boats",
+      "model": "55",
+      "boatType": "monohull_sail",
+      "lengthM": 16.73,
+      "beamM": 4.93
+    },
+    {
+      "builder": "Najad",
+      "model": "331",
+      "boatType": "monohull_sail",
+      "lengthM": 10.07,
+      "beamM": 3.3
+    },
+    {
+      "builder": "Najad",
+      "model": "361",
+      "boatType": "monohull_sail",
+      "lengthM": 11.08,
+      "beamM": 3.55
+    },
+    {
+      "builder": "Najad",
+      "model": "373",
+      "boatType": "monohull_sail",
+      "lengthM": 11.45,
+      "beamM": 3.7
+    },
+    {
+      "builder": "Najad",
+      "model": "380",
+      "boatType": "monohull_sail",
+      "lengthM": 11.6,
+      "beamM": 3.7
+    },
+    {
+      "builder": "Najad",
+      "model": "390",
+      "boatType": "monohull_sail",
+      "lengthM": 11.93,
+      "beamM": 3.8
+    },
+    {
+      "builder": "Najad",
+      "model": "440",
+      "boatType": "monohull_sail",
+      "lengthM": 13.48,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Najad",
+      "model": "460",
+      "boatType": "monohull_sail",
+      "lengthM": 14.18,
+      "beamM": 4.3
+    },
+    {
+      "builder": "Najad",
+      "model": "490",
+      "boatType": "monohull_sail",
+      "lengthM": 15,
+      "beamM": 4.47
+    },
+    {
+      "builder": "Najad",
+      "model": "570",
+      "boatType": "monohull_sail",
+      "lengthM": 17.38,
+      "beamM": 4.97
+    },
+    {
+      "builder": "Nautitech",
+      "model": "395",
+      "boatType": "catamaran",
+      "lengthM": 11.77,
+      "beamM": 6.5
+    },
+    {
+      "builder": "Nautitech",
+      "model": "40",
+      "boatType": "catamaran",
+      "yearFrom": 2005,
+      "yearTo": 2013,
+      "lengthM": 11.98,
+      "beamM": 6.8
+    },
+    {
+      "builder": "Nautitech",
+      "model": "46 Open",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "lengthM": 13.78,
+      "beamM": 7.54
+    },
+    {
+      "builder": "Nautitech",
+      "model": "542",
+      "boatType": "catamaran",
+      "yearFrom": 2010,
+      "yearTo": 2017,
+      "lengthM": 16.28
+    },
+    {
+      "builder": "Neel",
+      "model": "43",
+      "boatType": "trimaran",
+      "yearFrom": 2021,
+      "lengthM": 12.9,
+      "beamM": 7.6
+    },
+    {
+      "builder": "Neel",
+      "model": "45",
+      "boatType": "trimaran",
+      "yearFrom": 2012,
+      "yearTo": 2019,
+      "lengthM": 13.8,
+      "beamM": 7.95
+    },
+    {
+      "builder": "Neel",
+      "model": "47",
+      "boatType": "trimaran",
+      "yearFrom": 2019,
+      "lengthM": 14.3,
+      "beamM": 8.05
+    },
+    {
+      "builder": "Neel",
+      "model": "51",
+      "boatType": "trimaran",
+      "yearFrom": 2015,
+      "yearTo": 2022,
+      "lengthM": 15.55,
+      "beamM": 8.85
+    },
+    {
+      "builder": "Neel",
+      "model": "52",
+      "boatType": "trimaran",
+      "yearFrom": 2022,
+      "lengthM": 15.88,
+      "beamM": 8.9
+    },
+    {
+      "builder": "Neel",
+      "model": "65 Evolution",
+      "boatType": "trimaran",
+      "lengthM": 19.8
+    },
+    {
+      "builder": "Nimbus",
+      "model": "T8",
+      "boatType": "motor",
+      "lengthM": 8.1,
+      "beamM": 2.58
+    },
+    {
+      "builder": "Nimbus",
+      "model": "C9",
+      "boatType": "motor",
+      "lengthM": 8.95,
+      "beamM": 2.95
+    },
+    {
+      "builder": "Nimbus",
+      "model": "T9",
+      "boatType": "motor",
+      "lengthM": 8.95,
+      "beamM": 2.95
+    },
+    {
+      "builder": "Nimbus",
+      "model": "305 Coupé",
+      "boatType": "motor",
+      "lengthM": 9.99,
+      "beamM": 3.23
+    },
+    {
+      "builder": "Nimbus",
+      "model": "C11",
+      "boatType": "motor",
+      "lengthM": 10.95,
+      "beamM": 3.43
+    },
+    {
+      "builder": "Nimbus",
+      "model": "T11",
+      "boatType": "motor",
+      "lengthM": 10.95,
+      "beamM": 3.43
+    },
+    {
+      "builder": "Nuova Jolly",
+      "model": "Prince 43",
+      "boatType": "rib",
+      "lengthM": 13.2,
+      "beamM": 4
+    },
+    {
+      "builder": "Outremer",
+      "model": "45",
+      "boatType": "catamaran",
+      "lengthM": 13.76,
+      "beamM": 6.95
+    },
+    {
+      "builder": "Outremer",
+      "model": "4X",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "lengthM": 14.32
+    },
+    {
+      "builder": "Outremer",
+      "model": "49",
+      "boatType": "catamaran",
+      "yearTo": 2013,
+      "lengthM": 14.9,
+      "beamM": 7.5
+    },
+    {
+      "builder": "Outremer",
+      "model": "51",
+      "boatType": "catamaran",
+      "yearFrom": 2012,
+      "yearTo": 2021,
+      "lengthM": 15.43,
+      "beamM": 7.85
+    },
+    {
+      "builder": "Outremer",
+      "model": "52",
+      "boatType": "catamaran",
+      "yearFrom": 2022,
+      "lengthM": 15.83,
+      "beamM": 7.95
+    },
+    {
+      "builder": "Outremer",
+      "model": "55",
+      "boatType": "catamaran",
+      "yearFrom": 2020,
+      "lengthM": 16.6,
+      "beamM": 8.07
+    },
+    {
+      "builder": "Outremer",
+      "model": "5X",
+      "boatType": "catamaran",
+      "yearFrom": 2013,
+      "lengthM": 18.25
+    },
+    {
+      "builder": "Prestige",
+      "model": "420",
+      "boatType": "motor",
+      "lengthM": 12.92,
+      "beamM": 4.06
+    },
+    {
+      "builder": "Prestige",
+      "model": "460",
+      "boatType": "motor",
+      "yearFrom": 2017,
+      "lengthM": 14.15,
+      "beamM": 4.28
+    },
+    {
+      "builder": "Prestige",
+      "model": "500",
+      "boatType": "motor",
+      "yearFrom": 2011,
+      "lengthM": 15.29,
+      "beamM": 4.39
+    },
+    {
+      "builder": "Prestige",
+      "model": "520",
+      "boatType": "motor",
+      "yearFrom": 2018,
+      "lengthM": 15.63,
+      "beamM": 4.55
+    },
+    {
+      "builder": "Prestige",
+      "model": "590",
+      "boatType": "motor",
+      "yearFrom": 2018,
+      "lengthM": 17.7,
+      "beamM": 4.79
+    },
+    {
+      "builder": "Prestige",
+      "model": "X60",
+      "boatType": "motor",
+      "yearFrom": 2021,
+      "lengthM": 18.45,
+      "beamM": 5.23
+    },
+    {
+      "builder": "Privilège",
+      "model": "465",
+      "boatType": "catamaran",
+      "yearFrom": 1998,
+      "lengthM": 14.2,
+      "beamM": 7.75
+    },
+    {
+      "builder": "Privilège",
+      "model": "Signature 510",
+      "boatType": "catamaran",
+      "yearFrom": 2015,
+      "lengthM": 15.73,
+      "beamM": 8.2
+    },
+    {
+      "builder": "Privilège",
+      "model": "Signature 580",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "lengthM": 17.6,
+      "beamM": 9
+    },
+    {
+      "builder": "Privilège",
+      "model": "585",
+      "boatType": "catamaran",
+      "lengthM": 17.75,
+      "beamM": 8.95
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Activ 605 Open",
+      "boatType": "motor",
+      "lengthM": 5.98,
+      "beamM": 2.38
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Captur 605 Pilothouse",
+      "boatType": "motor",
+      "lengthM": 6,
+      "beamM": 2.38
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Activ 675 Open",
+      "boatType": "motor",
+      "lengthM": 6.56,
+      "beamM": 2.52
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Activ 755 Open",
+      "boatType": "motor",
+      "lengthM": 7.46,
+      "beamM": 2.54
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Captur 755 Pilothouse",
+      "boatType": "motor",
+      "lengthM": 7.48,
+      "beamM": 2.54
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Activ 875 Sundeck",
+      "boatType": "motor",
+      "lengthM": 8.68,
+      "beamM": 2.97
+    },
+    {
+      "builder": "Quicksilver",
+      "model": "Captur 905 Pilothouse",
+      "boatType": "motor",
+      "lengthM": 9.05,
+      "beamM": 3
+    },
+    {
+      "builder": "Rand",
+      "model": "Supreme 27",
+      "boatType": "motor",
+      "lengthM": 8.23,
+      "beamM": 2.58
+    },
+    {
+      "builder": "Rand",
+      "model": "Leisure 28",
+      "boatType": "motor",
+      "lengthM": 8.5,
+      "beamM": 2.58
+    },
+    {
+      "builder": "Rand",
+      "model": "Escape 30",
+      "boatType": "motor",
+      "lengthM": 9.1,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Ranieri",
+      "model": "Cayman 21 Sport",
+      "boatType": "rib",
+      "lengthM": 6.35,
+      "beamM": 2.51
+    },
+    {
+      "builder": "Ranieri",
+      "model": "Cayman 23 Sport",
+      "boatType": "rib",
+      "lengthM": 7.05,
+      "beamM": 2.68
+    },
+    {
+      "builder": "Ranieri",
+      "model": "Cayman 26 Sport",
+      "boatType": "rib",
+      "lengthM": 7.95,
+      "beamM": 2.93
+    },
+    {
+      "builder": "Ranieri",
+      "model": "Cayman 28 Sport",
+      "boatType": "rib",
+      "lengthM": 8.6,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Ranieri",
+      "model": "Cayman 31 Sport Touring",
+      "boatType": "rib",
+      "lengthM": 9.5,
+      "beamM": 3.25
+    },
+    {
+      "builder": "Ranieri",
+      "model": "Cayman 38 Executive",
+      "boatType": "rib",
+      "lengthM": 11.65,
+      "beamM": 3.8
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "890",
+      "boatType": "monohull_sail",
+      "lengthM": 8.9,
+      "beamM": 3.25
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "970",
+      "boatType": "monohull_sail",
+      "lengthM": 9.7,
+      "beamM": 3.55
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "1060",
+      "boatType": "monohull_sail",
+      "lengthM": 10.6,
+      "beamM": 3.7
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "1070",
+      "boatType": "monohull_sail",
+      "lengthM": 10.7,
+      "beamM": 3.8
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "1180",
+      "boatType": "monohull_sail",
+      "lengthM": 11.8,
+      "beamM": 4.03
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "1200",
+      "boatType": "monohull_sail",
+      "lengthM": 12,
+      "beamM": 4.1
+    },
+    {
+      "builder": "RM Yachts",
+      "model": "1270",
+      "boatType": "monohull_sail",
+      "lengthM": 12.7,
+      "beamM": 4.32
+    },
+    {
+      "builder": "Salona",
+      "model": "37",
+      "boatType": "monohull_sail",
+      "yearFrom": 2003,
+      "lengthM": 11.33,
+      "beamM": 3.6
+    },
+    {
+      "builder": "Salona",
+      "model": "38",
+      "boatType": "monohull_sail",
+      "yearFrom": 2009,
+      "lengthM": 11.58,
+      "beamM": 3.75
+    },
+    {
+      "builder": "Salona",
+      "model": "42",
+      "boatType": "monohull_sail",
+      "lengthM": 12.8,
+      "beamM": 4.02
+    },
+    {
+      "builder": "Salona",
+      "model": "44",
+      "boatType": "monohull_sail",
+      "lengthM": 13.35,
+      "beamM": 4.13
+    },
+    {
+      "builder": "Salona",
+      "model": "46",
+      "boatType": "monohull_sail",
+      "yearFrom": 2016,
+      "lengthM": 14.05,
+      "beamM": 4.35
+    },
+    {
+      "builder": "Sasga",
+      "model": "Menorquin 34",
+      "boatType": "motor",
+      "lengthM": 10.38,
+      "beamM": 3.63
+    },
+    {
+      "builder": "Sasga",
+      "model": "Menorquin 42",
+      "boatType": "motor",
+      "lengthM": 12.93,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Sasga",
+      "model": "Menorquin 54",
+      "boatType": "motor",
+      "lengthM": 16.5,
+      "beamM": 4.9
+    },
+    {
+      "builder": "Sasga",
+      "model": "Menorquin 68",
+      "boatType": "motor",
+      "lengthM": 20.65,
+      "beamM": 5.55
+    },
+    {
+      "builder": "Sealine",
+      "model": "C330",
+      "boatType": "motor",
+      "yearFrom": 2015,
+      "lengthM": 10.26,
+      "beamM": 3.45
+    },
+    {
+      "builder": "Sealine",
+      "model": "S330",
+      "boatType": "motor",
+      "yearFrom": 2015,
+      "lengthM": 10.26,
+      "beamM": 3.45
+    },
+    {
+      "builder": "Sealine",
+      "model": "C390",
+      "boatType": "motor",
+      "yearFrom": 2016,
+      "lengthM": 12,
+      "beamM": 3.97
+    },
+    {
+      "builder": "Sealine",
+      "model": "C430",
+      "boatType": "motor",
+      "lengthM": 13.25,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Sealine",
+      "model": "F430",
+      "boatType": "motor",
+      "lengthM": 13.25,
+      "beamM": 4.2
+    },
+    {
+      "builder": "Sealine",
+      "model": "T50",
+      "boatType": "motor",
+      "lengthM": 15.33,
+      "beamM": 4.38
+    },
+    {
+      "builder": "Sealine",
+      "model": "F530",
+      "boatType": "motor",
+      "lengthM": 16.12,
+      "beamM": 4.6
+    },
+    {
+      "builder": "Seawind",
+      "model": "1000",
+      "boatType": "catamaran",
+      "lengthM": 9.87
+    },
+    {
+      "builder": "Seawind",
+      "model": "1160",
+      "boatType": "catamaran",
+      "yearFrom": 2006,
+      "lengthM": 11.6,
+      "beamM": 6.2
+    },
+    {
+      "builder": "Seawind",
+      "model": "1250",
+      "boatType": "catamaran",
+      "yearFrom": 2011,
+      "lengthM": 12.5,
+      "beamM": 6.93
+    },
+    {
+      "builder": "Seawind",
+      "model": "1260",
+      "boatType": "catamaran",
+      "yearFrom": 2018,
+      "lengthM": 12.6,
+      "beamM": 6.9
+    },
+    {
+      "builder": "Seawind",
+      "model": "1370",
+      "boatType": "catamaran",
+      "yearFrom": 2022,
+      "lengthM": 13.7,
+      "beamM": 7.45
+    },
+    {
+      "builder": "Seawind",
+      "model": "1600",
+      "boatType": "catamaran",
+      "yearFrom": 2016,
+      "lengthM": 15.95,
+      "beamM": 8.15
+    },
+    {
+      "builder": "Southerly",
+      "model": "110",
+      "boatType": "monohull_sail",
+      "lengthM": 11.05,
+      "beamM": 3.68
+    },
+    {
+      "builder": "Southerly",
+      "model": "115",
+      "boatType": "monohull_sail",
+      "lengthM": 11.58,
+      "beamM": 3.8
+    },
+    {
+      "builder": "Southerly",
+      "model": "38",
+      "boatType": "monohull_sail",
+      "lengthM": 11.6,
+      "beamM": 3.85
+    },
+    {
+      "builder": "Southerly",
+      "model": "435",
+      "boatType": "monohull_sail",
+      "lengthM": 13.2,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Southerly",
+      "model": "135",
+      "boatType": "monohull_sail",
+      "lengthM": 13.53,
+      "beamM": 4.25
+    },
+    {
+      "builder": "Sunreef",
+      "model": "50",
+      "boatType": "catamaran",
+      "yearFrom": 2019,
+      "lengthM": 15.2,
+      "beamM": 8.8
+    },
+    {
+      "builder": "Sunreef",
+      "model": "60",
+      "boatType": "catamaran",
+      "lengthM": 18.1,
+      "beamM": 9.4
+    },
+    {
+      "builder": "Sunreef",
+      "model": "70",
+      "boatType": "catamaran",
+      "lengthM": 21.3,
+      "beamM": 10.55
+    },
+    {
+      "builder": "Sunreef",
+      "model": "80",
+      "boatType": "catamaran",
+      "lengthM": 24
+    },
+    {
+      "builder": "Valiant Boats",
+      "model": "DR 620",
+      "boatType": "rib",
+      "lengthM": 6.2,
+      "beamM": 2.5
+    },
+    {
+      "builder": "Valiant Boats",
+      "model": "DR 750",
+      "boatType": "rib",
+      "lengthM": 7.5,
+      "beamM": 2.88
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Centurion 32",
+      "boatType": "monohull_sail",
+      "lengthM": 9.75,
+      "beamM": 3.25
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Gladiateur 33",
+      "boatType": "monohull_sail",
+      "lengthM": 10.05,
+      "beamM": 3.26
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Pretorien 35",
+      "boatType": "monohull_sail",
+      "yearFrom": 1980,
+      "yearTo": 1990,
+      "lengthM": 10.65,
+      "beamM": 3.48
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Hood 38",
+      "boatType": "monohull_sail",
+      "lengthM": 11.59,
+      "beamM": 3.68
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Centurion 40S",
+      "boatType": "monohull_sail",
+      "lengthM": 12.15,
+      "beamM": 3.95
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Pilot Saloon 40",
+      "boatType": "monohull_sail",
+      "lengthM": 12.25,
+      "beamM": 3.95
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Amphitrite 43",
+      "boatType": "monohull_sail",
+      "lengthM": 13.08,
+      "beamM": 4.05
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Pilot Saloon 43",
+      "boatType": "monohull_sail",
+      "lengthM": 13.1,
+      "beamM": 4.15
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Centurion 45S",
+      "boatType": "monohull_sail",
+      "lengthM": 13.75,
+      "beamM": 4.22
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Centurion 47",
+      "boatType": "monohull_sail",
+      "lengthM": 14.33,
+      "beamM": 4.4
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Pilot Saloon 48",
+      "boatType": "monohull_sail",
+      "lengthM": 14.68,
+      "beamM": 4.5
+    },
+    {
+      "builder": "Wauquiez",
+      "model": "Pilot Saloon 55",
+      "boatType": "monohull_sail",
+      "lengthM": 16.73,
+      "beamM": 4.93
+    },
+    {
+      "builder": "Williams Jet Tenders",
+      "model": "Dieseljet 625",
+      "boatType": "rib",
+      "lengthM": 6.25,
+      "beamM": 2.45
+    },
+    {
+      "builder": "X-Yachts",
+      "model": "332",
+      "boatType": "monohull_sail",
+      "yearFrom": 1995,
+      "lengthM": 10.02,
+      "beamM": 3.26
+    },
+    {
+      "builder": "X-Yachts",
+      "model": "362 sport",
+      "boatType": "monohull_sail",
+      "yearFrom": 2000,
+      "lengthM": 10.88,
+      "beamM": 3.44
+    },
+    {
+      "builder": "X-Yachts",
+      "model": "Xp 38",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 11.58,
+      "beamM": 3.7
+    },
+    {
+      "builder": "X-Yachts",
+      "model": "Xc 38",
+      "boatType": "monohull_sail",
+      "yearFrom": 2010,
+      "lengthM": 11.63,
+      "beamM": 3.72
+    },
+    {
+      "builder": "X-Yachts",
+      "model": "Xp 44",
+      "boatType": "monohull_sail",
+      "yearFrom": 2012,
+      "lengthM": 13.35,
+      "beamM": 4.1
+    },
+    {
+      "builder": "X-Yachts",
+      "model": "Xc 45",
+      "boatType": "monohull_sail",
+      "yearFrom": 2008,
+      "lengthM": 13.8,
+      "beamM": 4.16
+    },
+    {
+      "builder": "Zodiac",
+      "model": "N-ZO 600",
+      "boatType": "rib",
+      "lengthM": 6.03,
+      "beamM": 2.48
+    },
+    {
+      "builder": "Zodiac",
+      "model": "Medline 660",
+      "boatType": "rib",
+      "lengthM": 6.57,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Zodiac",
+      "model": "Medline 6.8",
+      "boatType": "rib",
+      "lengthM": 6.8,
+      "beamM": 2.55
+    },
+    {
+      "builder": "Zodiac",
+      "model": "N-ZO 680",
+      "boatType": "rib",
+      "lengthM": 6.82,
+      "beamM": 2.6
+    },
+    {
+      "builder": "Zodiac",
+      "model": "Open 7",
+      "boatType": "rib",
+      "lengthM": 7,
+      "beamM": 2.63
+    },
+    {
+      "builder": "Zodiac",
+      "model": "Medline 7.5",
+      "boatType": "rib",
+      "lengthM": 7.5,
+      "beamM": 2.95
+    },
+    {
+      "builder": "Zodiac",
+      "model": "N-ZO 760",
+      "boatType": "rib",
+      "lengthM": 7.6,
+      "beamM": 2.99
+    },
+    {
+      "builder": "Zodiac",
+      "model": "Medline 9",
+      "boatType": "rib",
+      "lengthM": 9,
+      "beamM": 3.18
+    }
+  ]
+}
