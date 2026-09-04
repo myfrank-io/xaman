@@ -1010,8 +1010,9 @@ d'un champ « constructeur » sur le document n'est **pas établie**, et aucun c
 ## 2026-09-04 — D70 : la CI vérifie, elle ne déploie pas
 
 **Question.** « Simplifie le CI/CD sur ce projet, c'est beaucoup trop long et beaucoup trop
-complexe, ça n'avance à rien. » Trois jobs, 108 lignes de YAML, ~4 min 15 d'attente à chaque
-push. Le détail des exécutions dit où part le temps — et surtout ce qui ne prouve rien.
+complexe, ça n'avance à rien. » Trois jobs, 108 lignes de YAML, 4 min 19 d'attente sur une PR et
+4 min 58 sur `main`. Le détail des exécutions dit où part le temps — et surtout ce qui ne prouve
+rien.
 
 **Deux étapes ne pouvaient pas échouer.** Elles ont donc été retirées, pas réparées :
 
@@ -1033,12 +1034,16 @@ push. Le détail des exécutions dit où part le temps — et surtout ce qui ne 
 la base. Les trois specs actuelles ne font que `page.goto` + assertions : aucune fixture, aucune
 session, aucune écriture. Rien à sérialiser. Les 200 cas (40 pages × 5 viewports) tournaient sur
 2 workers avec une granularité de *fichier*, donc les 5 copies de `touch-audit.spec.ts` passaient
-l'une après l'autre. En parallèle sur 4 workers : **204 s → 142 s**, 200/200 au vert (mesuré sur
-4 cœurs, la forme du runner GitHub).
+l'une après l'autre. En parallèle sur 4 workers, l'étape passe de **217 s à 181 s** en CI
+(exécutions 108 puis 110), 200/200 au vert. En local sur 4 cœurs le même changement donnait
+204 s → 142 s : le runner GitHub est plus contraint, et le gain y est plus petit.
 
-Le plafond n'est plus là : le serveur `next dev` compile les routes à la demande, et c'est lui,
-pas le navigateur, qui limite. Le descendre plus bas demanderait un build de production dans le
-job e2e — inutile tant que le job `checks` (~3 min) reste le chemin critique.
+Le plafond n'est pas le navigateur : c'est `next dev`, qui compile les routes à la demande pendant
+que les 4 workers l'attendent. Le descendre vraiment demanderait de jouer l'audit sur un build de
+production. **Écarté pour l'instant** : en mode production, React ne journalise plus ses
+avertissements de développement — hydratation, clés manquantes — et c'est précisément ce que
+l'assertion « aucune erreur console » attrape depuis D50 et D58. On échangerait de la rigueur
+contre des secondes.
 
 **Ce qui n'a pas bougé, et pourquoi.** `supabase db start` coûte 82 s : c'est le poste le plus
 cher qui reste. Le remplacer par un conteneur `postgres:17` et le shim `tests/support/supabase-shim.sql`
@@ -1048,5 +1053,9 @@ les migrations de production partent à la main, c'est aussi le seul garde-fou a
 Échanger ce filet contre 75 s sur un pipeline de 3 minutes serait un mauvais marché. Le levier
 existe si l'arbitrage change un jour.
 
-**Résultat.** 3 jobs → 2, 108 lignes → 62, ~4 min 15 → ~3 min 10 d'attente, et plus une seule
-étape qui ne peut pas échouer.
+**Résultat**, mesuré sur l'exécution 110 : 3 jobs → 2, 108 lignes → 62, et plus une seule étape
+qui ne peut pas échouer. L'attente passe de 4 min 19 à **3 min 51** sur une PR (−11 %) et de
+4 min 58 à **3 min 51** sur `main` (−22 %, le troisième runner en moins). Le gain est réel mais
+modeste : l'audit tactile reste le chemin critique à 3 min 48, et le vrai plafond est `next dev`.
+Les trois leviers qui restent sont écrits ci-dessus — conteneur `postgres:17`, build de
+production pour l'audit, ou un viewport de moins — et chacun se paie en rigueur, pas en YAML.
