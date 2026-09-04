@@ -26,6 +26,16 @@ export const PROFILE_PATH = "/settings/profile";
  */
 export const NEW_BOAT_PATH = "/boats/new";
 
+/**
+ * Steps 2 and 3 of opening a carnet (D67). Under `/boats/new` rather than in the boat's own tree,
+ * because the boat's tree is `AppShell`: landing there would put the four tabs on screen and
+ * invite someone to wander off mid-flow. The id is in the address so the step is resumable — a
+ * closed tab, a dead battery, and the dashboard's own « reprendre » all come back here.
+ */
+export function onboardingPath(boatId: string, step: 2 | 3): string {
+  return withQuery(`${NEW_BOAT_PATH}/${boatId}`, { step });
+}
+
 export function boatPath(boatId: string, key: NavKey): string {
   if (key === "profile") return PROFILE_PATH;
   return `/boats/${boatId}/${BOAT_ROUTES[key]}`;

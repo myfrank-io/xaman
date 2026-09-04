@@ -288,7 +288,7 @@
     },
     "new": {
       "title": "Votre bateau",
-      "subtitle": "Quelques informations et le carnet est ouvert — avec votre historique si vous en avez un.",
+      "subtitle": "Trois étapes, et le carnet est à vous.",
       "add": "Ajouter un bateau",
       "name": "Nom du bateau",
       "namePlaceholder": "Xaman",
@@ -301,23 +301,69 @@
       "optional": "Facultatif",
       "engines": "Moteurs",
       "enginesHelp": "Les entretiens en heures s'y rattacheront. Vous les nommerez et relèverez les compteurs ensuite.",
-      "logbook": "Vous avez déjà un carnet d'entretien ?",
-      "logbookFormat": {
-        "none": "Rien à reprendre",
-        "spreadsheet": "Excel ou CSV",
-        "paper": "Papier ou photos"
-      },
-      "logbookNext": {
-        "none": "Vous pourrez reprendre un historique plus tard : chaque liste du carnet a son import.",
-        "spreadsheet": "Le carnet s'ouvre sur l'import : votre fichier, puis « Importer ». L'export d'une autre application fait aussi l'affaire.",
-        "paper": "Le carnet s'ouvre sur l'import de documents : photographiez les pages et les factures, chacune devient une intervention."
-      },
-      "submitImport": "Ouvrir le carnet et importer",
-      "submit": "Ouvrir le carnet",
-      "planLater": "Votre carnet arrivera avec les systèmes d'un {type}. Le plan d'entretien se choisit ensuite, depuis la checklist.",
+      "submit": "Continuer",
       "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement.",
       "suggestionsLabel": "Suggestions :",
-      "identityHelp": "Écrivez-les tels quels, même s'ils ne sont pas dans les suggestions."
+      "identityHelp": "Écrivez-les tels quels, même s'ils ne sont pas dans les suggestions.",
+      "systems": "Votre carnet arrivera avec les systèmes d'un {type}."
+    },
+    "onboarding": {
+      "title": "Mise en route",
+      "progress": "Progression de la mise en route",
+      "stepOf": "Étape {step} sur {total}",
+      "steps": {
+        "boat": "Le bateau",
+        "logbook": "Votre carnet",
+        "tour": "Prise en main"
+      },
+      "logbook": {
+        "subtitle": "Reprenez ce que vous avez déjà — ou passez, rien n'est obligatoire.",
+        "question": "Sur quoi votre carnet est-il écrit aujourd'hui ?",
+        "format": {
+          "none": "Rien à reprendre",
+          "spreadsheet": "Excel ou CSV",
+          "paper": "Papier ou photos"
+        },
+        "help": {
+          "none": "Bateau neuf, ou vous préférez saisir au fil de l'eau : chaque liste garde son import pour plus tard.",
+          "spreadsheet": "Votre fichier, puis « Importer ». L'export d'une autre application fait aussi l'affaire, et chaque ligne arrivera « à vérifier ».",
+          "paper": "Photographiez les pages et les factures : chacune devient une intervention, et « Tout rattacher » les envoie d'un coup."
+        },
+        "importedRows": "{count, plural, one {# ligne reprise dans votre carnet} other {# lignes reprises dans votre carnet}}.",
+        "importedDocuments": "{count, plural, one {# document rattaché} other {# documents rattachés}}.",
+        "next": "Continuer",
+        "skip": "Passer cette étape"
+      },
+      "tour": {
+        "subtitle": "Ce qu'il faut savoir, et les deux réglages qui font tourner le carnet.",
+        "plan": {
+          "title": "Votre checklist",
+          "text": "Un plan d'entretien apporte les points à surveiller, chacun avec son échéance. Vous cochez « Fait », l'échéance se recale toute seule.",
+          "label": "Plan d'entretien",
+          "later": "Je choisirai plus tard",
+          "laterHelp": "Sans plan, la checklist reste vide. Vous pourrez en choisir un depuis l'onglet Checklist.",
+          "summary": "{categories, plural, one {# système} other {# systèmes}} · {items, plural, one {# point d'entretien} other {# points d'entretien}}",
+          "groupExact": "Modèles de constructeurs",
+          "groupGeneric": "Modèles génériques",
+          "already": "Votre plan d'entretien est déjà choisi.",
+          "none": "Aucun plan disponible pour l'instant : votre checklist se remplira à la main."
+        },
+        "hours": {
+          "title": "Les compteurs",
+          "text": "Les entretiens en heures se calent sur le compteur des moteurs. Sans relevé, ces échéances restent muettes.",
+          "optional": "Facultatif",
+          "placeholder": "1250"
+        },
+        "log": {
+          "title": "Noter une intervention",
+          "text": "« J'ai fait… » en moins d'une minute : un titre, une date, un coût. Les points de checklist concernés sont pré-cochés, et l'historique se remplit tout seul."
+        },
+        "crew": {
+          "title": "À plusieurs",
+          "text": "Votre associé et vos prestataires voient le même carnet, à jour, depuis leur téléphone. Vous les invitez depuis Membres."
+        },
+        "finish": "Ouvrir mon carnet"
+      }
     }
   },
   "errors": {
@@ -581,11 +627,14 @@
       "overdue": "{count, plural, one {# point en retard} other {# points en retard}}",
       "soon": "{count, plural, one {# point à faire bientôt} other {# points à faire bientôt}}",
       "ok": "Tout est à jour",
-      "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}"
+      "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}",
+      "empty": "Carnet neuf : la checklist attend son plan d'entretien"
     },
     "banner": {
       "noReadings": "Aucun relevé d'heures pour {engines}.",
-      "noReadingsAction": "Saisir"
+      "noReadingsAction": "Saisir",
+      "unfinished": "Votre mise en route n'est pas terminée : sans plan d'entretien, la checklist reste vide.",
+      "unfinishedAction": "Reprendre"
     }
   },
   "offline": {
@@ -1671,7 +1720,6 @@
   },
   "import": {
     "subtitle": "Reprenez un tableau existant plutôt que de tout retaper.",
-    "fromNew": "Votre carnet est ouvert. Reprenez votre historique maintenant, ou passez : l'import reste sur chaque liste.",
     "run": "{count, plural, one {Importer # ligne} other {Importer # lignes}}",
     "done": "{created, plural, =0 {Aucune création} one {# création} other {# créations}} · {updated, plural, =0 {aucune mise à jour} one {# mise à jour} other {# mises à jour}}.",
     "action": "Importer",
@@ -1679,6 +1727,11 @@
       "source": "1 · Votre tableau",
       "mapping": "2 · Vos colonnes",
       "preview": "3 · Aperçu et import"
+    },
+    "sections": {
+      "source": "Votre tableau",
+      "mapping": "Vos colonnes",
+      "preview": "Aperçu et import"
     },
     "source": {
       "title": "Votre tableau",
@@ -1741,8 +1794,7 @@
       "logs": "Retour aux interventions",
       "purchases": "Retour aux achats",
       "completions": "Retour à la checklist",
-      "readings": "Retour aux moteurs",
-      "dashboard": "Aller au tableau de bord"
+      "readings": "Retour aux moteurs"
     },
     "errors": {
       "empty": "Le tableau est vide.",
@@ -1957,7 +2009,8 @@
       "done": "{count, plural, one {# document rattaché} other {# documents rattachés}}",
       "noLogs": "Aucune intervention pour l'instant : créez-en une depuis un document.",
       "readOnly": "Vous n'avez pas le droit d'ajouter des documents sur ce bateau.",
-      "dashboard": "Aller au tableau de bord"
+      "attachAll": "{count, plural, one {Rattacher le document} other {Rattacher les # documents}}",
+      "noCategories": "Ce bateau n'a encore aucun système : un document ne peut pas devenir une intervention sans en avoir un. Ajoutez-en depuis les paramètres du bateau."
     }
   }
 }

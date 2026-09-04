@@ -19,15 +19,10 @@ const RECENT_LOGS = 200;
  */
 export default async function ImportDocumentsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ boatId: string }>;
-  searchParams: Promise<{ from?: string }>;
 }) {
-  const [{ boatId }, { from }] = await Promise.all([params, searchParams]);
-  // Straight off « Ouvrir le carnet » with a paper logbook to photograph (D66): the way back is
-  // the dashboard of the new boat, not a list of interventions that does not exist yet.
-  const fromNew = from === "new";
+  const { boatId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: logs }, { data: categories }] = await Promise.all([
     supabase.rpc("boat_role", { p_boat_id: boatId }),
@@ -46,14 +41,14 @@ export default async function ImportDocumentsPage({
   ]);
   if (!role) notFound();
 
-  const [t, ta] = await Promise.all([getTranslations("logs"), getTranslations("attachments")]);
+  const t = await getTranslations("logs");
 
   return (
     <div className="flex flex-col gap-4">
       <Button asChild variant="ghost" size="sm" className="-ml-2 self-start">
-        <Link href={boatPath(boatId, fromNew ? "dashboard" : "logs") as Route}>
+        <Link href={boatPath(boatId, "logs") as Route}>
           <ChevronLeftIcon />
-          {fromNew ? ta("import.dashboard") : t("title")}
+          {t("title")}
         </Link>
       </Button>
       <DocumentImport
