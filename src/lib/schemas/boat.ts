@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { normaliseRegistration } from "@/lib/boat-registration";
 import {
   expectedUpdatedAt,
   nullableDecimal,
@@ -20,6 +21,19 @@ export const boatTypeSchema = z.enum([
 ]);
 export type BoatType = z.infer<typeof boatTypeSchema>;
 
+/**
+ * The registration number issued by the maritime administration (FR: immatriculation).
+ *
+ * Stored uppercase and single-spaced so the same number typed two ways is one value, and
+ * otherwise free text: there is no list to check it against and no registry to look it up in.
+ * The form shows a hint when the shape is not the current French one; nothing refuses it.
+ */
+const registration = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const normalised = normaliseRegistration(value);
+  return normalised === "" ? null : normalised;
+}, z.string().max(32).nullable());
+
 export const updateBoatSchema = z.object({
   boatId: uuid,
   expectedUpdatedAt,
@@ -28,6 +42,7 @@ export const updateBoatSchema = z.object({
   builder: nullableText(80),
   model: nullableText(80),
   hullNumber: nullableText(40),
+  registration,
   year: nullableInteger(1900, 2100),
   flag: nullableText(60),
   homePort: nullableText(80),
@@ -72,5 +87,11 @@ export const createBoatSchema = z.object({
   builder: nullableText(80),
   model: nullableText(80),
   engines: z.array(newBoatEngineSchema).max(NEW_BOAT_ENGINES_MAX).default([]),
+  /**
+   * The catalogue row that was tapped, if one was (D66). It contributes the dimensions and
+   * nothing else, server-side — the client sends a reference, never measurements. Null whenever
+   * the boat was typed by hand, which stays the ordinary case.
+   */
+  boatModelId: uuid.nullable().default(null),
 });
 export type CreateBoatInput = z.input<typeof createBoatSchema>;

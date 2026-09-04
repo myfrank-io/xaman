@@ -756,3 +756,71 @@ derrière.
 
 **Coût de l'acte** : 1 tap (type de coque, si ce n'est pas un monocoque) + « Ouvrir le carnet ».
 Le nombre de moteurs se règle seul depuis la coque. Le plan, plus tard, coûte 1 tap de plus.
+
+---
+
+## D66 — Immatriculation saisie, catalogue de modèles interne (2026-09-04)
+
+**Question.** « On n'a pas un moyen de rajouter l'immatriculation et de charger automatiquement
+toutes les données ? »
+
+**Ce qui a été cherché.** Un service qui, à partir d'une immatriculation de plaisance, rendrait le
+constructeur, le modèle et l'année. Réserve méthodologique : le proxy de sortie a renvoyé 403 sur
+toutes les pages cibles (mer.gouv.fr, Légifrance, data.gouv.fr, data.anfr.fr, sailboatdata.com,
+uscgboating.org). Les conclusions reposent sur des extraits de recherche, sauf trois dépôts GitHub
+clonés et lus.
+
+**Il n'existe pas.** Le registre français est PUMA (arrêté du 27 octobre 2025), interne aux
+Affaires maritimes : pas d'API, pas d'open data, pas de consultation publique — seulement une
+demande manuelle de fiche matricule. Deux confusions expliquent l'intuition inverse : un **registre
+administratif n'est pas une base de caractéristiques** (il dit qui possède quoi, pas ce qu'est le
+bateau), et **l'identité du bateau n'est pas celle du propriétaire** — construire un service « à
+qui est ce bateau ? » nous exposerait (art. L322-2 CRPA).
+
+**Écartés, et pourquoi.** L'AIS ne transporte ni année, ni constructeur, ni modèle (et l'IMO exclut
+la plaisance). SailboatData interdit l'accès automatisé dans ses CGU et a refusé une API sur son
+propre forum. `webmasterkai/sailboat_data` : 7 578 fiches scrapées mot pour mot, aucune LICENSE.
+`jieter/orc-data` : MIT couvre le code, pas les données — et **zéro multicoque** (ni Lagoon, ni
+Outremer, ni Catana, ni Neel, ni Marsaudon), rédhibitoire pour un produit dont le premier bateau
+est un catamaran. Le décodage HIN/CIN donne hors-ligne l'année (ambiguë) et le pays ; le
+constructeur exigerait une table MIC sans équivalent public européen.
+
+**Décision, en deux parties.**
+
+1. **`boats.registration` est un champ comme un autre** (migration `0018`), sur l'écran Bateau et
+   pas sur l'onboarding, qui doit rester à trois gestes. Texte libre normalisé en majuscules. La
+   forme française actuelle est **signalée, jamais exigée** : le format a changé en 2016, les
+   bateaux antérieurs gardent leur numéro, et les listes de quartiers maritimes publiées ne
+   s'accordent pas (45 ou 47 selon la source) — donc aucune liste n'est codée en dur, seule la
+   forme est testée. Donnée personnelle : elle reste derrière la RLS du bateau. Pas de `revoke` de
+   colonne — sous PostgREST une colonne révoquée fait **échouer** la requête au lieu de masquer la
+   valeur, ce qui casserait tous les écrans qui lisent le bateau.
+
+2. **Le catalogue de modèles est le nôtre** (migrations `0019` + `0020`, source
+   `seed/boat-models.json`, générateur `scripts/gen-boat-models-migration.mjs`). Table de
+   référence, donc **sans `boat_id`** (règle 4) : comme `checklist_templates`, elle ne porte la
+   donnée de personne. Lisible par tout compte connecté, écrite par le seul admin plateforme.
+
+**Ce que le catalogue change à l'écran.** Les suggestions ne viennent plus des quatre modèles pour
+lesquels nous publions un plan d'entretien, mais du catalogue. Taper « Lagoon 42 » et toucher la
+puce écrit le chantier, règle le type de coque, en déduit le nombre de moteurs et fait arriver les
+dimensions — quatre champs pour un geste. Le type de coque est passé **après** constructeur et
+modèle : la puce y répond, il ne reste qu'à confirmer.
+
+**Les dimensions ne sont pas fiables, et le disent.** Un nom de modèle ne détermine pas une coque :
+« Oceanis 40 » couvre des certificats ORC de 1991 à 2020 mesurant de 11,80 m à 12,15 m, et la
+plupart des séries existent en deux versions de quille. Chaque ligne a donc été écrite **deux fois,
+indépendamment** ; une dimension sur laquelle les deux passages ne s'accordaient pas à 25–35 cm
+près est laissée **nulle** plutôt que moyennée en mensonge plausible, et un modèle qu'un seul
+passage connaissait est écarté. Côté app, un modèle ne remplit **que les champs restés vides** —
+jamais une mesure prise sur le bateau.
+
+**Le client envoie une référence, pas des mesures.** `create_boat` reçoit `p_boat_model_id`
+(migration `0021`) et lit lui-même les dimensions ; un id inconnu ou désactivé est ignoré, jamais
+fatal. Nom, type, constructeur et modèle restent ce que le formulaire affiche : la fonction
+n'écrase pas un champ que la personne vient de corriger.
+
+**Ce qui reste à faire, et qui ne coûte pas une ligne de code** : demander à Xav une photo de son
+certificat d'enregistrement. La lecture du certificat est la seule piste d'auto-remplissage
+juridiquement propre (donnée fournie par la personne elle-même, comme HistoVec) — mais la présence
+d'un champ « constructeur » sur le document n'est **pas établie**, et aucun code 2D n'est attesté.

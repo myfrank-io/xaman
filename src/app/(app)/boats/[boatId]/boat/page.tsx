@@ -7,6 +7,7 @@ import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab"
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
 import { applyStockFilter, countLowStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
+import { boatModels } from "@/lib/queries/boat-models";
 import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,6 +33,7 @@ export default async function BoatPage({
     { data: equipment },
     { data: categories },
     allParts,
+    models,
   ] = await Promise.all([
     supabase.from("boats").select("*").eq("id", boatId).maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
@@ -64,6 +66,9 @@ export default async function BoatPage({
     // The spare-parts stock lives in this tab now (D34): read it with the equipment, enriched
     // with its system and supplier names by the shared loader the checklist screen uses too.
     loadStockItems(supabase, boatId),
+    // The catalogue (D66): suggestions in the identity form, and the dimensions of a model tapped
+    // there. A few hundred short rows, read alongside the rest rather than after it.
+    boatModels(supabase),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -120,6 +125,7 @@ export default async function BoatPage({
         boat={boat}
         canEdit={can(boatRole, "write")}
         templateName={template?.name ?? null}
+        models={models}
       />
       <BoatTabs
         boatId={boatId}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { PencilIcon } from "lucide-react";
@@ -10,6 +10,7 @@ import type { z } from "zod";
 
 import type { Boat } from "@/components/boat/BoatProvider";
 import { DiscardDialog } from "@/components/forms/DiscardDialog";
+import { SuggestionChips } from "@/components/boats/SuggestionChips";
 import { Field } from "@/components/forms/Field";
 import { FormActionBar } from "@/components/forms/FormActionBar";
 import { formResolver } from "@/components/forms/form-resolver";
@@ -29,6 +30,13 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { NumericField } from "@/components/ui/numeric-field";
 import { Textarea } from "@/components/ui/textarea";
 import { updateBoat } from "@/lib/actions/boat";
+import {
+  builderSuggestions,
+  findModelById,
+  modelSuggestions,
+  type BoatModelOption,
+} from "@/lib/boat-models";
+import { looksLikeFrenchRegistration } from "@/lib/boat-registration";
 import { formatNumber } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatTypeSchema, updateBoatSchema, type BoatType } from "@/lib/schemas/boat";
@@ -41,6 +49,7 @@ type IdentityForm = {
   builder: string;
   model: string;
   hullNumber: string;
+  registration: string;
   year: string;
   flag: string;
   homePort: string;
@@ -61,6 +70,7 @@ function toForm(boat: Boat): IdentityForm {
     builder: textToInput(boat.builder),
     model: textToInput(boat.model),
     hullNumber: textToInput(boat.hull_number),
+    registration: textToInput(boat.registration),
     year: numberToInput(boat.year),
     flag: textToInput(boat.flag),
     homePort: textToInput(boat.home_port),
@@ -102,12 +112,18 @@ export function BoatIdentity({
   boat,
   canEdit,
   templateName,
+  models,
 }: {
   boat: Boat;
   canEdit: boolean;
   templateName: string | null;
+  /** The catalogue (D66) — suggestions here, and the dimensions of a model that is tapped. */
+  models: BoatModelOption[];
 }) {
   const t = useTranslations("boat.identity");
+  // Shared with the creation screen: the chip lists need names of their own, so that a
+  // `<ul aria-label="Modèle">` does not collide with the `<input>` that already has that name.
+  const ts = useTranslations("boats.new");
   const tt = useTranslations("boatType");
   const errorMessage = useErrorMessage();
   const fieldError = useFieldError();
@@ -120,6 +136,42 @@ export function BoatIdentity({
   });
   const guard = useUnsavedGuard(editing && form.formState.isDirty);
   const errors = form.formState.errors;
+
+  // Shown, never enforced: a boat registered before the 2016 reform or under a foreign flag has a
+  // perfectly valid number that this shape does not match. `useWatch` rather than `form.watch()`,
+  // which returns a fresh function every render and opts the component out of the React Compiler.
+  const registration = useWatch({ control: form.control, name: "registration" });
+  const registrationHint = !!registration?.trim() && !looksLikeFrenchRegistration(registration);
+
+  const builder = useWatch({ control: form.control, name: "builder" });
+  const model = useWatch({ control: form.control, name: "model" });
+  const builders = useMemo(() => builderSuggestions(models, builder), [models, builder]);
+  const suggestedModels = useMemo(
+    () => modelSuggestions(models, builder, model),
+    [models, builder, model],
+  );
+
+  /**
+   * A tapped model fills the yard and the hull type, and then only the measurements the field is
+   * still empty for. Someone who measured their own draft has the right number in front of them;
+   * a catalogue that overwrote it with a figure « for this model » would be wrong and confident.
+   */
+  function pickModel(id: string) {
+    const row = findModelById(models, id);
+    if (!row) return;
+    form.setValue("model", row.model, { shouldDirty: true });
+    form.setValue("builder", row.builder, { shouldDirty: true });
+    form.setValue("type", row.boatType, { shouldDirty: true });
+    for (const [field, value] of [
+      ["lengthM", row.lengthM],
+      ["beamM", row.beamM],
+      ["draftM", row.draftM],
+    ] as const) {
+      if (value === null) continue;
+      if (form.getValues(field).trim() !== "") continue;
+      form.setValue(field, numberToInput(value), { shouldDirty: true });
+    }
+  }
 
   function startEditing() {
     form.reset(toForm(boat));
@@ -217,6 +269,12 @@ export function BoatIdentity({
                     <Value>{boat.hull_number}</Value>
                   </div>
                   <div>
+                    <Term>{t("registration")}</Term>
+                    <Value>
+                      {boat.registration ? <span className="num">{boat.registration}</span> : null}
+                    </Value>
+                  </div>
+                  <div>
                     <Term>{t("year")}</Term>
                     <Value>{boat.year ? <span className="num">{boat.year}</span> : null}</Value>
                   </div>
@@ -287,14 +345,45 @@ export function BoatIdentity({
                 ))}
               </NativeSelect>
             </Field>
-            <Field id="boat-builder" label={t("builder")} error={fieldError(errors.builder)}>
-              <Input id="boat-builder" autoComplete="off" {...form.register("builder")} />
-            </Field>
-            <Field id="boat-model" label={t("model")} error={fieldError(errors.model)}>
-              <Input id="boat-model" autoComplete="off" {...form.register("model")} />
-            </Field>
+            <div className="flex flex-col gap-2">
+              <Field id="boat-builder" label={t("builder")} error={fieldError(errors.builder)}>
+                <Input id="boat-builder" autoComplete="off" {...form.register("builder")} />
+              </Field>
+              <SuggestionChips
+                options={builders}
+                label={ts("builderSuggestions")}
+                onPick={(option) => form.setValue("builder", option.key, { shouldDirty: true })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Field id="boat-model" label={t("model")} error={fieldError(errors.model)}>
+                <Input id="boat-model" autoComplete="off" {...form.register("model")} />
+              </Field>
+              <SuggestionChips
+                options={suggestedModels}
+                label={ts("modelSuggestions")}
+                onPick={(option) => pickModel(option.key)}
+              />
+            </div>
             <Field id="boat-hull" label={t("hullNumber")} error={fieldError(errors.hullNumber)}>
               <Input id="boat-hull" autoComplete="off" {...form.register("hullNumber")} />
+            </Field>
+            <Field
+              id="boat-registration"
+              label={t("registration")}
+              help={t("registrationHelp")}
+              warning={registrationHint ? t("registrationShape") : undefined}
+              error={fieldError(errors.registration)}
+            >
+              <Input
+                id="boat-registration"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                className="num"
+                placeholder={t("registrationPlaceholder")}
+                {...form.register("registration")}
+              />
             </Field>
             <Field id="boat-year" label={t("year")} error={fieldError(errors.year)}>
               <NumericField
@@ -340,6 +429,7 @@ export function BoatIdentity({
                 {...form.register("draftM")}
               />
             </Field>
+            <p className="text-caption text-ink-3 sm:col-span-3">{t("characteristicsHelp")}</p>
           </fieldset>
           <Field id="boat-notes" label={t("notes")} error={fieldError(errors.notes)}>
             <Textarea

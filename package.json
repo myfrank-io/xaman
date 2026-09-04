@@ -26,6 +26,8 @@
     "db:types": "supabase gen types typescript --local --schema public > src/types/database.ts",
     "db:types:url": "node scripts/db-types.mjs",
     "seed:xaman": "node --env-file-if-exists=.env.local --import tsx scripts/seed.mts",
+    "gen:templates": "node scripts/gen-template-migration.mjs",
+    "gen:boat-models": "node scripts/gen-boat-models-migration.mjs",
     "build:sw": "serwist build serwist.config.mts",
     "test:e2e": "playwright test"
   },

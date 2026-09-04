@@ -29,6 +29,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
         builder: values.builder,
         model: values.model,
         hull_number: values.hullNumber,
+        registration: values.registration,
         year: values.year,
         flag: values.flag,
         home_port: values.homePort,
@@ -60,6 +61,9 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
  * No maintenance plan: `boats.checklist_template_id` stays null, and the Checklist screen reads
  * that null to offer the choice. Identity and plan are two questions asked at two moments.
  *
+ * `boatModelId` names the catalogue row that was tapped, and the RPC reads its dimensions itself
+ * (D66): the boat opens knowing its own length without anyone having typed it.
+ *
  * `boats_insert` is still `is_platform_admin()`: this RPC is the only door, which is what
  * guarantees the « au moins un owner » rule from the first millisecond.
  *
@@ -69,7 +73,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
 export async function createBoat(input: unknown): Promise<ActionResult<{ boatId: string }>> {
   const parsed = parseInput(createBoatSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { boatId, name, type, builder, model, engines } = parsed.data;
+  const { boatId, name, type, builder, model, engines, boatModelId } = parsed.data;
 
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
@@ -84,6 +88,7 @@ export async function createBoat(input: unknown): Promise<ActionResult<{ boatId:
     p_builder: builder ?? undefined,
     p_model: model ?? undefined,
     p_engines: engines,
+    p_boat_model_id: boatModelId ?? undefined,
   });
   if (error) return fail(dbErrorKey(error));
 
