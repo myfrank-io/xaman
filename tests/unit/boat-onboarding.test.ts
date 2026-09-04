@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   ENGINE_COUNT_CHOICES,
+  TENDER_CHOICES,
+  asksAboutTender,
   EXISTING_LOG_FORMATS,
   MAX_SUGGESTIONS,
   ONBOARDING_BOAT_STEPS,
@@ -17,13 +19,16 @@ import {
   type EngineLabels,
   type TemplateOption,
 } from "@/lib/boat-onboarding";
+import fr from "@/messages/fr.json";
 import { onboardingPath } from "@/lib/queries/boat-routes";
+import { boatTypeSchema } from "@/lib/schemas/boat";
 
 const LABELS: EngineLabels = {
   single: "Moteur",
   port: "Moteur bâbord",
   starboard: "Moteur tribord",
   outboard: "Hors-bord",
+  tender: "Hors-bord d'annexe",
 };
 
 function template(over: Partial<TemplateOption> = {}): TemplateOption {
@@ -219,5 +224,82 @@ describe("the three steps", () => {
     for (const format of EXISTING_LOG_FORMATS) expect(isExistingLogFormat(format)).toBe(true);
     expect(isExistingLogFormat("")).toBe(false);
     expect(isExistingLogFormat("pdf")).toBe(false);
+  });
+});
+
+describe("the annexe", () => {
+  it("comes after the boat's own engines, as an outboard", () => {
+    expect(newBoatEngines(2, "catamaran", LABELS, "outboard")).toEqual([
+      { label: LABELS.port, position: "port" },
+      { label: LABELS.starboard, position: "starboard" },
+      { label: LABELS.tender, position: "outboard" },
+    ]);
+  });
+
+  /** `engine_scope` matches on the position: an annexe given `center` would collect the saildrive
+   * points and none of its own. */
+  it("is always an outboard, whatever the hull carries", () => {
+    for (const type of ["catamaran", "monohull_sail", "motor", "other"] as const) {
+      const engines = newBoatEngines(1, type, LABELS, "outboard");
+      expect(engines.at(-1)).toEqual({ label: LABELS.tender, position: "outboard" });
+    }
+  });
+
+  it("is the only engine of a boat that has none of its own", () => {
+    expect(newBoatEngines(0, "monohull_sail", LABELS, "outboard")).toEqual([
+      { label: LABELS.tender, position: "outboard" },
+    ]);
+  });
+
+  it("changes nothing when there is no annexe", () => {
+    for (const count of ENGINE_COUNT_CHOICES) {
+      expect(newBoatEngines(count, "catamaran", LABELS, "none")).toEqual(
+        newBoatEngines(count, "catamaran", LABELS),
+      );
+    }
+  });
+
+  it("is not asked of a semi-rigide, and not added to one either", () => {
+    expect(asksAboutTender("rib")).toBe(false);
+    expect(newBoatEngines(1, "rib", LABELS, "outboard")).toEqual([
+      { label: LABELS.outboard, position: "outboard" },
+    ]);
+    for (const type of ["catamaran", "trimaran", "monohull_sail", "motor", "other"] as const) {
+      expect(asksAboutTender(type)).toBe(true);
+    }
+  });
+
+  it("never pushes the boat past what create_boat accepts", () => {
+    for (const count of ENGINE_COUNT_CHOICES) {
+      for (const choice of TENDER_CHOICES) {
+        expect(newBoatEngines(count, "catamaran", LABELS, choice).length).toBeLessThanOrEqual(6);
+      }
+    }
+  });
+
+  it("never labels an engine with an empty string", () => {
+    for (const engine of newBoatEngines(2, "catamaran", LABELS, "outboard")) {
+      expect(engine.label.trim().length).toBeGreaterThan(0);
+    }
+  });
+});
+
+/**
+ * The placeholders under « Constructeur » and « Modèle » follow the hull (D68). The key is built
+ * from the chosen type, so a missing one would not fail to compile — it would print the key on
+ * the screen of whoever picked that hull.
+ */
+describe("the example boat of each hull", () => {
+  const examples: Record<string, { builder: string; model: string }> = fr.boats.new.examples;
+
+  it("names one builder and one model for every type the toggle offers", () => {
+    for (const type of boatTypeSchema.options) {
+      expect(examples[type]?.builder?.trim()).toBeTruthy();
+      expect(examples[type]?.model?.trim()).toBeTruthy();
+    }
+  });
+
+  it("carries no example for a hull that cannot be chosen", () => {
+    expect(Object.keys(examples).sort()).toEqual([...boatTypeSchema.options].sort());
   });
 });

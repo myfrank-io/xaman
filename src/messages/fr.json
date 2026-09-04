@@ -295,17 +295,47 @@
       "type": "Type de bateau",
       "typeHelp": "Il détermine les systèmes du bord : moteurs, gréement, sécurité…",
       "builder": "Constructeur",
-      "builderPlaceholder": "Marsaudon Composites",
       "model": "Modèle",
-      "modelPlaceholder": "ORC 50",
       "optional": "Facultatif",
       "engines": "Moteurs",
       "enginesHelp": "Les entretiens en heures s'y rattacheront. Vous les nommerez et relèverez les compteurs ensuite.",
+      "tender": "Annexe",
+      "tenderHelp": "Son hors-bord a ses propres entretiens : il arrive dans le carnet comme un moteur du bord.",
+      "tenderOption": {
+        "none": "Aucune",
+        "outboard": "Avec hors-bord"
+      },
       "submit": "Continuer",
       "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement.",
       "suggestionsLabel": "Suggestions :",
       "identityHelp": "Écrivez-les tels quels, même s'ils ne sont pas dans les suggestions.",
-      "systems": "Votre carnet arrivera avec les systèmes d'un {type}."
+      "systems": "Votre carnet arrivera avec les systèmes d'un {type}.",
+      "examples": {
+        "catamaran": {
+          "builder": "Lagoon",
+          "model": "46"
+        },
+        "trimaran": {
+          "builder": "Neel",
+          "model": "47"
+        },
+        "monohull_sail": {
+          "builder": "Bénéteau",
+          "model": "Oceanis 46.1"
+        },
+        "motor": {
+          "builder": "Jeanneau",
+          "model": "Merry Fisher 895"
+        },
+        "rib": {
+          "builder": "Zodiac",
+          "model": "Medline 7.5"
+        },
+        "other": {
+          "builder": "Marsaudon Composites",
+          "model": "ORC 50"
+        }
+      }
     },
     "onboarding": {
       "title": "Mise en route",
@@ -1129,7 +1159,8 @@
       "single": "Moteur",
       "port": "Moteur bâbord",
       "starboard": "Moteur tribord",
-      "outboard": "Hors-bord"
+      "outboard": "Hors-bord",
+      "tender": "Hors-bord d'annexe"
     }
   },
   "equipment": {
