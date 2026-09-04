@@ -89,7 +89,10 @@ export function BrandNewBlock({
       href: checklistPath(boatId),
     },
   ];
-  const rows = allRows.filter((row) => row.key !== "review" || reviewCount > 0 || steps.review);
+  // The review row only exists when there is something to review: on a boat that never imported
+  // anything, « Vérifier les 0 lignes importées du carnet papier », struck through, is a step
+  // about a paper logbook that never existed.
+  const rows = allRows.filter((row) => row.key !== "review" || reviewCount > 0);
 
   return (
     <div className="flex flex-col items-center rounded-xl border border-border bg-surface-2 px-6 py-8 text-center">

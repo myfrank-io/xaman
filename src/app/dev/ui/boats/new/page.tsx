@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { BoatsShell } from "@/components/boats/BoatsShell";
 import { NewBoatForm } from "@/components/boats/NewBoatForm";
+import { OnboardingSteps } from "@/components/onboarding/OnboardingSteps";
 import type { TemplateOption } from "@/lib/boat-onboarding";
 import { devUiEnabled } from "@/lib/dev-ui";
 
@@ -68,6 +69,7 @@ export default async function DevNewBoatPage() {
 
   return (
     <BoatsShell title={t("title")} subtitle={t("subtitle")}>
+      <OnboardingSteps step={1} />
       <NewBoatForm templates={TEMPLATES} />
       <p className="text-caption text-ink-2">{t("invited")}</p>
     </BoatsShell>

@@ -18,14 +18,10 @@ export default async function ImportPage({
   searchParams,
 }: {
   params: Promise<{ boatId: string }>;
-  searchParams: Promise<{ entity?: string; from?: string }>;
+  searchParams: Promise<{ entity?: string }>;
 }) {
-  const [{ boatId }, { entity, from }] = await Promise.all([params, searchParams]);
+  const [{ boatId }, { entity }] = await Promise.all([params, searchParams]);
   if (!isImportEntity(entity)) notFound();
-
-  // Landed here straight from « Ouvrir le carnet » (D66): the boat is seconds old, so the way
-  // out is its dashboard — its list of interventions is a screen nobody has seen yet.
-  const fromNew = from === "new";
 
   const supabase = await createClient();
   const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
@@ -45,24 +41,19 @@ export default async function ImportPage({
     .filter((key) => key !== "");
 
   const t = await getTranslations("import");
-  const back = fromNew
-    ? { href: boatPath(boatId, "dashboard"), label: t("back.dashboard") }
-    : {
-        logs: { href: boatPath(boatId, "logs"), label: t("back.logs") },
-        purchases: { href: boatPath(boatId, "supplies"), label: t("back.purchases") },
-        contacts: { href: boatPath(boatId, "contacts"), label: t("back.contacts") },
-        equipment: { href: boatTabPath(boatId, "equipment"), label: t("back.equipment") },
-        parts: { href: stockPath(boatId), label: t("back.parts") },
-        completions: { href: boatPath(boatId, "checklist"), label: t("back.completions") },
-        readings: { href: boatTabPath(boatId, "engines"), label: t("back.readings") },
-      }[entity];
+  const back = {
+    logs: { href: boatPath(boatId, "logs"), label: t("back.logs") },
+    purchases: { href: boatPath(boatId, "supplies"), label: t("back.purchases") },
+    contacts: { href: boatPath(boatId, "contacts"), label: t("back.contacts") },
+    equipment: { href: boatTabPath(boatId, "equipment"), label: t("back.equipment") },
+    parts: { href: stockPath(boatId), label: t("back.parts") },
+    completions: { href: boatPath(boatId, "checklist"), label: t("back.completions") },
+    readings: { href: boatTabPath(boatId, "engines"), label: t("back.readings") },
+  }[entity];
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title={t(`entities.${entity}.title`)}
-        subtitle={fromNew ? t("fromNew") : t("subtitle")}
-      />
+      <PageHeader title={t(`entities.${entity}.title`)} subtitle={t("subtitle")} />
       <ImportWizard
         boatId={boatId}
         entity={entity}

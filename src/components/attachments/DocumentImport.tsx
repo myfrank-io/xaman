@@ -14,6 +14,7 @@ import {
   type UploadStage,
 } from "@/components/attachments/upload";
 import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Field } from "@/components/forms/Field";
@@ -23,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { saveAttachment } from "@/lib/actions/attachments";
 import { saveLog } from "@/lib/actions/logs";
@@ -64,11 +66,20 @@ export function DocumentImport({
   logs,
   categories,
   canWrite,
+  headless = false,
+  onAttached,
 }: {
   boatId: string;
   logs: DocumentImportLog[];
   categories: CategoryChoice[];
   canWrite: boolean;
+  /**
+   * Drop the screen title: as step 2 of the onboarding this block sits under a heading that has
+   * already said what it is, and two titles in a row read as two screens (D67).
+   */
+  headless?: boolean;
+  /** How many documents have landed, for a parent step that has its own « Continuer ». */
+  onAttached?: (count: number) => void;
 }) {
   const t = useTranslations("attachments.import");
   const ta = useTranslations("attachments");
@@ -78,6 +89,7 @@ export function DocumentImport({
   const fileInput = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [batch, setBatch] = useState(false);
 
   const patch = useCallback((key: string, changes: Partial<Row>) => {
     setRows((current) => current.map((row) => (row.key === key ? { ...row, ...changes } : row)));
@@ -108,7 +120,7 @@ export function DocumentImport({
   );
 
   /** Uploads the file and writes its row, creating the intervention first when asked to. */
-  async function attach(row: Row) {
+  async function attach(row: Row, { refresh = true }: { refresh?: boolean } = {}) {
     patch(row.key, { stage: "queued", error: null });
 
     let logId = row.logId;
@@ -175,17 +187,60 @@ export function DocumentImport({
     void queryClient.invalidateQueries({
       queryKey: boatKeys.attachments(boatId, "maintenance_log", logId),
     });
+    if (refresh) router.refresh();
+    return true;
+  }
+
+  /**
+   * Whether this document knows where it goes. Same condition as the row's own button, named
+   * once so « Tout rattacher » can never offer to send something the row itself refuses.
+   */
+  function ready(row: Row): boolean {
+    if (!canWrite || row.error !== null) return false;
+    if (row.stage !== null && row.stage !== "error") return false;
+    return row.mode === "existing" ? !!row.logId : !!row.newTitle.trim() && !!row.newCategoryId;
+  }
+
+  /**
+   * « Tout rattacher » (D67). A season of invoices photographed at once used to cost one tap per
+   * photo, on a screen where every row already carried the same answer — the filename as title,
+   * today's date, the first system. One tap for the pile, and a row whose answer was corrected by
+   * hand keeps it.
+   *
+   * Sequential on purpose: each document creates an intervention and uploads a file, and a phone
+   * on a marina's wifi does not thank you for ten of those at once. A failure stops nothing — the
+   * row keeps its error and stays in the list.
+   */
+  async function attachAll() {
+    const pickable = rows.filter(ready);
+    if (pickable.length === 0) return;
+    setBatch(true);
+    let done = 0;
+    for (const row of pickable) {
+      if (await attach(row, { refresh: false })) done += 1;
+    }
+    setBatch(false);
     router.refresh();
+    if (done > 0) onAttached?.(done);
   }
 
   const waiting = rows.filter((row) => row.stage !== "done").length;
   const attached = rows.filter((row) => row.stage === "done").length;
+  const readyCount = rows.filter(ready).length;
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("title")} subtitle={t("description")} />
+      {headless ? null : <PageHeader title={t("title")} subtitle={t("description")} />}
 
       {!canWrite ? <p className="text-body text-ink-2">{t("readOnly")}</p> : null}
+      {/* A document becomes an intervention, and an intervention needs a system to file it under.
+          Without one the row's button would simply never enable — a dead end with no explanation,
+          reachable on a database whose generic models were never loaded. */}
+      {canWrite && categories.length === 0 ? (
+        <Alert>
+          <AlertDescription>{t("noCategories")}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <div
         onDragOver={(event) => {
@@ -230,9 +285,22 @@ export function DocumentImport({
         />
       ) : (
         <>
-          <p className="text-caption text-ink-2">
-            {waiting > 0 ? t("pending", { count: waiting }) : t("done", { count: attached })}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-caption text-ink-2">
+              {waiting > 0 ? t("pending", { count: waiting }) : t("done", { count: attached })}
+            </p>
+            {readyCount > 1 ? (
+              <Button
+                type="button"
+                onClick={() => void attachAll()}
+                disabled={batch}
+                aria-busy={batch}
+              >
+                {batch ? <Spinner className="size-4" /> : <CheckIcon />}
+                {t("attachAll", { count: readyCount })}
+              </Button>
+            ) : null}
+          </div>
           <ul className="flex flex-col gap-4">
             {rows.map((row) => (
               <li
@@ -355,15 +423,8 @@ export function DocumentImport({
                     <div>
                       <Button
                         type="button"
-                        disabled={
-                          !canWrite ||
-                          row.error !== null ||
-                          (row.stage !== null && row.stage !== "error") ||
-                          (row.mode === "existing"
-                            ? !row.logId
-                            : !row.newTitle.trim() || !row.newCategoryId)
-                        }
-                        onClick={() => void attach(row)}
+                        disabled={!ready(row) || batch}
+                        onClick={() => void attach(row).then((done) => done && onAttached?.(1))}
                       >
                         {row.mode === "existing" ? t("attach") : t("createAndAttach")}
                       </Button>

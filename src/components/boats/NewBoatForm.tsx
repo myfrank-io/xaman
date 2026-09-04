@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { FileSpreadsheetIcon, ImagesIcon, SailboatIcon } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
@@ -20,16 +20,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createBoat } from "@/lib/actions/boat";
 import {
   ENGINE_COUNT_CHOICES,
-  EXISTING_LOG_FORMATS,
   builderSuggestions,
   defaultEngineCount,
-  existingLogDestination,
   modelSuggestions,
   newBoatEngines,
-  type ExistingLogFormat,
   type TemplateOption,
 } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import { onboardingPath } from "@/lib/queries/boat-routes";
 import { boatTypeSchema, createBoatSchema } from "@/lib/schemas/boat";
 
 /**
@@ -47,18 +45,11 @@ type NewBoatFormState = {
   builder: string;
   model: string;
   engineCount: string;
-  /** What the boat's history is written on today (D66): it decides where the creation lands. */
-  logbook: ExistingLogFormat;
-};
-
-/** The icon of each format — « rien à reprendre » is a word, not a picture. */
-const LOGBOOK_ICONS: Partial<Record<ExistingLogFormat, typeof FileSpreadsheetIcon>> = {
-  spreadsheet: FileSpreadsheetIcon,
-  paper: ImagesIcon,
 };
 
 /**
- * « Ajouter mon bateau » (D65, D66, E11-3). It asks about the boat, and about nothing else.
+ * Step 1 of three (D67, D65, E11-3): « Le bateau ». It asks about the boat, and about nothing
+ * else — the existing logbook is step 2, the maintenance plan is step 3.
  *
  * The word « checklist » does not appear here. Creating a carnet and choosing a maintenance plan
  * are two questions, and merging them meant that someone whose builder has published nothing had
@@ -68,9 +59,9 @@ const LOGBOOK_ICONS: Partial<Record<ExistingLogFormat, typeof FileSpreadsheetIco
  * The hull type is the one thing the server needs, because it is what gives the boat its eight
  * systems — and it also pre-sets the engine count, so the common case costs no tap at all.
  *
- * The last question is not about the boat either: it asks what its history is written on today
- * (D66). It writes nothing — it decides the screen the carnet opens on — and it is pre-answered
- * with « Rien à reprendre », so it costs no tap to whoever has nothing to take over.
+ * This is the only step that can be reached without a boat, and the only one that writes one. It
+ * therefore ends the moment `create_boat` answers: everything after it happens inside a carnet
+ * that exists, which is what makes steps 2 and 3 resumable from their own address.
  */
 export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
   const t = useTranslations("boats.new");
@@ -94,7 +85,6 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
       builder: "",
       model: "",
       engineCount: "1",
-      logbook: "none",
     },
   });
 
@@ -103,10 +93,6 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
   const type = useWatch({ control: form.control, name: "type" }) as z.infer<typeof boatTypeSchema>;
   const builder = useWatch({ control: form.control, name: "builder" });
   const model = useWatch({ control: form.control, name: "model" });
-
-  // Read back on the same render: the help line under the chips and the label of the submit
-  // button both say where « Ouvrir le carnet » is about to land.
-  const logbook = useWatch({ control: form.control, name: "logbook" });
 
   const builders = useMemo(() => builderSuggestions(templates, builder), [templates, builder]);
   const models = useMemo(
@@ -140,10 +126,9 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         toast.error(errorMessage(result.error));
         return;
       }
-      // Straight into the boat — on the screen the answer about the existing carnet asked for
-      // (D66): the import of a spreadsheet, that of the paper pages, or the dashboard, from where
-      // the Checklist screen offers the maintenance plan.
-      router.replace(existingLogDestination(logbook, result.data.boatId) as Route);
+      // Step 2 of three (D67). `replace` rather than `push`: going « back » to this screen would
+      // draw a new id and open a second carnet, so the browser's back button must not be able to.
+      router.replace(onboardingPath(result.data.boatId, 2) as Route);
       router.refresh();
     });
   }
@@ -259,38 +244,12 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         />
       </Field>
 
-      <Field
-        id="boat-logbook-none"
-        label={t("logbook")}
-        help={t(`logbookNext.${logbook}` as "logbookNext.none")}
-        className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5"
-      >
-        <ToggleGroup
-          type="single"
-          value={logbook}
-          aria-label={t("logbook")}
-          onValueChange={(next) =>
-            next && form.setValue("logbook", next as ExistingLogFormat, { shouldDirty: true })
-          }
-        >
-          {EXISTING_LOG_FORMATS.map((format) => {
-            const Icon = LOGBOOK_ICONS[format];
-            return (
-              <ToggleGroupItem key={format} value={format} id={`boat-logbook-${format}`}>
-                {Icon ? <Icon aria-hidden /> : null}
-                {t(`logbookFormat.${format}` as "logbookFormat.none")}
-              </ToggleGroupItem>
-            );
-          })}
-        </ToggleGroup>
-      </Field>
-
-      <Button type="submit" size="xl" disabled={pending}>
-        {pending ? <Spinner /> : <SailboatIcon />}
-        {logbook === "none" ? t("submit") : t("submitImport")}
+      <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
+        {pending ? <Spinner /> : <ArrowRightIcon />}
+        {t("submit")}
       </Button>
 
-      <p className="text-caption text-ink-3">{t("planLater", { type: tb(type) })}</p>
+      <p className="text-caption text-ink-3">{t("systems", { type: tb(type) })}</p>
     </form>
   );
 }

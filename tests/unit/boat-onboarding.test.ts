@@ -4,16 +4,20 @@ import {
   ENGINE_COUNT_CHOICES,
   EXISTING_LOG_FORMATS,
   MAX_SUGGESTIONS,
+  ONBOARDING_BOAT_STEPS,
+  ONBOARDING_STEPS,
   builderSuggestions,
   defaultEngineCount,
-  existingLogDestination,
   isExistingLogFormat,
+  isOnboardingBoatStep,
   modelSuggestions,
   newBoatEngines,
+  parseOnboardingBoatStep,
   splitTemplates,
   type EngineLabels,
   type TemplateOption,
 } from "@/lib/boat-onboarding";
+import { onboardingPath } from "@/lib/queries/boat-routes";
 
 const LABELS: EngineLabels = {
   single: "Moteur",
@@ -178,29 +182,37 @@ describe("suggestions", () => {
   });
 });
 
-describe("existingLogDestination", () => {
+describe("the three steps", () => {
   const boatId = "11111111-2222-3333-4444-555555555555";
 
-  it("opens a spreadsheet on the interventions import", () => {
-    expect(existingLogDestination("spreadsheet", boatId)).toBe(
-      `/boats/${boatId}/import?entity=logs&from=new`,
-    );
+  it("addresses the two steps that need a boat", () => {
+    expect(onboardingPath(boatId, 2)).toBe(`/boats/new/${boatId}?step=2`);
+    expect(onboardingPath(boatId, 3)).toBe(`/boats/new/${boatId}?step=3`);
   });
 
-  it("opens a paper logbook on the document import", () => {
-    expect(existingLogDestination("paper", boatId)).toBe(
-      `/boats/${boatId}/logs/documents?from=new`,
-    );
+  it("keeps step 1 out of the boat's tree, where it could not exist", () => {
+    expect(ONBOARDING_STEPS).toEqual([1, 2, 3]);
+    expect(ONBOARDING_BOAT_STEPS).toEqual([2, 3]);
+    expect(isOnboardingBoatStep(1)).toBe(false);
+    expect(ONBOARDING_BOAT_STEPS.every(isOnboardingBoatStep)).toBe(true);
   });
 
-  it("leaves someone with nothing to take over on the dashboard", () => {
-    expect(existingLogDestination("none", boatId)).toBe(`/boats/${boatId}/dashboard`);
+  /**
+   * `?step=` is whatever the address bar holds. Anything that is not step 3 lands on step 2 —
+   * the first screen the boat id is good for — rather than on a 404 in the middle of a flow.
+   */
+  it("reads ?step= defensively", () => {
+    expect(parseOnboardingBoatStep("3")).toBe(3);
+    expect(parseOnboardingBoatStep("2")).toBe(2);
+    expect(parseOnboardingBoatStep(undefined)).toBe(2);
+    expect(parseOnboardingBoatStep("")).toBe(2);
+    expect(parseOnboardingBoatStep("1")).toBe(2);
+    expect(parseOnboardingBoatStep("42")).toBe(2);
+    expect(parseOnboardingBoatStep("trois")).toBe(2);
   });
 
-  it("always lands inside the boat that was just created", () => {
-    for (const format of EXISTING_LOG_FORMATS) {
-      expect(existingLogDestination(format, boatId).startsWith(`/boats/${boatId}/`)).toBe(true);
-    }
+  it("offers « rien à reprendre » first, so the common case costs no tap", () => {
+    expect(EXISTING_LOG_FORMATS[0]).toBe("none");
   });
 
   it("only recognises the formats the toggle offers", () => {

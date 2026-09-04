@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BoatsShell } from "@/components/boats/BoatsShell";
 import { NewBoatForm } from "@/components/boats/NewBoatForm";
+import { OnboardingSteps } from "@/components/onboarding/OnboardingSteps";
 import type { TemplateOption } from "@/lib/boat-onboarding";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,12 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * « Ajouter mon bateau » (D65, E11-3). The screen someone lands on when they signed up without an
- * invitation — which until now was a waiting room with nothing to wait for.
+ * Step 1 of three, « Le bateau » (D67, D65, E11-3). The screen someone lands on when they signed
+ * up without an invitation — which until now was a waiting room with nothing to wait for.
  *
  * The published models are read here only to *suggest* builders and model names: the two fields
  * are free text, and a boat whose builder has published nothing is still written down exactly.
- * The maintenance plan is a separate question, asked later on the Checklist screen.
+ * The maintenance plan is a separate question, asked at step 3 once the boat exists.
  */
 export default async function NewBoatPage() {
   const t = await getTranslations("boats.new");
@@ -46,6 +47,7 @@ export default async function NewBoatPage() {
 
   return (
     <BoatsShell title={t("title")} subtitle={t("subtitle")}>
+      <OnboardingSteps step={1} />
       <NewBoatForm templates={templates} />
       <p className="text-caption text-ink-2">{t("invited")}</p>
       <div className="mt-auto flex justify-end pt-4">
