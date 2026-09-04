@@ -2312,6 +2312,10 @@ export type Database = {
         Args: { p_boat_id: string; p_engine_id?: string; p_template_id: string }
         Returns: undefined
       }
+      apply_template_categories: {
+        Args: { p_boat_id: string; p_template_id: string }
+        Returns: number
+      }
       boat_id_from_storage_path: { Args: { p_name: string }; Returns: string }
       boat_role: {
         Args: { p_boat_id: string }
@@ -2356,15 +2360,21 @@ export type Database = {
       create_boat: {
         Args: {
           p_boat_id: string
+          p_builder?: string
           p_engines?: Json
+          p_model?: string
           p_name: string
-          p_template_id: string
+          p_type: Database["public"]["Enums"]["boat_type"]
         }
         Returns: string
       }
       enqueue_weekly_digest: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generic_template_for_boat_type: {
+        Args: { p_type: Database["public"]["Enums"]["boat_type"] }
+        Returns: string
       }
       get_invitation_preview: {
         Args: { p_token: string }

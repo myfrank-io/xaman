@@ -288,20 +288,24 @@
     },
     "new": {
       "title": "Votre bateau",
-      "subtitle": "Trois réponses et le carnet est prêt, déjà rempli.",
+      "subtitle": "Quelques informations et le carnet est ouvert.",
       "add": "Ajouter un bateau",
       "name": "Nom du bateau",
       "namePlaceholder": "Xaman",
+      "type": "Type de bateau",
+      "typeHelp": "Il détermine les systèmes du bord : moteurs, gréement, sécurité…",
+      "builder": "Constructeur",
+      "builderPlaceholder": "Marsaudon Composites",
       "model": "Modèle",
-      "modelPlaceholder": "Choisir le modèle…",
-      "modelHelp": "Il apporte les systèmes du bord et les points d'entretien. Prenez le modèle générique si le vôtre n'est pas dans la liste.",
-      "modelSummary": "{categories, plural, one {# système} other {# systèmes}} · {items, plural, one {# point d'entretien} other {# points d'entretien}}",
-      "modelGroupExact": "Modèles de constructeurs",
-      "modelGroupGeneric": "Modèles génériques",
+      "modelPlaceholder": "ORC 50",
+      "optional": "Facultatif",
       "engines": "Moteurs",
-      "enginesHelp": "Les entretiens en heures s'y rattachent. Vous les nommerez et relèverez les compteurs ensuite.",
-      "submit": "Créer le carnet",
-      "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement."
+      "enginesHelp": "Les entretiens en heures s'y rattacheront. Vous les nommerez et relèverez les compteurs ensuite.",
+      "submit": "Ouvrir le carnet",
+      "planLater": "Votre carnet arrivera avec les systèmes d'un {type}. Le plan d'entretien se choisit ensuite, depuis la checklist.",
+      "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement.",
+      "suggestionsLabel": "Suggestions :",
+      "identityHelp": "Écrivez-les tels quels, même s'ils ne sont pas dans les suggestions."
     }
   },
   "errors": {
@@ -913,7 +917,20 @@
       "kept": "{kept} / {total} points suivis",
       "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
     },
-    "subtitle": "Ce qui doit être fait, et quand. Cocher un point écrit l'intervention."
+    "subtitle": "Ce qui doit être fait, et quand. Cocher un point écrit l'intervention.",
+    "plan": {
+      "title": "Choisissez un plan d'entretien",
+      "intro": "Les systèmes de votre bateau sont en place. Un modèle les remplit avec les points à suivre, leurs échéances et les gestes détaillés.",
+      "label": "Modèle",
+      "placeholder": "Choisir un modèle…",
+      "groupExact": "Modèles de constructeurs",
+      "groupGeneric": "Modèles génériques",
+      "help": "Prenez le modèle générique correspondant à votre coque si le vôtre n'est pas dans la liste.",
+      "summary": "{categories, plural, one {# système} other {# systèmes}} · {items, plural, one {# point d'entretien} other {# points d'entretien}}",
+      "submit": "Utiliser ce modèle",
+      "applied": "Plan d'entretien ajouté",
+      "orBlank": "Vous pouvez aussi commencer sans modèle et ajouter vos points un par un — le bouton « Ajouter un point » est en haut de cet écran."
+    }
   },
   "validation": {
     "required": "Champ obligatoire.",

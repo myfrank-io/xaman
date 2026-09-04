@@ -96,3 +96,12 @@ export const anchorItemsSchema = z.object({
     .min(1)
     .max(500),
 });
+
+/**
+ * Choosing the maintenance plan of a boat (D65). A separate moment from creating it: the boat
+ * already exists with its systems, and this is what fills them with points.
+ */
+export const chooseTemplateSchema = z.object({
+  boatId: uuid,
+  templateId: uuid,
+});

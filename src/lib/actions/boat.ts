@@ -52,9 +52,13 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
 }
 
 /**
- * Opening a carnet (D64, E11-3). One call: the boat, its owner, its engines and the whole
- * checklist instantiated from the chosen model — `create_boat` does all four in one transaction,
- * because a boat that exists without an owner, or without its checklist, is a broken boat.
+ * Opening a carnet (D65, E11-3). The boat, its owner, its engines and its systems — in one
+ * transaction, because a boat that exists without an owner is broken, and one without systems is
+ * unusable (a category is compulsory on every intervention, and `checklist_items.category_id` is
+ * `on delete restrict`).
+ *
+ * No maintenance plan: `boats.checklist_template_id` stays null, and the Checklist screen reads
+ * that null to offer the choice. Identity and plan are two questions asked at two moments.
  *
  * `boats_insert` is still `is_platform_admin()`: this RPC is the only door, which is what
  * guarantees the « au moins un owner » rule from the first millisecond.
@@ -65,7 +69,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
 export async function createBoat(input: unknown): Promise<ActionResult<{ boatId: string }>> {
   const parsed = parseInput(createBoatSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { boatId, name, templateId, engines } = parsed.data;
+  const { boatId, name, type, builder, model, engines } = parsed.data;
 
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
@@ -74,7 +78,11 @@ export async function createBoat(input: unknown): Promise<ActionResult<{ boatId:
   const { error } = await supabase.rpc("create_boat", {
     p_boat_id: boatId,
     p_name: name,
-    p_template_id: templateId,
+    p_type: type,
+    // The generated RPC args are optional rather than nullable; the function trims and nulls
+    // an empty string itself, so an absent field and an empty one mean the same thing.
+    p_builder: builder ?? undefined,
+    p_model: model ?? undefined,
     p_engines: engines,
   });
   if (error) return fail(dbErrorKey(error));

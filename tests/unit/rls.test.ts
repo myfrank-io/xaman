@@ -313,64 +313,132 @@ describe("insert", () => {
 });
 
 /**
- * Opening a carnet (D64, migration 0015). `create_boat` is the only door an ordinary user has to
- * a boat of their own, so what it refuses matters as much as what it creates.
+ * Opening a carnet (D65, migrations 0015 + 0017). `create_boat` is the only door an ordinary user
+ * has to a boat of their own, so what it refuses matters as much as what it creates — and since
+ * D65 what it deliberately does NOT create matters too.
  */
 describe("create_boat", () => {
   const NEW_BOAT = "00000000-0000-0000-0000-00000000b0f1";
-  const TEMPLATE = "00000000-0000-0000-0000-0000000000a0";
+  const ORC50 = "00000000-0000-0000-0000-0000000000a0";
 
-  const call = (boatId: string, name = "Mon bateau", template = TEMPLATE, engines = "[]") =>
-    `select public.create_boat('${boatId}'::uuid, '${name}', '${template}'::uuid, '${engines}'::jsonb)`;
+  const call = (boatId: string, name = "Mon bateau", type = "catamaran", engines = "[]") =>
+    `select public.create_boat('${boatId}'::uuid, '${name}', '${type}'::public.boat_type, null, null, '${engines}'::jsonb)`;
 
-  it("makes the caller the owner of the boat it creates, with its checklist", async () => {
+  it("makes the caller the owner, with the boat's own identity and its systems", async () => {
     const out = await as(U.stranger, async (c) => {
-      await c.query("select public.create_boat($1::uuid, $2, $3::uuid, $4::jsonb)", [
-        NEW_BOAT,
-        "  Mon bateau  ",
-        TEMPLATE,
-        JSON.stringify([
-          { label: "Moteur bâbord", position: "port" },
-          { label: "Moteur tribord", position: "starboard" },
-        ]),
-      ]);
+      await c.query(
+        "select public.create_boat($1::uuid, $2, $3::public.boat_type, $4, $5, $6::jsonb)",
+        [
+          NEW_BOAT,
+          "  Alizé  ",
+          "trimaran",
+          "  Neel  ",
+          " 47 ",
+          JSON.stringify([
+            { label: "Moteur bâbord", position: "port" },
+            { label: "Moteur tribord", position: "starboard" },
+          ]),
+        ],
+      );
       const boat = await c.query(
-        "select name, type, builder, checklist_template_id from public.boats where id = $1",
+        "select name, type, builder, model, checklist_template_id from public.boats where id = $1",
         [NEW_BOAT],
       );
       const role = await c.query("select public.boat_role($1::uuid) as role", [NEW_BOAT]);
-      const engines = await c.query(
-        "select count(*)::int as n from public.engines where boat_id = $1",
+      const counts = await c.query(
+        `select
+           (select count(*)::int from public.engines where boat_id = $1) as engines,
+           (select count(*)::int from public.boat_categories where boat_id = $1) as categories,
+           (select count(*)::int from public.checklist_items where boat_id = $1) as items`,
         [NEW_BOAT],
       );
-      const categories = await c.query(
-        "select count(*)::int as n from public.boat_categories where boat_id = $1",
-        [NEW_BOAT],
-      );
-      const items = await c.query(
-        "select count(*)::int as n from public.checklist_items where boat_id = $1 and anchor_date = current_date",
-        [NEW_BOAT],
-      );
+      const row = boat.rows[0] as {
+        name: string;
+        type: string;
+        builder: string | null;
+        model: string | null;
+        checklist_template_id: string | null;
+      };
+      const n = counts.rows[0] as { engines: number; categories: number; items: number };
       return {
-        // The name is trimmed, and the identity is read off the model rather than asked twice.
-        name: (boat.rows[0] as { name: string }).name,
-        builder: (boat.rows[0] as { builder: string | null }).builder,
-        template: (boat.rows[0] as { checklist_template_id: string | null }).checklist_template_id,
+        name: row.name,
+        // A trimaran stays a trimaran: the hull is no longer inherited from a chosen model.
+        type: row.type,
+        builder: row.builder,
+        model: row.model,
+        plan: row.checklist_template_id,
         role: (role.rows[0] as { role: string | null }).role,
-        engines: Number((engines.rows[0] as { n: number }).n),
-        categories: Number((categories.rows[0] as { n: number }).n),
-        anchoredItems: Number((items.rows[0] as { n: number }).n),
+        engines: Number(n.engines),
+        categories: Number(n.categories),
+        items: Number(n.items),
       };
     });
 
-    expect(out.name).toBe("Mon bateau");
-    expect(out.builder).toBe("Test");
-    expect(out.template).toBe(TEMPLATE);
+    expect(out.name).toBe("Alizé");
+    expect(out.type).toBe("trimaran");
+    // Free text: a builder we publish nothing for is still written down exactly.
+    expect(out.builder).toBe("Neel");
+    expect(out.model).toBe("47");
     expect(out.role).toBe("owner");
     expect(out.engines).toBe(2);
-    expect(out.categories).toBeGreaterThan(0);
-    // One per engine: the seed template's only point is engine-scoped (D1 anchors it on today).
-    expect(out.anchoredItems).toBe(2);
+    // The systems arrive, so the boat is usable; the maintenance plan does not (D65).
+    expect(out.categories).toBe(8);
+    expect(out.items).toBe(0);
+    expect(out.plan).toBeNull();
+  });
+
+  /**
+   * The whole point of the split: choosing a plan afterwards must fill the systems the boat
+   * already has, never duplicate them, and never undo a rename made in between.
+   */
+  it("a plan chosen later merges into the existing systems", async () => {
+    const out = await as(U.stranger, async (c) => {
+      await c.query(
+        call(
+          NEW_BOAT,
+          "Alizé",
+          "catamaran",
+          JSON.stringify([
+            { label: "Moteur bâbord", position: "port" },
+            { label: "Moteur tribord", position: "starboard" },
+          ]),
+        ),
+      );
+      await c.query(
+        "update public.boat_categories set name = 'Propulsion' where boat_id = $1 and external_ref = 'engines'",
+        [NEW_BOAT],
+      );
+      const template = await c.query(
+        "select id from public.checklist_templates where external_ref = 'generic-catamaran-v1'",
+      );
+      await c.query("select public.apply_checklist_template($1::uuid, $2::uuid)", [
+        NEW_BOAT,
+        (template.rows[0] as { id: string }).id,
+      ]);
+      const res = await c.query(
+        `select
+           (select count(*)::int from public.boat_categories where boat_id = $1) as categories,
+           (select count(*)::int from public.checklist_items where boat_id = $1) as items,
+           (select count(*)::int from public.boat_categories where boat_id = $1 and template_category_id is null) as unlinked,
+           (select name from public.boat_categories where boat_id = $1 and external_ref = 'engines') as renamed,
+           (select checklist_template_id from public.boats where id = $1) as plan`,
+        [NEW_BOAT],
+      );
+      return res.rows[0] as {
+        categories: number;
+        items: number;
+        unlinked: number;
+        renamed: string;
+        plan: string | null;
+      };
+    });
+
+    expect(Number(out.categories)).toBe(8);
+    expect(Number(out.unlinked)).toBe(0);
+    expect(out.renamed).toBe("Propulsion");
+    expect(out.plan).not.toBeNull();
+    // 70 template points, 10 of them engine-scoped: 9 inboard × 2 engines, 1 outboard skipped.
+    expect(Number(out.items)).toBe(78);
   });
 
   // Rule 11 / D18: the form draws the id when it opens, so the second tap of a double tap is
@@ -393,12 +461,6 @@ describe("create_boat", () => {
     if (!res.ok) expect(res.message).toContain("forbidden");
   });
 
-  it("refuses a model that does not exist, so no boat is ever born empty", async () => {
-    const res = await run(U.viewer, call(NEW_BOAT, "X", "00000000-0000-0000-0000-0000000000ff"));
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.message).toContain("template_not_found");
-  });
-
   it("refuses a blank name and a malformed engine", async () => {
     const blank = await run(U.viewer, call(NEW_BOAT, "   "));
     expect(blank.ok).toBe(false);
@@ -406,7 +468,7 @@ describe("create_boat", () => {
 
     const badPosition = await run(
       U.viewer,
-      call(NEW_BOAT, "X", TEMPLATE, '[{"label":"M","position":"milieu"}]'),
+      call(NEW_BOAT, "X", "catamaran", '[{"label":"M","position":"milieu"}]'),
     );
     expect(badPosition.ok).toBe(false);
     if (!badPosition.ok) expect(badPosition.message).toContain("invalid_engine");
@@ -418,14 +480,39 @@ describe("create_boat", () => {
     if (!res.ok) expect(res.code).toBe("42501");
   });
 
-  // The registry the picker reads. security_invoker, so it must show exactly what
+  // A boat is unusable without categories: a category is compulsory on an intervention and
+  // `checklist_items.category_id` is `on delete restrict`. Every hull must map to a model.
+  it("gives every hull type its systems", async () => {
+    for (const type of ["catamaran", "trimaran", "monohull_sail", "motor", "rib", "other"]) {
+      const categories = await as(U.stranger, async (c) => {
+        await c.query(call(NEW_BOAT, "X", type));
+        const res = await c.query(
+          "select count(*)::int as n from public.boat_categories where boat_id = $1",
+          [NEW_BOAT],
+        );
+        return Number((res.rows[0] as { n: number }).n);
+      });
+      expect(categories, type).toBeGreaterThanOrEqual(7);
+    }
+  });
+
+  it("apply_template_categories is refused to someone who cannot write the boat", async () => {
+    const res = await run(
+      U.viewer,
+      `select public.apply_template_categories('${BOAT}'::uuid, '${ORC50}'::uuid)`,
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toContain("forbidden");
+  });
+
+  // The registry the plan picker reads. security_invoker, so it must show exactly what
   // checklist_templates_select allows and never leak a private model.
   it("checklist_template_catalog: public models for everyone, private ones for the admin only", async () => {
     const visible = (user: User) =>
       as(user, async (c) => {
         const res = await c.query(
           "select count(*)::int as n from public.checklist_template_catalog where id = $1",
-          [TEMPLATE],
+          [ORC50],
         );
         return Number((res.rows[0] as { n: number }).n);
       });
@@ -435,27 +522,16 @@ describe("create_boat", () => {
     const hidden = await as(U.viewer, async (c) => {
       await c.query("set local role service_role");
       await c.query("update public.checklist_templates set is_public = false where id = $1", [
-        TEMPLATE,
+        ORC50,
       ]);
       await c.query("set local role authenticated");
       const mine = await c.query(
         "select count(*)::int as n from public.checklist_template_catalog where id = $1",
-        [TEMPLATE],
+        [ORC50],
       );
       return Number((mine.rows[0] as { n: number }).n);
     });
     expect(hidden).toBe(0);
-
-    // And its counts are the ones the picker promises.
-    const counts = await as(U.viewer, async (c) => {
-      const res = await c.query(
-        "select category_count, item_count from public.checklist_template_catalog where id = $1",
-        [TEMPLATE],
-      );
-      return res.rows[0] as { category_count: string; item_count: string };
-    });
-    expect(Number(counts.category_count)).toBe(1);
-    expect(Number(counts.item_count)).toBe(1);
   });
 
   it("counts the boats a person already owns, so the cap has something to count", async () => {
