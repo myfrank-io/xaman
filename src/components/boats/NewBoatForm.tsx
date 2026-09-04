@@ -25,7 +25,14 @@ import {
   modelSuggestions,
   type BoatModelOption,
 } from "@/lib/boat-models";
-import { ENGINE_COUNT_CHOICES, defaultEngineCount, newBoatEngines } from "@/lib/boat-onboarding";
+import {
+  ENGINE_COUNT_CHOICES,
+  TENDER_CHOICES,
+  asksAboutTender,
+  defaultEngineCount,
+  newBoatEngines,
+  type TenderChoice,
+} from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { onboardingPath } from "@/lib/queries/boat-routes";
 import { boatTypeSchema, createBoatSchema } from "@/lib/schemas/boat";
@@ -45,6 +52,8 @@ type NewBoatFormState = {
   builder: string;
   model: string;
   engineCount: string;
+  /** The annexe's outboard (D68) — an engine like any other, appended after the boat's own. */
+  tender: TenderChoice;
 };
 
 /**
@@ -56,7 +65,7 @@ type NewBoatFormState = {
  * to file their boat under « générique » at sign-up. Constructeur and Modèle are free text with
  * suggestions: a Neel 47 is written as a Neel 47 even though we have no Neel plan.
  *
- * The suggestions come from the catalogue of production models (D68), so tapping « Lagoon 42 »
+ * The suggestions come from the catalogue of production models (D69), so tapping « Lagoon 42 »
  * writes the yard, sets the hull type, sets the number of engines that hull usually carries and
  * hands the server the dimensions — four fields for one tap. Nothing is locked by it: every field
  * stays editable, and a boat the catalogue has never heard of is created exactly the same way.
@@ -87,6 +96,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
       builder: "",
       model: "",
       engineCount: "1",
+      tender: "none",
     },
   });
 
@@ -134,12 +144,18 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
       const result = await createBoat({
         ...values,
         boatModelId: known?.id ?? null,
-        engines: newBoatEngines(count, values.type, {
-          single: te("single"),
-          port: te("port"),
-          starboard: te("starboard"),
-          outboard: te("outboard"),
-        }),
+        engines: newBoatEngines(
+          count,
+          values.type,
+          {
+            single: te("single"),
+            port: te("port"),
+            starboard: te("starboard"),
+            outboard: te("outboard"),
+            tender: te("tender"),
+          },
+          form.getValues("tender"),
+        ),
       });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
@@ -186,7 +202,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
                 autoCapitalize="words"
                 autoComplete="off"
                 enterKeyHint="next"
-                placeholder={t("builderPlaceholder")}
+                placeholder={t(`examples.${type}.builder` as "examples.other.builder")}
                 {...form.register("builder")}
               />
             </Field>
@@ -211,7 +227,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
                 autoCapitalize="words"
                 autoComplete="off"
                 enterKeyHint="next"
-                placeholder={t("modelPlaceholder")}
+                placeholder={t(`examples.${type}.model` as "examples.other.model")}
                 {...form.register("model")}
               />
             </Field>
@@ -270,6 +286,29 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
           )}
         />
       </Field>
+
+      {asksAboutTender(type) ? (
+        <Field id="boat-tender-none" label={t("tender")} help={t("tenderHelp")}>
+          <Controller
+            control={form.control}
+            name="tender"
+            render={({ field }) => (
+              <ToggleGroup
+                type="single"
+                value={field.value}
+                aria-label={t("tender")}
+                onValueChange={(next) => next && field.onChange(next)}
+              >
+                {TENDER_CHOICES.map((choice) => (
+                  <ToggleGroupItem key={choice} value={choice} id={`boat-tender-${choice}`}>
+                    {t(`tenderOption.${choice}` as "tenderOption.none")}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            )}
+          />
+        </Field>
+      ) : null}
 
       <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
         {pending ? <Spinner /> : <ArrowRightIcon />}

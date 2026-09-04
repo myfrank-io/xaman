@@ -66,7 +66,7 @@ export default async function BoatPage({
     // The spare-parts stock lives in this tab now (D34): read it with the equipment, enriched
     // with its system and supplier names by the shared loader the checklist screen uses too.
     loadStockItems(supabase, boatId),
-    // The catalogue (D68): suggestions in the identity form, and the dimensions of a model tapped
+    // The catalogue (D69): suggestions in the identity form, and the dimensions of a model tapped
     // there. A few hundred short rows, read alongside the rest rather than after it.
     boatModels(supabase),
   ]);

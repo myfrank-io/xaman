@@ -88,7 +88,7 @@ export const createBoatSchema = z.object({
   model: nullableText(80),
   engines: z.array(newBoatEngineSchema).max(NEW_BOAT_ENGINES_MAX).default([]),
   /**
-   * The catalogue row that was tapped, if one was (D68). It contributes the dimensions and
+   * The catalogue row that was tapped, if one was (D69). It contributes the dimensions and
    * nothing else, server-side — the client sends a reference, never measurements. Null whenever
    * the boat was typed by hand, which stays the ordinary case.
    */

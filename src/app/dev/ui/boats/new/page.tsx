@@ -13,7 +13,7 @@ import { SAMPLE_BOAT_MODELS } from "../../boat/sample";
  * with no boat, which nobody on the team has any more — so without this page it would ship
  * having been looked at on one viewport, by accident.
  *
- * The catalogue (D68) is here only to feed the builder and model suggestions: since D65 the
+ * The catalogue (D69) is here only to feed the builder and model suggestions: since D65 the
  * screen asks about the boat, never about a maintenance plan.
  */
 export default async function DevNewBoatPage() {

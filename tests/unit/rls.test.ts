@@ -311,7 +311,7 @@ describe("insert", () => {
     expect((await run(U.owner, sql, ["t-owner"])).ok).toBe(false);
   });
 
-  // D68, migration 0019. A published catalogue: it holds nobody's data, so it carries no boat_id
+  // D69, migration 0019. A published catalogue: it holds nobody's data, so it carries no boat_id
   // and everyone signed in reads it — but only the platform admin decides what it contains.
   it("boat models: written by the platform admin only", async () => {
     const sql =
@@ -485,7 +485,7 @@ describe("create_boat", () => {
   });
 
   /**
-   * D68. Tapping « Lagoon 42 » in the suggestions is worth more than the two words it types: the
+   * D69. Tapping « Lagoon 42 » in the suggestions is worth more than the two words it types: the
    * catalogue already knows the hull's dimensions, and the boat opens carrying them.
    *
    * The client sends the row's id, never the measurements — so what is stored is what the

@@ -20,7 +20,33 @@ export type EngineCount = (typeof ENGINE_COUNT_CHOICES)[number];
 export type NewBoatEngine = { label: string; position: EnginePosition };
 
 /** The labels the caller reads from `fr.json` — never written in this file (rule 7). */
-export type EngineLabels = { single: string; port: string; starboard: string; outboard: string };
+export type EngineLabels = {
+  single: string;
+  port: string;
+  starboard: string;
+  outboard: string;
+  tender: string;
+};
+
+/**
+ * The annexe (D68). Almost every boat at anchor tows one, its outboard has its own servicing —
+ * impeller, bougie, vidange — and it is the engine people forget until it will not start on the
+ * day they need to go ashore.
+ *
+ * It is declared here, with the boat's own engines, because that is what it is to the app: one
+ * more engine, in `outboard` position, so `engine_scope` gives it the outboard points and none of
+ * the inboard ones. « Aucune » is first and pre-selected — the question costs no tap.
+ */
+export const TENDER_CHOICES = ["none", "outboard"] as const;
+export type TenderChoice = (typeof TENDER_CHOICES)[number];
+
+/**
+ * A semi-rigide *is* the boat one tows; asking it about its own annexe is noise. Every other hull
+ * is asked, and a tender added later is an engine added from the Bateau screen like any other.
+ */
+export function asksAboutTender(boatType: BoatType | null | undefined): boolean {
+  return boatType !== "rib";
+}
 
 /**
  * What the hull implies. A multihull has two, everything else has one — right often enough that
@@ -40,18 +66,28 @@ export function newBoatEngines(
   count: number,
   boatType: BoatType | null | undefined,
   labels: EngineLabels,
+  /** The annexe's outboard (D68), appended after the boat's own engines. */
+  tender: TenderChoice = "none",
 ): NewBoatEngine[] {
   const outboard = boatType === "rib";
-  if (count <= 0) return [];
+  const engines: NewBoatEngine[] = [];
   if (count === 1) {
-    return outboard
-      ? [{ label: labels.outboard, position: "outboard" }]
-      : [{ label: labels.single, position: "center" }];
+    engines.push(
+      outboard
+        ? { label: labels.outboard, position: "outboard" }
+        : { label: labels.single, position: "center" },
+    );
+  } else if (count >= 2) {
+    engines.push(
+      { label: labels.port, position: outboard ? "outboard" : "port" },
+      { label: labels.starboard, position: outboard ? "outboard" : "starboard" },
+    );
   }
-  return [
-    { label: labels.port, position: outboard ? "outboard" : "port" },
-    { label: labels.starboard, position: outboard ? "outboard" : "starboard" },
-  ];
+  // Last, so the boat's own engines keep positions 1 and 2 on every screen that lists them.
+  if (tender === "outboard" && asksAboutTender(boatType)) {
+    engines.push({ label: labels.tender, position: "outboard" });
+  }
+  return engines;
 }
 
 export type TemplateOption = {

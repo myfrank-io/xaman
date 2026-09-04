@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * Step 1 of three, « Le bateau » (D67, D65, E11-3). The screen someone lands on when they signed
  * up without an invitation — which until now was a waiting room with nothing to wait for.
  *
- * The catalogue of production models (D68) is read here to suggest builders and model names: the
+ * The catalogue of production models (D69) is read here to suggest builders and model names: the
  * two fields stay free text, and a boat the catalogue has never heard of is written down exactly.
  * The maintenance plan is a separate question, asked at step 3 once the boat exists.
  */
