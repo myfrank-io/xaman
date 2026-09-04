@@ -9,7 +9,11 @@ export default defineConfig({
   testDir: "tests/e2e",
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  fullyParallel: false,
+  // Every test here is a self-contained `page.goto` + assertions: no fixture, no session, no
+  // write to the database. Nothing to serialise, so the 200 cases (40 pages x 5 viewports) run
+  // side by side — the audit was the slowest thing in CI purely because it waited on itself.
+  fullyParallel: true,
+  workers: process.env.CI ? 4 : undefined,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: {

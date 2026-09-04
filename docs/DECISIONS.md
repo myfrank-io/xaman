@@ -1006,3 +1006,56 @@ Targa** (sinon il se range dans la même liste que la gamme Targa de Fairline) e
 certificat d'enregistrement. La lecture du certificat est la seule piste d'auto-remplissage
 juridiquement propre (donnée fournie par la personne elle-même, comme HistoVec) — mais la présence
 d'un champ « constructeur » sur le document n'est **pas établie**, et aucun code 2D n'est attesté.
+
+## 2026-09-04 — D70 : la CI vérifie, elle ne déploie pas
+
+**Question.** « Simplifie le CI/CD sur ce projet, c'est beaucoup trop long et beaucoup trop
+complexe, ça n'avance à rien. » Trois jobs, 108 lignes de YAML, 4 min 19 d'attente sur une PR et
+4 min 58 sur `main`. Le détail des exécutions dit où part le temps — et surtout ce qui ne prouve
+rien.
+
+**Deux étapes ne pouvaient pas échouer.** Elles ont donc été retirées, pas réparées :
+
+- Le job `migrate-production` n'a **jamais exécuté une seule étape réelle**. À chaque push sur
+  `main`, son étape « Check configuration » ne trouvait ni `SUPABASE_ACCESS_TOKEN`, ni
+  `SUPABASE_DB_PASSWORD`, ni `SUPABASE_PROJECT_REF` (jamais renseignés sur le dépôt), écrivait un
+  `::warning::` que personne ne lit, et les deux étapes suivantes — `setup-cli` et
+  `supabase link + db push` — étaient sautées. Vérifié sur les exécutions 109 et 96 : `skipped`
+  des deux côtés. Un job entier, un runner, et un `needs: checks` qui le sérialisait **après** les
+  checks, pour ne rien faire. Les migrations de production partent à la main (`supabase db push`
+  ou l'outil MCP depuis Claude Code), ce que `KICKOFF.md` et `CLAUDE.md` décrivaient déjà.
+- L'étape « Generated types are up to date » portait `continue-on-error: true` **et**
+  `|| echo "::warning::"`. Deux filets pour la même chute : aucune chance d'échouer, quelle que
+  soit la dérive de `src/types/database.ts`. 13 s par exécution pour un avertissement invisible.
+  La règle 3 de `CLAUDE.md` (regénérer et committer le type après une migration) ne change pas ;
+  elle est tenue à la revue, comme avant, mais sans faire semblant de l'automatiser.
+
+**L'audit tactile s'attendait lui-même.** `fullyParallel: false` datait d'une suite qui touchait
+la base. Les trois specs actuelles ne font que `page.goto` + assertions : aucune fixture, aucune
+session, aucune écriture. Rien à sérialiser. Les 200 cas (40 pages × 5 viewports) tournaient sur
+2 workers avec une granularité de *fichier*, donc les 5 copies de `touch-audit.spec.ts` passaient
+l'une après l'autre. En parallèle sur 4 workers, l'étape passe de **217 s à 181 s** en CI
+(exécutions 108 puis 110), 200/200 au vert. En local sur 4 cœurs le même changement donnait
+204 s → 142 s : le runner GitHub est plus contraint, et le gain y est plus petit.
+
+Le plafond n'est pas le navigateur : c'est `next dev`, qui compile les routes à la demande pendant
+que les 4 workers l'attendent. Le descendre vraiment demanderait de jouer l'audit sur un build de
+production. **Écarté pour l'instant** : en mode production, React ne journalise plus ses
+avertissements de développement — hydratation, clés manquantes — et c'est précisément ce que
+l'assertion « aucune erreur console » attrape depuis D50 et D58. On échangerait de la rigueur
+contre des secondes.
+
+**Ce qui n'a pas bougé, et pourquoi.** `supabase db start` coûte 82 s : c'est le poste le plus
+cher qui reste. Le remplacer par un conteneur `postgres:17` et le shim `tests/support/supabase-shim.sql`
+ferait gagner ~75 s. Refusé : c'est la seule chose dans la CI qui prouve qu'une migration
+s'applique sur un vrai Postgres Supabase, avec les schémas `auth` et `storage` réels — et comme
+les migrations de production partent à la main, c'est aussi le seul garde-fou avant la prod.
+Échanger ce filet contre 75 s sur un pipeline de 3 minutes serait un mauvais marché. Le levier
+existe si l'arbitrage change un jour.
+
+**Résultat**, mesuré sur l'exécution 110 : 3 jobs → 2, 108 lignes → 62, et plus une seule étape
+qui ne peut pas échouer. L'attente passe de 4 min 19 à **3 min 51** sur une PR (−11 %) et de
+4 min 58 à **3 min 51** sur `main` (−22 %, le troisième runner en moins). Le gain est réel mais
+modeste : l'audit tactile reste le chemin critique à 3 min 48, et le vrai plafond est `next dev`.
+Les trois leviers qui restent sont écrits ci-dessus — conteneur `postgres:17`, build de
+production pour l'audit, ou un viewport de moins — et chacun se paie en rigueur, pas en YAML.
