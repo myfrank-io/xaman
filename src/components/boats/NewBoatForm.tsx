@@ -20,11 +20,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createBoat } from "@/lib/actions/boat";
 import {
   ENGINE_COUNT_CHOICES,
+  TENDER_CHOICES,
+  asksAboutTender,
   builderSuggestions,
   defaultEngineCount,
   modelSuggestions,
   newBoatEngines,
   type TemplateOption,
+  type TenderChoice,
 } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { onboardingPath } from "@/lib/queries/boat-routes";
@@ -45,6 +48,8 @@ type NewBoatFormState = {
   builder: string;
   model: string;
   engineCount: string;
+  /** The annexe's outboard (D68) — an engine like any other, appended after the boat's own. */
+  tender: TenderChoice;
 };
 
 /**
@@ -85,6 +90,7 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
       builder: "",
       model: "",
       engineCount: "1",
+      tender: "none",
     },
   });
 
@@ -115,12 +121,18 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
     startTransition(async () => {
       const result = await createBoat({
         ...values,
-        engines: newBoatEngines(count, values.type, {
-          single: te("single"),
-          port: te("port"),
-          starboard: te("starboard"),
-          outboard: te("outboard"),
-        }),
+        engines: newBoatEngines(
+          count,
+          values.type,
+          {
+            single: te("single"),
+            port: te("port"),
+            starboard: te("starboard"),
+            outboard: te("outboard"),
+            tender: te("tender"),
+          },
+          form.getValues("tender"),
+        ),
       });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
@@ -185,7 +197,7 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
                 autoCapitalize="words"
                 autoComplete="off"
                 enterKeyHint="next"
-                placeholder={t("builderPlaceholder")}
+                placeholder={t(`examples.${type}.builder` as "examples.other.builder")}
                 {...form.register("builder")}
               />
               <SuggestionChips
@@ -208,7 +220,7 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
                 autoCapitalize="words"
                 autoComplete="off"
                 enterKeyHint="next"
-                placeholder={t("modelPlaceholder")}
+                placeholder={t(`examples.${type}.model` as "examples.other.model")}
                 {...form.register("model")}
               />
               <SuggestionChips
@@ -243,6 +255,29 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
           )}
         />
       </Field>
+
+      {asksAboutTender(type) ? (
+        <Field id="boat-tender-none" label={t("tender")} help={t("tenderHelp")}>
+          <Controller
+            control={form.control}
+            name="tender"
+            render={({ field }) => (
+              <ToggleGroup
+                type="single"
+                value={field.value}
+                aria-label={t("tender")}
+                onValueChange={(next) => next && field.onChange(next)}
+              >
+                {TENDER_CHOICES.map((choice) => (
+                  <ToggleGroupItem key={choice} value={choice} id={`boat-tender-${choice}`}>
+                    {t(`tenderOption.${choice}` as "tenderOption.none")}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            )}
+          />
+        </Field>
+      ) : null}
 
       <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
         {pending ? <Spinner /> : <ArrowRightIcon />}

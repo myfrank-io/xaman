@@ -887,3 +887,37 @@ honnête de laisser la main.
 deux lecteurs, `import.fromNew`, `import.back.dashboard`, `attachments.import.dashboard`,
 `boats.new.submitImport`) : l'étape 2 fait mieux au même endroit, et deux façons de faire la même
 chose valent moins qu'une seule qui marche.
+
+
+## 2026-09-04 — D68 : l'annexe est un moteur, et l'exemple suit la coque
+
+**Question.** Deux remarques sur l'étape 1, au même endroit de l'écran : « rajoute annexe ici » et
+« change les exemples des bateaux dans chaque catégorie ».
+
+**L'annexe.** Presque tout bateau au mouillage en traîne une, son hors-bord a ses propres
+entretiens — impeller, bougie, vidange — et c'est le moteur qu'on oublie jusqu'au jour où il
+refuse de démarrer pour aller à terre. Elle se déclare donc **sous les moteurs du bord**, parce
+que c'est ce qu'elle est pour l'app : un moteur de plus, en position `outboard`.
+
+La position n'est pas cosmétique : `engine_scope` filtre dessus (`0004_tracking.sql`), donc une
+annexe enregistrée en `center` récolterait les points d'un in-bord — saildrive, presse-étoupe —
+et aucun des siens. Elle est ajoutée **après** les moteurs du bord, pour que ceux-ci gardent les
+positions 1 et 2 sur tous les écrans qui les listent.
+
+- Puces « Aucune » (pré-sélectionnée) et « Avec hors-bord » : la question coûte **zéro tap** à qui
+  n'en a pas, comme le nombre de moteurs juste au-dessus.
+- **Pas posée à un semi-rigide** : c'est lui, le bateau qu'on remorque. La question y serait du
+  bruit, et un hors-bord ajouté après coup reste un moteur comme un autre depuis l'écran Bateau.
+- Elle n'est pas un *équipement* : un équipement ne porte pas d'intervalle en heures et ne
+  déclenche aucun point de checklist. Le carnet n'aurait rien à en dire.
+
+**Les exemples.** Les champs Constructeur et Modèle affichaient « Marsaudon Composites » et
+« ORC 50 » — un catamaran, sur un écran dont le type par défaut est un monocoque, et qui restait
+affiché même après avoir choisi « Semi-rigide ». L'exemple suit désormais la coque : *Lagoon 46*,
+*Neel 47*, *Bénéteau Oceanis 46.1*, *Jeanneau Merry Fisher 895*, *Zodiac Medline 7.5*, et l'ORC 50
+pour « Autre ». Ce sont des `placeholder`, jamais des valeurs : rien n'est écrit dans le bateau.
+
+La clé est construite depuis le type choisi (`examples.<type>.builder`), donc une clé manquante ne
+casserait pas la compilation — elle afficherait son propre nom à qui a choisi cette coque. Un test
+vérifie que chaque type proposé par la bascule a son exemple, et qu'aucun exemple ne traîne pour
+un type qui n'existe pas.
