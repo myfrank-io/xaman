@@ -8,6 +8,7 @@ import {
   CircleUserIcon,
   DownloadIcon,
   LogOutIcon,
+  PlusIcon,
   SettingsIcon,
   UsersIcon,
   type LucideIcon,
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/actions/auth";
 import { can, type BoatRole } from "@/lib/permissions";
-import { boatPath } from "@/lib/queries/boat-routes";
+import { NEW_BOAT_PATH, boatPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 export type AccountUser = {
@@ -68,6 +69,9 @@ export function AccountMenu({
       icon: CircleUserIcon,
       href: boatPath(boatId, "profile"),
     },
+    // The only door to a second carnet: /boats redirects straight to the dashboard as long as
+    // there is exactly one boat, so the picker that carries the same entry is never seen (D64).
+    { key: "newBoat", label: t("newBoat"), icon: PlusIcon, href: NEW_BOAT_PATH },
     ...(write
       ? [
           {

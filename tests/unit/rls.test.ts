@@ -177,9 +177,19 @@ describe("read access (select)", () => {
     expect(await count(U.admin, "profiles")).toBe(6);
   });
 
+  // A count, not a fixed number: the registry grows every time a model is published (0016 added
+  // the three generic ones), and what has to hold is that every public model is readable by
+  // anyone signed in and by nobody who is not.
   it("checklist templates are readable by any signed-in user", async () => {
-    expect(await count(U.stranger, "checklist_templates")).toBe(1);
-    expect(await count(U.viewer, "checklist_template_items")).toBe(1);
+    const published = await as(U.admin, async (c) => {
+      const res = await c.query(
+        "select count(*)::int as n from public.checklist_templates where is_public",
+      );
+      return Number((res.rows[0] as { n: number }).n);
+    });
+    expect(published).toBeGreaterThan(1);
+    expect(await count(U.stranger, "checklist_templates")).toBe(published);
+    expect(await count(U.viewer, "checklist_template_items")).toBeGreaterThan(0);
     expect(await count(null, "checklist_templates")).toBe(-1);
   });
 
@@ -273,10 +283,13 @@ describe("insert", () => {
     expect((await run(U.stranger, sql, params(U.stranger))).ok, "stranger").toBe(false);
   });
 
-  it("boats: only the platform admin creates boats in V1", async () => {
+  // D64: the table stays shut. Opening a carnet goes through create_boat, so a boat can never
+  // exist without an owner and never exist without its checklist.
+  it("boats: the table itself still takes an insert only from the platform admin", async () => {
     const sql = "insert into public.boats (name, type, created_by) values ('Nouveau', 'motor', $1)";
     expect((await run(U.admin, sql, [U.admin.id])).ok).toBe(true);
     expect((await run(U.owner, sql, [U.owner.id])).ok).toBe(false);
+    expect((await run(U.viewer, sql, [U.viewer.id])).ok).toBe(false);
   });
 
   it("boat_members and boat_invitations: owner only", async () => {
@@ -296,6 +309,164 @@ describe("insert", () => {
     const sql = "insert into public.checklist_templates (name, external_ref) values ('T', $1)";
     expect((await run(U.admin, sql, ["t-admin"])).ok).toBe(true);
     expect((await run(U.owner, sql, ["t-owner"])).ok).toBe(false);
+  });
+});
+
+/**
+ * Opening a carnet (D64, migration 0015). `create_boat` is the only door an ordinary user has to
+ * a boat of their own, so what it refuses matters as much as what it creates.
+ */
+describe("create_boat", () => {
+  const NEW_BOAT = "00000000-0000-0000-0000-00000000b0f1";
+  const TEMPLATE = "00000000-0000-0000-0000-0000000000a0";
+
+  const call = (boatId: string, name = "Mon bateau", template = TEMPLATE, engines = "[]") =>
+    `select public.create_boat('${boatId}'::uuid, '${name}', '${template}'::uuid, '${engines}'::jsonb)`;
+
+  it("makes the caller the owner of the boat it creates, with its checklist", async () => {
+    const out = await as(U.stranger, async (c) => {
+      await c.query("select public.create_boat($1::uuid, $2, $3::uuid, $4::jsonb)", [
+        NEW_BOAT,
+        "  Mon bateau  ",
+        TEMPLATE,
+        JSON.stringify([
+          { label: "Moteur bâbord", position: "port" },
+          { label: "Moteur tribord", position: "starboard" },
+        ]),
+      ]);
+      const boat = await c.query(
+        "select name, type, builder, checklist_template_id from public.boats where id = $1",
+        [NEW_BOAT],
+      );
+      const role = await c.query("select public.boat_role($1::uuid) as role", [NEW_BOAT]);
+      const engines = await c.query(
+        "select count(*)::int as n from public.engines where boat_id = $1",
+        [NEW_BOAT],
+      );
+      const categories = await c.query(
+        "select count(*)::int as n from public.boat_categories where boat_id = $1",
+        [NEW_BOAT],
+      );
+      const items = await c.query(
+        "select count(*)::int as n from public.checklist_items where boat_id = $1 and anchor_date = current_date",
+        [NEW_BOAT],
+      );
+      return {
+        // The name is trimmed, and the identity is read off the model rather than asked twice.
+        name: (boat.rows[0] as { name: string }).name,
+        builder: (boat.rows[0] as { builder: string | null }).builder,
+        template: (boat.rows[0] as { checklist_template_id: string | null }).checklist_template_id,
+        role: (role.rows[0] as { role: string | null }).role,
+        engines: Number((engines.rows[0] as { n: number }).n),
+        categories: Number((categories.rows[0] as { n: number }).n),
+        anchoredItems: Number((items.rows[0] as { n: number }).n),
+      };
+    });
+
+    expect(out.name).toBe("Mon bateau");
+    expect(out.builder).toBe("Test");
+    expect(out.template).toBe(TEMPLATE);
+    expect(out.role).toBe("owner");
+    expect(out.engines).toBe(2);
+    expect(out.categories).toBeGreaterThan(0);
+    // One per engine: the seed template's only point is engine-scoped (D1 anchors it on today).
+    expect(out.anchoredItems).toBe(2);
+  });
+
+  // Rule 11 / D18: the form draws the id when it opens, so the second tap of a double tap is
+  // this exact call again — and must not open a second carnet.
+  it("is idempotent: a replay returns the same boat instead of a twin", async () => {
+    const count = await as(U.stranger, async (c) => {
+      await c.query(call(NEW_BOAT));
+      await c.query(call(NEW_BOAT));
+      const res = await c.query("select count(*)::int as n from public.boats where id = $1", [
+        NEW_BOAT,
+      ]);
+      return Number((res.rows[0] as { n: number }).n);
+    });
+    expect(count).toBe(1);
+  });
+
+  it("refuses a boat id that already belongs to someone else", async () => {
+    const res = await run(U.viewer, call(BOAT2));
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toContain("forbidden");
+  });
+
+  it("refuses a model that does not exist, so no boat is ever born empty", async () => {
+    const res = await run(U.viewer, call(NEW_BOAT, "X", "00000000-0000-0000-0000-0000000000ff"));
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toContain("template_not_found");
+  });
+
+  it("refuses a blank name and a malformed engine", async () => {
+    const blank = await run(U.viewer, call(NEW_BOAT, "   "));
+    expect(blank.ok).toBe(false);
+    if (!blank.ok) expect(blank.message).toContain("invalid_name");
+
+    const badPosition = await run(
+      U.viewer,
+      call(NEW_BOAT, "X", TEMPLATE, '[{"label":"M","position":"milieu"}]'),
+    );
+    expect(badPosition.ok).toBe(false);
+    if (!badPosition.ok) expect(badPosition.message).toContain("invalid_engine");
+  });
+
+  it("is closed to anon", async () => {
+    const res = await run(null, call(NEW_BOAT));
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.code).toBe("42501");
+  });
+
+  // The registry the picker reads. security_invoker, so it must show exactly what
+  // checklist_templates_select allows and never leak a private model.
+  it("checklist_template_catalog: public models for everyone, private ones for the admin only", async () => {
+    const visible = (user: User) =>
+      as(user, async (c) => {
+        const res = await c.query(
+          "select count(*)::int as n from public.checklist_template_catalog where id = $1",
+          [TEMPLATE],
+        );
+        return Number((res.rows[0] as { n: number }).n);
+      });
+    expect(await visible(U.viewer)).toBe(1);
+    expect(await visible(U.stranger)).toBe(1);
+
+    const hidden = await as(U.viewer, async (c) => {
+      await c.query("set local role service_role");
+      await c.query("update public.checklist_templates set is_public = false where id = $1", [
+        TEMPLATE,
+      ]);
+      await c.query("set local role authenticated");
+      const mine = await c.query(
+        "select count(*)::int as n from public.checklist_template_catalog where id = $1",
+        [TEMPLATE],
+      );
+      return Number((mine.rows[0] as { n: number }).n);
+    });
+    expect(hidden).toBe(0);
+
+    // And its counts are the ones the picker promises.
+    const counts = await as(U.viewer, async (c) => {
+      const res = await c.query(
+        "select category_count, item_count from public.checklist_template_catalog where id = $1",
+        [TEMPLATE],
+      );
+      return res.rows[0] as { category_count: string; item_count: string };
+    });
+    expect(Number(counts.category_count)).toBe(1);
+    expect(Number(counts.item_count)).toBe(1);
+  });
+
+  it("counts the boats a person already owns, so the cap has something to count", async () => {
+    const owned = await as(U.stranger, async (c) => {
+      const res = await c.query(
+        "select count(*)::int as n from public.boat_members where user_id = $1 and role = 'owner'",
+        [U.stranger.id],
+      );
+      return Number((res.rows[0] as { n: number }).n);
+    });
+    expect(owned).toBe(1);
   });
 });
 

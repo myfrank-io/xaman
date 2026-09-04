@@ -94,7 +94,8 @@
       "parts": "Stock",
       "report": "Rapport",
       "profile": "Profil"
-    }
+    },
+    "newBoat": "Ajouter un bateau"
   },
   "logStatus": {
     "planned": "Planifié",
@@ -283,7 +284,24 @@
     "title": "Vos bateaux",
     "none": {
       "title": "Vous n'avez pas encore de bateau",
-      "description": "Demandez une invitation au propriétaire du bateau : vous recevrez un e-mail avec un lien pour le rejoindre."
+      "description": "Ajoutez le vôtre, ou ouvrez le lien d'invitation reçu par e-mail pour rejoindre celui de quelqu'un d'autre."
+    },
+    "new": {
+      "title": "Votre bateau",
+      "subtitle": "Trois réponses et le carnet est prêt, déjà rempli.",
+      "add": "Ajouter un bateau",
+      "name": "Nom du bateau",
+      "namePlaceholder": "Xaman",
+      "model": "Modèle",
+      "modelPlaceholder": "Choisir le modèle…",
+      "modelHelp": "Il apporte les systèmes du bord et les points d'entretien. Prenez le modèle générique si le vôtre n'est pas dans la liste.",
+      "modelSummary": "{categories, plural, one {# système} other {# systèmes}} · {items, plural, one {# point d'entretien} other {# points d'entretien}}",
+      "modelGroupExact": "Modèles de constructeurs",
+      "modelGroupGeneric": "Modèles génériques",
+      "engines": "Moteurs",
+      "enginesHelp": "Les entretiens en heures s'y rattachent. Vous les nommerez et relèverez les compteurs ensuite.",
+      "submit": "Créer le carnet",
+      "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement."
     }
   },
   "errors": {
@@ -314,7 +332,8 @@
     "date_in_future": "Cette date est dans le futur.",
     "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus.",
     "part_not_found": "Cette pièce n'existe plus.",
-    "attachment_owner_not_found": "La ligne à laquelle ce document devait être rattaché n'existe plus."
+    "attachment_owner_not_found": "La ligne à laquelle ce document devait être rattaché n'existe plus.",
+    "boat_limit": "Vous avez atteint le nombre maximal de bateaux. Contactez-nous pour en ouvrir d'autres."
   },
   "members": {
     "title": "Membres",
@@ -1026,7 +1045,14 @@
       "checklist": "checklist",
       "import": "import"
     },
-    "importedHint": "issu du carnet papier"
+    "importedHint": "issu du carnet papier",
+    "onboarding": {
+      "count": "{count, plural, =0 {Aucun} one {# moteur} other {# moteurs}}",
+      "single": "Moteur",
+      "port": "Moteur bâbord",
+      "starboard": "Moteur tribord",
+      "outboard": "Hors-bord"
+    }
   },
   "equipment": {
     "title": "Équipements",

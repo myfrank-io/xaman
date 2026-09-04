@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { boatPath } from "@/lib/queries/boat-routes";
-import { deleteBoatSchema, updateBoatSchema } from "@/lib/schemas/boat";
+import { createBoatSchema, deleteBoatSchema, updateBoatSchema } from "@/lib/schemas/boat";
 import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
 
@@ -49,6 +49,39 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
   revalidatePath(boatPath(boatId, "boat"));
   revalidatePath(boatPath(boatId, "dashboard"));
   return ok(undefined);
+}
+
+/**
+ * Opening a carnet (D64, E11-3). One call: the boat, its owner, its engines and the whole
+ * checklist instantiated from the chosen model — `create_boat` does all four in one transaction,
+ * because a boat that exists without an owner, or without its checklist, is a broken boat.
+ *
+ * `boats_insert` is still `is_platform_admin()`: this RPC is the only door, which is what
+ * guarantees the « au moins un owner » rule from the first millisecond.
+ *
+ * Idempotent (rule 11, D18): the form draws `boatId` when it opens, so the second tap of a
+ * double tap replays the same call and gets the same boat back instead of a twin.
+ */
+export async function createBoat(input: unknown): Promise<ActionResult<{ boatId: string }>> {
+  const parsed = parseInput(createBoatSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, name, templateId, engines } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { error } = await supabase.rpc("create_boat", {
+    p_boat_id: boatId,
+    p_name: name,
+    p_template_id: templateId,
+    p_engines: engines,
+  });
+  if (error) return fail(dbErrorKey(error));
+
+  // The boat list and the shell's boat name are server-rendered.
+  revalidatePath("/boats");
+  return ok({ boatId });
 }
 
 // Deletes the boat and everything it carries (cascade). Owner only (RLS); the name must be typed.

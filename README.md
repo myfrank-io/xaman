@@ -50,8 +50,10 @@ La CI GitHub Actions (`.github/workflows/ci.yml`) rejoue lint, prettier, typeche
 - **Supabase** : projet en région UE ; migrations appliquées par la CI ou `supabase db push` ; gabarits d'e-mail en français (code OTP, invitation, lien magique) ; URL de redirection `https://xaman-blue.vercel.app/**`.
 - **PWA** : `src/app/manifest.ts` + service worker Serwist (`src/app/sw.ts`, construit par `serwist build` après `next build`). Sur iPad : Partager → Sur l'écran d'accueil.
 
-## Demander un accès
-Xaman est réservé aux membres d'un bateau. Pour rejoindre le carnet d'un bateau existant, demandez une invitation à son propriétaire (« Membres → Inviter ») ; pour ouvrir un nouveau bateau, contactez l'administrateur de la plateforme (Joseph), qui crée le bateau à partir de son modèle et nomme son premier propriétaire.
+## Ouvrir un carnet
+Créez un compte sur `/signup`, puis ajoutez votre bateau : un nom, un modèle et le nombre de moteurs. Le carnet arrive rempli — les systèmes du bord, les points d'entretien et leurs échéances viennent du modèle choisi. Si votre bateau n'a pas encore de modèle publié, prenez le modèle générique correspondant à sa coque.
+
+Pour rejoindre le carnet d'un bateau existant, demandez plutôt une invitation à son propriétaire (« Membres → Inviter ») : le lien reçu par e-mail vous y ajoute directement.
 
 ## Personnes
 Joseph (produit, admin plateforme) · Xavier · Emmanuel
