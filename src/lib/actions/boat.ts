@@ -62,7 +62,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
  * that null to offer the choice. Identity and plan are two questions asked at two moments.
  *
  * `boatModelId` names the catalogue row that was tapped, and the RPC reads its dimensions itself
- * (D66): the boat opens knowing its own length without anyone having typed it.
+ * (D68): the boat opens knowing its own length without anyone having typed it.
  *
  * `boats_insert` is still `is_platform_admin()`: this RPC is the only door, which is what
  * guarantees the « au moins un owner » rule from the first millisecond.

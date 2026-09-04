@@ -26,6 +26,16 @@ export const PROFILE_PATH = "/settings/profile";
  */
 export const NEW_BOAT_PATH = "/boats/new";
 
+/**
+ * Steps 2 and 3 of opening a carnet (D67). Under `/boats/new` rather than in the boat's own tree,
+ * because the boat's tree is `AppShell`: landing there would put the four tabs on screen and
+ * invite someone to wander off mid-flow. The id is in the address so the step is resumable — a
+ * closed tab, a dead battery, and the dashboard's own « reprendre » all come back here.
+ */
+export function onboardingPath(boatId: string, step: 2 | 3): string {
+  return withQuery(`${NEW_BOAT_PATH}/${boatId}`, { step });
+}
+
 export function boatPath(boatId: string, key: NavKey): string {
   if (key === "profile") return PROFILE_PATH;
   return `/boats/${boatId}/${BOAT_ROUTES[key]}`;
@@ -69,8 +79,11 @@ export function logsPath(
  * « Importer des documents » (E10-1): a batch of invoices and photos dropped at once, each
  * attached to an intervention or turned into one.
  */
-export function importDocumentsPath(boatId: string): string {
-  return `${boatPath(boatId, "logs")}/documents`;
+export function importDocumentsPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`${boatPath(boatId, "logs")}/documents`, query);
 }
 
 /** « Reprise du carnet » (E3-7): the guided review of the imported rows. */
@@ -186,8 +199,9 @@ export function editPartPath(boatId: string, partId: string): string {
 export function importPath(
   boatId: string,
   entity: "logs" | "purchases" | "contacts" | "equipment" | "parts" | "completions" | "readings",
+  query?: Record<string, string | number | undefined>,
 ): string {
-  return withQuery(`/boats/${boatId}/import`, { entity });
+  return withQuery(`/boats/${boatId}/import`, { entity, ...query });
 }
 
 export function boatTabPath(

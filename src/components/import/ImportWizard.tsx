@@ -51,7 +51,7 @@ import {
 import { parseTable, type ParsedTable } from "@/lib/import/parse";
 import { templateCsv, templateFileName } from "@/lib/import/template";
 import { parseContactCards, isContactCardFile } from "@/lib/import/vcard";
-import { isLegacyExcelFile, isSpreadsheetFile, readWorkbook, type Sheet } from "@/lib/import/xlsx";
+import type { Sheet } from "@/lib/import/xlsx";
 import { cn } from "@/lib/utils";
 
 /** « Autre » chip: never the empty string, which Radix reads as « nothing selected ». */
@@ -104,11 +104,17 @@ export function ImportWizard({
   existingKeys = [],
   catalog,
   initialText,
+  onImported,
+  embedded = false,
 }: {
   boatId: string;
   entity: ImportEntity;
-  backHref: string;
-  backLabel: string;
+  /**
+   * The way out, when this wizard is the whole screen. Omitted when it is one step of a flow that
+   * carries its own « Suivant » — an import step of the onboarding has no list to go back to.
+   */
+  backHref?: string;
+  backLabel?: string;
   /** Natural keys already on the boat: what tells a creation from an update before the write. */
   existingKeys?: string[];
   /**
@@ -118,6 +124,17 @@ export function ImportWizard({
   catalog?: ImportCatalog;
   /** Preloaded cells, for the design gallery. */
   initialText?: string;
+  /**
+   * What was written, announced to whoever embeds this. The report is private state, so without
+   * it a parent step cannot tell « rien fait » from « 42 lignes importées » (D67).
+   */
+  onImported?: (report: ImportReport) => void;
+  /**
+   * One step of a flow that already numbers itself. « 1 · Votre tableau » under « Étape 2 sur 3 »
+   * is two counters on one screen, and a person reading both no longer knows where they are — so
+   * embedded, the three sections keep their names and drop their numbers (D67).
+   */
+  embedded?: boolean;
 }) {
   const t = useTranslations("import");
   const te = useTranslations(`import.entities.${entity}`);
@@ -128,6 +145,10 @@ export function ImportWizard({
 
   const descriptor = descriptorOf(entity);
   const fields = descriptor.fields;
+  const heading = (section: "source" | "mapping" | "preview") =>
+    embedded
+      ? t(`sections.${section}` as "sections.source")
+      : t(`steps.${section}` as "steps.source");
 
   const seed = useMemo(() => {
     const parsed = initialText ? parseTable(initialText) : null;
@@ -176,6 +197,12 @@ export function ImportWizard({
   async function onFile(file: File | undefined) {
     if (!file) return;
     try {
+      // The workbook reader (with its ZIP and XML halves) is ~8 kB gzipped and is dead weight for
+      // a `.csv`, for a `.vcf`, and for everyone who never picks a file at all. Loaded here, it
+      // arrives during the file picker's own round trip and costs nothing anyone can feel — and
+      // it stays out of the onboarding bundle, which now carries this wizard (D67).
+      const { isLegacyExcelFile, isSpreadsheetFile, readWorkbook } =
+        await import("@/lib/import/xlsx");
       // The binary format of Excel 97 is not a ZIP and cannot be opened here.
       if (isLegacyExcelFile(file.name)) {
         toast.error(t("errors.legacyExcel"));
@@ -349,6 +376,7 @@ export function ImportWizard({
         return;
       }
       setReport(result.data);
+      onImported?.(result.data);
       const { created, updated } = result.data;
       if (created + updated > 0) toast.success(t("done", { created, updated }));
       router.refresh();
@@ -373,7 +401,7 @@ export function ImportWizard({
     <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-h2">{t("steps.source")}</h2>
+          <h2 className="text-h2">{heading("source")}</h2>
           {table && !sourceOpen ? (
             <Button type="button" variant="outline" onClick={() => setSourceOpen(true)}>
               <RefreshCwIcon />
@@ -499,7 +527,7 @@ export function ImportWizard({
       ) : sourceOpen ? null : (
         <>
           <section className="flex flex-col gap-3">
-            <h2 className="text-h2">{t("steps.mapping")}</h2>
+            <h2 className="text-h2">{heading("mapping")}</h2>
             <p className="text-caption text-ink-2">{t("mapping.help")}</p>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -653,7 +681,7 @@ export function ImportWizard({
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="text-h2">{t("steps.preview")}</h2>
+            <h2 className="text-h2">{heading("preview")}</h2>
             <p className="text-body">{t("preview.plan", plan)}</p>
             {/* Seven columns cannot fit 328 px and stay a table, so it scrolls — and a table that
                 scrolls without saying so reads as a table with three columns (F9). */}
@@ -725,9 +753,13 @@ export function ImportWizard({
           </section>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button asChild variant="outline">
-              <Link href={backHref as Route}>{backLabel}</Link>
-            </Button>
+            {backHref && backLabel ? (
+              <Button asChild variant="outline">
+                <Link href={backHref as Route}>{backLabel}</Link>
+              </Button>
+            ) : (
+              <span />
+            )}
             <Button
               type="button"
               size="xl"
@@ -766,16 +798,18 @@ export function ImportWizard({
                 <Button type="button" variant="outline" onClick={downloadRejects}>
                   {t("report.download")}
                 </Button>
-                <Button asChild>
-                  <Link href={backHref as Route}>{backLabel}</Link>
-                </Button>
+                {backHref && backLabel ? (
+                  <Button asChild>
+                    <Link href={backHref as Route}>{backLabel}</Link>
+                  </Button>
+                ) : null}
               </div>
             </>
-          ) : (
+          ) : backHref && backLabel ? (
             <Button asChild className="self-start">
               <Link href={backHref as Route}>{backLabel}</Link>
             </Button>
-          )}
+          ) : null}
         </section>
       ) : null}
     </div>

@@ -330,7 +330,7 @@ export const SAMPLE_CATEGORY_ROWS: CategoryRow[] = [
 ];
 
 /**
- * A slice of the model catalogue (D66), enough to exercise every branch of the suggestions:
+ * A slice of the model catalogue (D68), enough to exercise every branch of the suggestions:
  * two yards sharing a model name, a row with no draft because the series has two keels, and one
  * with nothing but a length.
  */

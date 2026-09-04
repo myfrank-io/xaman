@@ -117,7 +117,7 @@ export function BoatIdentity({
   boat: Boat;
   canEdit: boolean;
   templateName: string | null;
-  /** The catalogue (D66) — suggestions here, and the dimensions of a model that is tapped. */
+  /** The catalogue (D68) — suggestions here, and the dimensions of a model that is tapped. */
   models: BoatModelOption[];
 }) {
   const t = useTranslations("boat.identity");

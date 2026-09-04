@@ -69,7 +69,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   ] = await Promise.all([
     supabase
       .from("boats")
-      .select("name, builder, model, hull_number, type")
+      .select("name, builder, model, hull_number, type, checklist_template_id")
       .eq("id", boatId)
       .maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
@@ -172,6 +172,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const totalInterval = categories.reduce((sum, category) => sum + category.total, 0);
   const neverRecorded = categories.reduce((sum, category) => sum + category.neverRecorded, 0);
   const brandNew = totalInterval > 0 && neverRecorded === totalInterval;
+  /**
+   * No plan chosen: the boat has its systems and not one point (D65), so every count below is a
+   * truthful zero and the screen would otherwise read « Tout est à jour » on an empty carnet.
+   * Step 3 of the onboarding is where that is finished (D67).
+   */
+  const unfinished = boat.checklist_template_id === null;
 
   const overdue = stats?.overdue_items ?? 0;
   const soon = stats?.soon_items ?? 0;
@@ -229,9 +235,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const statePhrase =
     stateParts.length > 0
       ? stateParts.join(" · ")
-      : brandNew
-        ? t("state.new", { count: totalInterval })
-        : t("state.ok");
+      : unfinished
+        ? t("state.empty")
+        : brandNew
+          ? t("state.new", { count: totalInterval })
+          : t("state.ok");
   const subtitle = [
     [boat.model, boat.hull_number ? `#${boat.hull_number}` : null].filter(Boolean).join(" "),
     boat.builder,
@@ -327,6 +335,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
         reviewCount={reviewCount}
         noReadingEngines={noReadingEngines}
         canContribute={canContribute}
+        canWrite={canWrite}
+        unfinished={unfinished}
       />
 
       {/* 3 — the work queue */}

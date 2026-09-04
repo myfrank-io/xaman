@@ -38,6 +38,9 @@ const PAGES = [
   // The first screen of anyone who signs up without an invitation (D64), and one nobody on the
   // team can reach any more: every account here already has a boat.
   "/dev/ui/boats/new",
+  // Steps 2 and 3 of the same flow (D67): the import panels and the tour, four dense surfaces
+  // that exist only in the minutes after a carnet is opened.
+  "/dev/ui/onboarding",
   // The second half of the split onboarding (D65): only ever seen on a brand-new boat.
   "/dev/ui/checklist-plan",
   "/dev/ui/members",

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { SailboatIcon } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
@@ -27,6 +27,7 @@ import {
 } from "@/lib/boat-models";
 import { ENGINE_COUNT_CHOICES, defaultEngineCount, newBoatEngines } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import { onboardingPath } from "@/lib/queries/boat-routes";
 import { boatTypeSchema, createBoatSchema } from "@/lib/schemas/boat";
 
 /**
@@ -47,17 +48,22 @@ type NewBoatFormState = {
 };
 
 /**
- * « Ajouter mon bateau » (D65, D66, E11-3). It asks about the boat, and about nothing else.
+ * Step 1 of three (D67, D65, E11-3): « Le bateau ». It asks about the boat, and about nothing
+ * else — the existing logbook is step 2, the maintenance plan is step 3.
  *
  * The word « checklist » does not appear here. Creating a carnet and choosing a maintenance plan
  * are two questions, and merging them meant that someone whose builder has published nothing had
  * to file their boat under « générique » at sign-up. Constructeur and Modèle are free text with
  * suggestions: a Neel 47 is written as a Neel 47 even though we have no Neel plan.
  *
- * The suggestions come from the catalogue of production models (D66), so tapping « Lagoon 42 »
+ * The suggestions come from the catalogue of production models (D68), so tapping « Lagoon 42 »
  * writes the yard, sets the hull type, sets the number of engines that hull usually carries and
  * hands the server the dimensions — four fields for one tap. Nothing is locked by it: every field
  * stays editable, and a boat the catalogue has never heard of is created exactly the same way.
+ *
+ * This is the only step that can be reached without a boat, and the only one that writes one. It
+ * therefore ends the moment `create_boat` answers: everything after it happens inside a carnet
+ * that exists, which is what makes steps 2 and 3 resumable from their own address.
  */
 export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
   const t = useTranslations("boats.new");
@@ -139,8 +145,9 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
         toast.error(errorMessage(result.error));
         return;
       }
-      // Straight into the boat: the Checklist screen offers the maintenance plan from there.
-      router.replace(`/boats/${result.data.boatId}/dashboard` as Route);
+      // Step 2 of three (D67). `replace` rather than `push`: going « back » to this screen would
+      // draw a new id and open a second carnet, so the browser's back button must not be able to.
+      router.replace(onboardingPath(result.data.boatId, 2) as Route);
       router.refresh();
     });
   }
@@ -264,12 +271,12 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
         />
       </Field>
 
-      <Button type="submit" size="xl" disabled={pending}>
-        {pending ? <Spinner /> : <SailboatIcon />}
+      <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
+        {pending ? <Spinner /> : <ArrowRightIcon />}
         {t("submit")}
       </Button>
 
-      <p className="text-caption text-ink-3">{t("planLater", { type: tb(type) })}</p>
+      <p className="text-caption text-ink-3">{t("systems", { type: tb(type) })}</p>
     </form>
   );
 }

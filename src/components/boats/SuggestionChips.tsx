@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { Suggestion } from "@/lib/boat-models";
 
 /**
- * The suggestions under « Constructeur » and « Modèle » (D65, D66).
+ * The suggestions under « Constructeur » and « Modèle » (D65, D68).
  *
  * Never a `<datalist>`: Safari iOS renders it partially and it cannot be styled — the same
  * reason the title suggestions of the intervention form are hand-built (D26). Chips rather than

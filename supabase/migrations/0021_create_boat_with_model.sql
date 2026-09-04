@@ -134,7 +134,7 @@ $$;
 drop function if exists public.create_boat(uuid, text, public.boat_type, text, text, jsonb);
 
 comment on function public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid) is
-  'Onboarding (D65, D66): creates a boat from its own identity — name, hull type, free-text builder and model — makes the caller its owner, creates its engines and copies the systems of the matching generic model. p_boat_model_id, when it names an active catalogue row, contributes the dimensions and nothing else. No maintenance plan: checklist_template_id stays null until one is chosen in the app. Idempotent on p_boat_id for the caller.';
+  'Onboarding (D65, D68): creates a boat from its own identity — name, hull type, free-text builder and model — makes the caller its owner, creates its engines and copies the systems of the matching generic model. p_boat_model_id, when it names an active catalogue row, contributes the dimensions and nothing else. No maintenance plan: checklist_template_id stays null until one is chosen in the app. Idempotent on p_boat_id for the caller.';
 
 revoke all on function public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid) from public, anon;
 grant execute on function public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid) to authenticated, service_role;

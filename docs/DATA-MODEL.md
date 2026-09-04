@@ -105,7 +105,7 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | builder | text | | « Marsaudon Composites » |
 | model | text | | « ORC 50 » |
 | hull_number | text | | numéro de série du chantier — « 25 » |
-| registration | text | | immatriculation délivrée par les affaires maritimes (D66, `0018`). Texte libre : aucune liste de référence, aucun registre consultable. Distincte de `hull_number` et de `sail_number` |
+| registration | text | | immatriculation délivrée par les affaires maritimes (D68, `0018`). Texte libre : aucune liste de référence, aucun registre consultable. Distincte de `hull_number` et de `sail_number` |
 | year | int | | |
 | type | boat_type | not null default 'monohull_sail' | |
 | flag | text | | pavillon |
@@ -119,7 +119,7 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | created_by / updated_by | uuid | FK profiles | |
 | created_at / updated_at | timestamptz | | |
 
-### 3.4 bis `boat_models` — catalogue de modèles (D66, `0019`)
+### 3.4 bis `boat_models` — catalogue de modèles (D68, `0019`)
 
 Table de **référence**, pas une table métier : **pas de `boat_id`** (elle ne porte la donnée de
 personne), comme `checklist_templates`. Lisible par tout compte connecté quand `is_active`, écrite

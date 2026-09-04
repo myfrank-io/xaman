@@ -757,9 +757,138 @@ derrière.
 **Coût de l'acte** : 1 tap (type de coque, si ce n'est pas un monocoque) + « Ouvrir le carnet ».
 Le nombre de moteurs se règle seul depuis la coque. Le plan, plus tard, coûte 1 tap de plus.
 
----
+## 2026-09-04 — D66 : la création demande sur quoi le carnet est écrit aujourd'hui
 
-## D66 — Immatriculation saisie, catalogue de modèles interne (2026-09-04)
+**Question.** Personne n'arrive vierge. Il y a un carnet papier dans la table à cartes, un fichier
+Excel sur un portable, un dossier de factures — et c'est précisément cet historique qui décide si
+le carnet numérique sera adopté ou refermé. Or `/boats/new` ne posait pas la question : la
+création menait au tableau de bord, et l'import (E12, E10-1) attendait, six écrans plus loin, que
+quelqu'un le découvre. Un mois plus tard, il n'était toujours pas fait.
+
+**Décision.** Une dernière question sur `/boats/new`, sous celles qui décrivent le bateau (D65) et
+en puces pré-réglées sur « Rien à reprendre » — donc **zéro tap de plus** dans le cas où il n'y a
+rien : « Vous avez déjà un carnet d'entretien ? » · *Rien à reprendre* · *Excel ou CSV* · *Papier
+ou photos*. Elle ne porte pas sur le bateau et n'écrit rien ; elle change **l'écran sur lequel le
+carnet s'ouvre** (`existingLogDestination`, `src/lib/boat-onboarding.ts`) :
+
+| Format | Atterrissage | Ce qu'il reste à faire |
+|---|---|---|
+| Excel ou CSV | `/boats/[id]/import?entity=logs&from=new` (E12-1) | le fichier, puis « Importer » |
+| Papier ou photos | `/boats/[id]/logs/documents?from=new` (E10-1) | les pages photographiées, chacune devient une intervention |
+| Rien à reprendre | le tableau de bord, comme avant | le bloc « carnet neuf » et le choix du plan (D65) prennent le relais |
+
+**Pourquoi la question porte sur le format et pas sur le contenu.** Chaque format a déjà son
+lecteur dans l'app ; il n'y a rien à écrire de neuf, seulement à nommer la bonne porte. Un export
+d'une autre application est toujours un `.csv` ou un `.xlsx`, donc il tombe dans la première
+ligne sans mériter sa propre puce. Et le libellé du bouton devient « Ouvrir le carnet et
+importer » dès qu'un format est choisi : on ne débarque jamais sur un écran d'import sans l'avoir
+demandé.
+
+**`from=new` n'est pas décoratif.** Il dit à l'écran d'import que la sortie est le tableau de bord
+d'un bateau créé il y a dix secondes, et non la liste d'un carnet que personne n'a encore vue ; le
+sous-titre y devient « Reprenez votre historique maintenant, ou passez ». Sans lui, le bouton de
+retour de l'assistant renvoyait vers une liste vide, ce qui se lit comme une impasse.
+
+**Ce qui n'a pas changé.** Aucune écriture, aucune politique RLS, aucun descripteur d'import : la
+décision est un aiguillage de navigation, entièrement couvert par
+`tests/unit/boat-onboarding.test.ts`. Le fichier reste choisi **sur** l'écran d'import, jamais sur
+`/boats/new` : le tableur y est lu par l'analyseur qui vit là (`.xlsx` hors du bundle principal,
+E12-5), et un fichier choisi avant que le bateau n'existe serait un fichier à réémettre si la
+création échouait.
+
+**Reste ouvert.** La reconnaissance du carnet papier en texte (photo → saisie guidée, E11) : ici,
+la photo devient une pièce jointe sur une intervention à compléter, pas une ligne lue toute seule.
+
+
+## 2026-09-04 — D67 : une seule mise en route, en trois étapes, et l'étape écrite en haut
+
+**Question.** « C'est un onboarding en 3 étapes : 1) le bateau, 2) l'upload du carnet actuel, 3) une
+micro-formation. Audite tout le flux pour que le user ait le moins de choses possibles à faire. »
+
+**L'audit, d'abord.** Quatre passes sur le parcours complet — inscription, création, tableau de
+bord, checklist, imports, assistants — avant d'écrire une ligne. Ce qu'il a trouvé :
+
+- **9 taps minimum après l'inscription, ~31 en pratique**, répartis sur cinq écrans, pour arriver à
+  un carnet utilisable. Le chemin le plus court donnait un carnet **faux** : tout calé sur
+  aujourd'hui, ce que l'assistant de mise en route existe précisément pour corriger.
+- **18 surfaces d'accueil concurrentes**, dont **deux narrations « trois étapes »** qui s'ignorent
+  (`dashboard.upcoming.startIntro` « Trois étapes pour partir du bon pied » et
+  `checklist.wizard.intro` « Trois étapes, moins de cinq minutes »), et **cinq endroits** qui
+  réclament les heures moteur.
+- **Le tableau de bord mentait le jour 1.** `create_boat` laisse `checklist_template_id` nul (D65),
+  donc un bateau neuf a ses huit systèmes et **zéro point**. Tous les compteurs valent zéro et sont
+  exacts, si bien que l'écran affichait « Tout est à jour » et « Rien à faire dans les 30 prochains
+  jours » sur un carnet vide — et le bloc « carnet neuf », qui exige `totalInterval > 0`, était
+  **invisible précisément le jour où il servait**.
+- **Aucun chemin depuis le tableau de bord vers le choix du plan.** Le seul indice était une
+  légende sur l'écran précédent : il fallait deviner l'onglet Checklist.
+
+**Décision. Une colonne vertébrale, trois écrans, l'étape écrite en haut de chacun.**
+
+| Étape | Adresse | Ce qu'elle demande | Ce qu'elle coûte |
+|---|---|---|---|
+| 1 · Le bateau | `/boats/new` | nom, coque, constructeur et modèle (facultatifs), nombre de moteurs | 2 taps (le nom, « Continuer ») |
+| 2 · Votre carnet | `/boats/new/[boatId]?step=2` | sur quoi le carnet est écrit aujourd'hui | 1 tap (pré-réglé sur « Rien à reprendre ») |
+| 3 · Prise en main | `/boats/new/[boatId]?step=3` | rien — elle explique, et pose les deux réglages déjà remplis | 1 tap (« Ouvrir mon carnet ») |
+
+**4 taps après l'inscription**, contre 9 au mieux et ~31 en pratique, et le carnet qui s'ouvre à la
+fin a son plan d'entretien appliqué.
+
+**Ce que chaque étape a gagné.**
+
+- **L'indicateur d'étape n'est pas cliquable.** L'étape 1 a déjà écrit le bateau ; y « revenir »
+  tirerait un nouvel identifiant et ouvrirait un second carnet. Le flux ne va que vers l'avant, et
+  tout ce qu'il écrit reste modifiable ensuite depuis l'app — ce qui supprime du même coup le
+  problème d'état perdu entre deux étapes.
+- **L'étape 2 ouvre le lecteur sur place** au lieu de renvoyer vers `/import` ou
+  `/logs/documents` (ce que faisait D66). Sortir du flux pour importer puis retrouver son chemin
+  est exactement le trajet que personne ne fait : le carnet reste vide, et un carnet vide ne se
+  rouvre pas. Rien n'y est obligatoire — le pied dit « Passer cette étape » tant que rien n'est
+  arrivé.
+- **L'étape 3 enseigne en réglant.** Une visite guidée qui ne fait que parler ne laisse rien ; les
+  deux leçons qui comptent portent leur propre contrôle, déjà rempli : le **plan d'entretien**
+  (pré-sélectionné sur le modèle générique de la coque — la même correspondance que
+  `create_boat` a déjà utilisée pour copier les systèmes) et les **compteurs moteur** (facultatifs,
+  car sans relevé une échéance en heures est muette, D1). « Ouvrir mon carnet » écrit les deux en
+  une seule action.
+
+**Pourquoi le plan est ici et pas ailleurs.** D65 a séparé l'identité du plan pour de bonnes
+raisons, et cette décision ne revient pas dessus : la question reste posée **après** la création,
+avec ses comptes affichés (« 8 systèmes · 70 points d'entretien »), au moment où elle veut dire
+quelque chose. Elle n'est simplement plus à trouver. Le bloc de la Checklist reste en place pour
+les bateaux qui ont sauté l'étape.
+
+**Aucune migration.** Chaque étape a déjà sa vérité côté serveur : le bateau existe ou non,
+`maintenance_logs` est vide ou non, `boats.checklist_template_id` est nul ou non. Ajouter une
+colonne « où en est cette personne » aurait été le premier état de ce schéma capable d'être en
+désaccord avec la réalité — et une visite guidée se regarde par personne, pas par coque.
+
+**Ce que la décision répare au passage**, parce que le flux ne tient pas sans :
+
+1. Un bandeau **« Votre mise en route n'est pas terminée · Reprendre »** en tête du tableau de bord
+   quand le bateau n'a pas de plan. Il ramène à l'étape 3 ; avant, rien ne signalait ce carnet.
+2. La phrase d'état devient **« Carnet neuf : la checklist attend son plan d'entretien »** au lieu
+   de « Tout est à jour ».
+3. Le bloc « carnet neuf » ne propose plus « Vérifier les **0** lignes importées du carnet papier »
+   à un bateau qui n'a jamais rien importé.
+4. **« Rattacher les N documents »** dans le tri des documents : reprendre un carnet papier coûtait
+   un tap par photo, sur des lignes qui portaient déjà toutes la même réponse.
+5. Le tri des documents **dit** pourquoi il ne peut rien faire quand le bateau n'a aucun système,
+   au lieu de laisser un bouton éternellement désactivé.
+6. L'analyseur `.xlsx` (~8 ko gz) est chargé **à la demande**, au moment où quelqu'un choisit un
+   fichier, et non plus sur toute page portant l'assistant d'import.
+
+**Ce qui n'a pas été fait, et pourquoi.** Aucun quatrième assistant : « Recaler ma checklist »
+(E4-9) garde le tri des points et le calage grossier, qui sont un travail de dix minutes et n'ont
+rien à faire sur le chemin critique de l'arrivée. Le nouveau flux s'arrête là où il devient
+honnête de laisser la main.
+
+**Ce qui disparaît.** Le routage post-création de D66 (`existingLogDestination`, `from=new` et ses
+deux lecteurs, `import.fromNew`, `import.back.dashboard`, `attachments.import.dashboard`,
+`boats.new.submitImport`) : l'étape 2 fait mieux au même endroit, et deux façons de faire la même
+chose valent moins qu'une seule qui marche.
+
+## 2026-09-04 — D68 : immatriculation saisie, catalogue de modèles interne
 
 **Question.** « On n'a pas un moyen de rajouter l'immatriculation et de charger automatiquement
 toutes les données ? »
@@ -824,3 +953,4 @@ n'écrase pas un champ que la personne vient de corriger.
 certificat d'enregistrement. La lecture du certificat est la seule piste d'auto-remplissage
 juridiquement propre (donnée fournie par la personne elle-même, comme HistoVec) — mais la présence
 d'un champ « constructeur » sur le document n'est **pas établie**, et aucun code 2D n'est attesté.
+

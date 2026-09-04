@@ -80,3 +80,51 @@ export function splitTemplates(templates: TemplateOption[]): {
     generic: templates.filter((t) => t.builder === null && t.model === null),
   };
 }
+
+/**
+ * The three steps of opening a carnet (D67).
+ *
+ * They are asked in this order because each one is only answerable once the previous is done:
+ * the boat has to exist before its history can be written into it, and the history has to be in
+ * before « voici comment ça marche » can point at anything real.
+ *
+ * The numbers are the route (`?step=`), so they are part of the app's addresses: a person who
+ * closes the tab on step 2 comes back to step 2, and the dashboard can send someone back into
+ * the flow rather than leaving them on a carnet that was never finished.
+ */
+export const ONBOARDING_STEPS = [1, 2, 3] as const;
+export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/** Step 1 lives at `/boats/new` — there is no boat id yet to put in the address. */
+export const ONBOARDING_BOAT_STEPS = [2, 3] as const;
+export type OnboardingBoatStep = (typeof ONBOARDING_BOAT_STEPS)[number];
+
+export function isOnboardingBoatStep(value: unknown): value is OnboardingBoatStep {
+  return value === 2 || value === 3;
+}
+
+/**
+ * `?step=` as it arrives: a string, a missing value, or something someone typed. Anything that is
+ * not step 3 is step 2 — the first screen the boat id is good for.
+ */
+export function parseOnboardingBoatStep(value: string | undefined): OnboardingBoatStep {
+  return Number(value) === 3 ? 3 : 2;
+}
+
+/**
+ * « Sur quoi votre carnet est-il écrit aujourd'hui ? » (D66, D67).
+ *
+ * Almost nobody starts from nothing: there is a booklet in the chart table, a spreadsheet on a
+ * laptop, or a folder of invoices. The question is about the **format** and never about the
+ * content, because each format already has its reader in the app — the answer only says which
+ * one step 2 puts on screen.
+ *
+ * `none` is first and pre-selected: a boat that is genuinely new, or an owner who would rather
+ * type as they go, must not pay a single tap for a question that does not concern them.
+ */
+export const EXISTING_LOG_FORMATS = ["none", "spreadsheet", "paper"] as const;
+export type ExistingLogFormat = (typeof EXISTING_LOG_FORMATS)[number];
+
+export function isExistingLogFormat(value: string): value is ExistingLogFormat {
+  return (EXISTING_LOG_FORMATS as readonly string[]).includes(value);
+}
