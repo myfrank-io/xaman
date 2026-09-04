@@ -699,3 +699,46 @@ la porte à côté, avec ses propres refus (bateau d'autrui, modèle inexistant,
 malformé, `anon`), tous couverts. L'assistant de mise en route (E4-9) reste le pas suivant : la
 création pose les points et leur ancrage `current_date` (D1), le tableau de bord du jour 1 est
 donc vide **et honnête**, et le bloc « carnet neuf » emmène vers le calage.
+
+
+## 2026-09-04 — D65 : la création demande sur quoi le carnet est écrit aujourd'hui
+
+**Question.** Personne n'arrive vierge. Il y a un carnet papier dans la table à cartes, un fichier
+Excel sur un portable, un dossier de factures — et c'est précisément cet historique qui décide si
+le carnet numérique sera adopté ou refermé. Or `/boats/new` ne posait pas la question : la
+création menait au tableau de bord, et l'import (E12, E10-1) attendait, six écrans plus loin, que
+quelqu'un le découvre. Un mois plus tard, il n'était toujours pas fait.
+
+**Décision.** Une quatrième question sur `/boats/new`, en puces pré-réglées sur « Rien à
+reprendre » — donc **zéro tap de plus** dans le cas où il n'y a rien : « Vous avez déjà un carnet
+d'entretien ? » · *Rien à reprendre* · *Excel ou CSV* · *Papier ou photos*. La réponse ne change
+rien à ce qui est créé ; elle change **l'écran sur lequel le carnet s'ouvre**
+(`existingLogDestination`, `src/lib/boat-onboarding.ts`) :
+
+| Format | Atterrissage | Ce qu'il reste à faire |
+|---|---|---|
+| Excel ou CSV | `/boats/[id]/import?entity=logs&from=new` (E12-1) | le fichier, puis « Importer » |
+| Papier ou photos | `/boats/[id]/logs/documents?from=new` (E10-1) | les pages photographiées, chacune devient une intervention |
+| Rien à reprendre | le tableau de bord, comme avant | le bloc « carnet neuf » prend le relais |
+
+**Pourquoi la question porte sur le format et pas sur le contenu.** Chaque format a déjà son
+lecteur dans l'app ; il n'y a rien à écrire de neuf, seulement à nommer la bonne porte. Un export
+d'une autre application est toujours un `.csv` ou un `.xlsx`, donc il tombe dans la première
+ligne sans mériter sa propre puce. Et le libellé du bouton devient « Créer le carnet et
+importer » dès qu'un format est choisi : on ne débarque jamais sur un écran d'import sans l'avoir
+demandé.
+
+**`from=new` n'est pas décoratif.** Il dit à l'écran d'import que la sortie est le tableau de bord
+d'un bateau créé il y a dix secondes, et non la liste d'un carnet que personne n'a encore vue ; le
+sous-titre y devient « Reprenez votre historique maintenant, ou passez ». Sans lui, le bouton de
+retour de l'assistant renvoyait vers une liste vide, ce qui se lit comme une impasse.
+
+**Ce qui n'a pas changé.** Aucune écriture, aucune politique RLS, aucun descripteur d'import : la
+décision est un aiguillage de navigation, entièrement couvert par
+`tests/unit/boat-onboarding.test.ts`. Le fichier reste choisi **sur** l'écran d'import, jamais sur
+`/boats/new` : le tableur y est lu par l'analyseur qui vit là (`.xlsx` hors du bundle principal,
+E12-5), et un fichier choisi avant que le bateau n'existe serait un fichier à réémettre si la
+création échouait.
+
+**Reste ouvert.** La reconnaissance du carnet papier en texte (photo → saisie guidée, E11) : ici,
+la photo devient une pièce jointe sur une intervention à compléter, pas une ligne lue toute seule.

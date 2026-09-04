@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { SailboatIcon } from "lucide-react";
+import { FileSpreadsheetIcon, ImagesIcon, SailboatIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
@@ -20,9 +20,12 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createBoat } from "@/lib/actions/boat";
 import {
   ENGINE_COUNT_CHOICES,
+  EXISTING_LOG_FORMATS,
   defaultEngineCount,
+  existingLogDestination,
   newBoatEngines,
   splitTemplates,
+  type ExistingLogFormat,
   type TemplateOption,
 } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -41,6 +44,14 @@ type NewBoatFormState = {
   name: string;
   templateId: string;
   engineCount: string;
+  /** What the boat's history is written on today (D65): it decides where the creation lands. */
+  logbook: ExistingLogFormat;
+};
+
+/** The icon of each format — « rien à reprendre » is a word, not a picture. */
+const LOGBOOK_ICONS: Partial<Record<ExistingLogFormat, typeof FileSpreadsheetIcon>> = {
+  spreadsheet: FileSpreadsheetIcon,
+  paper: ImagesIcon,
 };
 
 /**
@@ -71,7 +82,7 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
 
   const form = useForm<NewBoatFormState, unknown, NewBoatOutput>({
     resolver: formResolver<NewBoatFormState, NewBoatOutput>(newBoatFormSchema),
-    defaultValues: { boatId, name: "", templateId: "", engineCount: "1" },
+    defaultValues: { boatId, name: "", templateId: "", engineCount: "1", logbook: "none" },
   });
 
   // Registered like any other plain input, rather than driven by `setValue` from a controlled
@@ -84,6 +95,10 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
   // which opts the whole component out of the React Compiler.
   const templateId = useWatch({ control: form.control, name: "templateId" });
   const template = templates.find((option) => option.id === templateId) ?? null;
+
+  // Read back on the same render: the help line under the chips and the label of the submit
+  // button both say where « Créer le carnet » is about to land.
+  const logbook = useWatch({ control: form.control, name: "logbook" });
 
   function chooseTemplate(nextId: string) {
     const next = templates.find((option) => option.id === nextId);
@@ -110,8 +125,10 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         toast.error(errorMessage(result.error));
         return;
       }
-      // Straight into the boat: the dashboard's « carnet neuf » block takes it from there.
-      router.replace(`/boats/${result.data.boatId}/dashboard` as Route);
+      // Straight into the boat — on the screen the answer about the existing carnet asked for
+      // (D65): the import of a spreadsheet, that of the paper pages, or the dashboard and its
+      // « carnet neuf » block when there is nothing to take over.
+      router.replace(existingLogDestination(logbook, result.data.boatId) as Route);
       router.refresh();
     });
   }
@@ -199,9 +216,35 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         />
       </Field>
 
+      <Field
+        id="boat-logbook-none"
+        label={t("logbook")}
+        help={t(`logbookNext.${logbook}` as "logbookNext.none")}
+        className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5"
+      >
+        <ToggleGroup
+          type="single"
+          value={logbook}
+          aria-label={t("logbook")}
+          onValueChange={(next) =>
+            next && form.setValue("logbook", next as ExistingLogFormat, { shouldDirty: true })
+          }
+        >
+          {EXISTING_LOG_FORMATS.map((format) => {
+            const Icon = LOGBOOK_ICONS[format];
+            return (
+              <ToggleGroupItem key={format} value={format} id={`boat-logbook-${format}`}>
+                {Icon ? <Icon aria-hidden /> : null}
+                {t(`logbookFormat.${format}` as "logbookFormat.none")}
+              </ToggleGroupItem>
+            );
+          })}
+        </ToggleGroup>
+      </Field>
+
       <Button type="submit" size="xl" disabled={pending}>
         {pending ? <Spinner /> : <SailboatIcon />}
-        {t("submit")}
+        {logbook === "none" ? t("submit") : t("submitImport")}
       </Button>
     </form>
   );

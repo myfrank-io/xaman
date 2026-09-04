@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   ENGINE_COUNT_CHOICES,
+  EXISTING_LOG_FORMATS,
   defaultEngineCount,
+  existingLogDestination,
+  isExistingLogFormat,
   newBoatEngines,
   splitTemplates,
   type EngineLabels,
@@ -120,5 +123,37 @@ describe("splitTemplates", () => {
     ];
     const { exact, generic } = splitTemplates(all);
     expect(exact.length + generic.length).toBe(all.length);
+  });
+});
+
+describe("existingLogDestination", () => {
+  const boatId = "11111111-2222-3333-4444-555555555555";
+
+  it("opens a spreadsheet on the interventions import", () => {
+    expect(existingLogDestination("spreadsheet", boatId)).toBe(
+      `/boats/${boatId}/import?entity=logs&from=new`,
+    );
+  });
+
+  it("opens a paper logbook on the document import", () => {
+    expect(existingLogDestination("paper", boatId)).toBe(
+      `/boats/${boatId}/logs/documents?from=new`,
+    );
+  });
+
+  it("leaves someone with nothing to take over on the dashboard", () => {
+    expect(existingLogDestination("none", boatId)).toBe(`/boats/${boatId}/dashboard`);
+  });
+
+  it("always lands inside the boat that was just created", () => {
+    for (const format of EXISTING_LOG_FORMATS) {
+      expect(existingLogDestination(format, boatId).startsWith(`/boats/${boatId}/`)).toBe(true);
+    }
+  });
+
+  it("only recognises the formats the toggle offers", () => {
+    for (const format of EXISTING_LOG_FORMATS) expect(isExistingLogFormat(format)).toBe(true);
+    expect(isExistingLogFormat("")).toBe(false);
+    expect(isExistingLogFormat("pdf")).toBe(false);
   });
 });

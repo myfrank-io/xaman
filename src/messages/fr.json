@@ -288,7 +288,7 @@
     },
     "new": {
       "title": "Votre bateau",
-      "subtitle": "Trois réponses et le carnet est prêt, déjà rempli.",
+      "subtitle": "Trois réponses et le carnet est prêt, déjà rempli — avec votre historique si vous en avez un.",
       "add": "Ajouter un bateau",
       "name": "Nom du bateau",
       "namePlaceholder": "Xaman",
@@ -300,6 +300,18 @@
       "modelGroupGeneric": "Modèles génériques",
       "engines": "Moteurs",
       "enginesHelp": "Les entretiens en heures s'y rattachent. Vous les nommerez et relèverez les compteurs ensuite.",
+      "logbook": "Vous avez déjà un carnet d'entretien ?",
+      "logbookFormat": {
+        "none": "Rien à reprendre",
+        "spreadsheet": "Excel ou CSV",
+        "paper": "Papier ou photos"
+      },
+      "logbookNext": {
+        "none": "Vous pourrez reprendre un historique plus tard : chaque liste du carnet a son import.",
+        "spreadsheet": "Le carnet s'ouvre sur l'import : votre fichier, puis « Importer ». L'export d'une autre application fait aussi l'affaire.",
+        "paper": "Le carnet s'ouvre sur l'import de documents : photographiez les pages et les factures, chacune devient une intervention."
+      },
+      "submitImport": "Créer le carnet et importer",
       "submit": "Créer le carnet",
       "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement."
     }
@@ -1642,6 +1654,7 @@
   },
   "import": {
     "subtitle": "Reprenez un tableau existant plutôt que de tout retaper.",
+    "fromNew": "Votre carnet est ouvert. Reprenez votre historique maintenant, ou passez : l'import reste sur chaque liste.",
     "run": "{count, plural, one {Importer # ligne} other {Importer # lignes}}",
     "done": "{created, plural, =0 {Aucune création} one {# création} other {# créations}} · {updated, plural, =0 {aucune mise à jour} one {# mise à jour} other {# mises à jour}}.",
     "action": "Importer",
@@ -1711,7 +1724,8 @@
       "logs": "Retour aux interventions",
       "purchases": "Retour aux achats",
       "completions": "Retour à la checklist",
-      "readings": "Retour aux moteurs"
+      "readings": "Retour aux moteurs",
+      "dashboard": "Aller au tableau de bord"
     },
     "errors": {
       "empty": "Le tableau est vide.",
@@ -1925,7 +1939,8 @@
       "discard": "Retirer de la liste",
       "done": "{count, plural, one {# document rattaché} other {# documents rattachés}}",
       "noLogs": "Aucune intervention pour l'instant : créez-en une depuis un document.",
-      "readOnly": "Vous n'avez pas le droit d'ajouter des documents sur ce bateau."
+      "readOnly": "Vous n'avez pas le droit d'ajouter des documents sur ce bateau.",
+      "dashboard": "Aller au tableau de bord"
     }
   }
 }
