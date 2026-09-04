@@ -3,17 +3,16 @@ import type { BoatType } from "@/lib/schemas/boat";
 import type { EnginePosition } from "@/lib/schemas/engines";
 
 /**
- * Opening a carnet (D64): what the boat needs before the model can be applied.
+ * Opening a carnet (D65): what the creation screen asks, and why it asks only that.
  *
- * The engines are the one thing the creation screen cannot skip. `apply_checklist_template`
- * duplicates an engine-scoped point once per active engine and skips the point entirely when the
- * boat has none — and those are exactly the points carrying the hour intervals. A boat created
- * without its engines opens on a checklist with no « Vidange huile », which is the first thing
- * anyone looks for.
+ * Identity and maintenance plan are two questions. This screen asks the first — what is this boat
+ * — and the app asks the second later. So there is no template here: the hull type is what the
+ * server turns into the boat's systems, and the engines are the one thing that cannot wait.
  *
- * So the screen asks, in one pre-set toggle rather than a form: how many. Everything else about
- * an engine (brand, serial, the hour counter) belongs to the Bateau screen and to the startup
- * wizard, and is asked for there.
+ * They cannot wait because `apply_checklist_template` duplicates an engine-scoped point once per
+ * active engine and skips it entirely when the boat has none — and those are exactly the points
+ * carrying the hour intervals. A plan chosen a week later on a boat created without its engines
+ * would arrive with no « Vidange huile », which is the first thing anyone looks for.
  */
 
 export const ENGINE_COUNT_CHOICES = [0, 1, 2] as const;
@@ -25,7 +24,7 @@ export type NewBoatEngine = { label: string; position: EnginePosition };
 export type EngineLabels = { single: string; port: string; starboard: string; outboard: string };
 
 /**
- * What the model implies. A multihull has two, everything else has one — right often enough that
+ * What the hull implies. A multihull has two, everything else has one — right often enough that
  * the toggle is a confirmation rather than a question, and wrong cheaply: an engine is added or
  * removed on the Bateau screen, which then offers « Générer les points de ce moteur ».
  */
@@ -67,10 +66,11 @@ export type TemplateOption = {
 };
 
 /**
- * The registry, split in two for the picker. A model published for an exact hull is worth more
- * than a generic one and is what the product promises (« le bateau arrive déjà rempli avec son
- * modèle exact »), so it comes first; the generic ones are the floor, so that no boat is ever
- * turned away for want of its builder.
+ * The published models, split for the plan picker — which now lives in the app, not at sign-up.
+ *
+ * A model published for an exact hull is worth more than a generic one and is what the product
+ * promises (« le bateau arrive déjà rempli avec son modèle exact »), so it comes first; the
+ * generic ones are the floor, so that no boat is left without a plan it can start from.
  */
 export function splitTemplates(templates: TemplateOption[]): {
   exact: TemplateOption[];
@@ -83,7 +83,70 @@ export function splitTemplates(templates: TemplateOption[]): {
 }
 
 /**
- * « J'ai déjà un carnet » (D65).
+ * What the creation screen suggests under « Constructeur » and « Modèle ».
+ *
+ * Only the models we publish: another owner's boat is another tenant's data, and RLS would hide
+ * it anyway. So these are suggestions, never a closed list — the field accepts anything typed,
+ * which is the whole point of D65 and what makes an external catalogue pluggable here later.
+ */
+export const MAX_SUGGESTIONS = 5;
+
+export function builderSuggestions(templates: TemplateOption[], typed: string): string[] {
+  return match(unique(templates.map((t) => t.builder)), typed);
+}
+
+/**
+ * Models are narrowed by the builder already typed, so « Marsaudon » does not also suggest every
+ * other yard's range. A builder we know nothing about narrows to nothing rather than to a
+ * misleading list.
+ */
+export function modelSuggestions(
+  templates: TemplateOption[],
+  builder: string,
+  typed: string,
+): string[] {
+  const yard = normalise(builder);
+  const scoped = yard
+    ? templates.filter((t) => normalise(t.builder ?? "").includes(yard))
+    : templates;
+  return match(unique(scoped.map((t) => t.model)), typed);
+}
+
+/**
+ * Case- and accent-insensitive, because « Beneteau » must find « Bénéteau ».
+ *
+ * The « already filled » test compares the raw text, not the normalised one: someone who typed
+ * « beneteau » has *not* got the answer yet, and the suggestion is precisely what puts the accents
+ * back. Only an exact match stops the suggestions.
+ */
+function match(options: string[], typed: string): string[] {
+  const exact = typed.trim();
+  if (options.some((option) => option === exact)) return [];
+  const needle = normalise(typed);
+  return options
+    .filter((option) => !needle || normalise(option).includes(needle))
+    .slice(0, MAX_SUGGESTIONS);
+}
+
+function normalise(value: string): string {
+  return value
+    .trim()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("fr");
+}
+
+function unique(values: (string | null)[]): string[] {
+  const seen = new Set<string>();
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed) seen.add(trimmed);
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+/**
+ * « J'ai déjà un carnet » (D66).
  *
  * Almost nobody starts from nothing: there is a booklet in the chart table, a spreadsheet on a
  * laptop, or a folder of invoices. Asked here, in one pre-set toggle, the answer is worth more
@@ -101,7 +164,7 @@ export function isExistingLogFormat(value: string): value is ExistingLogFormat {
 }
 
 /**
- * Where « Créer le carnet » lands, given the format.
+ * Where « Ouvrir le carnet » lands, given the format.
  *
  * - a spreadsheet — Excel, `.csv`, or the export of another app, which is always one of the two —
  *   goes to the interventions import (E12-1): the file, then « Importer », and the whole history

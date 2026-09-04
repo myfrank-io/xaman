@@ -46,16 +46,17 @@ export const deleteBoatSchema = z.object({
 });
 
 /**
- * Onboarding (D64): what it takes to open a carnet. A name, a model, and how many engines.
+ * Onboarding (D65): what it takes to open a carnet — the boat, and nothing about maintenance.
  *
- * The model is not optional — it is what makes the boat arrive already filled, and the audit's
- * « ne pas faire : création libre de bateaux sans modèle » (§2) is the whole point. Builder,
- * model and boat type are read from the template server-side, so they are not asked for twice.
+ * Identity and maintenance plan are two questions. This one asks only the first: what is this
+ * boat. `builder` and `model` are free text, so a boat whose builder has published nothing is
+ * still named exactly rather than filed under « générique »; the hull type is what gives the boat
+ * its systems, server-side.
  *
- * The engines are asked for here rather than later because `apply_checklist_template` only
- * duplicates an engine-scoped point for engines that already exist, and those carry every
- * hour-based interval: a boat created without them has no « Vidange huile ». One toggle,
- * pre-set from the model — the labels come from `fr.json`, never from SQL (rule 7).
+ * The engines are asked here because `apply_checklist_template` only duplicates an engine-scoped
+ * point for engines that already exist, and those carry every hour-based interval — a plan chosen
+ * later would otherwise miss « Vidange huile ». One toggle, pre-set from the hull; the labels come
+ * from `fr.json`, never from SQL (rule 7).
  */
 export const NEW_BOAT_ENGINES_MAX = 6;
 
@@ -67,7 +68,9 @@ export const newBoatEngineSchema = z.object({
 export const createBoatSchema = z.object({
   boatId: uuid,
   name: requiredText(80),
-  templateId: uuid,
+  type: boatTypeSchema,
+  builder: nullableText(80),
+  model: nullableText(80),
   engines: z.array(newBoatEngineSchema).max(NEW_BOAT_ENGINES_MAX).default([]),
 });
 export type CreateBoatInput = z.input<typeof createBoatSchema>;

@@ -7,6 +7,7 @@ import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actio
 import { toIsoDate } from "@/lib/numbers";
 import {
   anchorItemsSchema,
+  chooseTemplateSchema,
   completeItemSchema,
   deleteCompletionSchema,
   setItemActiveSchema,
@@ -208,6 +209,32 @@ export async function anchorChecklistItems(input: unknown): Promise<ActionResult
       .in("id", ids);
     if (error) return fail(dbErrorKey(error));
   }
+
+  revalidateBoat(boatId);
+  return ok(undefined);
+}
+
+/**
+ * « Choisir un modèle d'entretien » (D65). The second half of the split: creation gave the boat
+ * its systems, this gives them their points.
+ *
+ * It is the same `apply_checklist_template` the seed and the per-engine action already use, so
+ * the categories created at onboarding are linked rather than duplicated (same external_ref) and
+ * a point the owner has already written by hand is left alone. Applying a second model therefore
+ * adds to the checklist instead of replacing it — which is why the screen offering this only
+ * offers it while the boat has no plan.
+ */
+export async function chooseChecklistTemplate(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(chooseTemplateSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, templateId } = parsed.data;
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("apply_checklist_template", {
+    p_boat_id: boatId,
+    p_template_id: templateId,
+  });
+  if (error) return fail(dbErrorKey(error));
 
   revalidateBoat(boatId);
   return ok(undefined);

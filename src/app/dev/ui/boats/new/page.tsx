@@ -7,12 +7,12 @@ import type { TemplateOption } from "@/lib/boat-onboarding";
 import { devUiEnabled } from "@/lib/dev-ui";
 
 /**
- * Visual acceptance of « Ajouter mon bateau » (D64). The real screen only exists for an account
+ * Visual acceptance of « Ajouter mon bateau » (D65). The real screen only exists for an account
  * with no boat, which nobody on the team has any more — so without this page it would ship
  * having been looked at on one viewport, by accident.
  *
- * The registry is faked with both shapes the picker has to group: builders' models and the
- * generic ones.
+ * The published models are here only to feed the builder and model suggestions: since D65 the
+ * screen asks about the boat, never about a maintenance plan.
  */
 const TEMPLATES: TemplateOption[] = [
   {
@@ -23,6 +23,15 @@ const TEMPLATES: TemplateOption[] = [
     boatType: "catamaran",
     categoryCount: 8,
     itemCount: 93,
+  },
+  {
+    id: "00000000-0000-4000-8000-0000000000a4",
+    name: "Oceanis 46.1 — Bénéteau",
+    builder: "Bénéteau",
+    model: "Oceanis 46.1",
+    boatType: "monohull_sail",
+    categoryCount: 8,
+    itemCount: 74,
   },
   {
     id: "00000000-0000-4000-8000-0000000000a1",

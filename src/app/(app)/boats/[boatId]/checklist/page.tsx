@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 
 import { ChecklistGrid, toCategoryProgress } from "@/components/checklist/ChecklistGrid";
 import { ChecklistViewTabs } from "@/components/checklist/ChecklistViewTabs";
+import { ChoosePlanBlock } from "@/components/checklist/ChoosePlanBlock";
 import { TodoList, type TodoFilter } from "@/components/checklist/TodoList";
 import { toChecklistRow } from "@/components/checklist/rows";
 import { PlusIcon } from "lucide-react";
@@ -22,6 +23,7 @@ import {
   newChecklistItemPath,
   stockPath,
 } from "@/lib/queries/boat-routes";
+import { boatPlanChoice } from "@/lib/queries/boat-plan";
 import { completionContext } from "@/lib/queries/completion-context";
 import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +61,10 @@ export default async function ChecklistPage({
     ]);
   if (!role) notFound();
   const boatRole = role as BoatRole;
+
+  // D65: creation gives a boat its systems but no maintenance plan, and `checklist_template_id`
+  // stays null until one is chosen. That null is what puts the choice on this screen.
+  const plan = can(boatRole, "write") ? await boatPlanChoice(supabase, boatId) : null;
 
   const categories = (progress ?? []).map(toCategoryProgress);
   const byCategory = new Map(categories.map((category) => [category.id, category]));
@@ -125,7 +131,14 @@ export default async function ChecklistPage({
           ) : undefined
         }
       />
-      {brandNew && can(boatRole, "write") ? (
+      {plan ? (
+        <ChoosePlanBlock
+          boatId={boatId}
+          templates={plan.templates}
+          suggestedTemplateId={plan.suggestedTemplateId}
+        />
+      ) : null}
+      {!plan && brandNew && can(boatRole, "write") ? (
         <Alert variant="info">
           <AlertTitle>{t("setup.banner")}</AlertTitle>
           <AlertDescription>

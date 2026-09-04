@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   ENGINE_COUNT_CHOICES,
   EXISTING_LOG_FORMATS,
+  MAX_SUGGESTIONS,
+  builderSuggestions,
   defaultEngineCount,
   existingLogDestination,
   isExistingLogFormat,
+  modelSuggestions,
   newBoatEngines,
   splitTemplates,
   type EngineLabels,
@@ -123,6 +126,55 @@ describe("splitTemplates", () => {
     ];
     const { exact, generic } = splitTemplates(all);
     expect(exact.length + generic.length).toBe(all.length);
+  });
+});
+
+/**
+ * D65: builder and model are free text with suggestions. What matters is that the suggestions
+ * help without ever becoming a constraint — and that they behave on a French keyboard.
+ */
+describe("suggestions", () => {
+  const TEMPLATES = [
+    template({ id: "orc50", builder: "Marsaudon Composites", model: "ORC 50" }),
+    template({ id: "orc57", builder: "Marsaudon Composites", model: "ORC 57" }),
+    template({ id: "oceanis", builder: "Bénéteau", model: "Oceanis 46.1" }),
+    template({ id: "generic" }),
+  ];
+
+  it("proposes the builders it knows, and none of the generic models", () => {
+    expect(builderSuggestions(TEMPLATES, "")).toEqual(["Bénéteau", "Marsaudon Composites"]);
+  });
+
+  it("finds an accented builder from an unaccented keyboard", () => {
+    expect(builderSuggestions(TEMPLATES, "beneteau")).toEqual(["Bénéteau"]);
+    expect(builderSuggestions(TEMPLATES, "BENETEAU")).toEqual(["Bénéteau"]);
+  });
+
+  it("stops suggesting a value the field already holds exactly", () => {
+    expect(builderSuggestions(TEMPLATES, "Bénéteau")).toEqual([]);
+    expect(modelSuggestions(TEMPLATES, "Marsaudon Composites", "ORC 50")).toEqual([]);
+  });
+
+  it("narrows the models to the builder already typed", () => {
+    expect(modelSuggestions(TEMPLATES, "Marsaudon", "")).toEqual(["ORC 50", "ORC 57"]);
+    expect(modelSuggestions(TEMPLATES, "Bénéteau", "")).toEqual(["Oceanis 46.1"]);
+  });
+
+  /**
+   * The point of D65: a boat whose builder we publish nothing for is still written down exactly.
+   * Suggesting someone else's range at that moment would be worse than suggesting nothing.
+   */
+  it("suggests nothing for a builder it does not know", () => {
+    expect(modelSuggestions(TEMPLATES, "Neel", "")).toEqual([]);
+    expect(builderSuggestions(TEMPLATES, "Neel")).toEqual([]);
+  });
+
+  it("never floods the screen", () => {
+    const many = Array.from({ length: 40 }, (_, i) =>
+      template({ id: `t${i}`, builder: `Chantier ${i}`, model: `M${i}` }),
+    );
+    expect(builderSuggestions(many, "Chantier").length).toBe(MAX_SUGGESTIONS);
+    expect(modelSuggestions(many, "", "M").length).toBe(MAX_SUGGESTIONS);
   });
 });
 

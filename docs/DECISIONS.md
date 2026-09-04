@@ -632,6 +632,8 @@ rachetée), et une pièce qui franchit son seuil disparaît de la liste comme av
 
 ## 2026-09-03 — D64 : un compte sans bateau ajoute le sien (renversement du 2026-09-02)
 
+> **Scindée par D65 (2026-09-04)** : l'inscription ne demande plus le modèle de checklist, seulement l'identité du bateau. Ce qui suit reste vrai de l'ouverture du carnet, pas du choix du plan.
+
 **Question.** « Quand je crée un compte sans avoir été invité, évidemment que je dois ajouter mon
 bateau. » Quelqu'un qui s'inscrivait sans invitation atterrissait sur `/boats`, lisait « Vous
 n'avez pas encore de bateau. Demandez une invitation au propriétaire du bateau » et n'avait aucun
@@ -700,8 +702,62 @@ malformé, `anon`), tous couverts. L'assistant de mise en route (E4-9) reste le 
 création pose les points et leur ancrage `current_date` (D1), le tableau de bord du jour 1 est
 donc vide **et honnête**, et le bloc « carnet neuf » emmène vers le calage.
 
+## 2026-09-04 — D65 : l'inscription demande le bateau, l'app demande le plan d'entretien
 
-## 2026-09-04 — D65 : la création demande sur quoi le carnet est écrit aujourd'hui
+**Question.** « Je suis sur l'onboarding donc j'ai juste besoin des infos du bateau pour créer le
+compte, l'entretien c'est après que ça intervient dans l'app. C'est 2 choses différentes. »
+
+**Constat.** D64 posait une seule question qui en était deux. Le champ « Modèle » choisissait un
+`checklist_template`, et le bateau en tirait son constructeur, son modèle **et son type de coque** :
+déclarer ce qu'est le bateau et choisir son plan d'entretien étaient le même geste. Deux coûts :
+
+1. **Quelqu'un dont le bateau n'a pas de plan publié devait le ranger sous « générique » dès
+   l'inscription.** Un Neel 47 n'était pas un Neel 47, c'était « Catamaran — modèle générique ». Le
+   trimaran enregistré en catamaran, signalé comme un défaut assumé dans la PR de D64, n'était pas
+   un détail : c'était le symptôme.
+2. **Les champs d'identité étaient plafonnés aux modèles que nous publions**, alors que l'identité
+   est justement la partie qu'un grand annuaire externe pourrait un jour remplir. Un catalogue de
+   8 000 modèles est juste pour « quel bateau », et ne dit rien de « quel entretien ».
+
+**Décision.** Les deux questions sont séparées, et posées à deux moments.
+
+- **`/boats/new` ne parle que du bateau** : nom, type de coque, constructeur et modèle en **texte
+  libre** (avec suggestions), nombre de moteurs. Le mot « checklist » n'y apparaît pas.
+- **Le plan d'entretien se choisit depuis la Checklist**, quand il veut dire quelque chose, avec
+  les compteurs affichés (« 8 systèmes · 70 points d'entretien ») et le modèle générique de la
+  coque pré-sélectionné.
+
+**Ce que la création fait quand même : les systèmes.** `boat_categories` n'est pas du mobilier de
+checklist. `checklist_items.category_id` est `not null on delete restrict` et la catégorie est
+obligatoire à la saisie d'une intervention (`SPEC M3`) : un bateau sans catégorie a un Journal et
+un écran Dépenses **inutilisables**. La création copie donc les huit systèmes du modèle générique
+de la coque (`apply_template_categories`, `generic_template_for_boat_type`, migration `0017`) —
+sans jamais montrer le mot « modèle ». C'est ce qui permet de tenir la demande (« l'inscription ne
+demande que le bateau ») sans livrer un carnet cassé.
+
+`boats.checklist_template_id` reste **null**, et ce null est le marqueur honnête que l'app lit
+ensuite. Les catégories créées portent les mêmes `external_ref` que celles qu'`apply_checklist_
+template` insère : un plan choisi plus tard les **relie** au lieu de les dupliquer, et un
+renommage fait entre-temps survit (vérifié : 8 catégories, 78 points, « Propulsion » conservé).
+
+**Texte libre plutôt que liste fermée.** Le constructeur et le modèle acceptent n'importe quoi.
+Les suggestions viennent des seuls modèles publiés — le bateau d'un autre propriétaire est la
+donnée d'un autre locataire, que la RLS masque de toute façon. Insensibles à la casse et aux
+accents (« beneteau » trouve « Bénéteau », et le tap remet les accents), 5 au maximum, les modèles
+restreints au constructeur déjà saisi. **Pas de `<datalist>`** : Safari iOS le rend partiellement
+et il n'est pas stylable (D26) — des puces, comme les suggestions de titre du formulaire
+d'intervention.
+
+**Ce que ça ouvre.** Le champ « Modèle » étant devenu un champ d'identité, y brancher un annuaire
+externe ne promettrait plus rien sur l'entretien — le piège identifié en étudiant la question
+(8 000 entrées dont 4 ont un vrai plan) disparaît. Et le texte libre enregistre dès maintenant ce
+que les gens déclarent posséder : la liste classée des modèles à écrire, avec la demande réelle
+derrière.
+
+**Coût de l'acte** : 1 tap (type de coque, si ce n'est pas un monocoque) + « Ouvrir le carnet ».
+Le nombre de moteurs se règle seul depuis la coque. Le plan, plus tard, coûte 1 tap de plus.
+
+## 2026-09-04 — D66 : la création demande sur quoi le carnet est écrit aujourd'hui
 
 **Question.** Personne n'arrive vierge. Il y a un carnet papier dans la table à cartes, un fichier
 Excel sur un portable, un dossier de factures — et c'est précisément cet historique qui décide si
@@ -709,22 +765,22 @@ le carnet numérique sera adopté ou refermé. Or `/boats/new` ne posait pas la 
 création menait au tableau de bord, et l'import (E12, E10-1) attendait, six écrans plus loin, que
 quelqu'un le découvre. Un mois plus tard, il n'était toujours pas fait.
 
-**Décision.** Une quatrième question sur `/boats/new`, en puces pré-réglées sur « Rien à
-reprendre » — donc **zéro tap de plus** dans le cas où il n'y a rien : « Vous avez déjà un carnet
-d'entretien ? » · *Rien à reprendre* · *Excel ou CSV* · *Papier ou photos*. La réponse ne change
-rien à ce qui est créé ; elle change **l'écran sur lequel le carnet s'ouvre**
-(`existingLogDestination`, `src/lib/boat-onboarding.ts`) :
+**Décision.** Une dernière question sur `/boats/new`, sous celles qui décrivent le bateau (D65) et
+en puces pré-réglées sur « Rien à reprendre » — donc **zéro tap de plus** dans le cas où il n'y a
+rien : « Vous avez déjà un carnet d'entretien ? » · *Rien à reprendre* · *Excel ou CSV* · *Papier
+ou photos*. Elle ne porte pas sur le bateau et n'écrit rien ; elle change **l'écran sur lequel le
+carnet s'ouvre** (`existingLogDestination`, `src/lib/boat-onboarding.ts`) :
 
 | Format | Atterrissage | Ce qu'il reste à faire |
 |---|---|---|
 | Excel ou CSV | `/boats/[id]/import?entity=logs&from=new` (E12-1) | le fichier, puis « Importer » |
 | Papier ou photos | `/boats/[id]/logs/documents?from=new` (E10-1) | les pages photographiées, chacune devient une intervention |
-| Rien à reprendre | le tableau de bord, comme avant | le bloc « carnet neuf » prend le relais |
+| Rien à reprendre | le tableau de bord, comme avant | le bloc « carnet neuf » et le choix du plan (D65) prennent le relais |
 
 **Pourquoi la question porte sur le format et pas sur le contenu.** Chaque format a déjà son
 lecteur dans l'app ; il n'y a rien à écrire de neuf, seulement à nommer la bonne porte. Un export
 d'une autre application est toujours un `.csv` ou un `.xlsx`, donc il tombe dans la première
-ligne sans mériter sa propre puce. Et le libellé du bouton devient « Créer le carnet et
+ligne sans mériter sa propre puce. Et le libellé du bouton devient « Ouvrir le carnet et
 importer » dès qu'un format est choisi : on ne débarque jamais sur un écran d'import sans l'avoir
 demandé.
 

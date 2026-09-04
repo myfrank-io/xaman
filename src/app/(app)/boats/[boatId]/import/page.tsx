@@ -23,7 +23,7 @@ export default async function ImportPage({
   const [{ boatId }, { entity, from }] = await Promise.all([params, searchParams]);
   if (!isImportEntity(entity)) notFound();
 
-  // Landed here straight from « Créer le carnet » (D65): the boat is seconds old, so the way
+  // Landed here straight from « Ouvrir le carnet » (D66): the boat is seconds old, so the way
   // out is its dashboard — its list of interventions is a screen nobody has seen yet.
   const fromNew = from === "new";
 

@@ -51,7 +51,7 @@ La CI GitHub Actions (`.github/workflows/ci.yml`) rejoue lint, prettier, typeche
 - **PWA** : `src/app/manifest.ts` + service worker Serwist (`src/app/sw.ts`, construit par `serwist build` après `next build`). Sur iPad : Partager → Sur l'écran d'accueil.
 
 ## Ouvrir un carnet
-Créez un compte sur `/signup`, puis ajoutez votre bateau : un nom, un modèle et le nombre de moteurs. Le carnet arrive rempli — les systèmes du bord, les points d'entretien et leurs échéances viennent du modèle choisi. Si votre bateau n'a pas encore de modèle publié, prenez le modèle générique correspondant à sa coque.
+Créez un compte sur `/signup`, puis ajoutez votre bateau : un nom, un type de coque, son constructeur et son modèle, le nombre de moteurs. Écrivez le constructeur et le modèle tels quels — le champ est libre. Le carnet s'ouvre avec les systèmes du bord ; le plan d'entretien se choisit ensuite depuis la Checklist, dans la liste des modèles publiés ou dans le modèle générique de votre coque.
 
 Pour rejoindre le carnet d'un bateau existant, demandez plutôt une invitation à son propriétaire (« Membres → Inviter ») : le lien reçu par e-mail vous y ajoute directement.
 

@@ -100,7 +100,7 @@ Statut à tenir à jour dans ce fichier : `[ ]` à faire, `[~]` en cours, `[x]` 
 ## Retirés ou reportés (voir `AUDIT.md §3.4`)
 
 - E4-8 export PDF de catégorie → remplacé par E9-2b · E10-2 sélecteur de bateau → reporté (un seul bateau) · E10-3 → fusionné dans E3-4 · E10-5 → fusionné dans E2-2 · E3-6 → fusionné dans E3-3 / E3-3b.
-- **E11 — V1.1 / V2 (ne pas démarrer sans validation)** : E11-2 graphique des heures · ~~E11-3 onboarding public (derrière une bibliothèque de modèles)~~ **livré le 2026-09-03 (D64)** : `/boats/new`, `create_boat` (`0015`), trois modèles génériques (`0016`) · E11-4 offline-first · E11-5 organisations / `renter` · E11-6 modèles publiés par les constructeurs et versionnage · E11-7 relevés automatiques (Victron / NMEA) · lien de partage lecture seule du rapport · import assisté du carnet papier (photo → saisie guidée) · historique par équipement enrichi.
+- **E11 — V1.1 / V2 (ne pas démarrer sans validation)** : E11-2 graphique des heures · ~~E11-3 onboarding public (derrière une bibliothèque de modèles)~~ **livré le 2026-09-03 (D64), scindé le 2026-09-04 (D65)** : `/boats/new` demande l'identité du bateau seule, `create_boat` (`0015` + `0017`) lui donne ses systèmes, le plan d'entretien se choisit depuis la Checklist ; trois modèles génériques (`0016`) · E11-4 offline-first · E11-5 organisations / `renter` · E11-6 modèles publiés par les constructeurs et versionnage · E11-7 relevés automatiques (Victron / NMEA) · lien de partage lecture seule du rapport · import assisté du carnet papier (photo → saisie guidée) · historique par équipement enrichi.
 
 ---
 
@@ -125,7 +125,7 @@ Règle produit : partout où l'app stocke une liste, on doit pouvoir l'importer.
 - [x] **E12-5 (S, 1)** Fichiers `.xlsx` (analyseur chargé à la demande, hors du bundle principal).
 - [x] **E12-6 (S, 1)** Contacts depuis une fiche `.vcf` (carnet d'adresses iOS / Android exporté).
 - [x] **E12-7 (C, 1)** Modèle vierge téléchargeable par entité (les bons en-têtes, une ligne d'exemple).
-- [x] **E12-8 (S, 1)** « Vous avez déjà un carnet d'entretien ? » sur `/boats/new` (D65) : puces *Rien à reprendre* / *Excel ou CSV* / *Papier ou photos*, pré-réglées sur la première ; le format choisi décide de l'écran sur lequel le carnet s'ouvre — import des interventions (E12-1), import de documents (E10-1) ou tableau de bord — et le bouton devient « Créer le carnet et importer ». `from=new` renvoie l'assistant vers le tableau de bord du bateau tout neuf.
+- [x] **E12-8 (S, 1)** « Vous avez déjà un carnet d'entretien ? » sur `/boats/new` (D66) : puces *Rien à reprendre* / *Excel ou CSV* / *Papier ou photos*, pré-réglées sur la première ; le format choisi décide de l'écran sur lequel le carnet s'ouvre — import des interventions (E12-1), import de documents (E10-1) ou tableau de bord — et le bouton devient « Ouvrir le carnet et importer ». `from=new` renvoie l'assistant vers le tableau de bord du bateau tout neuf.
 
 ## E13 — Reprises d'interface signalées à l'usage
 

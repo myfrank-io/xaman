@@ -15,12 +15,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * « Ajouter mon bateau » (D64, E11-3). The screen someone lands on when they signed up without an
+ * « Ajouter mon bateau » (D65, E11-3). The screen someone lands on when they signed up without an
  * invitation — which until now was a waiting room with nothing to wait for.
  *
- * The model registry is read here rather than in the client so the picker is populated on first
- * paint: `checklist_template_catalog` is `security_invoker`, so `checklist_templates_select`
- * (public models, plus everything for the platform admin) is what decides the list.
+ * The published models are read here only to *suggest* builders and model names: the two fields
+ * are free text, and a boat whose builder has published nothing is still written down exactly.
+ * The maintenance plan is a separate question, asked later on the Checklist screen.
  */
 export default async function NewBoatPage() {
   const t = await getTranslations("boats.new");

@@ -25,7 +25,7 @@ export default async function ImportDocumentsPage({
   searchParams: Promise<{ from?: string }>;
 }) {
   const [{ boatId }, { from }] = await Promise.all([params, searchParams]);
-  // Straight off « Créer le carnet » with a paper logbook to photograph (D65): the way back is
+  // Straight off « Ouvrir le carnet » with a paper logbook to photograph (D66): the way back is
   // the dashboard of the new boat, not a list of interventions that does not exist yet.
   const fromNew = from === "new";
   const supabase = await createClient();

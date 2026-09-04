@@ -9,42 +9,45 @@ import { FileSpreadsheetIcon, ImagesIcon, SailboatIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
+import { SuggestionChips } from "@/components/boats/SuggestionChips";
 import { Field } from "@/components/forms/Field";
 import { formResolver } from "@/components/forms/form-resolver";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createBoat } from "@/lib/actions/boat";
 import {
   ENGINE_COUNT_CHOICES,
   EXISTING_LOG_FORMATS,
+  builderSuggestions,
   defaultEngineCount,
   existingLogDestination,
+  modelSuggestions,
   newBoatEngines,
-  splitTemplates,
   type ExistingLogFormat,
   type TemplateOption,
 } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { createBoatSchema } from "@/lib/schemas/boat";
+import { boatTypeSchema, createBoatSchema } from "@/lib/schemas/boat";
 
 /**
- * The form holds strings; the schema turns them into what the action receives. `engines` is not
- * a field: it is built at submit time from the count and the chosen model, so what the person
- * answers is « combien » and what the server gets is a list of engines with their positions.
+ * The form holds strings; the schema turns them into what the action receives. `engines` is not a
+ * field: it is built at submit time from the count and the hull, so what the person answers is
+ * « combien » and what the server gets is a list of engines with their positions.
  */
-const newBoatFormSchema = createBoatSchema.pick({ boatId: true, name: true, templateId: true });
+const newBoatFormSchema = createBoatSchema.omit({ engines: true });
 type NewBoatOutput = z.output<typeof newBoatFormSchema>;
 
 type NewBoatFormState = {
   boatId: string;
   name: string;
-  templateId: string;
+  type: string;
+  builder: string;
+  model: string;
   engineCount: string;
-  /** What the boat's history is written on today (D65): it decides where the creation lands. */
+  /** What the boat's history is written on today (D66): it decides where the creation lands. */
   logbook: ExistingLogFormat;
 };
 
@@ -55,19 +58,23 @@ const LOGBOOK_ICONS: Partial<Record<ExistingLogFormat, typeof FileSpreadsheetIco
 };
 
 /**
- * « Ajouter mon bateau » (D64, E11-3). Three answers and the carnet is open: a name, a model,
- * and how many engines.
+ * « Ajouter mon bateau » (D65, D66, E11-3). It asks about the boat, and about nothing else.
  *
- * There is no boat type field and no builder field. The model carries all three, and asking a
- * question whose answer is already known is exactly the kind of step that makes people abandon
- * an onboarding — `create_boat` copies them off the template, and the Bateau screen edits them
- * afterwards for the rare boat that needs it.
+ * The word « checklist » does not appear here. Creating a carnet and choosing a maintenance plan
+ * are two questions, and merging them meant that someone whose builder has published nothing had
+ * to file their boat under « générique » at sign-up. Constructeur and Modèle are free text with
+ * suggestions: a Neel 47 is written as a Neel 47 even though we have no Neel plan.
  *
- * The engine count is the only question with a reliable default, so it is a toggle already on
- * the right answer rather than a field to fill: from there it is one tap to « Créer le carnet ».
+ * The hull type is the one thing the server needs, because it is what gives the boat its eight
+ * systems — and it also pre-sets the engine count, so the common case costs no tap at all.
+ *
+ * The last question is not about the boat either: it asks what its history is written on today
+ * (D66). It writes nothing — it decides the screen the carnet opens on — and it is pre-answered
+ * with « Rien à reprendre », so it costs no tap to whoever has nothing to take over.
  */
 export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
   const t = useTranslations("boats.new");
+  const tb = useTranslations("boatType");
   const te = useTranslations("engines.onboarding");
   const errorMessage = useErrorMessage();
   const fieldError = useFieldError();
@@ -78,34 +85,42 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
   // same id and `create_boat` hands back the same boat instead of opening a second carnet.
   const [boatId] = useState(() => crypto.randomUUID());
 
-  const { exact, generic } = useMemo(() => splitTemplates(templates), [templates]);
-
   const form = useForm<NewBoatFormState, unknown, NewBoatOutput>({
     resolver: formResolver<NewBoatFormState, NewBoatOutput>(newBoatFormSchema),
-    defaultValues: { boatId, name: "", templateId: "", engineCount: "1", logbook: "none" },
+    defaultValues: {
+      boatId,
+      name: "",
+      type: "monohull_sail",
+      builder: "",
+      model: "",
+      engineCount: "1",
+      logbook: "none",
+    },
   });
-
-  // Registered like any other plain input, rather than driven by `setValue` from a controlled
-  // `value`: the model is read back by `useWatch` on the same render (the summary line and the
-  // engine default both depend on it), and a registered field is the subscription that makes
-  // that reliable. `chooseTemplate` then only has the side effect to apply.
-  const templateField = form.register("templateId");
 
   // `useWatch` rather than `form.watch()`: the latter returns a fresh function every render,
   // which opts the whole component out of the React Compiler.
-  const templateId = useWatch({ control: form.control, name: "templateId" });
-  const template = templates.find((option) => option.id === templateId) ?? null;
+  const type = useWatch({ control: form.control, name: "type" }) as z.infer<typeof boatTypeSchema>;
+  const builder = useWatch({ control: form.control, name: "builder" });
+  const model = useWatch({ control: form.control, name: "model" });
 
   // Read back on the same render: the help line under the chips and the label of the submit
-  // button both say where « Créer le carnet » is about to land.
+  // button both say where « Ouvrir le carnet » is about to land.
   const logbook = useWatch({ control: form.control, name: "logbook" });
 
-  function chooseTemplate(nextId: string) {
-    const next = templates.find((option) => option.id === nextId);
-    // The model knows how many engines the hull usually carries. A count the person has already
-    // corrected by hand is never overwritten.
-    if (next && !form.getFieldState("engineCount").isDirty) {
-      form.setValue("engineCount", String(defaultEngineCount(next.boatType)));
+  const builders = useMemo(() => builderSuggestions(templates, builder), [templates, builder]);
+  const models = useMemo(
+    () => modelSuggestions(templates, builder, model),
+    [templates, builder, model],
+  );
+
+  function chooseType(next: string) {
+    form.setValue("type", next, { shouldValidate: form.formState.isSubmitted });
+    // The hull knows how many engines it usually carries. A count already corrected by hand is
+    // never overwritten.
+    if (!form.getFieldState("engineCount").isDirty) {
+      const parsed = boatTypeSchema.safeParse(next);
+      form.setValue("engineCount", String(defaultEngineCount(parsed.success ? parsed.data : null)));
     }
   }
 
@@ -114,7 +129,7 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
     startTransition(async () => {
       const result = await createBoat({
         ...values,
-        engines: newBoatEngines(count, template?.boatType ?? null, {
+        engines: newBoatEngines(count, values.type, {
           single: te("single"),
           port: te("port"),
           starboard: te("starboard"),
@@ -126,8 +141,8 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         return;
       }
       // Straight into the boat — on the screen the answer about the existing carnet asked for
-      // (D65): the import of a spreadsheet, that of the paper pages, or the dashboard and its
-      // « carnet neuf » block when there is nothing to take over.
+      // (D66): the import of a spreadsheet, that of the paper pages, or the dashboard, from where
+      // the Checklist screen offers the maintenance plan.
       router.replace(existingLogDestination(logbook, result.data.boatId) as Route);
       router.refresh();
     });
@@ -150,50 +165,78 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         />
       </Field>
 
-      <Field
-        id="boat-template"
-        label={t("model")}
-        required
-        help={
-          template
-            ? t("modelSummary", {
-                categories: template.categoryCount,
-                items: template.itemCount,
-              })
-            : t("modelHelp")
-        }
-        error={fieldError(errors.templateId)}
-      >
-        <NativeSelect
-          id="boat-template"
-          {...templateField}
-          onChange={(event) => {
-            void templateField.onChange(event);
-            chooseTemplate(event.target.value);
-          }}
-          aria-invalid={errors.templateId ? true : undefined}
-        >
-          <option value="">{t("modelPlaceholder")}</option>
-          {exact.length > 0 ? (
-            <optgroup label={t("modelGroupExact")}>
-              {exact.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
+      <Field id="boat-type" label={t("type")} help={t("typeHelp")} error={fieldError(errors.type)}>
+        <Controller
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <ToggleGroup
+              type="single"
+              value={field.value}
+              aria-label={t("type")}
+              onValueChange={(next) => next && chooseType(next)}
+            >
+              {boatTypeSchema.options.map((option) => (
+                <ToggleGroupItem key={option} value={option} id={`boat-type-${option}`}>
+                  {tb(option)}
+                </ToggleGroupItem>
               ))}
-            </optgroup>
-          ) : null}
-          {generic.length > 0 ? (
-            <optgroup label={t("modelGroupGeneric")}>
-              {generic.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </optgroup>
-          ) : null}
-        </NativeSelect>
+            </ToggleGroup>
+          )}
+        />
       </Field>
+
+      <div className="flex flex-col gap-2">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field
+            id="boat-builder"
+            label={t("builder")}
+            help={t("optional")}
+            error={fieldError(errors.builder)}
+          >
+            <div className="flex flex-col gap-2">
+              <Input
+                id="boat-builder"
+                autoCapitalize="words"
+                autoComplete="off"
+                enterKeyHint="next"
+                placeholder={t("builderPlaceholder")}
+                {...form.register("builder")}
+              />
+              <SuggestionChips
+                options={builders}
+                label={t("builder")}
+                onPick={(value) => form.setValue("builder", value, { shouldDirty: true })}
+              />
+            </div>
+          </Field>
+
+          <Field
+            id="boat-model"
+            label={t("model")}
+            help={t("optional")}
+            error={fieldError(errors.model)}
+          >
+            <div className="flex flex-col gap-2">
+              <Input
+                id="boat-model"
+                autoCapitalize="words"
+                autoComplete="off"
+                enterKeyHint="next"
+                placeholder={t("modelPlaceholder")}
+                {...form.register("model")}
+              />
+              <SuggestionChips
+                options={models}
+                label={t("model")}
+                onPick={(value) => form.setValue("model", value, { shouldDirty: true })}
+              />
+            </div>
+          </Field>
+        </div>
+        {/* Said once for the pair rather than twice side by side. */}
+        <p className="text-caption text-ink-3">{t("identityHelp")}</p>
+      </div>
 
       <Field id="boat-engines-1" label={t("engines")} help={t("enginesHelp")}>
         <Controller
@@ -246,6 +289,8 @@ export function NewBoatForm({ templates }: { templates: TemplateOption[] }) {
         {pending ? <Spinner /> : <SailboatIcon />}
         {logbook === "none" ? t("submit") : t("submitImport")}
       </Button>
+
+      <p className="text-caption text-ink-3">{t("planLater", { type: tb(type) })}</p>
     </form>
   );
 }
