@@ -48,13 +48,13 @@ DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/xaman_test pnpm test
 ```
 `pnpm test` couvre : la matrice RLS complète (rôles × tables × opérations, fonctions d'invitation, Storage, corbeille, file d'attente), la parité entre la vue SQL `checklist_item_status` et sa copie TypeScript, le script de seed, les exports CSV et les formats.
 
-La CI GitHub Actions (`.github/workflows/ci.yml`) rejoue lint, prettier, typecheck, la pile Supabase (`supabase db start` + `db reset`), les tests et le build à chaque push ; les migrations de production sont appliquées par le job `migrate-production` quand les secrets `SUPABASE_ACCESS_TOKEN` / `SUPABASE_DB_PASSWORD` et la variable `SUPABASE_PROJECT_REF` sont définis.
+La CI GitHub Actions (`.github/workflows/ci.yml`) tient en deux jobs parallèles : `checks` (lint, prettier, typecheck, pile Supabase `db start` + `db reset`, tests, build) et `e2e` (l'audit tactile Playwright aux cinq viewports). Rien d'autre : la CI vérifie, elle ne déploie pas.
 
 Écrans sans base : les pages `/dev/ui/*` (hors production) montent les composants réels avec des données d'exemple pour la recette visuelle en 1024×768 et 768×1024.
 
 ## Déploiement
 - **Vercel** : projet `xaman` lié au dépôt GitHub ; variables d'environnement `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_APP_URL` (voir `.env.example`). Région `cdg1` (`vercel.json`).
-- **Supabase** : projet en région UE ; migrations appliquées par la CI ou `supabase db push` ; gabarits d'e-mail en français (code OTP, invitation, lien magique) ; URL de redirection `https://xaman-blue.vercel.app/**`.
+- **Supabase** : projet en région UE ; migrations appliquées à la main (`supabase db push`, ou l'outil MCP depuis Claude Code) ; gabarits d'e-mail en français (code OTP, invitation, lien magique) ; URL de redirection `https://xaman-blue.vercel.app/**`.
 - **PWA** : `src/app/manifest.ts` + service worker Serwist (`src/app/sw.ts`, construit par `serwist build` après `next build`). Sur iPad : Partager → Sur l'écran d'accueil.
 
 ## Ouvrir un carnet

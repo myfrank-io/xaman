@@ -1006,3 +1006,47 @@ Targa** (sinon il se range dans la même liste que la gamme Targa de Fairline) e
 certificat d'enregistrement. La lecture du certificat est la seule piste d'auto-remplissage
 juridiquement propre (donnée fournie par la personne elle-même, comme HistoVec) — mais la présence
 d'un champ « constructeur » sur le document n'est **pas établie**, et aucun code 2D n'est attesté.
+
+## 2026-09-04 — D70 : la CI vérifie, elle ne déploie pas
+
+**Question.** « Simplifie le CI/CD sur ce projet, c'est beaucoup trop long et beaucoup trop
+complexe, ça n'avance à rien. » Trois jobs, 108 lignes de YAML, ~4 min 15 d'attente à chaque
+push. Le détail des exécutions dit où part le temps — et surtout ce qui ne prouve rien.
+
+**Deux étapes ne pouvaient pas échouer.** Elles ont donc été retirées, pas réparées :
+
+- Le job `migrate-production` n'a **jamais exécuté une seule étape réelle**. À chaque push sur
+  `main`, son étape « Check configuration » ne trouvait ni `SUPABASE_ACCESS_TOKEN`, ni
+  `SUPABASE_DB_PASSWORD`, ni `SUPABASE_PROJECT_REF` (jamais renseignés sur le dépôt), écrivait un
+  `::warning::` que personne ne lit, et les deux étapes suivantes — `setup-cli` et
+  `supabase link + db push` — étaient sautées. Vérifié sur les exécutions 109 et 96 : `skipped`
+  des deux côtés. Un job entier, un runner, et un `needs: checks` qui le sérialisait **après** les
+  checks, pour ne rien faire. Les migrations de production partent à la main (`supabase db push`
+  ou l'outil MCP depuis Claude Code), ce que `KICKOFF.md` et `CLAUDE.md` décrivaient déjà.
+- L'étape « Generated types are up to date » portait `continue-on-error: true` **et**
+  `|| echo "::warning::"`. Deux filets pour la même chute : aucune chance d'échouer, quelle que
+  soit la dérive de `src/types/database.ts`. 13 s par exécution pour un avertissement invisible.
+  La règle 3 de `CLAUDE.md` (regénérer et committer le type après une migration) ne change pas ;
+  elle est tenue à la revue, comme avant, mais sans faire semblant de l'automatiser.
+
+**L'audit tactile s'attendait lui-même.** `fullyParallel: false` datait d'une suite qui touchait
+la base. Les trois specs actuelles ne font que `page.goto` + assertions : aucune fixture, aucune
+session, aucune écriture. Rien à sérialiser. Les 200 cas (40 pages × 5 viewports) tournaient sur
+2 workers avec une granularité de *fichier*, donc les 5 copies de `touch-audit.spec.ts` passaient
+l'une après l'autre. En parallèle sur 4 workers : **204 s → 142 s**, 200/200 au vert (mesuré sur
+4 cœurs, la forme du runner GitHub).
+
+Le plafond n'est plus là : le serveur `next dev` compile les routes à la demande, et c'est lui,
+pas le navigateur, qui limite. Le descendre plus bas demanderait un build de production dans le
+job e2e — inutile tant que le job `checks` (~3 min) reste le chemin critique.
+
+**Ce qui n'a pas bougé, et pourquoi.** `supabase db start` coûte 82 s : c'est le poste le plus
+cher qui reste. Le remplacer par un conteneur `postgres:17` et le shim `tests/support/supabase-shim.sql`
+ferait gagner ~75 s. Refusé : c'est la seule chose dans la CI qui prouve qu'une migration
+s'applique sur un vrai Postgres Supabase, avec les schémas `auth` et `storage` réels — et comme
+les migrations de production partent à la main, c'est aussi le seul garde-fou avant la prod.
+Échanger ce filet contre 75 s sur un pipeline de 3 minutes serait un mauvais marché. Le levier
+existe si l'arbitrage change un jour.
+
+**Résultat.** 3 jobs → 2, 108 lignes → 62, ~4 min 15 → ~3 min 10 d'attente, et plus une seule
+étape qui ne peut pas échouer.
