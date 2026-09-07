@@ -31,7 +31,8 @@
     "gen:emails": "node scripts/gen-email-templates.mjs",
     "emails:push": "node scripts/push-email-templates.mjs",
     "build:sw": "serwist build serwist.config.mts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:journeys": "playwright test --project=journeys-ipad --project=journeys-iphone --workers=1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
