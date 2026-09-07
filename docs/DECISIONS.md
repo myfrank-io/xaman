@@ -1059,3 +1059,44 @@ qui ne peut pas échouer. L'attente passe de 4 min 19 à **3 min 51** sur une PR
 modeste : l'audit tactile reste le chemin critique à 3 min 48, et le vrai plafond est `next dev`.
 Les trois leviers qui restent sont écrits ci-dessus — conteneur `postgres:17`, build de
 production pour l'audit, ou un viewport de moins — et chacun se paie en rigueur, pas en YAML.
+
+## 2026-09-07 — D71 : « Sorties de l'eau » est un onglet, donc l'écran en porte le cadre
+
+**Question.** « Cette page n'a pas la bonne vue, on dirait qu'on quitte l'onglet interventions »
+— signalé sur `/boats/<id>/haul-outs`, avec `/logs` et `/logs?tab=planned` donnés comme justes.
+
+D9 avait sorti les sorties de l'eau de la navigation pour en faire le **troisième onglet du
+Journal**, et E3-2 avait bien mis la puce « Sorties de l'eau » dans la barre d'onglets de
+`/logs`. Mais l'écran d'arrivée n'avait jamais reçu ce cadre : titre « Sorties de l'eau » à la
+place de la section, pas de barre d'onglets — donc aucun retour vers Historique et Prévu, et rien
+pour dire quel onglet était ouvert — et surtout **aucune des quatre entrées de la barre allumée**,
+puisque `useIsActive` ne compare que le chemin et que `/haul-outs` n'est plus une entrée. Un
+onglet qui, quand on le touche, éteint la barre entière : le signalement décrit exactement ce que
+le code faisait.
+
+**Décision.** Ce qui est un onglet en porte le cadre, entièrement.
+
+1. **La barre d'onglets est un objet partagé** (`LogsTabs`), rendu par les trois vues. La
+   troisième garde son chemin — la liste est un écran, pas une chaîne de requête — mais elle
+   n'est plus la seule à ne pas afficher la barre.
+2. **L'en-tête nomme la section, la barre dit la vue** : `<h1>` « Interventions » sur les trois,
+   comme `?tab=planned` le faisait déjà. Le sous-titre reste la prose d'accueil de la vue (D54) ;
+   le compte « 3 sorties » qui l'occupait était une donnée dans le créneau de l'accueil, et la
+   liste le dit déjà.
+3. **L'entrée « Interventions » s'allume sur tout `/haul-outs`**, fiche et formulaires compris.
+   La règle sort de `NavLink` pour devenir une fonction pure testée (`nav-active.ts`) : les deux
+   écrans sans entrée à eux — les sorties de l'eau, l'import — sont précisément ceux où elle
+   casse sans que rien ne le voie.
+4. **Le contrôle de création suit D35** : la liste nomme son objet en haut à droite
+   (« Nouvelle sortie de l'eau ») et le « + » du cadre s'efface, comme sur le Journal. Deux
+   contrôles de création sur un même écran auraient violé D19. Un `pro`, qui ne peut pas créer
+   de sortie de l'eau, garde celui du cadre : s'effacer devant un bouton qui n'est pas là lui
+   aurait laissé un écran sans aucune porte.
+5. **Le fil d'Ariane disparaît sur la liste** (il reste sur la fiche et les formulaires) :
+   « Interventions › Sorties de l'eau » au-dessus d'une barre où « Sorties de l'eau » est déjà
+   allumée, sous un titre « Interventions », c'est trois fois la même chose. C'est D53 appliqué à
+   un onglet qui a un chemin.
+
+**Raison.** Une section ne se déclare pas dans un document, elle se voit à l'écran : tant que la
+barre s'éteint et que la barre d'onglets disparaît, l'écran *a* quitté la section, quoi qu'en
+disent `AUDIT.md` et le backlog.

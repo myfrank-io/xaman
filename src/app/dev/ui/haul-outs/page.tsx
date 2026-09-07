@@ -1,10 +1,16 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { PlusIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { HaulOutDetail, type HaulOutLog } from "@/components/haul-outs/HaulOutDetail";
 import { HaulOutForm } from "@/components/haul-outs/HaulOutForm";
 import { HaulOutsList, type HaulOutListItem } from "@/components/haul-outs/HaulOutsList";
+import { LogsTabs } from "@/components/logs/LogsTabs";
+import { Button } from "@/components/ui/button";
 import { daysAshore } from "@/lib/haul-outs";
+import { newHaulOutPath } from "@/lib/queries/boat-routes";
 
 import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import { SAMPLE_CONTACTS } from "../supplies/sample";
@@ -71,12 +77,30 @@ const LOGS: HaulOutLog[] = [
 
 /** Visual acceptance of the haul-outs module (E6-1): list, sheet and form on one page. */
 export default async function DevHaulOutsPage() {
-  const t = await getTranslations("haulOuts");
+  const [t, tl, tc] = await Promise.all([
+    getTranslations("haulOuts"),
+    getTranslations("logs"),
+    getTranslations("create"),
+  ]);
   return (
     <DevShell>
       <div className="flex flex-col gap-10">
         <div className="flex flex-col gap-6">
-          <PageHeader title={t("title")} subtitle={t("count", { count: HAUL_OUTS.length })} />
+          {/* The list is the journal's third tab (D9): it wears that section's heading and
+              strip, as the screen does. */}
+          <PageHeader
+            title={tl("title")}
+            subtitle={t("subtitle")}
+            actions={
+              <Button asChild size="xl">
+                <Link href={newHaulOutPath(DEV_BOAT_ID) as Route}>
+                  <PlusIcon />
+                  {tc("newHaulOut")}
+                </Link>
+              </Button>
+            }
+          />
+          <LogsTabs boatId={DEV_BOAT_ID} active="haulOuts" />
           <HaulOutsList boatId={DEV_BOAT_ID} haulOuts={HAUL_OUTS} canWrite />
         </div>
 

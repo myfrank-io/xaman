@@ -4,20 +4,15 @@ import Link from "next/link";
 import type { Route } from "next";
 import { usePathname, useSearchParams } from "next/navigation";
 
-import { importSection } from "@/components/layout/breadcrumb-trail";
-import { BOAT_ROUTES } from "@/lib/queries/boat-routes";
+import { isNavActive } from "@/components/layout/nav-active";
 import { cn } from "@/lib/utils";
 
+// The rule itself is a pure function (`nav-active.ts`): the screens with no entry of their own
+// — the haul-outs, the import — are exactly where it goes wrong unseen, so it is tested.
 export function useIsActive(href: string): boolean {
   const pathname = usePathname();
   const entity = useSearchParams().get("entity");
-  if (pathname === href || pathname.startsWith(`${href}/`)) return true;
-  // The import screen has no entry of its own: it belongs to the list its `?entity=` names, and
-  // that list's entry is the one that must light up. Without this the menu shows nothing
-  // selected, so « où suis-je » has no answer on the one screen that is hardest to place.
-  if (!pathname.endsWith("/import")) return false;
-  const owner = importSection(entity);
-  return owner ? href.endsWith(`/${BOAT_ROUTES[owner.nav]}`) : false;
+  return isNavActive(pathname, href, entity);
 }
 
 export function NavLink({

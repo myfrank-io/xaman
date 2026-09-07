@@ -152,6 +152,12 @@ export function buildTrail(pathname: string, boatId: string, entity?: string | n
   if (!head) return [];
   // …and neither does the dashboard, which announces itself in its own header.
   if (head === BOAT_ROUTES.dashboard && segments.length === 1) return [];
+  // « Sorties de l'eau » is a tab of the Journal (D9), and this list IS that tab: a trail
+  // « Interventions › Sorties de l'eau » above a strip where « Sorties de l'eau » is already lit,
+  // under a heading already reading « Interventions », says the same thing three times and costs
+  // a row of a phone screen. The screens under it keep their trail: they hang off the tab, they
+  // are not it.
+  if (head === BOAT_ROUTES.haulOuts && segments.length === 1) return [];
   const section = sectionOf(head, boatId, entity);
   if (!section) return [];
 

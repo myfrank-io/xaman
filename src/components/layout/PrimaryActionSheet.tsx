@@ -20,7 +20,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { BoatRole } from "@/lib/permissions";
+import { can, type BoatRole } from "@/lib/permissions";
 import {
   hourReadingPath,
   newChecklistItemPath,
@@ -73,7 +73,7 @@ function entryHref(key: CreateKey, boatId: string): string {
 }
 
 /** The one object a screen obviously creates (D19); null when the screen is ambiguous. */
-type DirectKey = "newChecklistItem" | "newContact" | "newPurchase" | "newHaulOut";
+type DirectKey = "newChecklistItem" | "newContact" | "newPurchase";
 type Direct = { href: string; labelKey: DirectKey; icon: LucideIcon };
 
 function directTarget(segments: string[], boatId: string, role: BoatRole): Direct | null {
@@ -89,12 +89,9 @@ function directTarget(segments: string[], boatId: string, role: BoatRole): Direc
   if (section === "contacts" && segments.length === 1) {
     return { href: newContactPath(boatId), labelKey: "newContact", icon: ContactIcon };
   }
-  // « Dépenses » creates an expense line, « Sorties de l'eau » a haul-out: one object each.
+  // « Dépenses » creates an expense line: the one object of that screen.
   if (section === "supplies" && segments.length === 1) {
     return { href: newPurchasePath(boatId), labelKey: "newPurchase", icon: EuroIcon };
-  }
-  if (section === "haul-outs" && segments.length === 1) {
-    return { href: newHaulOutPath(boatId), labelKey: "newHaulOut", icon: AnchorIcon };
   }
   return null;
 }
@@ -136,8 +133,11 @@ export function PrimaryActionSheet({
       segments[0] === "logs" ||
       (segments[0] === "checklist" && segments.length > 2) ||
       (segments[0] === "contacts" && segments.length > 1) ||
-      // Haul-out sheet and purchase form: each carries its own creation control.
-      (segments[0] === "haul-outs" && segments.length > 1) ||
+      // …and so does « Sorties de l'eau », the journal's third tab (D9): the list names its own
+      // object at the top right like the two others, and the sheet and the form under it each
+      // carry their own control. A `pro` keeps the frame's: he cannot create a haul-out, so the
+      // named button is not on the screen and stepping aside would leave him nothing at all.
+      (segments[0] === "haul-outs" && (segments.length > 1 || can(role, "write"))) ||
       (segments[0] === "supplies" && segments.length > 1));
 
   const direct = inBoat ? directTarget(segments, boatId, role) : null;

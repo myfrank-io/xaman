@@ -1685,7 +1685,6 @@
     "new": "Nouvelle sortie de l'eau",
     "edit": "Modifier la sortie de l'eau",
     "saved": "Sortie de l'eau enregistrée",
-    "count": "{count, plural, =0 {aucune sortie} one {# sortie} other {# sorties}}",
     "ashore": "À terre",
     "ashoreSince": "À terre depuis {days, plural, one {# jour} other {# jours}}",
     "duration": "{days, plural, one {# jour} other {# jours}} à terre",
