@@ -27,6 +27,8 @@ test.describe("§6.4 the mechanic comes aboard", () => {
     await page.goto(`/boats/${SEED.boat}/logs/new`);
     const title = `Révision Yanmar ${Date.now()}`;
     await page.getByLabel(fr.logs.title).fill(title);
+    // The category is required, like it is for anyone else: a pro writes a whole row or none.
+    await page.getByRole("radio", { name: SEED.category }).first().tap();
     await page.getByRole("button", { name: fr.common.save }).tap();
 
     await expect(page.getByText(title).first()).toBeVisible({ timeout: 15_000 });

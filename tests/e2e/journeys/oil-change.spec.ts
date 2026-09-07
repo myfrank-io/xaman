@@ -31,7 +31,7 @@ test.describe("§6.2 oil change at the dock", () => {
     await page.getByLabel(fr.logs.title).fill("Vidange moteur SB");
 
     // 2 — the category, as a chip rather than a select (rule 13).
-    await taps.tap(page.getByRole("button", { name: SEED.category }).first());
+    await taps.tap(page.getByRole("radio", { name: SEED.category }).first());
 
     // 3 — save. Date, status and engine hours are already carrying their defaults.
     await taps.tap(page.getByRole("button", { name: fr.common.save }));
