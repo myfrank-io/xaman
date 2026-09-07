@@ -41,6 +41,22 @@ claude          # depuis la racine du dépôt, approuver le serveur du projet
 Les migrations restent gouvernées par la règle 3 de `CLAUDE.md` : `supabase/migrations/` est la
 source de vérité, `apply_migration` via MCP ne dispense pas d'y écrire le fichier.
 
+### Agent Skills Supabase
+`.claude/skills/supabase` et `.claude/skills/supabase-postgres-best-practices` sont deux skills
+publiées par Supabase (MIT), installées au scope projet et **copiées** dans le dépôt — pas de lien
+symbolique vers `node_modules`, pour qu'elles fonctionnent sur un clone neuf. `skills-lock.json`
+fige la version installée.
+
+```
+npx skills list                                    # ce qui est installé
+npx skills update supabase supabase-postgres-best-practices   # mise à jour
+```
+
+Elles sont **consultatives**. En cas de contradiction, `CLAUDE.md` l'emporte — en particulier sa
+règle 3 : la procédure « imperative migrations » de la skill (`execute_sql` pour itérer, puis
+`supabase db pull`) ne vaut que pour une base locale, jamais pour le projet de production auquel le
+MCP est relié.
+
 ### Base de données
 Le schéma vit dans `supabase/migrations/` (jamais de modification manuelle en production).
 

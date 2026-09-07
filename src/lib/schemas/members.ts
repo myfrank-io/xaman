@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const memberRoleSchema = z.enum(["owner", "editor", "pro", "viewer"]);
-export const invitableRoleSchema = z.enum(["editor", "pro", "viewer"]);
+// Since D73 an invitation may carry any of them, `owner` included; who is allowed to issue which
+// is decided by the insert policy on `boat_invitations`, and mirrored in `inviteMember`.
+export const invitableRoleSchema = memberRoleSchema;
 
 // Access duration (D29): 7 / 30 / 90 days or unlimited; an editor may only issue dated
 // invitations (≤ 90 days, enforced by the insert policy too).

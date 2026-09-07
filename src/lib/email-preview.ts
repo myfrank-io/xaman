@@ -1,16 +1,11 @@
 /**
- * Fills a Supabase Auth template with sample values, so the six e-mails can be looked at in
- * /dev/ui/emails instead of being discovered in someone's inbox.
- *
- * Not a Go template engine: it understands exactly the two forms the templates use — a value,
- * and a guard around a value that may be missing (`{{ if .Data.boat_name }}…{{ else }}…{{ end }}`).
- * That is deliberate. If a template ever needs a third form, this throws it into view here
- * rather than rendering `<no value>` in a real e-mail.
+ * Sample values for /dev/ui/emails: what Supabase would substitute — the invitation metadata,
+ * the code, the links. The substitution itself lives in `@/lib/email/render`, shared with the
+ * invitation the app sends itself (D75).
  */
-export type EmailPreviewValues = Record<string, string>;
+import { renderTemplate, unresolvedPlaceholders as unresolved } from "@/lib/email/render";
 
-/** What Supabase would substitute: the invitation metadata, the code, the links. */
-export const SAMPLE_VALUES: EmailPreviewValues = {
+export const SAMPLE_VALUES: Record<string, string> = {
   ".Token": "418273",
   ".ConfirmationURL": "https://xaman.app/auth/v1/verify?token=b3f1…&type=invite",
   ".SiteURL": "https://xaman.app",
@@ -21,19 +16,8 @@ export const SAMPLE_VALUES: EmailPreviewValues = {
   ".Data.role_label": "Éditeur",
 };
 
-const GUARD = /\{\{ if (\.[\w.]+) \}\}([\s\S]*?)(?:\{\{ else \}\}([\s\S]*?))?\{\{ end \}\}/g;
-const VALUE = /\{\{ (\.[\w.]+) \}\}/g;
+export const renderEmailPreview = (html: string, values = SAMPLE_VALUES) =>
+  renderTemplate(html, values);
 
-export function renderEmailPreview(html: string, values = SAMPLE_VALUES): string {
-  return html
-    .replace(GUARD, (_, name: string, then: string, otherwise = "") =>
-      values[name] ? then : otherwise,
-    )
-    .replace(VALUE, (match, name: string) => values[name] ?? match);
-}
-
-/** Every placeholder the preview could not fill — what a real inbox would show as `<no value>`. */
-export function unresolvedPlaceholders(html: string, values = SAMPLE_VALUES): string[] {
-  const rendered = renderEmailPreview(html, values);
-  return [...new Set(rendered.match(/\{\{[^}]*\}\}/g) ?? [])];
-}
+export const unresolvedPlaceholders = (html: string, values = SAMPLE_VALUES) =>
+  unresolved(html, values);

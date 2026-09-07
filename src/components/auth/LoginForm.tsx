@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { callbackUrl } from "@/lib/auth/redirect";
 import {
+  OTP_MAX,
   emailSchema,
   otpSchema,
   passwordSignInSchema,
@@ -32,9 +33,12 @@ type Step = { name: "form" } | { name: "code"; email: string };
 type Mode = "password" | "code";
 
 /**
- * Sign-in, two ways. A password, like everywhere else, or a 6-digit code sent by e-mail for
- * anyone who would rather not have one — the code path also serves the people invited onto a
- * boat, whose account is created on their first sign-in.
+ * Sign-in, two ways. A password, like everywhere else, or a code sent by e-mail for anyone who
+ * would rather not have one — the code path also serves the people invited onto a boat, whose
+ * account is created on their first sign-in.
+ *
+ * The code is six to ten digits (`OTP_MIN` / `OTP_MAX`): its length is a Supabase project
+ * setting, not ours, and the screen no longer promises a number it cannot keep.
  */
 export function LoginForm({
   next,
@@ -151,9 +155,11 @@ export function LoginForm({
             inputMode="numeric"
             autoComplete="one-time-code"
             pattern="[0-9]*"
-            maxLength={6}
+            maxLength={OTP_MAX}
             autoFocus
-            className="h-14 text-center font-mono text-2xl tracking-[0.5em]"
+            // Ten digits have to fit on a 320 px screen: the tracking is what gives way, not
+            // the 16 px floor on the text.
+            className="h-14 text-center font-mono text-2xl tracking-[0.3em]"
             aria-invalid={otpForm.formState.errors.token ? true : undefined}
             {...otpForm.register("token")}
           />

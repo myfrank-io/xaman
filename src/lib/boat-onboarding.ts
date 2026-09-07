@@ -14,8 +14,15 @@ import type { EnginePosition } from "@/lib/schemas/engines";
  * would arrive with no « Vidange huile », which is the first thing anyone looks for.
  */
 
-export const ENGINE_COUNT_CHOICES = [0, 1, 2] as const;
+/**
+ * Up to four, signalled in use (« donne la possibilité de rajouter d'autres moteurs direct »,
+ * D74): two was a floor a triple or a quad hit on the first screen. Four covers the boats that
+ * exist — a triple, a quad on a transom — and leaves room under the six the database accepts for
+ * the annexe that may follow. A fifth is added from the Bateau screen, where it is named.
+ */
+export const ENGINE_COUNT_CHOICES = [0, 1, 2, 3, 4] as const;
 export type EngineCount = (typeof ENGINE_COUNT_CHOICES)[number];
+export const ENGINE_COUNT_MAX = 4;
 
 export type NewBoatEngine = { label: string; position: EnginePosition };
 
@@ -24,8 +31,38 @@ export type EngineLabels = {
   single: string;
   port: string;
   starboard: string;
+  center: string;
+  portOuter: string;
+  portInner: string;
+  starboardInner: string;
+  starboardOuter: string;
   outboard: string;
   tender: string;
+};
+
+/**
+ * Where the engines sit, count by count. Past two, « bâbord / tribord » stops naming them: a
+ * third one is central, and a quad is read from the outside in — the way anyone standing at the
+ * transom counts them. The position is not decoration: `engine_scope` matches on it, so it says
+ * inboard or outboard and nothing else names the point set an engine collects.
+ */
+const ENGINE_LAYOUTS: Record<number, { label: keyof EngineLabels; position: EnginePosition }[]> = {
+  1: [{ label: "single", position: "center" }],
+  2: [
+    { label: "port", position: "port" },
+    { label: "starboard", position: "starboard" },
+  ],
+  3: [
+    { label: "port", position: "port" },
+    { label: "center", position: "center" },
+    { label: "starboard", position: "starboard" },
+  ],
+  4: [
+    { label: "portOuter", position: "port" },
+    { label: "portInner", position: "port" },
+    { label: "starboardInner", position: "starboard" },
+    { label: "starboardOuter", position: "starboard" },
+  ],
 };
 
 /**
@@ -70,19 +107,14 @@ export function newBoatEngines(
   tender: TenderChoice = "none",
 ): NewBoatEngine[] {
   const outboard = boatType === "rib";
-  const engines: NewBoatEngine[] = [];
-  if (count === 1) {
-    engines.push(
-      outboard
-        ? { label: labels.outboard, position: "outboard" }
-        : { label: labels.single, position: "center" },
-    );
-  } else if (count >= 2) {
-    engines.push(
-      { label: labels.port, position: outboard ? "outboard" : "port" },
-      { label: labels.starboard, position: outboard ? "outboard" : "starboard" },
-    );
-  }
+  // A count out of range is clamped rather than refused: the toggle offers 0…4, and a wider
+  // number arriving from anywhere else must still open a carnet.
+  const layout = ENGINE_LAYOUTS[Math.min(Math.floor(count), ENGINE_COUNT_MAX)] ?? [];
+  const engines: NewBoatEngine[] = layout.map((slot) => ({
+    // The one engine of a rigid inflatable is a « Hors-bord », not a « Moteur » in the middle.
+    label: outboard && slot.label === "single" ? labels.outboard : labels[slot.label],
+    position: outboard ? "outboard" : slot.position,
+  }));
   // Last, so the boat's own engines keep positions 1 and 2 on every screen that lists them.
   if (tender === "outboard" && asksAboutTender(boatType)) {
     engines.push({ label: labels.tender, position: "outboard" });
