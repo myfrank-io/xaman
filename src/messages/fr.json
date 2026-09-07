@@ -260,7 +260,7 @@
         "title": "Saisissez le code reçu",
         "help": "Si un compte existe pour {email}, un code vient d'y être envoyé. Pensez à vérifier vos courriers indésirables.",
         "label": "Code reçu par e-mail",
-        "submit": "Choisir un nouveau mot de passe",
+        "submit": "Continuer",
         "back": "Changer d'adresse",
         "resend": "Renvoyer le code",
         "linkHint": "Demandez un seul code : en redemander un annule le précédent."
