@@ -538,6 +538,7 @@ conservé ; seules la finition et l'identité changent.
 | 2026-09-03 | Badges de statut/état (révision de la règle DA « le plein = action requise ») | **Un seul langage teinté** : tous les badges (y compris En retard, Bientôt, Urgent) passent en teinte + `-fg` + liseré + icône, plus aucun aplat rouge/orange | Le mur d'aplats lisait « tableau de bord en alarme » ; la teinte garde l'instrument calme et reste lisible au soleil (contrastes `-fg`/`-border` mesurés), l'icône et le libellé portent le sens sans la couleur seule. Idem pour les pastilles de comptage (`Badge variant="danger"` ajouté) |
 | 2026-09-03 | Signature d'en-tête | Filet laiton (`brass-rule`) au bas de tout bandeau navy + dégradé multi-arrêt plus profond | Le « trait doré » d'une couverture de carnet ; détail de marque discret, jamais une alerte (respecte « le laiton ne porte jamais de donnée ») |
 | 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D77** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
+| 2026-09-07 | « Le mail de mot de passe oublié ne fonctionne pas » — deuxième fois (après D45) | **D78** — le mot de passe oublié passe par un **code saisi dans l'application**, comme la connexion (D76), et l'app envoie elle-même l'e-mail par Resend quand un expéditeur est configuré (comme l'invitation, D75) | Le lien de récupération et le code sont le même jeton à usage unique : les analyseurs anti-hameçonnage ouvrent chaque URL d'un message et le consomment avant son destinataire (mesuré en D76). Et l'e-mail partait encore de la boîte SMTP intégrée de Supabase, quelques messages par heure — le `429` que D45 avait lu dans les journaux |
 
 ## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
 
@@ -1083,7 +1084,7 @@ de la marque, et vivent dans le dépôt : `supabase/templates/*.html`.
 | `invite` | un propriétaire ajoute quelqu'un à l'équipage | le bateau, l'invitant, le rôle, un bouton |
 | `magic_link` | « Code par e-mail » sur un compte existant | **le code**, puis le lien en second |
 | `confirmation` | première connexion d'un invité (le compte se crée) | **le code**, puis le lien |
-| `recovery` | « Mot de passe oublié ? » (D26) | le lien, et le rappel de D45 |
+| `recovery` | « Mot de passe oublié ? » (D26) | ~~le lien, et le rappel de D45~~ — **le code depuis D78** (2026-09-07), et le rappel de D45 |
 | `email_change` | changement d'adresse (les deux confirment) | le code et le bouton |
 | `reauthentication` | opération sensible | le code |
 
@@ -1403,3 +1404,65 @@ modifiables sur l'écran Bateau, où l'on est déjà pour tout le reste. Écart�
 numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le groupe passe à deux
 lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
 sans avoir à remonter au libellé du champ.
+
+## 2026-09-07 — D78 : le mot de passe oublié passe par un code, et part de l'application
+
+**Question.** Signalé à l'usage, pour la deuxième fois : « le mail de mot de passe oublié ne
+fonctionne pas ». D45 avait déjà répondu à cette phrase le 2026-09-03 — en ajoutant la carte
+**Mot de passe** au profil, qui écrit le nouveau mot de passe sans e-mail. C'était un contournement
+pour quelqu'un de déjà connecté ; le parcours, lui, n'avait pas été réparé.
+
+**Le constat, en deux pannes qui suffisent chacune.**
+
+1. **L'expéditeur.** `resetPasswordForEmail` laissait GoTrue envoyer le message, donc par la boîte
+   SMTP intégrée de Supabase : quelques messages par heure pour tout le projet, réservée au
+   développement. C'est le `429 email rate limit exceeded` que D45 avait lu dans les journaux
+   quatorze secondes avant un `/recover → 200`. L'invitation avait quitté ce chemin en D75
+   (Resend) ; la récupération y était restée seule.
+2. **Le lien.** Même arrivé, il ne servait à personne. D76 (E13-13) l'a établi sur l'e-mail de
+   connexion, journaux à l'appui : les analyseurs anti-hameçonnage d'une messagerie ouvrent
+   **chaque URL** d'un message trois secondes après sa livraison — toutes les vérifications
+   réussies venaient d'adresses Amazon et Azure. Or dans GoTrue le lien de récupération et le code
+   de récupération sont **le même jeton à usage unique**. Le scanner le consomme, et la personne
+   qui l'a demandé lit « ce lien n'est plus valable ». D76 avait laissé son lien à `recovery` en
+   jugeant que « le lien y **est** le parcours » : c'était exactement la raison de le retirer.
+
+Une troisième panne dormait dessous : `resetPasswordForEmail` appelé depuis le navigateur ouvre un
+échange PKCE, dont le vérificateur reste dans le navigateur qui a demandé. Demander depuis l'iPad
+et ouvrir le message sur le Mac ne pouvait pas marcher — `exchangeCodeForSession` échouait, et
+`/login?error=link` était tout ce qu'on en voyait. Sur un carnet partagé, ce n'est pas un cas rare.
+
+**Décision.** Le mot de passe oublié devient **un code saisi dans l'application**, comme la
+connexion :
+
+- le gabarit `recovery` porte `{{ .Token }}` et **plus aucun lien**, avec la phrase de D76 qui dit
+  pourquoi ; le sujet porte le code, comme les autres e-mails de code ;
+- `/forgot-password` a désormais deux faces — l'adresse, puis le code — et
+  `verifyOtp({ type: "recovery" })` ouvre la session ; `/reset-password` ne change pas : il refuse
+  toujours de s'afficher sans elle ;
+- **l'application envoie l'e-mail elle-même** quand `RESEND_API_KEY` est posée, comme
+  l'invitation (D75). `generateLink({ type: "recovery" })` frappe le jeton **sans rien envoyer**,
+  donc ce chemin ne touche jamais la boîte SMTP de Supabase — la panne 1 disparaît par
+  construction. `RECOVERY_HTML` est généré depuis `supabase/templates/recovery.html`, un test
+  compare octet par octet ;
+- **sans `RESEND_API_KEY`, le comportement d'avant est conservé** : GoTrue envoie son propre
+  gabarit `recovery`, qui porte maintenant le code lui aussi. Livrable avant que la variable
+  existe, exactement comme D75.
+
+**La réponse reste la même que l'adresse existe ou non.** Une adresse inconnue reçoit « envoyé »
+— dire quelles adresses ont un compte ici, c'est dire qui navigue avec qui. Le quota horaire est la
+seule exception : il appartient à l'application, pas à l'adresse, donc le nommer ne trahit rien, et
+se taire laisserait quelqu'un attendre un message qui ne partira pas.
+
+**Ce qui ne bouge pas.** La carte **Mot de passe** du profil (D45) — déjà connecté, on n'a jamais
+eu besoin de ce détour, et l'e-mail continue de le rappeler. `/auth/callback` garde son traitement
+de `token_hash` + `type` : un ancien message de récupération encore dans une boîte fonctionne.
+
+**Écarté :** garder le lien *en plus* du code, comme `confirmation` le fait. Sur `confirmation` le
+lien est un second chemin vers la même confirmation, et le perdre ne coûte rien ; ici le lien et le
+code sont un seul jeton, donc le lien ne serait pas une aide de plus — il serait la panne, laissée
+en place. Écarté aussi : allonger la durée de validité, ou augmenter le quota Supabase. Ni l'un ni
+l'autre ne touche à un jeton consommé par un robot trois secondes après l'envoi.
+
+**À refaire côté Supabase** : `pnpm emails:push`, pour appliquer `recovery.html` et son nouveau
+sujet au projet hébergé.
