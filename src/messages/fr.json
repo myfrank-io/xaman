@@ -967,6 +967,7 @@
       "noneHelp": "Contrôle ponctuel : le point sera « À faire » puis « OK » définitivement.",
       "hours": "… ou toutes les",
       "hoursSuffix": "h moteur",
+      "hoursNoCounter": "Ce moteur n'a pas de compteur d'heures : cette échéance ne se déclenchera pas.",
       "engine": "Moteur concerné",
       "engineHelp": "Obligatoire si vous saisissez des heures.",
       "noEngine": "— aucun —",
@@ -1098,6 +1099,8 @@
     "inactiveList": "{count, plural, one {# moteur désactivé} other {# moteurs désactivés}}",
     "counter": "Compteur",
     "unknownCounter": "compteur inconnu",
+    "noCounter": "sans compteur d'heures",
+    "noCounterHint": "Ce moteur n'a pas de compteur d'heures : aucun relevé n'est demandé, et ses points de checklist ne se comptent qu'en dates.",
     "readOn": "relevé le {date}",
     "readBy": "par {name}",
     "stale": "à mettre à jour",
@@ -1110,7 +1113,9 @@
       "model": "Modèle",
       "serial": "N° de série",
       "installedAt": "Installé le",
-      "notes": "Notes"
+      "notes": "Notes",
+      "noCounter": "Pas de compteur d'heures",
+      "noCounterHelp": "Pour une annexe ou un hors-bord sans compteur : l'app cesse de demander un relevé et les échéances en heures de ses points de checklist sont ignorées."
     },
     "installedIn": "installé en {year}",
     "serialShort": "série {serial}",

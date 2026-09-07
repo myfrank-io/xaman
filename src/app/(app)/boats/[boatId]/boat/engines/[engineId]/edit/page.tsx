@@ -27,6 +27,7 @@ export default async function EditEnginePage({
         model: engine.model,
         serial: engine.serial,
         installedAt: engine.installed_at,
+        tracksHours: engine.tracks_hours,
         notes: engine.notes,
         updatedAt: engine.updated_at,
       }}

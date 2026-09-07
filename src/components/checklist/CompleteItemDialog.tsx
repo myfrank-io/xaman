@@ -42,7 +42,14 @@ export type CompletableItem = {
   categoryName: string;
   intervalMonths: number | null;
   intervalHours: number | null;
-  engine: { id: string; label: string; lastHours: number | null; lastDate: string | null } | null;
+  engine: {
+    id: string;
+    label: string;
+    lastHours: number | null;
+    lastDate: string | null;
+    /** false: no hour meter on this engine (D71) — the hours field does not exist. */
+    tracksHours: boolean;
+  } | null;
   lastCompletedAt: string | null;
   lastCompletedByName: string | null;
   lastEngineHours: number | null;
@@ -164,8 +171,10 @@ function CompleteForm({
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  const hoursRequired = item.intervalHours !== null;
-  const engine = item.engine;
+  // D71: an engine without a meter has no hours to give — the field disappears and the database
+  // no longer demands them either (check_completion_hours).
+  const engine = item.engine?.tracksHours === false ? null : item.engine;
+  const hoursRequired = item.intervalHours !== null && item.engine?.tracksHours !== false;
   const alreadyToday = item.lastCompletedAt === todayString();
 
   function submit(event: React.FormEvent) {

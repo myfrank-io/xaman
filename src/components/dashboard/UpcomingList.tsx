@@ -81,6 +81,7 @@ export function UpcomingList({
             label: row.engineLabel ?? "",
             lastHours: row.currentHours,
             lastDate: null,
+            tracksHours: row.engineTracksHours,
           }
         : null,
       lastCompletedAt: row.lastCompletedAt,

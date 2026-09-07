@@ -1059,3 +1059,47 @@ qui ne peut pas échouer. L'attente passe de 4 min 19 à **3 min 51** sur une PR
 modeste : l'audit tactile reste le chemin critique à 3 min 48, et le vrai plafond est `next dev`.
 Les trois leviers qui restent sont écrits ci-dessus — conteneur `postgres:17`, build de
 production pour l'audit, ou un viewport de moins — et chacun se paie en rigueur, pas en YAML.
+
+## 2026-09-07 — D71 : un moteur peut n'avoir aucun compteur d'heures
+
+**Question.** Signalé sur l'onglet Moteurs de Xaman : « dans moteurs mets une check box pour les
+annexes où on n'a pas le compteur d'heures ». La carte de l'annexe Suzuki y affichait
+« compteur inconnu », entre deux Yanmar qui affichent 580 h et 1 008 h.
+
+**Le constat.** « Compteur inconnu » est une phrase d'attente : elle dit *on ne sait pas encore*,
+et l'app se comporte en conséquence. Elle demandait donc un relevé qui n'arrivera jamais — bouton
+« Relevé » sur la carte et sur la fiche, puce dans le bandeau du tableau de bord, ligne dans
+« moteurs sans relevé », champ d'heures dans chaque intervention — parce qu'un hors-bord d'annexe
+n'a pas de compteur sur son capot. Il n'y a rien à relever : ce n'est pas une donnée manquante,
+c'est une donnée qui n'existe pas.
+
+**Décision.** `engines.tracks_hours` (booléen, défaut `true`), une case sur la fiche du moteur
+écrite dans le sens où elle est vécue — **« Pas de compteur d'heures »**, à cocher, plutôt qu'un
+« suit les heures » à décocher. Ce que l'absence de compteur entraîne, partout, sans autre
+réglage :
+
+- la carte et la fiche disent **« sans compteur d'heures »** en gris, jamais l'ambre
+  « à mettre à jour » d'un relevé en retard ; le bouton « Relevé » disparaît des deux ;
+- le moteur quitte le bandeau des compteurs du tableau de bord, la phrase « moteurs sans relevé »
+  et le compte `boat_dashboard_stats.engines_without_reading` ;
+- l'intervention ne lui ouvre plus de champ d'heures ;
+- ses points de checklist perdent leur échéance en heures : `checklist_item_status` remet
+  `interval_hours` à null pour eux, donc plus de « toutes les 100 h » affiché, plus de statut
+  calculé sur un compteur absent, et surtout plus de **cul-de-sac au cochage** — le trigger
+  `check_completion_hours` exigeait des heures que personne ne pouvait lire, et refusait la
+  réalisation. Un « Entretien du hors-bord » hérité d'un modèle générique redevient ce qu'il est
+  en vrai : une échéance annuelle.
+
+**Rien n'est effacé.** `checklist_items.interval_hours` garde sa valeur, les relevés déjà saisis
+gardent leurs lignes et restent lisibles sur la fiche. La case se décoche, et tout revient — c'est
+ce qui arrive le jour où un compteur est posé sur l'annexe.
+
+**Le défaut reste `true`.** Un moteur existant suit ses heures jusqu'à ce que quelqu'un dise le
+contraire ; la migration ne change rien pour les deux Yanmar. L'annexe de `seed/xaman-boat.json`
+part, elle, avec `tracks_hours: false` : c'est l'état réel du bateau.
+
+**Écarté :** déduire l'absence de compteur de la position `outboard`. Un semi-rigide est propulsé
+par un hors-bord qui, lui, a bien un compteur ; la position dit où le moteur est monté, pas ce
+qu'on peut lire dessus. Écarté aussi : refuser la case tant que le moteur porte des relevés. Un
+compteur peut avoir été relevé une fois à la louche puis abandonné, et une case qui refuse de se
+cocher n'explique jamais assez bien pourquoi.

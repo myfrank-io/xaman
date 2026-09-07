@@ -41,11 +41,13 @@ export async function logFormData(
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
+    // D71: no meter, no hour field on the intervention.
     supabase
       .from("engines")
       .select("id, label, sort_order")
       .eq("boat_id", boatId)
       .eq("is_active", true)
+      .eq("tracks_hours", true)
       .order("sort_order"),
     supabase.from("engine_current_hours").select("engine_id, hours, read_at").eq("boat_id", boatId),
     // A category carrying engine-linked points is an « engine » category whatever its name.

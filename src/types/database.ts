@@ -1109,6 +1109,7 @@ export type Database = {
           position: Database["public"]["Enums"]["engine_position"]
           serial: string | null
           sort_order: number
+          tracks_hours: boolean
           updated_at: string
           updated_by: string | null
         }
@@ -1129,6 +1130,7 @@ export type Database = {
           position: Database["public"]["Enums"]["engine_position"]
           serial?: string | null
           sort_order?: number
+          tracks_hours?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -1149,6 +1151,7 @@ export type Database = {
           position?: Database["public"]["Enums"]["engine_position"]
           serial?: string | null
           sort_order?: number
+          tracks_hours?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -2042,6 +2045,7 @@ export type Database = {
           due_at: string | null
           due_hours: number | null
           engine_id: string | null
+          engine_tracks_hours: boolean | null
           fixed_due_at: string | null
           has_completion: boolean | null
           hours_remaining: number | null

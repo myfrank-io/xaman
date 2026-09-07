@@ -23,8 +23,9 @@ const CATEGORIES: CategoryChoice[] = [
 ];
 
 const ENGINES = [
-  { id: "e1", label: "Bâbord" },
-  { id: "e2", label: "Tribord" },
+  { id: "e1", label: "Bâbord", tracksHours: true },
+  { id: "e2", label: "Tribord", tracksHours: true },
+  { id: "e3", label: "Annexe", tracksHours: false },
 ];
 
 export default function DevChecklistFormPage() {

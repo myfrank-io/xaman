@@ -45,6 +45,7 @@ function row(over: Partial<ChecklistRow> & Pick<ChecklistRow, "id" | "label">): 
     categoryColor: SAILS.color,
     engineId: null,
     engineLabel: null,
+    engineTracksHours: true,
     intervalMonths: 12,
     intervalHours: null,
     sortOrder: 1,

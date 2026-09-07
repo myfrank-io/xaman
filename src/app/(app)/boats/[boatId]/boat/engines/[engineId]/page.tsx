@@ -131,6 +131,7 @@ export default async function EnginePage({
           installedAt: engine.installed_at,
           notes: engine.notes,
           isActive: engine.is_active,
+          tracksHours: engine.tracks_hours,
           counterResetAt: engine.counter_reset_at,
         }}
         currentHours={current?.hours ?? null}

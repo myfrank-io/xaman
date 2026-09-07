@@ -130,6 +130,7 @@ export function TodoList({
                               label: target.engineLabel ?? "",
                               lastHours: target.currentHours,
                               lastDate: null,
+                              tracksHours: target.engineTracksHours,
                             }
                           : null,
                         lastCompletedAt: target.lastCompletedAt,

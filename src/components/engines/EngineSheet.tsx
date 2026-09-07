@@ -50,6 +50,7 @@ export type EngineDetail = {
   installedAt: string | null;
   notes: string | null;
   isActive: boolean;
+  tracksHours: boolean;
   counterResetAt: string | null;
 };
 
@@ -187,7 +188,7 @@ export function EngineSheet({
           subtitle={subtitle}
           actions={
             <>
-              {canContribute && engine.isActive ? (
+              {canContribute && engine.isActive && engine.tracksHours ? (
                 <Button type="button" onClick={() => setReadingOpen(true)}>
                   <GaugeIcon />
                   {t("addReading")}
@@ -208,8 +209,16 @@ export function EngineSheet({
 
       <SectionCard title={t("counter")}>
         <div className="px-5 py-4">
-          <EngineCounter hours={currentHours} readAt={currentReadAt} size="lg" />
-          {currentByName ? (
+          <EngineCounter
+            hours={currentHours}
+            readAt={currentReadAt}
+            tracksHours={engine.tracksHours}
+            size="lg"
+          />
+          {/* D71: no meter — the block says why rather than showing a counter nobody can read. */}
+          {!engine.tracksHours ? (
+            <p className="mt-1 text-caption text-ink-2">{t("noCounterHint")}</p>
+          ) : currentByName ? (
             <p className="mt-1 text-caption text-ink-3">{t("readBy", { name: currentByName })}</p>
           ) : null}
         </div>
@@ -260,67 +269,76 @@ export function EngineSheet({
         )}
       </SectionCard>
 
-      <SectionCard title={t("readings")}>
-        {readings.length === 0 ? (
-          <p className="px-5 py-4 text-body text-ink-2">{t("noReadings")}</p>
-        ) : (
-          readings.map((reading) => (
-            <ListRow
-              key={reading.id}
-              title={
-                <span className="flex items-center gap-3">
-                  <span className="num">{formatHours(reading.hours)}</span>
-                  <Badge variant="outline" size="sm">
-                    {t(`source.${reading.source}`)}
-                  </Badge>
-                </span>
-              }
-              meta={[
-                formatDate(reading.readAt),
-                reading.byName,
-                reading.note,
-                reading.source === "import" ? t("importedHint") : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-              action={
-                canWrite ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" aria-label={tc("actions")}>
-                        <MoreHorizontalIcon />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onSelect={() =>
-                          setEditing({
-                            id: reading.id,
-                            hours: reading.hours,
-                            readAt: reading.readAt,
-                            note: reading.note,
-                            updatedAt: reading.updatedAt,
-                          })
-                        }
-                      >
-                        {t("reading.edit")}
-                      </DropdownMenuItem>
-                      {reading.source === "manual" || reading.source === "import" ? (
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onSelect={() => setDeleting(reading)}
+      {/* Nothing is lost: an engine that loses its meter keeps the readings it already has.
+          Only the empty « Aucun relevé » block goes, on an engine that will never have one. */}
+      {!engine.tracksHours && readings.length === 0 ? null : (
+        <SectionCard title={t("readings")}>
+          {readings.length === 0 ? (
+            <p className="px-5 py-4 text-body text-ink-2">{t("noReadings")}</p>
+          ) : (
+            readings.map((reading) => (
+              <ListRow
+                key={reading.id}
+                title={
+                  <span className="flex items-center gap-3">
+                    <span className="num">{formatHours(reading.hours)}</span>
+                    <Badge variant="outline" size="sm">
+                      {t(`source.${reading.source}`)}
+                    </Badge>
+                  </span>
+                }
+                meta={[
+                  formatDate(reading.readAt),
+                  reading.byName,
+                  reading.note,
+                  reading.source === "import" ? t("importedHint") : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+                action={
+                  canWrite ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={tc("actions")}
                         >
-                          {t("reading.delete")}
+                          <MoreHorizontalIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            setEditing({
+                              id: reading.id,
+                              hours: reading.hours,
+                              readAt: reading.readAt,
+                              note: reading.note,
+                              updatedAt: reading.updatedAt,
+                            })
+                          }
+                        >
+                          {t("reading.edit")}
                         </DropdownMenuItem>
-                      ) : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : undefined
-              }
-            />
-          ))
-        )}
-      </SectionCard>
+                        {reading.source === "manual" || reading.source === "import" ? (
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => setDeleting(reading)}
+                          >
+                            {t("reading.delete")}
+                          </DropdownMenuItem>
+                        ) : null}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : undefined
+                }
+              />
+            ))
+          )}
+        </SectionCard>
+      )}
 
       {/* The act starts where the subject is named (D35): the form arrives with this engine's
           category chosen and its hours field open and focused — two taps to a saved line. */}
