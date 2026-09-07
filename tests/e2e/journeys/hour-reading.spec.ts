@@ -28,7 +28,9 @@ test.describe("engine hours from the dashboard", () => {
 
     // The engine is already chosen (this boat has one) and the date is already today, so the
     // counter is the only thing left to say. Typing is not a tap.
-    await dialog.getByLabel(fr.engines.reading.hours, { exact: true }).fill("812");
+    // Anchored rather than exact: `Field` appends an aria-hidden " *" to the label of a
+    // required field, so the label's text is "Compteur *" and an exact match never lands.
+    await dialog.getByLabel(new RegExp(`^${fr.engines.reading.hours}`)).fill("812");
 
     // 2 — save.
     await taps.tap(dialog.getByRole("button", { name: fr.common.save, exact: true }));
