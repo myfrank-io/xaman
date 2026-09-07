@@ -118,13 +118,21 @@ export default async function DevEmailsPage({
           <p className="mt-3 text-caption text-ink-2">Envoyé quand</p>
           <p className="mt-1 text-body">{current.when}</p>
         </div>
-        {/* An e-mail is a document, not a fragment: a sandboxed iframe is the only honest
-            preview — the page's own stylesheet must not reach inside it. */}
+        {/* An e-mail is a document, not a fragment: an iframe is the only honest preview —
+            the page's own stylesheet must not reach inside it.
+
+            `allow-scripts` in an otherwise closed sandbox looks odd on a document that has
+            none, and it is deliberate: a frame sandboxed *without* it makes the browser log
+            « Blocked script execution in 'about:srcdoc' » as soon as anything tries to
+            instrument the frame, and the touch audit fails the page on any console error. The
+            frame keeps its opaque origin (no `allow-same-origin`), so nothing inside can read
+            the app, and no `allow-top-navigation`, so tapping « Rejoindre le carnet » in a
+            preview cannot carry the gallery off to the link. */}
         <iframe
           key={current.key}
           title={`Aperçu — ${current.label}`}
           srcDoc={html}
-          sandbox=""
+          sandbox="allow-scripts"
           className="h-[900px] w-full rounded-xl border bg-white"
         />
       </section>
