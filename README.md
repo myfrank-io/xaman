@@ -25,6 +25,22 @@ cp .env.example .env.local        # renseigner les clés du projet Supabase (jam
 pnpm dev                          # http://localhost:3000
 ```
 
+### Serveur MCP Supabase (Claude Code)
+`.mcp.json` déclare le serveur MCP Supabase au niveau du dépôt : il pointe sur le projet `xaman`
+(`project_ref` `udguqqhnoekbpekpyzov`, région `eu-west-3`) et expose les fonctionnalités `docs`,
+`account`, `database`, `debugging`, `development`, `functions` et `branching`.
+
+Le fichier ne contient aucune clé : l'authentification est un flux OAuth propre à chaque personne, à
+faire une fois, dans un vrai terminal (pas une extension IDE) :
+
+```
+claude          # depuis la racine du dépôt, approuver le serveur du projet
+/mcp            # choisir « supabase », puis « Authenticate »
+```
+
+Les migrations restent gouvernées par la règle 3 de `CLAUDE.md` : `supabase/migrations/` est la
+source de vérité, `apply_migration` via MCP ne dispense pas d'y écrire le fichier.
+
 ### Base de données
 Le schéma vit dans `supabase/migrations/` (jamais de modification manuelle en production).
 
