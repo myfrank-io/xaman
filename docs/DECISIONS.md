@@ -1237,3 +1237,52 @@ nom, pas un acte, donc indiscernable d'un lien vers les relevés.
 
 **Rien n'est retiré.** Aucune information ne quitte la carte : elle est réarrangée, et le seul
 chemin qui disparaît (le faux bouton « N points liés ») est remplacé par un vrai, plus grand.
+
+## 2026-09-07 — D73 : tous les rôles dès l'invitation, une seule porte vers la propriété
+
+**Question.** « Pourquoi on a que ça en sélection ? Et une fois ajouté j'ai la possibilité de
+changer. » Puis : « Je veux pouvoir ajouter tous les rôles dès l'ajout. »
+
+**Ce qui se passait, et que personne n'avait vu.** Deux écrans, deux listes de rôles, écrites à
+deux endroits. Le dialogue d'invitation lisait `ASSIGNABLE_ROLES` — *éditeur, professionnel,
+lecteur* — dont le commentaire disait « never owner directly », conformément à D30 : la propriété
+ne se transmet que par **Réglages → Transférer le bateau**, qui invite en `owner` puis fait partir
+l'ancien propriétaire une fois l'invitation acceptée.
+
+Mais `MembersList.tsx` ne lisait pas cette constante. Il s'était écrit la sienne :
+
+```ts
+const ROLES: BoatRole[] = ["owner", "editor", "pro", "viewer"];
+```
+
+Et la base ne rattrapait rien : la politique `boat_members_update` vérifie seulement que celui qui
+écrit est propriétaire du bateau, jamais quel rôle il attribue. Donc la propriété avait **déjà**
+deux portes — une documentée et gardée, une ouverte dans un menu déroulant, sans confirmation,
+depuis chaque ligne de la liste. C'est la seconde qui a été signalée, par quelqu'un qui l'a
+trouvée par accident.
+
+**Décision.** Les deux écrans lisent la même liste, et elle contient les quatre rôles. Inviter
+directement en `owner` devient possible ; la propriété a une porte, la même partout.
+
+- `ASSIGNABLE_ROLES` passe à `["owner", "editor", "pro", "viewer"]` et `MembersList` la lit au
+  lieu de sa copie.
+- `EDITOR_ASSIGNABLE_ROLES` (`pro`, `viewer`) apparaît : le dialogue filtrait jusque-là en
+  retirant `editor` de la liste, ce qui aurait laissé passer `owner` dès qu'on l'y ajoutait. La
+  règle D28 est désormais nommée plutôt que déduite — côté serveur aussi, où `inviteMember`
+  distingue « ce rôle ne vous est pas permis » de « il vous faut une date de fin ».
+- **Une invitation en `owner` n'a pas de date de fin.** La question de la durée disparaît du
+  formulaire au lieu d'être posée puis ignorée, et `inviteMember` écrit `null` quoi que le
+  formulaire ait retenu : un propriétaire dont l'accès expire un mardi n'est pas un propriétaire.
+- Un encart d'avertissement remplace la question de durée : *« Les mêmes droits que vous : gérer
+  les membres, modifier les réglages, supprimer le carnet — et vous en retirer. »* Le geste reste
+  d'un seul tap, mais plus à l'aveugle.
+
+**Aucune migration.** La politique d'insertion sur `boat_invitations` autorisait déjà un
+propriétaire à inviter n'importe quel rôle ; seule la branche `editor` restreint à `pro` / `viewer`
+avec une date ≤ 90 jours (D28). Le test RLS gagne une ligne qui fixe le comportement — si une
+migration future refermait cette porte, elle échouerait ici plutôt qu'en production.
+
+**Ce qui ne change pas.** Le parcours de transfert (D30) reste : il fait deux choses que
+l'invitation ne fait pas — il invite *et* il fait partir l'ancien propriétaire une fois
+l'acceptation confirmée. `ensure_last_owner` continue d'interdire de retirer le dernier
+propriétaire d'un bateau.

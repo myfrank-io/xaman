@@ -468,6 +468,8 @@
       "sent": "Invitation envoyée à {email}.",
       "proTitle": "Ce que verra ce professionnel",
       "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions seront conservées.",
+      "ownerTitle": "Ce que pourra ce propriétaire",
+      "ownerDescription": "Les mêmes droits que vous : gérer les membres, modifier les réglages, supprimer le carnet — et vous en retirer. Son accès n'a pas de date de fin. Pour lui transmettre le bateau et partir ensuite, passez plutôt par Réglages → Transférer le bateau.",
       "duration": "Durée d'accès",
       "durations": {
         "7": "7 jours",

@@ -28,7 +28,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { inviteMember } from "@/lib/actions/members";
 import { formatDate } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { ASSIGNABLE_ROLES } from "@/lib/permissions";
+import { ASSIGNABLE_ROLES, EDITOR_ASSIGNABLE_ROLES } from "@/lib/permissions";
 import {
   inviteMemberSchema,
   type AccessDuration,
@@ -40,9 +40,14 @@ type Sent = { email: string; url: string; validUntil: string | null };
 const DURATIONS: AccessDuration[] = ["7", "30", "90", "unlimited"];
 
 /**
- * Invitation (E1-5, D28, D29): role, access duration, the guarantee sentence for a `pro`,
- * then the link to copy or share in addition to the e-mail. An editor invites pro/viewer only,
- * always dated (≤ 90 days).
+ * Invitation (E1-5, D28, D29, D73): role, access duration, the sentence that says what the role
+ * really allows, then the link to copy or share in addition to the e-mail. An editor invites
+ * pro/viewer only, always dated (≤ 90 days).
+ *
+ * Since D73 the list carries `owner` too. It brings its own rule: the duration question
+ * disappears, because an owner has no end date (`inviteMember` writes null whatever the form
+ * held), and a warning takes its place — the person invited this way can remove the person
+ * inviting them.
  */
 export function InviteMemberDialog({
   boatId,
@@ -61,7 +66,7 @@ export function InviteMemberDialog({
   const [sent, setSent] = useState<Sent | null>(null);
   const [pending, startTransition] = useTransition();
   const editor = inviterRole === "editor";
-  const roles = editor ? ASSIGNABLE_ROLES.filter((r) => r !== "editor") : ASSIGNABLE_ROLES;
+  const roles = editor ? EDITOR_ASSIGNABLE_ROLES : ASSIGNABLE_ROLES;
   const durations = editor ? DURATIONS.filter((d) => d !== "unlimited") : DURATIONS;
   const defaults: InviteMemberInput = {
     boatId,
@@ -197,33 +202,45 @@ export function InviteMemberDialog({
                 ))}
               </NativeSelect>
             </Field>
+            {/* An owner has no end date (D73): the question is removed rather than asked and
+                then ignored — the alert below says so in words. */}
             <Controller
               control={form.control}
               name="duration"
-              render={({ field }) => (
-                <Field
-                  id="invite-duration"
-                  label={t("invite.duration")}
-                  help={editor ? t("invite.durationHelpEditor") : t("invite.durationHelp")}
-                >
-                  <ToggleGroup
-                    type="single"
-                    value={field.value}
-                    aria-label={t("invite.duration")}
-                    className="flex-wrap justify-start"
-                    onValueChange={(next) => {
-                      if (next) field.onChange(next);
-                    }}
+              render={({ field }) =>
+                role === "owner" ? (
+                  <></>
+                ) : (
+                  <Field
+                    id="invite-duration"
+                    label={t("invite.duration")}
+                    help={editor ? t("invite.durationHelpEditor") : t("invite.durationHelp")}
                   >
-                    {durations.map((d) => (
-                      <ToggleGroupItem key={d} value={d} className="min-h-11">
-                        {t(`invite.durations.${d}`)}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </Field>
-              )}
+                    <ToggleGroup
+                      type="single"
+                      value={field.value}
+                      aria-label={t("invite.duration")}
+                      className="flex-wrap justify-start"
+                      onValueChange={(next) => {
+                        if (next) field.onChange(next);
+                      }}
+                    >
+                      {durations.map((d) => (
+                        <ToggleGroupItem key={d} value={d} className="min-h-11">
+                          {t(`invite.durations.${d}`)}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </Field>
+                )
+              }
             />
+            {role === "owner" ? (
+              <Alert variant="warning">
+                <AlertTitle>{t("invite.ownerTitle")}</AlertTitle>
+                <AlertDescription>{t("invite.ownerDescription")}</AlertDescription>
+              </Alert>
+            ) : null}
             {role === "pro" ? (
               <Alert variant="info">
                 <AlertTitle>{t("invite.proTitle")}</AlertTitle>

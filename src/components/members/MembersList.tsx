@@ -24,7 +24,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { changeMemberRole, extendMemberAccess, removeMember } from "@/lib/actions/members";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { formatDate, todayString } from "@/lib/format";
-import type { BoatRole } from "@/lib/permissions";
+import { ASSIGNABLE_ROLES, type BoatRole } from "@/lib/permissions";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +36,8 @@ export type MemberRow = {
   email: string;
 };
 
-const ROLES: BoatRole[] = ["owner", "editor", "pro", "viewer"];
+// The same four the invitation offers (D73). It used to be a second list written here, which is
+// how the dropdown came to hand out `owner` while the invitation refused to.
 
 export function MembersList({
   boatId,
@@ -178,7 +179,7 @@ export function MembersList({
                       disabled={pending}
                       onChange={(e) => onRoleChange(m, e.target.value as BoatRole)}
                     >
-                      {ROLES.map((r) => (
+                      {ASSIGNABLE_ROLES.map((r) => (
                         <option key={r} value={r}>
                           {t(`roles.${r}`)}
                         </option>
