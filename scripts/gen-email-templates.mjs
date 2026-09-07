@@ -258,13 +258,18 @@ export const TEMPLATES = [
     // The code first, in the subject too: on an iPad it is often all someone needs to read.
     subject: "{{ .Token }} — votre code de connexion Xaman",
     title: "Code de connexion",
-    preheader: "Votre code à 6 chiffres, valable 10 minutes.",
+    preheader: "Votre code de connexion.",
     body: [
       h1("Votre code de connexion"),
-      p("Saisissez ce code dans Xaman pour ouvrir votre session. Il est valable 10 minutes."),
+      p("Saisissez ce code dans Xaman pour ouvrir votre session."),
       code(),
+      // No link, on purpose (D76). In GoTrue the magic link and this code are the SAME one-time
+      // token, and the anti-phishing scanners of a corporate mailbox open every URL in a message
+      // seconds after it lands — burning the code before its owner has read it. Measured on this
+      // project: three `/verify 303` from Amazon and Azure addresses, then the human's own
+      // attempt refused. Nothing to open is the only fix that holds.
       p(
-        `Vous préférez le lien ? ${link("Se connecter directement", "{{ .ConfirmationURL }}")} — il ouvre le navigateur plutôt que l'application installée. Si vous venez d'être invité à bord d'un carnet, il vous conduit à l'invitation.`,
+        `Ce message ne contient volontairement aucun lien : certaines messageries les ouvrent automatiquement pour les vérifier, ce qui consommerait votre code avant vous.`,
         { size: 14, top: 24 },
       ),
       p(IGNORE, { color: C.ink3, size: 13, top: 20 }),

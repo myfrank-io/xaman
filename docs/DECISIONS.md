@@ -1359,3 +1359,53 @@ s'active le jour où elle est posée.
 domaine `xaman.boats` y est vérifié depuis ce midi. L'envoi est un `fetch` — un POST, aucune
 dépendance ajoutée. Un échec d'envoi ne détruit pas l'invitation : la ligne existe, et le dialogue
 propose le lien à copier ou à partager.
+
+## 2026-09-07 — D76 : l'e-mail de code ne contient aucun lien
+
+**Question.** « Quand il arrive il est expiré. » Puis, écran à l'appui : « Code incorrect ou
+expiré », à chaque tentative, sur `joseph.lecomte@ieseg.fr`.
+
+**Ce n'était ni l'expiration, ni une faute de frappe.** Les adresses IP des journaux Auth le
+disent sans ambiguïté :
+
+```
+16:31:28  /otp     200  83.202.132.88    ← la demande, depuis une IP grand public française
+16:31:31  /verify  303  18.236.154.173   ← 3 s plus tard : AWS, Oregon
+16:31:42  /verify  303  3.126.219.214    ← AWS, Francfort
+16:33:04  /verify  303  3.69.201.121     ← AWS, Francfort
+16:33:19  /verify  403  83.202.132.88    ← l'humain : « token has expired or is invalid »
+```
+
+Toutes les vérifications qui **réussissent** viennent d'adresses Amazon et Microsoft
+(`48.209.223.132` est de l'Azure) : ce sont les analyseurs anti-hameçonnage de la messagerie.
+Une adresse d'école est derrière Microsoft Defender, qui visite chaque URL d'un message reçu pour
+vérifier qu'elle est saine.
+
+Et dans GoTrue, **le lien magique et le code à 6 chiffres sont le même jeton à usage unique**. Le
+robot ouvre le lien trois secondes après la livraison, le jeton est consommé, et le code que la
+personne recopie ensuite est déjà mort. Ce n'est pas un incident : c'est le comportement normal de
+toute messagerie d'entreprise, donc c'était reproductible à chaque essai.
+
+**Décision.** Le gabarit `magic_link` ne contient plus aucun lien. Rien à ouvrir, rien à
+consommer : le code survit jusqu'à ce que son destinataire le tape. Le message le dit — « ce
+message ne contient volontairement aucun lien : certaines messageries les ouvrent automatiquement
+pour les vérifier, ce qui consommerait votre code avant vous » — parce qu'une absence
+inexpliquée ressemble à un oubli.
+
+C'est aussi ce que **D26** disait déjà : sur iPad, un lien ouvert depuis Mail s'ouvre dans Safari
+et non dans la PWA installée. Le lien n'était qu'une politesse ; il coûtait la connexion.
+
+Le message sous le champ change de rôle : au lieu d'annoncer un lien qui n'existe plus, il prévient
+de l'autre façon de perdre un code — « demandez un seul code : en redemander un annule le
+précédent », ce que les mêmes journaux montraient aussi (trois demandes, deux `429` de
+l'intervalle minimum, et tous les envois précédents morts).
+
+**Ce qui garde son lien, et pourquoi.** `confirmation` (inscription) et `recovery` (mot de passe
+oublié) : là, le lien **est** le parcours — l'écran d'inscription n'a aucun champ où saisir un
+code. Un analyseur qui l'ouvre confirme l'adresse, ce qui est précisément ce que la personne
+voulait ; le cas est bénin pour l'inscription. Il ne l'est pas pour la récupération de mot de
+passe, qui reste exposée au même problème : à traiter le jour où quelqu'un le signale, en lui
+donnant un code plutôt qu'un lien.
+
+**À refaire côté Supabase** : les gabarits vivent dans le tableau de bord, il faut y recoller
+`magic-link.html`, sinon la production continue d'envoyer l'ancien, lien compris.

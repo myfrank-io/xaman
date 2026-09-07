@@ -198,7 +198,7 @@
       "submit": "Se connecter",
       "back": "Changer d'adresse",
       "resend": "Renvoyer le code",
-      "linkHint": "Le lien contenu dans l'e-mail fonctionne aussi, mais il s'ouvre dans Safari plutôt que dans l'application installée."
+      "linkHint": "Demandez un seul code : en redemander un annule le précédent."
     },
     "errors": {
       "send": "Impossible d'envoyer le code. Réessayez dans une minute.",
