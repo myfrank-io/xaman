@@ -263,7 +263,7 @@ export const TEMPLATES = [
       h1("Votre code de connexion"),
       p("Saisissez ce code dans Xaman pour ouvrir votre session."),
       code(),
-      // No link, on purpose (D76). In GoTrue the magic link and this code are the SAME one-time
+      // No link, on purpose (D78). In GoTrue the magic link and this code are the SAME one-time
       // token, and the anti-phishing scanners of a corporate mailbox open every URL in a message
       // seconds after it lands — burning the code before its owner has read it. Measured on this
       // project: three `/verify 303` from Amazon and Azure addresses, then the human's own
