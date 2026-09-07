@@ -43,7 +43,22 @@ const MEMBERS: MemberRow[] = [
   },
 ];
 
+/**
+ * The four an invitation can be in since D79, in the order they hurt: an address that does not
+ * exist (the one that started this — one letter wrong, « En attente » for fourteen days), one
+ * still on its way, one received, and an expired one from before the mailer knew anything.
+ */
 const INVITATIONS: InvitationRow[] = [
+  {
+    id: "00000000-0000-4000-8000-0000000000b0",
+    email: "manu.lessafre@exemple.fr",
+    role: "editor",
+    status: "pending",
+    expiresAt: "2026-09-21",
+    validUntil: null,
+    invitedByName: "Xavier Marin",
+    delivery: { status: "bounced", reason: "no_email" },
+  },
   {
     id: "00000000-0000-4000-8000-0000000000b1",
     email: "jean-baptiste.de-la-tourelle@exemple.fr",
@@ -52,6 +67,17 @@ const INVITATIONS: InvitationRow[] = [
     expiresAt: "2026-09-17",
     validUntil: "2027-03-03",
     invitedByName: "Xavier Marin",
+    delivery: { status: "delivered", reason: null },
+  },
+  {
+    id: "00000000-0000-4000-8000-0000000000b3",
+    email: "assurance@exemple.fr",
+    role: "viewer",
+    status: "pending",
+    expiresAt: "2026-09-21",
+    validUntil: "2026-12-20",
+    invitedByName: "Xavier Marin",
+    delivery: { status: "sent", reason: null },
   },
   {
     id: "00000000-0000-4000-8000-0000000000b2",
@@ -61,6 +87,7 @@ const INVITATIONS: InvitationRow[] = [
     expiresAt: "2026-08-01",
     validUntil: null,
     invitedByName: "Xavier Marin",
+    delivery: null,
   },
 ];
 
@@ -81,7 +108,7 @@ export default async function DevMembersPage() {
           canManage
           members={MEMBERS}
         />
-        <InvitationsList boatId={DEV_BOAT_ID} invitations={INVITATIONS} />
+        <InvitationsList boatId={DEV_BOAT_ID} boatName="Xaman" invitations={INVITATIONS} />
       </div>
     </DevShell>
   );

@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { InviteMemberDialog } from "@/components/members/InviteMemberDialog";
 import { InvitationsList, type InvitationStatus } from "@/components/members/InvitationsList";
 import { MembersList } from "@/components/members/MembersList";
+import { refreshInvitationDeliveries } from "@/lib/email/delivery";
+import { toDeliveryReason, toDeliveryStatus } from "@/lib/email/delivery-status";
 import { can, type BoatRole } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,12 +33,21 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
     isOwner
       ? supabase
           .from("boat_invitations_safe")
-          .select("id, email, role, status, expires_at, valid_until, invited_by_name, created_at")
+          .select(
+            "id, email, role, status, expires_at, valid_until, invited_by_name, created_at, delivery_status, delivery_reason",
+          )
           .eq("boat_id", boatId)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
     supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
   ]);
+
+  // D79: the invitations still waiting are the ones worth asking the mailer about. Costs nothing
+  // once each has an answer — delivered and bounced are final, and a fresh answer is not asked
+  // for twice in a minute — so this is a no-op on every visit but the one that matters.
+  const fresh = await refreshInvitationDeliveries(
+    (invitations ?? []).filter((i) => i.status === "pending" && i.id).map((i) => i.id ?? ""),
+  );
 
   const t = await getTranslations("members");
 
@@ -68,15 +79,23 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       {isOwner ? (
         <InvitationsList
           boatId={boatId}
-          invitations={(invitations ?? []).map((i) => ({
-            id: i.id ?? "",
-            email: i.email ?? "",
-            role: i.role ?? "viewer",
-            status: (i.status ?? "pending") as InvitationStatus,
-            expiresAt: i.expires_at ?? "",
-            validUntil: i.valid_until ?? null,
-            invitedByName: i.invited_by_name ?? null,
-          }))}
+          boatName={boat?.name ?? ""}
+          invitations={(invitations ?? []).map((i) => {
+            const polled = fresh.get(i.id ?? "");
+            const status = polled?.status ?? toDeliveryStatus(i.delivery_status);
+            return {
+              id: i.id ?? "",
+              email: i.email ?? "",
+              role: i.role ?? "viewer",
+              status: (i.status ?? "pending") as InvitationStatus,
+              expiresAt: i.expires_at ?? "",
+              validUntil: i.valid_until ?? null,
+              invitedByName: i.invited_by_name ?? null,
+              delivery: status
+                ? { status, reason: polled?.reason ?? toDeliveryReason(i.delivery_reason) }
+                : null,
+            };
+          })}
         />
       ) : null}
     </div>

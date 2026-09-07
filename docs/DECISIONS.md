@@ -1438,64 +1438,58 @@ vue ne fait jamais : « Sans catégorie » n'apparaissait donc nulle part dans `
 `/dev/ui/supplies?category=none` entre dans l'audit tactile — l'état actif d'une ligne est un état
 qu'aucune autre URL de la galerie n'atteignait.
 
-## 2026-09-07 — D78 : le mot de passe oublié passe par un code, et part de l'application
+## 2026-09-07 — D79 : un e-mail qui n'arrive pas le dit dans l'app
 
-**Question.** Signalé à l'usage, pour la deuxième fois : « le mail de mot de passe oublié ne
-fonctionne pas ». D45 avait déjà répondu à cette phrase le 2026-09-03 — en ajoutant la carte
-**Mot de passe** au profil, qui écrit le nouveau mot de passe sans e-mail. C'était un contournement
-pour quelqu'un de déjà connecté ; le parcours, lui, n'avait pas été réparé.
+**Question.** « Il faut absolument que tu montres quand les mails sont en bounce dans l'app »,
+capture du tableau de bord de l'expéditeur à l'appui : « Vous êtes invité à bord — Xaman »,
+`Sent` 19:00, `Bounced` 19:00, `Suppressed` 19:00, *« Recipient not found: the recipient address
+doesn't exist »*. L'adresse invitée portait une lettre de travers.
 
-**Le constat, en deux pannes qui suffisent chacune.**
+**Le constat.** Dans l'application, cette invitation affichait **« En attente »**. Elle l'aurait
+affiché quatorze jours, puis « Expirée » — les deux mêmes mots qu'une invitation en train d'être
+lue à l'instant. Le seul fait utile (personne ne recevra jamais ce message, l'adresse est à
+corriger) était connu **trois secondes après l'envoi**, par l'expéditeur seul, sur un tableau de
+bord où l'on ne va pas. Et il empire tout seul : après un rebond définitif l'adresse passe en
+liste de suppression, si bien qu'on peut réinviter dix fois sans que rien ne parte.
 
-1. **L'expéditeur.** `resetPasswordForEmail` laissait GoTrue envoyer le message, donc par la boîte
-   SMTP intégrée de Supabase : quelques messages par heure pour tout le projet, réservée au
-   développement. C'est le `429 email rate limit exceeded` que D45 avait lu dans les journaux
-   quatorze secondes avant un `/recover → 200`. L'invitation avait quitté ce chemin en D75
-   (Resend) ; la récupération y était restée seule.
-2. **Le lien.** Même arrivé, il ne servait à personne. D76 (E13-13) l'a établi sur l'e-mail de
-   connexion, journaux à l'appui : les analyseurs anti-hameçonnage d'une messagerie ouvrent
-   **chaque URL** d'un message trois secondes après sa livraison — toutes les vérifications
-   réussies venaient d'adresses Amazon et Azure. Or dans GoTrue le lien de récupération et le code
-   de récupération sont **le même jeton à usage unique**. Le scanner le consomme, et la personne
-   qui l'a demandé lit « ce lien n'est plus valable ». D76 avait laissé son lien à `recovery` en
-   jugeant que « le lien y **est** le parcours » : c'était exactement la raison de le retirer.
+**Décision.** L'invitation porte désormais ce que l'expéditeur sait (`0023`) : `email_id`,
+`delivery_status`, `delivery_reason`, `delivery_detail`, `delivery_updated_at`. L'écran Membres
+lit les trois qui le concernent — l'identifiant du message et la phrase anglaise du fournisseur
+ne sont pas accordés à `authenticated`, comme le token avant eux.
 
-Une troisième panne dormait dessous : `resetPasswordForEmail` appelé depuis le navigateur ouvre un
-échange PKCE, dont le vérificateur reste dans le navigateur qui a demandé. Demander depuis l'iPad
-et ouvrir le message sur le Mac ne pouvait pas marcher — `exchangeCodeForSession` échouait, et
-`/login?error=link` était tout ce qu'on en voyait. Sur un carnet partagé, ce n'est pas un cas rare.
+**Deux chemins vers la même colonne.** Un **webhook signé** (`/api/webhooks/resend`, signature
+Standard Webhooks vérifiée avec `node:crypto`, aucune dépendance ajoutée) écrit l'événement dès
+qu'il arrive ; et l'écran Membres **redemande** l'état des invitations encore en attente au
+moment de les afficher. Le second existe parce que le premier se configure hors dépôt : E9-6 et
+E13-8 attendent encore un secret posé à la main, et « personne n'a reçu ça » ne doit pas attendre
+qu'un tableau de bord soit ouvert. La relance ne coûte rien en régime établi — `delivered` et
+`bounced` sont définitifs, et rien n'est redemandé deux fois dans la minute.
 
-**Décision.** Le mot de passe oublié devient **un code saisi dans l'application**, comme la
-connexion :
+**Ce que l'écran dit.** Un rebond prime sur « En attente » — attendre est précisément ce que
+cette invitation ne fait pas : la pastille passe en `Non délivré`, et sous la ligne un encart
+donne la cause **en français** (« Cette adresse n'existe pas. Vérifiez l'orthographe, puis
+renvoyez l'invitation à la bonne adresse. ») et la sortie : **Réinviter**, qui rouvre le
+dialogue d'invitation avec l'adresse déjà remplie — une faute de frappe se corrige là où on la
+lit. Les états sains se disent aussi, discrètement, en fin de ligne : « e-mail remis », « envoi
+en cours », « remise retardée ».
 
-- le gabarit `recovery` porte `{{ .Token }}` et **plus aucun lien**, avec la phrase de D76 qui dit
-  pourquoi ; le sujet porte le code, comme les autres e-mails de code ;
-- `/forgot-password` a désormais deux faces — l'adresse, puis le code — et
-  `verifyOtp({ type: "recovery" })` ouvre la session ; `/reset-password` ne change pas : il refuse
-  toujours de s'afficher sans elle ;
-- **l'application envoie l'e-mail elle-même** quand `RESEND_API_KEY` est posée, comme
-  l'invitation (D75). `generateLink({ type: "recovery" })` frappe le jeton **sans rien envoyer**,
-  donc ce chemin ne touche jamais la boîte SMTP de Supabase — la panne 1 disparaît par
-  construction. `RECOVERY_HTML` est généré depuis `supabase/templates/recovery.html`, un test
-  compare octet par octet ;
-- **sans `RESEND_API_KEY`, le comportement d'avant est conservé** : GoTrue envoie son propre
-  gabarit `recovery`, qui porte maintenant le code lui aussi. Livrable avant que la variable
-  existe, exactement comme D75.
+**Le vocabulaire est fermé des deux côtés.** Six états et huit causes, traduits une fois depuis
+la classification du fournisseur (`src/lib/email/delivery-status.ts`), repris à l'identique par
+une contrainte `check` en base ; un test compare les deux listes à la migration, un autre exige
+une phrase française pour chacune. L'anglais du fournisseur est stocké (`delivery_detail`) mais
+n'atteint jamais un écran (règle 7).
 
-**La réponse reste la même que l'adresse existe ou non.** Une adresse inconnue reçoit « envoyé »
-— dire quelles adresses ont un compte ici, c'est dire qui navigue avec qui. Le quota horaire est la
-seule exception : il appartient à l'application, pas à l'adresse, donc le nommer ne trahit rien, et
-se taire laisserait quelqu'un attendre un message qui ne partira pas.
+**Ce qui ne bouge pas.** Sans expéditeur configuré (D75), les cinq colonnes restent nulles et
+l'écran affiche exactement ce qu'il affichait hier : **null, c'est inconnu, jamais « remis »**.
+L'invitation continue d'exister quoi qu'il arrive, et le lien reste offert dans le dialogue.
 
-**Ce qui ne bouge pas.** La carte **Mot de passe** du profil (D45) — déjà connecté, on n'a jamais
-eu besoin de ce détour, et l'e-mail continue de le rappeler. `/auth/callback` garde son traitement
-de `token_hash` + `type` : un ancien message de récupération encore dans une boîte fonctionne.
+**Écarté :** une table générique d'événements d'e-mail (`email_deliveries`) — la seule question
+posée est « cette invitation est-elle arrivée ? », et une colonne sur l'invitation y répond sans
+table, RLS ni tests supplémentaires ; l'e-mail hebdomadaire, lui, n'a personne à prévenir.
+Écarté aussi : attendre avant d'annoncer la panne (« ça va peut-être arriver ») — un rebond
+définitif l'est dès la première seconde. Écarté enfin : renvoyer automatiquement le même message
+à la même adresse, qui est en liste de suppression et ne repartira pas.
 
-**Écarté :** garder le lien *en plus* du code, comme `confirmation` le fait. Sur `confirmation` le
-lien est un second chemin vers la même confirmation, et le perdre ne coûte rien ; ici le lien et le
-code sont un seul jeton, donc le lien ne serait pas une aide de plus — il serait la panne, laissée
-en place. Écarté aussi : allonger la durée de validité, ou augmenter le quota Supabase. Ni l'un ni
-l'autre ne touche à un jeton consommé par un robot trois secondes après l'envoi.
-
-**À refaire côté Supabase** : `pnpm emails:push`, pour appliquer `recovery.html` et son nouveau
-sujet au projet hébergé.
+**À faire hors dépôt** : dans Resend → Webhooks, ajouter `https://<app>/api/webhooks/resend` sur
+les événements `email.*`, puis poser `RESEND_WEBHOOK_SECRET` (le *signing secret*) dans les
+variables Vercel. Sans lui l'endpoint refuse tout et seule la relance à la lecture travaille.

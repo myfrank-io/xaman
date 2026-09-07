@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
+import { recordInvitationSent } from "@/lib/email/delivery";
 import { invitationEmail } from "@/lib/email/invitation";
 import { mailerConfigured, sendMail } from "@/lib/email/send";
 import { publicEnv } from "@/lib/env";
@@ -88,7 +89,11 @@ async function createInvitation(
     });
     // The row stays either way: the dialog offers the link, so a mailer having a bad day costs
     // an e-mail, never the invitation.
-    if (!(await sendMail({ to: email, subject, html }))) return fail("errors.invitation_email");
+    const sent = await sendMail({ to: email, subject, html });
+    if (!sent.sent) return fail("errors.invitation_email");
+    // Accepted is not received (D79): the id is what the bounce, three seconds later, is named
+    // by — and what turns the row on the Membres screen into « Non délivré ».
+    if (sent.id) await recordInvitationSent(invitation.id, sent.id);
   } else {
     try {
       const admin = createAdminClient();
