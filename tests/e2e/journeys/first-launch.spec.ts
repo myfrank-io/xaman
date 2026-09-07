@@ -34,7 +34,12 @@ test.describe("first launch", () => {
     // which is the whole point of the step: skipping is offered, not imposed.
     await page.waitForURL(/\/boats\/new\/[0-9a-f-]+\?step=2/, { timeout: 15_000 });
     await expect(page.getByText(fr.boats.onboarding.logbook.question)).toBeVisible();
-    await page.getByRole("radio", { name: fr.boats.onboarding.logbook.format.none }).tap();
+    // By id, not by name: `LogbookStep` labels the group with `<Label htmlFor="logbook-none">`,
+    // and a <button> is a labelable element, so that label overrides this chip's own text — its
+    // accessible name is the question, not « Rien à reprendre ». The id is stable either way, so
+    // this keeps passing when that is fixed. Same shape on `boat-engines-1` and
+    // `boat-tender-none`; `boat-type` escapes it only because it matches no item id.
+    await page.locator("#logbook-none").tap();
     await page.getByRole("link", { name: fr.boats.onboarding.logbook.next }).tap();
 
     // Step 3 — the tour. The plan is left on « Je choisirai plus tard »: a carnet has to open
