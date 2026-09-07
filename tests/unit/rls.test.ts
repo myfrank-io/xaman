@@ -169,7 +169,7 @@ describe("read access (select)", () => {
     const star = await run(U.owner, "select * from public.boat_invitations");
     expect(star.ok).toBe(false);
 
-    // D78 (0023): what became of the e-mail is readable, the mailer's own id and its English
+    // D79 (0023): what became of the e-mail is readable, the mailer's own id and its English
     // sentence are not — they are written by the service key and never leave the server.
     const delivery = await run(
       U.owner,
@@ -1522,7 +1522,7 @@ describe("secondary views", () => {
     });
     expect(columns).not.toContain("token");
     expect(columns).toContain("valid_until");
-    // D78: the delivery is part of what an owner reads; the message id and the raw provider
+    // D79: the delivery is part of what an owner reads; the message id and the raw provider
     // sentence stay out of the view, as the token does.
     expect(columns).toEqual(
       expect.arrayContaining(["delivery_status", "delivery_reason", "delivery_updated_at"]),

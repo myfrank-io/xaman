@@ -5,7 +5,7 @@ import { deliveryFromEvent } from "@/lib/email/delivery-status";
 import { verifyWebhookSignature } from "@/lib/email/webhook-signature";
 
 /**
- * Where the mailer says what became of a message it accepted (D78).
+ * Where the mailer says what became of a message it accepted (D79).
  *
  * Resend posts one signed event per state change — sent, delivered, bounced, complained,
  * delayed, failed — and `applyDelivery` writes it on the invitation carrying that message id.

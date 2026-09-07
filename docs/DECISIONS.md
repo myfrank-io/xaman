@@ -1437,7 +1437,7 @@ vue ne fait jamais : « Sans catégorie » n'apparaissait donc nulle part dans `
 `/dev/ui/supplies?category=none` entre dans l'audit tactile — l'état actif d'une ligne est un état
 qu'aucune autre URL de la galerie n'atteignait.
 
-## 2026-09-07 — D78 : un e-mail qui n'arrive pas le dit dans l'app
+## 2026-09-07 — D79 : un e-mail qui n'arrive pas le dit dans l'app
 
 **Question.** « Il faut absolument que tu montres quand les mails sont en bounce dans l'app »,
 capture du tableau de bord de l'expéditeur à l'appui : « Vous êtes invité à bord — Xaman »,

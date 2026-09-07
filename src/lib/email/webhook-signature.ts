@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 /**
- * Standard Webhooks (Svix) signature — how the mailer proves an event is its own (D78).
+ * Standard Webhooks (Svix) signature — how the mailer proves an event is its own (D79).
  *
  * The endpoint is public: anything on the internet can POST « this invitation bounced » and,
  * without this, be believed. So the body is HMAC'd with the endpoint's own secret and the

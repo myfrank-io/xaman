@@ -42,7 +42,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
     supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
   ]);
 
-  // D78: the invitations still waiting are the ones worth asking the mailer about. Costs nothing
+  // D79: the invitations still waiting are the ones worth asking the mailer about. Costs nothing
   // once each has an answer — delivered and bounced are final, and a fresh answer is not asked
   // for twice in a minute — so this is a no-op on every visit but the one that matters.
   const fresh = await refreshInvitationDeliveries(

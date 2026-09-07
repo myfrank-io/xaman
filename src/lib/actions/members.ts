@@ -91,7 +91,7 @@ async function createInvitation(
     // an e-mail, never the invitation.
     const sent = await sendMail({ to: email, subject, html });
     if (!sent.sent) return fail("errors.invitation_email");
-    // Accepted is not received (D78): the id is what the bounce, three seconds later, is named
+    // Accepted is not received (D79): the id is what the bounce, three seconds later, is named
     // by — and what turns the row on the Membres screen into « Non délivré ».
     if (sent.id) await recordInvitationSent(invitation.id, sent.id);
   } else {
