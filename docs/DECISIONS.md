@@ -1360,52 +1360,45 @@ domaine `xaman.boats` y est vérifié depuis ce midi. L'envoi est un `fetch` —
 dépendance ajoutée. Un échec d'envoi ne détruit pas l'invitation : la ligne existe, et le dialogue
 propose le lien à copier ou à partager.
 
-## 2026-09-07 — D76 : l'e-mail de code ne contient aucun lien
+## 2026-09-07 — D76 : l'étape 1 compte jusqu'à quatre moteurs
 
-**Question.** « Quand il arrive il est expiré. » Puis, écran à l'appui : « Code incorrect ou
-expiré », à chaque tentative, sur `joseph.lecomte@ieseg.fr`.
+**Question.** Signalé à l'usage sur l'étape 1, la puce « Moteurs » sous le type de bateau : « ici
+donne la possibilité de rajouter d'autres moteurs direct ».
 
-**Ce n'était ni l'expiration, ni une faute de frappe.** Les adresses IP des journaux Auth le
-disent sans ambiguïté :
+**Le constat.** Le toggle s'arrêtait à *2 moteurs*, et `newBoatEngines` créait deux moteurs pour
+tout compte supérieur ou égal à deux. Un tri-moteur ou un quad était donc plafonné sur le premier
+écran, sans que rien ne le dise : le carnet s'ouvrait avec deux moteurs et il fallait aller en
+ajouter un troisième depuis l'écran Bateau, puis lui générer ses points. Le plafond n'était pas
+une décision, c'était le cas `else if (count >= 2)` d'une fonction écrite pour un catamaran.
 
-```
-16:31:28  /otp     200  83.202.132.88    ← la demande, depuis une IP grand public française
-16:31:31  /verify  303  18.236.154.173   ← 3 s plus tard : AWS, Oregon
-16:31:42  /verify  303  3.126.219.214    ← AWS, Francfort
-16:33:04  /verify  303  3.69.201.121     ← AWS, Francfort
-16:33:19  /verify  403  83.202.132.88    ← l'humain : « token has expired or is invalid »
-```
+**Décision.** Le toggle offre **0, 1, 2, 3, 4**. Au-delà de deux, « bâbord / tribord » ne nomme
+plus les moteurs, alors la table des noms change avec le nombre :
 
-Toutes les vérifications qui **réussissent** viennent d'adresses Amazon et Microsoft
-(`48.209.223.132` est de l'Azure) : ce sont les analyseurs anti-hameçonnage de la messagerie.
-Une adresse d'école est derrière Microsoft Defender, qui visite chaque URL d'un message reçu pour
-vérifier qu'elle est saine.
+| Nombre | Noms | Positions |
+|---|---|---|
+| 1 | Moteur (Hors-bord sur un semi-rigide) | `center` |
+| 2 | Moteur bâbord · Moteur tribord | `port` · `starboard` |
+| 3 | Moteur bâbord · Moteur central · Moteur tribord | `port` · `center` · `starboard` |
+| 4 | Moteur bâbord extérieur · bâbord intérieur · tribord intérieur · tribord extérieur | `port` · `port` · `starboard` · `starboard` |
 
-Et dans GoTrue, **le lien magique et le code à 6 chiffres sont le même jeton à usage unique**. Le
-robot ouvre le lien trois secondes après la livraison, le jeton est consommé, et le code que la
-personne recopie ensuite est déjà mort. Ce n'est pas un incident : c'est le comportement normal de
-toute messagerie d'entreprise, donc c'était reproductible à chaque essai.
+Un quad se lit de l'extérieur vers l'intérieur, comme on le compte depuis le ponton. Deux moteurs
+d'un même bord partagent leur position : seul le nom les distingue, et un test garantit que deux
+moteurs n'en portent jamais le même. Sur un semi-rigide, toutes les positions passent à
+`outboard` — ce n'est pas cosmétique, `engine_scope` filtre dessus (D68) et un hors-bord rangé en
+`center` récolterait les points d'un in-bord.
 
-**Décision.** Le gabarit `magic_link` ne contient plus aucun lien. Rien à ouvrir, rien à
-consommer : le code survit jusqu'à ce que son destinataire le tape. Le message le dit — « ce
-message ne contient volontairement aucun lien : certaines messageries les ouvrent automatiquement
-pour les vérifier, ce qui consommerait votre code avant vous » — parce qu'une absence
-inexpliquée ressemble à un oubli.
+**Pourquoi quatre et pas six.** `create_boat` accepte six moteurs, et l'annexe s'ajoute derrière :
+quatre plus l'annexe font cinq, sous le plafond. Un cinquième moteur *du bord* est assez rare
+pour ne pas valoir deux puces de plus sur l'écran d'arrivée ; il s'ajoute depuis l'écran Bateau,
+où il est nommé et positionné à la main. Un compte hors bornes arrivant d'ailleurs est ramené à
+quatre plutôt que refusé : un carnet doit s'ouvrir quoi qu'il arrive.
 
-C'est aussi ce que **D26** disait déjà : sur iPad, un lien ouvert depuis Mail s'ouvre dans Safari
-et non dans la PWA installée. Le lien n'était qu'une politesse ; il coûtait la connexion.
+**Ce qui ne bouge pas.** Le pré-réglage (deux pour un multicoque, un pour le reste), la puce
+« Aucun » en tête, et l'annexe qui reste une question à part.
 
-Le message sous le champ change de rôle : au lieu d'annoncer un lien qui n'existe plus, il prévient
-de l'autre façon de perdre un code — « demandez un seul code : en redemander un annule le
-précédent », ce que les mêmes journaux montraient aussi (trois demandes, deux `429` de
-l'intervalle minimum, et tous les envois précédents morts).
-
-**Ce qui garde son lien, et pourquoi.** `confirmation` (inscription) et `recovery` (mot de passe
-oublié) : là, le lien **est** le parcours — l'écran d'inscription n'a aucun champ où saisir un
-code. Un analyseur qui l'ouvre confirme l'adresse, ce qui est précisément ce que la personne
-voulait ; le cas est bénin pour l'inscription. Il ne l'est pas pour la récupération de mot de
-passe, qui reste exposée au même problème : à traiter le jour où quelqu'un le signale, en lui
-donnant un code plutôt qu'un lien.
-
-**À refaire côté Supabase** : les gabarits vivent dans le tableau de bord, il faut y recoller
-`magic-link.html`, sinon la production continue d'envoyer l'ancien, lien compris.
+**Écarté :** un éditeur de liste à l'étape 1, une ligne par moteur avec son nom et sa position.
+D65 et D67 tiennent cet écran à cinq questions et zéro tap superflu ; les noms générés sont
+modifiables sur l'écran Bateau, où l'on est déjà pour tout le reste. Écarté aussi : des puces
+numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le groupe passe à deux
+lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
+sans avoir à remonter au libellé du champ.

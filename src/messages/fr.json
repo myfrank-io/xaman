@@ -1173,6 +1173,11 @@
       "single": "Moteur",
       "port": "Moteur bâbord",
       "starboard": "Moteur tribord",
+      "center": "Moteur central",
+      "portOuter": "Moteur bâbord extérieur",
+      "portInner": "Moteur bâbord intérieur",
+      "starboardInner": "Moteur tribord intérieur",
+      "starboardOuter": "Moteur tribord extérieur",
       "outboard": "Hors-bord",
       "tender": "Hors-bord d'annexe"
     }
