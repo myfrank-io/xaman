@@ -110,6 +110,19 @@ describe("auth e-mail templates", () => {
     }
   });
 
+  /**
+   * D76. In GoTrue the magic link and the code are the same one-time token, and a mailbox's
+   * anti-phishing scanner opens every URL in a message seconds after it arrives — burning the
+   * code before its owner reads it. Measured here: three `/verify 303` from Amazon and Azure
+   * addresses, then the human's own attempt refused. A code e-mail carries nothing to open.
+   */
+  it("give a scanner nothing to open in the sign-in code e-mail", () => {
+    const magicLink = html("magic-link.html");
+    expect(magicLink).toContain("{{ .Token }}");
+    expect(magicLink).not.toContain("{{ .ConfirmationURL }}");
+    expect(magicLink).not.toContain('<a href="http');
+  });
+
   // The invitation is the one e-mail that has something to say: which boat, from whom, as what.
   it("name the boat, the inviter and the role in the invitation", () => {
     const invite = html("invite.html");
