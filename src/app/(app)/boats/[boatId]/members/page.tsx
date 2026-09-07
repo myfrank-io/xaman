@@ -10,6 +10,55 @@ import { toDeliveryReason, toDeliveryStatus } from "@/lib/email/delivery-status"
 import { can, type BoatRole } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
+const INVITATION_COLUMNS =
+  "id, email, role, status, expires_at, valid_until, invited_by_name, created_at";
+
+type InvitationSource = {
+  id: string | null;
+  email: string | null;
+  role: BoatRole | null;
+  status: string | null;
+  expires_at: string | null;
+  valid_until: string | null;
+  invited_by_name: string | null;
+  delivery_status: string | null;
+  delivery_reason: string | null;
+};
+
+/**
+ * The invitations, with what became of their e-mail where the database can say (D79).
+ *
+ * The retry is not defensive dressing, it is the deploy order: the schema is pushed by hand
+ * (rule 3), so a build reaches production before its migration does. In that window
+ * `delivery_status` does not exist yet, PostgREST answers `42703`, and supabase-js hands back
+ * `data: null` — which read straight means « no invitations » and takes the whole section off
+ * the screen. Nobody is told; the owner sees a crew and no pending invitation, exactly as if
+ * there were none. That is what D60 forbids, and it is what happened on the first deploy of
+ * D79.
+ *
+ * So a refused select falls back to the columns that have always existed: the list comes back,
+ * the delivery reads as unknown, and the server log names the column that is missing.
+ */
+async function loadInvitations(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  boatId: string,
+): Promise<InvitationSource[]> {
+  const full = await supabase
+    .from("boat_invitations_safe")
+    .select(`${INVITATION_COLUMNS}, delivery_status, delivery_reason`)
+    .eq("boat_id", boatId)
+    .order("created_at", { ascending: false });
+  if (!full.error) return full.data;
+
+  console.error(`members: invitations read without their delivery — ${full.error.message}`);
+  const { data } = await supabase
+    .from("boat_invitations_safe")
+    .select(INVITATION_COLUMNS)
+    .eq("boat_id", boatId)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((row) => ({ ...row, delivery_status: null, delivery_reason: null }));
+}
+
 // Owner: manage members and invitations. Editor: read-only list. Others: 404 (SPEC §4.3).
 export default async function MembersPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
@@ -22,7 +71,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
   if (!boatRole || !can(boatRole, "write")) notFound();
   const isOwner = can(boatRole, "manageMembers");
 
-  const [{ data: members }, { data: invitations }, { data: boat }] = await Promise.all([
+  const [{ data: members }, invitations, { data: boat }] = await Promise.all([
     supabase
       .from("boat_members")
       .select(
@@ -30,15 +79,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       )
       .eq("boat_id", boatId)
       .order("created_at"),
-    isOwner
-      ? supabase
-          .from("boat_invitations_safe")
-          .select(
-            "id, email, role, status, expires_at, valid_until, invited_by_name, created_at, delivery_status, delivery_reason",
-          )
-          .eq("boat_id", boatId)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [] }),
+    isOwner ? loadInvitations(supabase, boatId) : Promise.resolve([] as InvitationSource[]),
     supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
   ]);
 
@@ -46,7 +87,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
   // once each has an answer — delivered and bounced are final, and a fresh answer is not asked
   // for twice in a minute — so this is a no-op on every visit but the one that matters.
   const fresh = await refreshInvitationDeliveries(
-    (invitations ?? []).filter((i) => i.status === "pending" && i.id).map((i) => i.id ?? ""),
+    invitations.filter((i) => i.status === "pending" && i.id).map((i) => i.id ?? ""),
   );
 
   const t = await getTranslations("members");
@@ -80,7 +121,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
         <InvitationsList
           boatId={boatId}
           boatName={boat?.name ?? ""}
-          invitations={(invitations ?? []).map((i) => {
+          invitations={invitations.map((i) => {
             const polled = fresh.get(i.id ?? "");
             const status = polled?.status ?? toDeliveryStatus(i.delivery_status);
             return {
