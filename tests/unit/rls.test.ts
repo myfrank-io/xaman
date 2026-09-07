@@ -168,6 +168,19 @@ describe("read access (select)", () => {
     if (!owner.ok) expect(owner.code).toBe("42501");
     const star = await run(U.owner, "select * from public.boat_invitations");
     expect(star.ok).toBe(false);
+
+    // D77 (0023): what became of the e-mail is readable, the mailer's own id and its English
+    // sentence are not — they are written by the service key and never leave the server.
+    const delivery = await run(
+      U.owner,
+      "select delivery_status, delivery_reason, delivery_updated_at from public.boat_invitations",
+    );
+    expect(delivery.ok).toBe(true);
+    for (const column of ["email_id", "delivery_detail"]) {
+      const hidden = await run(U.owner, `select ${column} from public.boat_invitations`);
+      expect(hidden.ok, column).toBe(false);
+      if (!hidden.ok) expect(hidden.code, column).toBe("42501");
+    }
   });
 
   it("profiles: a user sees themself and the people sharing a boat; the admin sees everyone", async () => {
@@ -1509,6 +1522,13 @@ describe("secondary views", () => {
     });
     expect(columns).not.toContain("token");
     expect(columns).toContain("valid_until");
+    // D77: the delivery is part of what an owner reads; the message id and the raw provider
+    // sentence stay out of the view, as the token does.
+    expect(columns).toEqual(
+      expect.arrayContaining(["delivery_status", "delivery_reason", "delivery_updated_at"]),
+    );
+    expect(columns).not.toContain("email_id");
+    expect(columns).not.toContain("delivery_detail");
   });
 
   it("maintenance_logs_trash_view: a trashed log shows for owner/editor, nothing for outsiders", async () => {

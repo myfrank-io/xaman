@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,15 +48,29 @@ const DURATIONS: AccessDuration[] = ["7", "30", "90", "unlimited"];
  * disappears, because an owner has no end date (`inviteMember` writes null whatever the form
  * held), and a warning takes its place — the person invited this way can remove the person
  * inviting them.
+ *
+ * The same dialog is the way out of a bounced invitation (D77): the list opens it from the row,
+ * with its own trigger and the address that failed already filled in — a typo is corrected where
+ * it is read, not retyped from memory in another screen.
  */
 export function InviteMemberDialog({
   boatId,
   boatName,
   inviterRole,
+  defaultEmail = "",
+  defaultRole,
+  title,
+  description,
+  trigger,
 }: {
   boatId: string;
   boatName: string;
   inviterRole: "owner" | "editor";
+  defaultEmail?: string;
+  defaultRole?: InviteMemberInput["role"];
+  title?: string;
+  description?: string;
+  trigger?: ReactNode;
 }) {
   const t = useTranslations("members");
   const te = useTranslations();
@@ -70,8 +84,8 @@ export function InviteMemberDialog({
   const durations = editor ? DURATIONS.filter((d) => d !== "unlimited") : DURATIONS;
   const defaults: InviteMemberInput = {
     boatId,
-    email: "",
-    role: editor ? "pro" : "editor",
+    email: defaultEmail,
+    role: defaultRole ?? (editor ? "pro" : "editor"),
     duration: editor ? "90" : "unlimited",
   };
   const form = useForm<InviteMemberInput>({
@@ -131,10 +145,12 @@ export function InviteMemberDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <UserPlusIcon />
-          {t("invite.button")}
-        </Button>
+        {trigger ?? (
+          <Button>
+            <UserPlusIcon />
+            {t("invite.button")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         {sent ? (
@@ -173,8 +189,8 @@ export function InviteMemberDialog({
         ) : (
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
             <DialogHeader>
-              <DialogTitle>{t("invite.title")}</DialogTitle>
-              <DialogDescription>{t("invite.description")}</DialogDescription>
+              <DialogTitle>{title ?? t("invite.title")}</DialogTitle>
+              <DialogDescription>{description ?? t("invite.description")}</DialogDescription>
             </DialogHeader>
             <Field
               id="invite-email"

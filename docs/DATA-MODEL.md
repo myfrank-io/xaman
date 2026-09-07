@@ -171,6 +171,11 @@ Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la 
 | accepted_by | uuid | FK profiles, null | |
 | revoked_at | timestamptz | null | |
 | created_at | timestamptz | | |
+| email_id | text | null | id du message chez l'expéditeur (Resend), écrit quand l'app envoie l'invitation elle-même (D75) ; index partiel `boat_invitations_email_id_idx`. Non lisible par `authenticated` (D77, `0023`) |
+| delivery_status | text | null, check | `sent` / `delivered` / `bounced` / `complained` / `delayed` / `failed`. Null = l'app n'a pas envoyé le message (pas d'expéditeur configuré) : inconnu, pas « remis » |
+| delivery_reason | text | null, check | cause de l'échec dans le vocabulaire de l'app : `no_email`, `mailbox_full`, `suppressed`, `blocked`, `content`, `spam`, `temporary`, `unknown` — traduit en français par `members.invitations.delivery.reasons.*` |
+| delivery_detail | text | null | la phrase du fournisseur, telle quelle, pour la table et les journaux. Non lisible par `authenticated` |
+| delivery_updated_at | timestamptz | null | horodatage de l'événement (pas de l'écriture) : une mise à jour plus ancienne que la valeur stockée est refusée, ce qui rend inoffensif un webhook arrivé dans le désordre |
 
 ### 3.7 `engines`
 
@@ -582,7 +587,7 @@ Cas particuliers :
 - `profiles` : select pour soi-même et pour les profils partageant au moins un bateau avec soi (nécessaire pour afficher « qui a fait » ; un `pro` voit donc les noms des co-membres mais pas la page Membres — accepté, documenté) ; update soi-même uniquement ; `revoke update (is_platform_admin) on profiles from authenticated`.
 - `boats` : select `is_boat_member(id)` ; insert `is_platform_admin()` — **la table reste fermée**, la création d'un bateau par son propriétaire passe par `create_boat` (D65, `0015` + `0017`), seule porte qui garantit qu'un bateau naît toujours avec son owner et ses systèmes ; update `can_write_boat(id)` ; delete `is_boat_owner(id)`.
 - `boat_members` : select `can_write_boat(boat_id)` (owner + editor voient la liste) **ou** `user_id = auth.uid()` (sa propre ligne) ; insert/update/delete `is_boat_owner(boat_id)` (+ trigger dernier owner).
-- `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
+- `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` (et, depuis `0023`, `email_id` / `delivery_detail` jamais accordés — l'état de remise l'est, pas l'identifiant du message ni le texte du fournisseur) — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.
 - `boat_models` : select tout utilisateur authentifié où `is_active` (ou `is_platform_admin()`) ; write `is_platform_admin()`. Catalogue publié, sans `boat_id` : aucune donnée de locataire à cloisonner.
 - `organizations*` : V1, select/write `is_platform_admin()` uniquement.
@@ -624,7 +629,7 @@ La même logique est implémentée en TypeScript dans `src/lib/checklist-status.
 `maintenance_logs` non supprimés, joints à `boat_categories` (nom, couleur), `contacts` (nom), `profiles` (nom du créateur), avec `engine_hours` agrégé en JSON `[{engine_id, label, hours}]` depuis `engine_hour_readings`, `completions_count`, `attachments_count`. Utilisée par la liste, le détail et l'export. Une variante `maintenance_logs_trash_view` expose les lignes supprimées (< 30 jours).
 
 ### 6.4 `boat_invitations_safe`
-`boat_invitations` sans la colonne `token`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur.
+`boat_invitations` sans la colonne `token`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur. Depuis `0023` (D77) elle expose aussi `delivery_status`, `delivery_reason` et `delivery_updated_at` — jamais `email_id` ni `delivery_detail`.
 
 ### 6.5 `expenses_by_category`
 Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `purchase_kind = null`), `purchases` (`amount`, `date = purchased_at`, `source = 'purchase'`, `purchase_kind = kind`), `haul_outs` (`cost`, `date = started_at`, `source = 'haul_out'`, `purchase_kind = null`), non supprimés, montant non null. Colonnes : `boat_id`, `category_id` (null → « Non catégorisé »), `category_name`, `source`, `purchase_kind`, `date`, `amount`, `currency`, `entity_id`. Agrégation par période côté requête ; le tableau E5-5 croise `category_name` × (`source`, `purchase_kind`).
