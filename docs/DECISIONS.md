@@ -1313,3 +1313,49 @@ comptent : une lettre, un espace au milieu, trop court, trop long.
 **Ce qui reste vrai.** `otp_length = 6` demeure dans `supabase/config.toml` — c'est le réglage
 local, et six chiffres restent le bon choix par défaut. Simplement, si le projet hébergé en dit
 autre chose un jour, l'application suit au lieu de casser.
+## 2026-09-07 — D75 : l'invitation part de l'application, pas de Supabase
+
+**Question.** « Pourquoi quand j'ajoute un user depuis un compte il reçoit ça ? » — le gabarit du
+code de connexion à la place de l'invitation. Puis, en creusant : « il a un compte Xaman en soft
+delete, donc ça doit pas être considéré comme un compte Xaman. »
+
+**Ce que disaient les journaux**, trois fois, à une seconde d'intervalle :
+
+```
+/invite  422  A user with this email address has already been registered
+/otp     200  1.19 s
+```
+
+**Il n'y avait pas de soft delete.** Les quatre comptes du projet ont tous `deleted_at` à `null`,
+et `deleteAccount` fait un `deleteUser` définitif. Ce que l'usage appelait « supprimé », c'était
+le **retrait du bateau** : la ligne `boat_members` s'en va, le compte reste — il le faut, la
+personne peut être membre d'un autre bateau, et D31 garde son nom lisible dans l'historique.
+
+**Mais la remarque visait juste.** « Avoir un compte Xaman » et « être déjà à bord » sont deux
+choses différentes, et `inviteUserByEmail` ne connaît que la première : il refuse toute adresse
+présente dans `auth.users`, quel que soit son rapport au bateau. Trois adresses du projet avaient
+un compte et **aucune appartenance** — elles ne pouvaient plus recevoir qu'un code de connexion
+qui ne nomme ni le bateau, ni l'invitant, ni le rôle. Aucun réglage ne corrige ça : le point
+d'invitation de Supabase ne sait rien de nos bateaux.
+
+**Décision.** Quand un expéditeur est configuré, **l'application envoie l'invitation elle-même**
+et Supabase Auth n'intervient plus dans ce chemin. C'est le même e-mail — `INVITATION_HTML` est
+généré depuis `supabase/templates/invite.html` par `pnpm gen:emails`, et un test compare les deux
+octet par octet, donc ils ne peuvent pas diverger. Les mêmes marques de gabarit (`{{ .Data.* }}`,
+`{{ .ConfirmationURL }}`) sont résolues ici plutôt que par GoTrue, par le rendu partagé avec la
+galerie `/dev/ui/emails`.
+
+Le lien devient l'adresse de l'invitation elle-même, plus une URL de vérification : l'ouvrir ne
+crée le compte de personne. **Plus aucun compte n'est créé à l'avance**, et rien ne se perd —
+l'invité arrive sur `/invite/[token]`, se connecte par code (ce qui crée le compte au premier
+usage) et accepte. C'est le chemin qu'un inconnu invité prenait déjà.
+
+**Le repli est le comportement d'avant, à l'identique.** Sans `RESEND_API_KEY`, `mailerConfigured()`
+répond faux et le gabarit `invite` de Supabase reprend la main, avec sa bascule vers le code pour
+une adresse déjà inscrite. La correction peut donc être livrée avant que la variable existe, et
+s'active le jour où elle est posée.
+
+**Resend**, parce que c'était déjà la décision du résumé hebdomadaire (2026-09-02) et que le
+domaine `xaman.boats` y est vérifié depuis ce midi. L'envoi est un `fetch` — un POST, aucune
+dépendance ajoutée. Un échec d'envoi ne détruit pas l'invitation : la ligne existe, et le dialogue
+propose le lien à copier ou à partager.

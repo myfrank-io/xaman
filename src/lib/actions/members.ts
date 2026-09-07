@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
+import { invitationEmail } from "@/lib/email/invitation";
+import { mailerConfigured, sendMail } from "@/lib/email/send";
 import { publicEnv } from "@/lib/env";
 import { addDays, toIsoDate } from "@/lib/numbers";
 import { EDITOR_ASSIGNABLE_ROLES } from "@/lib/permissions";
@@ -31,19 +33,23 @@ type InvitationRole = "owner" | "editor" | "pro" | "viewer";
 
 /**
  * Inserts the row with the user's client (RLS decides who may invite whom), reads nothing
- * sensitive back, and sends the e-mail through Supabase Auth, landing on /invite/[token].
- * Returns the link so the dialog can also offer it to copy or share.
+ * sensitive back, sends the invitation, and returns the link so the dialog can also offer it to
+ * copy or share.
  *
- * Two templates, because Supabase has two doors (both in `supabase/templates/`, both in Xaman's
- * colours since D71):
- *   - a new address goes through `invite`, which is the real invitation e-mail: `data` below
- *     becomes `user_metadata`, and the template reads it back as `{{ .Data.boat_name }}`,
- *     `{{ .Data.inviter_name }}` and `{{ .Data.role_label }}` — the boat, the inviter, the role;
- *   - an address that already has an account cannot be invited twice, so it gets a sign-in code
- *     pointing at the same page. `signInWithOtp` carries no metadata for an existing user — that
- *     e-mail cannot name the boat, and says instead that the link leads to the invitation.
- * Either way the person lands on /invite/[token], which names everything again before they
- * accept.
+ * **Who sends it (D75).** With a mailer configured, the app sends the invitation itself and
+ * Supabase Auth is not involved. That is the whole point: `inviteUserByEmail` refuses an address
+ * that already has an account — `422: A user with this email address has already been
+ * registered` — and « has an account » is not « is already aboard ». Someone removed from a boat,
+ * or a member of another boat entirely, kept their account and could only be sent a sign-in code
+ * that says nothing about the invitation. The app knows the difference; the auth endpoint cannot.
+ *
+ * Nobody's account is created up front any more, and nothing is lost by that: the invitee lands
+ * on /invite/[token], signs in with a code — which creates the account on first use — and
+ * accepts. The same path an invited stranger already took.
+ *
+ * **Without a mailer**, the previous behaviour is kept exactly: the `invite` template for a new
+ * address, a sign-in code for one that already exists. Both live in `supabase/templates/` (D71),
+ * and the invitation e-mail sent here is generated from the same file, so the two cannot drift.
  */
 async function createInvitation(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -71,22 +77,36 @@ async function createInvitation(
     role_label: t(role),
   };
 
-  try {
-    const admin = createAdminClient();
-    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      data,
-      redirectTo,
+  if (mailerConfigured()) {
+    const { subject, html } = invitationEmail({
+      email,
+      inviteUrl: redirectTo,
+      boatName: data.boat_name,
+      inviterName: data.inviter_name,
+      roleLabel: data.role_label,
+      appUrl: publicEnv.appUrl,
     });
-    if (inviteError) {
-      // Already registered: a sign-in code that lands on the invitation page.
-      const { error: otpError } = await admin.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
+    // The row stays either way: the dialog offers the link, so a mailer having a bad day costs
+    // an e-mail, never the invitation.
+    if (!(await sendMail({ to: email, subject, html }))) return fail("errors.invitation_email");
+  } else {
+    try {
+      const admin = createAdminClient();
+      const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+        data,
+        redirectTo,
       });
-      if (otpError) return fail("errors.invitation_email");
+      if (inviteError) {
+        // Already registered: a sign-in code that lands on the invitation page.
+        const { error: otpError } = await admin.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
+        });
+        if (otpError) return fail("errors.invitation_email");
+      }
+    } catch {
+      return fail("errors.invitation_email");
     }
-  } catch {
-    return fail("errors.invitation_email");
   }
 
   revalidatePath(membersPath(boatId));
