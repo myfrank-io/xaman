@@ -1569,6 +1569,8 @@
       },
       "uncategorized": "Sans catégorie",
       "byCategory": "Par catégorie",
+      "filterCategory": "Voir les dépenses de {name}",
+      "clearCategory": "Retirer le filtre {name}",
       "comparison": {
         "label": "Période précédente",
         "up": "La période en cours dépasse de {percent}",

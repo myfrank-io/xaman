@@ -1,3 +1,6 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { ChevronRightIcon, XIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
@@ -15,7 +18,9 @@ import { ExpenseFilters } from "@/components/supplies/ExpenseFilters";
 import { ExpenseLines, type ExpenseLine } from "@/components/supplies/ExpenseLines";
 import { ExportExpensesButton } from "@/components/supplies/ExportExpensesButton";
 import {
+  expenseFilterQuery,
   groupByCategory,
+  NO_CATEGORY,
   totalAmount,
   variation,
   type DateRange,
@@ -24,8 +29,10 @@ import {
   type ExpenseSource,
 } from "@/lib/expenses";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { suppliesPath } from "@/lib/queries/boat-routes";
 import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/purchases";
 import type { PurchaseKind } from "@/lib/schemas/purchases";
+import { cn } from "@/lib/utils";
 
 /** Neutral grey for the « no category » bucket: a category colour never travels alone. */
 const NO_CATEGORY_COLOR = "#8A99AC";
@@ -84,10 +91,23 @@ export async function ExpensesTab({
     kind && (VISIBLE_PURCHASE_KINDS as readonly string[]).includes(kind)
       ? tk(kind as VisiblePurchaseKind)
       : null,
-    categoryId ? (categories.find((c) => c.id === categoryId)?.name ?? null) : null,
+    categoryId === NO_CATEGORY
+      ? t("uncategorized")
+      : categoryId
+        ? (categories.find((c) => c.id === categoryId)?.name ?? null)
+        : null,
   ]
     .filter(Boolean)
     .join(" · ");
+
+  // Narrowing to a category keeps every other filter, and drops the page size: a new filter
+  // deserves a fresh first page, exactly as the filter panel does it.
+  const filterHref = (next: string | null) =>
+    suppliesPath(
+      boatId,
+      undefined,
+      expenseFilterQuery({ period, range, sources, kind, categoryId: next }),
+    );
 
   const total = totalAmount(data.rows);
   const categoryTotals = groupByCategory(data.rows, t("uncategorized"), NO_CATEGORY_COLOR);
@@ -168,33 +188,62 @@ export async function ExpensesTab({
               boatId={boatId}
               range={range}
               sources={sources}
+              kind={kind}
+              categoryId={categoryId}
               disabled={data.rows.length === 0}
             />
           }
           footer={t("lines", { count: data.rows.length })}
         >
+          {/* A share of the total is a question — « c'est quoi, ces 1 850 € ? » — and the answer
+              is the list below, narrowed to that system. The row is the link that narrows it;
+              the one already narrowing is the link that widens it back. Everything travels in
+              the URL, so the back button undoes a filter and a filtered view can be sent. */}
           <ul>
-            {categoryTotals.map((category) => (
-              <li
-                key={category.id || "none"}
-                className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-b-0"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="flex min-w-0 items-center gap-2 text-body font-medium">
-                    <CategoryDot color={category.color} />
-                    <span className="truncate">{category.name}</span>
-                  </span>
-                  <span className="shrink-0 num text-num-sm font-semibold">
-                    {formatCurrency(category.amount)}
-                  </span>
-                </div>
-                <ProgressBar
-                  ratio={total > 0 ? category.amount / total : 0}
-                  color={category.color}
-                  label={category.name}
-                />
-              </li>
-            ))}
+            {categoryTotals.map((category) => {
+              const id = category.id || NO_CATEGORY;
+              const active = id === categoryId;
+              return (
+                <li key={id} className="border-b border-border last:border-b-0">
+                  <Link
+                    href={filterHref(active ? null : id) as Route}
+                    aria-current={active ? "true" : undefined}
+                    aria-label={t(active ? "clearCategory" : "filterCategory", {
+                      name: category.name,
+                    })}
+                    className={cn(
+                      "flex flex-col gap-2 tap-feedback px-4 py-3",
+                      "focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:-outline-offset-2 focus-visible:outline-none",
+                      active && "bg-accent",
+                    )}
+                  >
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="flex min-w-0 items-center gap-2 text-body font-medium">
+                        <CategoryDot color={category.color} />
+                        <span className="truncate">{category.name}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <span className="num text-num-sm font-semibold">
+                          {formatCurrency(category.amount)}
+                        </span>
+                        {/* The « × » is the whole reason the row can be tapped twice: without it
+                            a filtered breakdown shows one row at 100 % and no way out of it. */}
+                        {active ? (
+                          <XIcon className="size-4 text-ink-2" aria-hidden />
+                        ) : (
+                          <ChevronRightIcon className="size-4 text-n-400" aria-hidden />
+                        )}
+                      </span>
+                    </div>
+                    <ProgressBar
+                      ratio={total > 0 ? category.amount / total : 0}
+                      color={category.color}
+                      label={category.name}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </SectionCard>
       ) : null}

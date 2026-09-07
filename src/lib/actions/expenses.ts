@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
-import { buildExpensesCsv, EXPENSE_SOURCES, type ExpenseRow } from "@/lib/expenses";
+import { buildExpensesCsv, EXPENSE_SOURCES, NO_CATEGORY, type ExpenseRow } from "@/lib/expenses";
+import { PURCHASE_KINDS } from "@/lib/schemas/purchases";
 import { isoDate } from "@/lib/schemas/common";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,6 +14,10 @@ const exportExpensesSchema = z.object({
   from: isoDate,
   to: isoDate,
   sources: z.array(z.enum(EXPENSE_SOURCES)).min(1),
+  // The button sits in the header of the breakdown, and that breakdown is filterable now: a
+  // file that ignored the filter on screen would be read as the whole truth.
+  kind: z.enum(PURCHASE_KINDS).nullish(),
+  categoryId: z.union([z.string().uuid(), z.literal(NO_CATEGORY)]).nullish(),
 });
 
 /**
@@ -25,17 +30,20 @@ export async function exportExpensesCsv(
 ): Promise<ActionResult<{ filename: string; csv: string }>> {
   const parsed = parseInput(exportExpensesSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { boatId, from, to, sources } = parsed.data;
+  const { boatId, from, to, sources, kind, categoryId } = parsed.data;
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("expenses_by_category")
     .select("source, entity_id, label, amount, date, category_id, category_name, category_color")
     .eq("boat_id", boatId)
     .gte("date", from)
     .lte("date", to)
-    .in("source", sources)
-    .order("date", { ascending: false });
+    .in("source", sources);
+  if (kind) query = query.eq("purchase_kind", kind);
+  if (categoryId === NO_CATEGORY) query = query.is("category_id", null);
+  else if (categoryId) query = query.eq("category_id", categoryId);
+  const { data, error } = await query.order("date", { ascending: false });
   if (error) return fail(dbErrorKey(error));
 
   const rows: ExpenseRow[] = (data ?? []).map((row) => ({
