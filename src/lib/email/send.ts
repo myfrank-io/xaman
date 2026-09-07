@@ -23,7 +23,7 @@ export type Mail = { to: string; subject: string; html: string };
 
 /**
  * Accepted by the mailer is not received by anyone: the id the provider answers with is what
- * lets the app find out which of the two it was (D77), so it comes back with the answer rather
+ * lets the app find out which of the two it was (D78), so it comes back with the answer rather
  * than being thrown away. `sent: false` is the send itself failing, and stays what it was — the
  * caller's error path.
  */

@@ -1,4 +1,4 @@
--- 0023_invitation_delivery.sql — an invitation that never reached anyone says so (D77).
+-- 0023_invitation_delivery.sql — an invitation that never reached anyone says so (D78).
 --
 -- Signalled in use, from the mailer's dashboard and not from the app: « Vous êtes invité à bord
 -- — Xaman », `Sent` at 19:00, `Bounced` at 19:00, `Suppressed` at 19:00 — « Recipient not found:
@@ -117,4 +117,4 @@ left join public.profiles p on p.id = i.invited_by;
 
 comment on view public.boat_invitations_safe is
   'Invitations without the token, with the computed status, the inviter name and what became of '
-  'the e-mail (D77).';
+  'the e-mail (D78).';

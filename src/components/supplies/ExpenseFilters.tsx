@@ -12,6 +12,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   EXPENSE_PERIODS,
   EXPENSE_SOURCES,
+  expenseFilterQuery,
+  NO_CATEGORY,
   type DateRange,
   type ExpensePeriod,
   type ExpenseSource,
@@ -73,17 +75,17 @@ export function ExpenseFilters({
     const nextSources = nextKind ? (["purchase"] as ExpenseSource[]) : (next.sources ?? sources);
     startTransition(() => {
       router.replace(
-        suppliesPath(boatId, undefined, {
-          period: nextPeriod === "all" ? undefined : nextPeriod,
-          from: nextPeriod === "custom" ? nextRange.from : undefined,
-          to: nextPeriod === "custom" ? nextRange.to : undefined,
-          source:
-            nextKind || nextSources.length === EXPENSE_SOURCES.length
-              ? undefined
-              : nextSources.join(","),
-          kind: nextKind ?? undefined,
-          category: nextCategory ?? undefined,
-        }) as Route,
+        suppliesPath(
+          boatId,
+          undefined,
+          expenseFilterQuery({
+            period: nextPeriod,
+            range: nextRange,
+            sources: nextSources,
+            kind: nextKind,
+            categoryId: nextCategory,
+          }),
+        ) as Route,
       );
     });
   }
@@ -91,6 +93,9 @@ export function ExpenseFilters({
   const choices: CategoryChoice[] = [
     { id: ALL, name: tf("allCategories"), color: ALL_COLOR },
     ...categories,
+    // Every haul-out lands here, and the breakdown lets you tap that row: without the chip the
+    // group would show nothing selected while the filter was plainly on.
+    { id: NO_CATEGORY, name: t("uncategorized"), color: ALL_COLOR },
   ];
 
   return (

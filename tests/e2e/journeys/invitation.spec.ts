@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import fr from "../../../src/messages/fr.json";
 import { signIn } from "../support/auth";
+import { freshInvitation } from "../support/invitation";
 import { SEED, hasStack, skipReason } from "../support/stack";
 
 /**
@@ -12,16 +13,16 @@ import { SEED, hasStack, skipReason } from "../support/stack";
  * The seed carries one pending invitation (`supabase/seed.sql`): `stranger@test.xaman`, as
  * viewer, on the test boat.
  */
-const TOKEN = "test-token-secret-000000000000000000000000001";
-const INVITEE = "stranger@test.xaman";
+const INVITEE = SEED.users.stranger;
 
 test.describe("§6.1 an invitee's first sign-in", () => {
   test.skip(!hasStack, skipReason);
 
   test("the invitation names the boat, the inviter and the role before sign-in", async ({
     page,
+    request,
   }) => {
-    await page.goto(`/invite/${TOKEN}`);
+    await page.goto(`/invite/${await freshInvitation(request)}`);
 
     await expect(page.getByRole("heading", { name: fr.invite.title })).toBeVisible();
     await expect(page.getByText(SEED.boatName).first()).toBeVisible();
@@ -36,7 +37,7 @@ test.describe("§6.1 an invitee's first sign-in", () => {
   });
 
   test("signing in as the invitee joins the boat", async ({ page, request }) => {
-    await signIn(page, request, INVITEE, `/invite/${TOKEN}`);
+    await signIn(page, request, INVITEE, `/invite/${await freshInvitation(request)}`);
 
     await page.getByRole("button", { name: /Rejoindre/ }).tap();
 

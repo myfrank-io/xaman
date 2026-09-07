@@ -60,6 +60,9 @@ const PAGES = [
   "/dev/ui/dialogs?d=contact",
   "/dev/ui/dialogs?d=recurring",
   "/dev/ui/supplies?dialog=1",
+  // The breakdown once one of its rows has been tapped (D77): the row marked as the active
+  // filter is a state no other URL of the gallery reaches.
+  "/dev/ui/supplies?category=none",
 ];
 
 const MIN_TARGET = 44;

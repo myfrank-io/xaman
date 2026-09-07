@@ -21,6 +21,14 @@ export type ExpensePeriod = (typeof EXPENSE_PERIODS)[number];
 /** Lower bound of « toute la période »: older than any boat this app will ever hold. */
 export const EXPENSE_EPOCH = "1900-01-01";
 
+/**
+ * `?category=none` — the lines that carry no system at all. Every haul-out is one of them (the
+ * view files them under a null category), so the bucket is never empty on a real boat, and
+ * « Sans catégorie » had to be filterable like any other row of the breakdown. A UUID can never
+ * collide with it.
+ */
+export const NO_CATEGORY = "none";
+
 export type DateRange = { from: string; to: string };
 
 export type ExpenseRow = {
@@ -43,6 +51,37 @@ export type CategoryTotal = {
   amount: number;
   count: number;
 };
+
+/** The filters of the money list as they travel in the URL (ux-flows §1.2). */
+export type ExpenseFilterState = {
+  period: ExpensePeriod;
+  range: DateRange;
+  sources: ExpenseSource[];
+  kind: string | null;
+  categoryId: string | null;
+};
+
+/**
+ * Those filters, written as a query string. One function for the two places that navigate —
+ * the filter panel and the category breakdown, which is a filter of its own now — because a
+ * second copy is how `from`/`to` end up dropped on a custom period in one of them only.
+ *
+ * What is implicit is never written: the default period, the full source list, and the sources
+ * a kind already implies (a kind only exists on a purchase).
+ */
+export function expenseFilterQuery(state: ExpenseFilterState): Record<string, string | undefined> {
+  return {
+    period: state.period === "all" ? undefined : state.period,
+    from: state.period === "custom" ? state.range.from : undefined,
+    to: state.period === "custom" ? state.range.to : undefined,
+    source:
+      state.kind || state.sources.length === EXPENSE_SOURCES.length
+        ? undefined
+        : state.sources.join(","),
+    kind: state.kind ?? undefined,
+    category: state.categoryId ?? undefined,
+  };
+}
 
 export function isExpensePeriod(value: string | undefined): value is ExpensePeriod {
   return EXPENSE_PERIODS.includes(value as ExpensePeriod);

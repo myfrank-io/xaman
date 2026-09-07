@@ -12,7 +12,7 @@ import { mailerConfigured } from "@/lib/email/send";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * What became of an invitation e-mail, kept on the invitation itself (D77).
+ * What became of an invitation e-mail, kept on the invitation itself (D78).
  *
  * Two ways in, one writer:
  *   * the webhook (`/api/webhooks/resend`) — instant, and what the app is built around;

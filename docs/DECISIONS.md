@@ -537,7 +537,7 @@ conservé ; seules la finition et l'identité changent.
 | 2026-09-03 | Anneau de focus | Azur marin (`--ring #1b5e96`) au lieu du bleu framework `#1d4ed8` | Le bleu par défaut est un marqueur « non designé » ; l'azur appartient à la palette |
 | 2026-09-03 | Badges de statut/état (révision de la règle DA « le plein = action requise ») | **Un seul langage teinté** : tous les badges (y compris En retard, Bientôt, Urgent) passent en teinte + `-fg` + liseré + icône, plus aucun aplat rouge/orange | Le mur d'aplats lisait « tableau de bord en alarme » ; la teinte garde l'instrument calme et reste lisible au soleil (contrastes `-fg`/`-border` mesurés), l'icône et le libellé portent le sens sans la couleur seule. Idem pour les pastilles de comptage (`Badge variant="danger"` ajouté) |
 | 2026-09-03 | Signature d'en-tête | Filet laiton (`brass-rule`) au bas de tout bandeau navy + dégradé multi-arrêt plus profond | Le « trait doré » d'une couverture de carnet ; détail de marque discret, jamais une alerte (respecte « le laiton ne porte jamais de donnée ») |
-| 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D76** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
+| 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D77** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
 
 ## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
 
@@ -1404,7 +1404,40 @@ numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le
 lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
 sans avoir à remonter au libellé du champ.
 
-## 2026-09-07 — D77 : un e-mail qui n'arrive pas le dit dans l'app
+## 2026-09-07 — D77 : une part du total est une question, et la ligne qui la porte est la réponse
+
+**Question.** « Pas cliquable », sur le bloc « Par catégorie » de Dépenses.
+
+**Le constat.** Le bloc répond à « où est parti l'argent » : une ligne par système, un montant, une
+barre. Lire « Coque & Pont — 2 300 € — 63 % » pose immédiatement la question suivante — *c'est
+quoi, ces 2 300 € ?* — et la réponse existait déjà, un mètre plus bas : la liste des lignes,
+filtrée sur cette catégorie. Le filtre existait, dans le panneau replié au-dessus ; la ligne, elle,
+ne réagissait pas au doigt.
+
+**Décision.** La ligne EST le filtre.
+
+1. **Chaque ligne du bloc est un lien** qui restreint la liste à cette catégorie, chevron à
+   droite du montant. **La ligne active porte un « × »** et un fond teinté : sans elle, un bloc
+   filtré n'affiche qu'une ligne à 100 % et aucune porte de sortie. Tout passe par l'URL : le
+   bouton retour défait le filtre, et une vue filtrée s'envoie.
+2. **« Sans catégorie » est filtrable comme les autres** (`?category=none`). Ce n'est pas un
+   détail : la vue `expenses_by_category` range **toute sortie de l'eau** sous une catégorie
+   nulle, donc ce seau existe sur n'importe quel bateau réel — c'était la seule ligne morte du
+   bloc, et le signalement portait précisément là-dessus. La puce correspondante rejoint le
+   panneau de filtres, sinon le groupe n'aurait rien affiché de sélectionné alors qu'un filtre
+   était visiblement actif.
+3. **L'export suit ce qui est à l'écran.** « Exporter en CSV » vit dans l'en-tête de ce bloc et
+   ignorait le type d'achat et la catégorie : un fichier qui contredit l'écran d'où il part se lit
+   comme la vérité entière. Il porte maintenant les mêmes filtres que la liste.
+4. **Un seul constructeur d'URL** (`expenseFilterQuery`, testé) pour le panneau et pour le bloc :
+   deux copies, c'est ainsi qu'on perd les dates d'une période personnalisée dans l'une des deux.
+
+**Au passage.** L'échantillon de la galerie donnait une catégorie à sa sortie de l'eau, ce que la
+vue ne fait jamais : « Sans catégorie » n'apparaissait donc nulle part dans `/dev/ui`. Corrigé, et
+`/dev/ui/supplies?category=none` entre dans l'audit tactile — l'état actif d'une ligne est un état
+qu'aucune autre URL de la galerie n'atteignait.
+
+## 2026-09-07 — D78 : un e-mail qui n'arrive pas le dit dans l'app
 
 **Question.** « Il faut absolument que tu montres quand les mails sont en bounce dans l'app »,
 capture du tableau de bord de l'expéditeur à l'appui : « Vous êtes invité à bord — Xaman »,

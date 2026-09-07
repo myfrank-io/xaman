@@ -22,7 +22,7 @@ import type { BoatRole } from "@/lib/permissions";
 
 export type InvitationStatus = "pending" | "expired" | "accepted" | "revoked";
 
-/** What became of the e-mail (D77). Null when the app did not send it: unknown, not delivered. */
+/** What became of the e-mail (D78). Null when the app did not send it: unknown, not delivered. */
 export type InvitationDelivery = { status: DeliveryStatus; reason: DeliveryReason | null };
 
 export type InvitationRow = {
@@ -36,7 +36,7 @@ export type InvitationRow = {
   delivery: InvitationDelivery | null;
 };
 
-/** The three that are a note at the end of the line rather than an alert under it (D77). */
+/** The three that are a note at the end of the line rather than an alert under it (D78). */
 const NOTE: Partial<Record<DeliveryStatus, "sent" | "delivered" | "delayed">> = {
   sent: "sent",
   delivered: "delivered",
@@ -108,7 +108,7 @@ export function InvitationsList({
                   {t("invitations.revoke")}
                 </Button>
               </div>
-              {/* The whole point of D77: what the mailer knew three seconds after the send, said
+              {/* The whole point of D78: what the mailer knew three seconds after the send, said
                   where the invitation is read — with the way out under it, address in hand. */}
               {failure ? (
                 <Alert variant="destructive" className="basis-full">

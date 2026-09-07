@@ -44,7 +44,7 @@ const MEMBERS: MemberRow[] = [
 ];
 
 /**
- * The four an invitation can be in since D77, in the order they hurt: an address that does not
+ * The four an invitation can be in since D78, in the order they hurt: an address that does not
  * exist (the one that started this — one letter wrong, « En attente » for fourteen days), one
  * still on its way, one received, and an expired one from before the mailer knew anything.
  */

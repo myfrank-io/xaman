@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * What became of one e-mail, in the app's own words (D77).
+ * What became of one e-mail, in the app's own words (D78).
  *
  * Pure translation, no I/O: the provider's vocabulary in, the app's closed vocabulary out. It is
  * the seam that keeps English out of a French screen and a mailer's naming out of the database —

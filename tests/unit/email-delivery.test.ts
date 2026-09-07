@@ -20,7 +20,7 @@ import {
 import { verifyWebhookSignature } from "@/lib/email/webhook-signature";
 
 /**
- * D77 — « il faut absolument que tu montres quand les mails sont en bounce dans l'app ».
+ * D78 — « il faut absolument que tu montres quand les mails sont en bounce dans l'app ».
  *
  * The invitation to `manu.lessafre@…` was accepted by the mailer at 19:00 and bounced at 19:00:
  * « Recipient not found ». Everything below is the path between that event and the sentence an

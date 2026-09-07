@@ -49,7 +49,7 @@ const DURATIONS: AccessDuration[] = ["7", "30", "90", "unlimited"];
  * held), and a warning takes its place — the person invited this way can remove the person
  * inviting them.
  *
- * The same dialog is the way out of a bounced invitation (D77): the list opens it from the row,
+ * The same dialog is the way out of a bounced invitation (D78): the list opens it from the row,
  * with its own trigger and the address that failed already filled in — a typo is corrected where
  * it is read, not retyped from memory in another screen.
  */
