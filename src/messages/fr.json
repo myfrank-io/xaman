@@ -290,6 +290,7 @@
       "title": "Votre bateau",
       "subtitle": "Trois étapes, et le carnet est à vous.",
       "add": "Ajouter un bateau",
+      "back": "Retour à l'application",
       "name": "Nom du bateau",
       "namePlaceholder": "Xaman",
       "type": "Type de bateau",

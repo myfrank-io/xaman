@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>Nouveau mot de passe</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .x-ground { background-color: #081426 !important; }
+        .x-card { background-color: #12233d !important; }
+        .x-ink { color: #ffffff !important; }
+        .x-ink-2 { color: #cbd6e4 !important; }
+        .x-ink-3 { color: #9bb0c8 !important; }
+        .x-panel { background-color: #1b2a45 !important; border-color: #35496a !important; }
+      }
+      @media only screen and (max-width: 620px) {
+        .x-pad { padding-left: 24px !important; padding-right: 24px !important; }
+      }
+    </style>
+  </head>
+  <body class="x-ground" style="margin:0;padding:0;width:100%;background-color:#f6f5f1;-webkit-text-size-adjust:100%">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">Le lien pour choisir un nouveau mot de passe.</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="x-ground" style="background-color:#f6f5f1">
+      <tr>
+        <td align="center" style="padding:24px 12px 32px">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px">
+            <tr>
+              <td bgcolor="#0c1b33" class="x-pad" style="background-color:#0c1b33;padding:28px 32px 22px;border-radius:14px 14px 0 0">
+                <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:11px;line-height:1.4;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#e3b879">Carnet d'entretien</p>
+                <p style="margin:10px 0 0;font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:28px;line-height:1.1;font-weight:600;letter-spacing:0.3em;text-indent:0.3em;color:#ffffff">XAMAN</p>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#a38964" style="background-color:#a38964;height:2px;line-height:2px;font-size:0">&nbsp;</td>
+            </tr>
+            <tr>
+              <td bgcolor="#ffffff" class="x-card x-pad" style="background-color:#ffffff;padding:32px;border-radius:0 0 14px 14px">
+                <h1 class="x-ink" style="margin:0;font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:26px;line-height:1.25;font-weight:600;color:#0c1b33">Choisir un nouveau mot de passe</h1>
+                <p class="x-ink-2" style="margin:16px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:16px;line-height:1.6;color:#4a5b72">Ce lien ouvre l'écran où vous saisirez votre nouveau mot de passe. Il ne sert qu'une fois.</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0">
+                  <tr>
+                    <td align="center" bgcolor="#123152" style="border-radius:10px;background-color:#123152;mso-padding-alt:14px 28px">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px">Choisir un nouveau mot de passe</a>
+                    </td>
+                  </tr>
+                </table>
+                <p class="x-ink-3" style="margin:20px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.6;color:#63748a">Déjà connecté sur un appareil ? Mon profil → Mot de passe le change sans passer par ici.</p>
+                <p class="x-ink-3" style="margin:24px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.6;color:#63748a">Le bouton ne fonctionne pas ? Copiez cette adresse dans votre navigateur :<br /><a href="{{ .ConfirmationURL }}" style="color:#123152;text-decoration:underline;word-break:break-all">{{ .ConfirmationURL }}</a></p>
+                <p class="x-ink-3" style="margin:20px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.6;color:#63748a">Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : rien ne se passera.</p>
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px">
+            <tr>
+              <td class="x-pad" style="padding:20px 32px 0">
+                <p class="x-ink-3" style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.6;color:#63748a">Xaman — carnet d'entretien numérique et partagé pour bateaux.<br />Cet e-mail part de <a href="{{ .SiteURL }}" style="color:#63748a">{{ .SiteURL }}</a>.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
