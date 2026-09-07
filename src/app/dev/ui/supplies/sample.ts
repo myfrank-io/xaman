@@ -45,7 +45,10 @@ const EXPENSE_ROWS: ExpenseRow[] = [
     amount: 148.4,
     date: "2026-08-20",
   }),
-  row(HULL, {
+  // A haul-out carries no system, ever: `expenses_by_category` files it under a null category.
+  // The sample said otherwise, so the « Sans catégorie » row of the breakdown — the bucket every
+  // real boat has — never showed up in the gallery.
+  row(null, {
     source: "haul_out",
     entityId: "h1",
     label: "Chantier Naval de Hyères",
