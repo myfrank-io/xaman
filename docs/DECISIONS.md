@@ -1286,3 +1286,30 @@ migration future refermait cette porte, elle échouerait ici plutôt qu'en produ
 l'invitation ne fait pas — il invite *et* il fait partir l'ancien propriétaire une fois
 l'acceptation confirmée. `ensure_last_owner` continue d'interdire de retirer le dernier
 propriétaire d'un bateau.
+
+## 2026-09-07 — D74 : la longueur du code n'est pas à nous
+
+**Question.** « Pour info le code à 6 chiffres en a 8. » Copie d'écran à l'appui : `97510872`,
+arrivé par e-mail, huit chiffres.
+
+**Ce qui n'allait pas.** Six chiffres étaient écrits en dur à trois endroits — le schéma
+(`/^\d{6}$/`), le `maxLength` du champ, et trois phrases de l'écran de connexion. Or la longueur
+du code est un réglage du projet Supabase (« Email OTP Length », de 6 à 10). L'application ne le
+possède pas ; elle en dépend.
+
+Le résultat n'était pas une gêne, c'était un mur : le champ s'arrêtait à six caractères, donc le
+code reçu ne pouvait pas être **saisi**, et collé en entier il aurait été refusé par le schéma. La
+connexion par code devenait impossible sans qu'aucune erreur n'explique pourquoi.
+
+**Décision.** Le code accepte de **6 à 10 chiffres** (`OTP_MIN` / `OTP_MAX`, exportés depuis
+`src/lib/schemas/auth.ts`), et l'écran cesse de promettre un nombre qu'il ne contrôle pas :
+« Vous recevrez un code par e-mail », « Code reçu par e-mail ». L'`espacement` du champ passe de
+`0.5em` à `0.3em` pour que dix chiffres tiennent sur un écran de 320 px sans descendre sous le
+plancher de 16 px.
+
+`tests/unit/auth-schemas.test.ts` parcourt les cinq longueurs possibles, et garde les refus qui
+comptent : une lettre, un espace au milieu, trop court, trop long.
+
+**Ce qui reste vrai.** `otp_length = 6` demeure dans `supabase/config.toml` — c'est le réglage
+local, et six chiffres restent le bon choix par défaut. Simplement, si le projet hébergé en dit
+autre chose un jour, l'application suit au lieu de casser.
