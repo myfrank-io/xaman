@@ -183,6 +183,7 @@ Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la 
 | brand / model / serial | text | | |
 | installed_at | date | | |
 | is_active | boolean | not null default true | |
+| tracks_hours | boolean | not null default true | false = pas de compteur d'heures (annexe, hors-bord — D73) : aucun relevé n'est demandé, les échéances en heures de ses points sont neutralisées par `checklist_item_status` |
 | sort_order | int | not null default 0 | |
 | notes | text | | |
 | external_ref | text | | seed (`xaman-engine-sb`) |
@@ -363,7 +364,7 @@ Les points sans aucun intervalle sont **autorisés** (contrôle ponctuel) : l'é
 | completed_at | date | not null default current_date | |
 | completed_by | uuid | FK profiles | qui l'a fait (par défaut l'utilisateur courant ; peut être un autre membre) |
 | completed_by_name | text | null | si fait par quelqu'un qui n'est pas membre (« Chantier X ») |
-| engine_hours | numeric(8,1) | null | heures du moteur lié au moment du cochage. **Obligatoire si le point a un `interval_hours`** (validation zod + trigger `check_completion_hours`). Crée un `engine_hour_readings` (source 'checklist') sauf si `maintenance_log_id` est renseigné (l'intervention porte déjà ses relevés) |
+| engine_hours | numeric(8,1) | null | heures du moteur lié au moment du cochage. **Obligatoire si le point a un `interval_hours`** (validation zod + trigger `check_completion_hours`) — sauf sur un moteur sans compteur (`engines.tracks_hours = false`, D73). Crée un `engine_hour_readings` (source 'checklist') sauf si `maintenance_log_id` est renseigné (l'intervention porte déjà ses relevés) |
 | note | text | | |
 | maintenance_log_id | uuid | FK maintenance_logs on delete set null, null | |
 | created_by / updated_by / created_at / updated_at | | | |
@@ -549,7 +550,8 @@ create function purge_trash() returns int ...;
 --                                    ou si le bateau n'existe plus. La suppression de compte du dernier owner d'un
 --                                    bateau est refusée en amont par la Server Action (« transférez d'abord la propriété »).
 --  check_completion_hours()        : before insert/update sur checklist_completions — engine_hours obligatoire si
---                                    l'item a un interval_hours.
+--                                    l'item a un interval_hours, sauf si son moteur n'a pas de compteur
+--                                    (engines.tracks_hours = false, D73).
 --  sync_engine_hours_from_completion() : after insert/update sur checklist_completions — upsert engine_hour_readings
 --                                    (source 'checklist') si engine_hours non null ET maintenance_log_id null.
 --  sync_log_readings_date()        : after update of performed_at sur maintenance_logs — aligne read_at des relevés liés.
@@ -693,12 +695,12 @@ Cette migration applique les décisions de l'audit (`docs/AUDIT.md §3.1`). **El
 - `due_at = coalesce(fixed_due_at, reference_at + interval_months)` — **la date fixe gagne toujours**.
 - `due_hours = reference_hours + interval_hours`, null si `interval_hours` est null, si `reference_hours` est null, ou si le compteur a été remplacé après la référence (`reference_at < engines.counter_reset_at`).
 - `status` : `overdue` si une échéance est dépassée, sinon `soon` à 30 jours **ou** 25 heures (première échéance atteinte), sinon `never` **uniquement** pour un point sans aucun intervalle et jamais réalisé, sinon `ok`. Un point jamais coché mais ancré n'est donc plus `never` : au jour 1 tout est `ok`, et les points basculent seuls à l'échéance.
-- `checklist_item_status` expose en plus `anchor_date`, `anchor_hours`, `counter_reset_at`, `fixed_due_at`, `has_completion`, `is_estimated` (= `not has_completion`), `reference_at`, `reference_hours` ; elle exclut les points dont le moteur est inactif (`i.engine_id is null or e.is_active`).
+- `checklist_item_status` expose en plus `anchor_date`, `anchor_hours`, `counter_reset_at`, `fixed_due_at`, `has_completion`, `is_estimated` (= `not has_completion`), `reference_at`, `reference_hours`, `engine_tracks_hours` ; elle exclut les points dont le moteur est inactif (`i.engine_id is null or e.is_active`) et **remet `interval_hours` à null** pour un point dont le moteur n'a pas de compteur (D73) : l'échéance en heures disparaît partout (statut, libellés, heures exigées au cochage) sans que `checklist_items.interval_hours` soit touché — elle revient telle quelle le jour où un compteur est posé.
 - Parité TS ↔ SQL : `src/lib/checklist-status.ts` reflète la fonction **et** les deux `coalesce` de la vue (helpers exportés `checklistReferenceAt` / `checklistReferenceHours`) ; 30 cas dans `tests/fixtures/checklist-status-cases.json`, dont l'ancrage, la date fixe et le compteur remplacé. Les cas « moteur désactivé », « catégorie désactivée » et « deux réalisations le même jour » relèvent de la vue et sont testés dans `tests/unit/rls.test.ts`.
 
 ### 12.4 Progression et agrégats
 - `checklist_category_progress` : le dénominateur (`total`, `progress`, `ok_count`, `soon_count`) ne compte que les **points à intervalle** ; nouvelles colonnes `never_recorded_count` (points à intervalle sans réalisation) et `punctual_count` (points sans intervalle). `overdue_count` n'est volontairement **pas** filtré : un contrôle ponctuel porteur d'une date fixe est une vraie échéance.
-- `boat_dashboard_stats` ajoute `expenses_12m` (12 mois glissants — l'année civile n'a pas de sens pour une saison méditerranéenne), `never_recorded_items` (même définition que `never_recorded_count`), `review_pending_logs`, `review_pending_purchases`, `engines_without_reading` ; les colonnes existantes sont conservées.
+- `boat_dashboard_stats` ajoute `expenses_12m` (12 mois glissants — l'année civile n'a pas de sens pour une saison méditerranéenne), `never_recorded_items` (même définition que `never_recorded_count`), `review_pending_logs`, `review_pending_purchases`, `engines_without_reading` (moteurs actifs **à compteur** sans aucun relevé — D73) ; les colonnes existantes sont conservées.
 - `maintenance_logs_view` ajoute `equipment_id` et `equipment_name` ; `maintenance_logs_trash_view` ajoute `pending_engine_hours` (les heures parquées, cf. 12.6) ; `boat_invitations_safe` ajoute `valid_until`.
 
 ### 12.5 `boat_todo_queue(p_boat_id uuid, p_limit int default 10)`

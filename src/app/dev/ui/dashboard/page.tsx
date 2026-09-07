@@ -49,6 +49,7 @@ function sampleRow(over: Partial<ChecklistRow> & Pick<ChecklistRow, "id" | "labe
     categoryColor: SAMPLE_CATEGORIES[0].color,
     engineId: null,
     engineLabel: null,
+    engineTracksHours: true,
     intervalMonths: 12,
     intervalHours: null,
     sortOrder: 1,
@@ -302,6 +303,7 @@ export default async function DevDashboardPage() {
             count={90}
             reviewCount={7}
             steps={{ hours: true, review: false, checklist: false }}
+            hasCounters
             canContribute
           />
         </SectionCard>

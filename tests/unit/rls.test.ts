@@ -1391,6 +1391,88 @@ describe("status views", () => {
   });
 });
 
+// D73: the dinghy's outboard has no hour meter. Nothing asks it for a reading, and the hour
+// deadlines its checklist points inherited from the template stop pretending to be deadlines.
+describe("engine without an hour meter (D73)", () => {
+  const meterless = (c: PoolClient) =>
+    c.query("update public.engines set tracks_hours = false where id = $1", [ENGINE]);
+
+  it("drops the hour deadline of its points, and gives it back with the meter", async () => {
+    const rows = await as(U.owner, async (c) => {
+      const read = async () =>
+        (
+          await c.query(
+            `select interval_hours, due_hours::float8, engine_tracks_hours
+               from public.checklist_item_status where id = $1`,
+            [ITEM],
+          )
+        ).rows[0];
+      const before = await read();
+      await meterless(c);
+      const without = await read();
+      await c.query("update public.engines set tracks_hours = true where id = $1", [ENGINE]);
+      return { before, without, back: await read() };
+    });
+    expect(rows.before).toMatchObject({ interval_hours: 250, engine_tracks_hours: true });
+    // The stored interval is untouched: only the view stops counting it.
+    expect(rows.without).toMatchObject({
+      interval_hours: null,
+      due_hours: null,
+      engine_tracks_hours: false,
+    });
+    expect(rows.back).toEqual(rows.before);
+  });
+
+  it("lets its points be ticked without hours nobody can read", async () => {
+    const tick = () =>
+      run(
+        U.owner,
+        `insert into public.checklist_completions (boat_id, checklist_item_id, completed_at, engine_hours, created_by)
+         values ($1, $2, current_date, null, $3)`,
+        [BOAT, ITEM, U.owner.id],
+      );
+    // With a meter, the hours stay mandatory.
+    const refused = await tick();
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) expect(refused.message).toContain("engine_hours_required");
+
+    const accepted = await as(U.owner, async (c) => {
+      await meterless(c);
+      return c.query(
+        `insert into public.checklist_completions (boat_id, checklist_item_id, completed_at, engine_hours, created_by)
+         values ($1, $2, current_date, null, $3)`,
+        [BOAT, ITEM, U.owner.id],
+      );
+    });
+    expect(accepted.rowCount).toBe(1);
+  });
+
+  it("is not counted among the engines waiting for a reading", async () => {
+    const counts = await as(U.owner, async (c) => {
+      const waiting = async () =>
+        Number(
+          (
+            await c.query(
+              "select engines_without_reading from public.boat_dashboard_stats where boat_id = $1",
+              [BOAT],
+            )
+          ).rows[0].engines_without_reading,
+        );
+      const inserted = await c.query(
+        "insert into public.engines (boat_id, label, position, created_by) values ($1, 'Annexe', 'outboard', $2) returning id",
+        [BOAT, U.owner.id],
+      );
+      const withMeter = await waiting();
+      await c.query("update public.engines set tracks_hours = false where id = $1", [
+        (inserted.rows[0] as { id: string }).id,
+      ]);
+      return { withMeter, withoutMeter: await waiting() };
+    });
+    expect(counts.withMeter).toBe(1);
+    expect(counts.withoutMeter).toBe(0);
+  });
+});
+
 // E1-6b: the secondary views follow the same tenant isolation as the tables they read.
 describe("secondary views", () => {
   it.each(["expenses_by_category", "engine_current_hours"] as const)(

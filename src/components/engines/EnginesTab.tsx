@@ -32,6 +32,7 @@ export type EngineSummary = {
   model: string | null;
   installedAt: string | null;
   isActive: boolean;
+  tracksHours: boolean;
   hours: number | null;
   readAt: string | null;
   linkedItems: number;
@@ -43,15 +44,23 @@ const STALE_DAYS = 60;
 export function EngineCounter({
   hours,
   readAt,
+  tracksHours = true,
   size = "md",
 }: {
   hours: number | null;
   readAt: string | null;
+  /** false: the engine has no hour meter (D73) — nothing to read, nothing to update. */
+  tracksHours?: boolean;
   size?: "md" | "lg";
 }) {
   const t = useTranslations("engines");
   const date = toDate(readAt);
   const stale = date ? differenceInCalendarDays(new Date(), date) > STALE_DAYS : false;
+  // An engine without a meter is not an engine whose counter is unknown: it says so plainly,
+  // in grey, and never turns amber for a reading that will never come.
+  if (!tracksHours) {
+    return <div className="text-body-lg font-medium text-ink-3">{t("noCounter")}</div>;
+  }
   return (
     <div>
       <div
@@ -109,7 +118,7 @@ function EngineCard({
           </Badge>
         )}
       </div>
-      <EngineCounter hours={engine.hours} readAt={engine.readAt} />
+      <EngineCounter hours={engine.hours} readAt={engine.readAt} tracksHours={engine.tracksHours} />
       <div className="flex items-center justify-between gap-2 border-t border-border pt-2 sm:pt-3">
         {onReading ? (
           <Button type="button" variant="outline" onClick={onReading}>
@@ -150,14 +159,19 @@ export function EnginesTab({
   const active = engines.filter((engine) => engine.isActive);
   const inactive = engines.filter((engine) => !engine.isActive);
   const [dialogEngine, setDialogEngine] = useState<string | undefined>(undefined);
-  const [dialogOpen, setDialogOpen] = useState(openReading && canContribute && active.length > 0);
+  const [dialogOpen, setDialogOpen] = useState(
+    openReading && canContribute && active.some((engine) => engine.tracksHours),
+  );
 
-  const readingEngines: ReadingEngine[] = active.map((engine) => ({
-    id: engine.id,
-    label: engine.label,
-    lastHours: engine.hours,
-    lastDate: engine.readAt,
-  }));
+  // Only engines that have a meter can be read (D73).
+  const readingEngines: ReadingEngine[] = active
+    .filter((engine) => engine.tracksHours)
+    .map((engine) => ({
+      id: engine.id,
+      label: engine.label,
+      lastHours: engine.hours,
+      lastDate: engine.readAt,
+    }));
 
   function openDialog(engineId?: string) {
     setDialogEngine(engineId);
@@ -205,7 +219,9 @@ export function EnginesTab({
               key={engine.id}
               engine={engine}
               href={enginePath(boatId, engine.id)}
-              onReading={canContribute ? () => openDialog(engine.id) : undefined}
+              onReading={
+                canContribute && engine.tracksHours ? () => openDialog(engine.id) : undefined
+              }
             />
           ))}
         </div>

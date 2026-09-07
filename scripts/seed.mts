@@ -94,6 +94,8 @@ const boatFile = z.object({
       serial: nullableText,
       sort_order: z.number().int().optional(),
       notes: nullableText,
+      /** false for an engine with no hour meter (D73), e.g. a dinghy outboard. */
+      tracks_hours: z.boolean().optional(),
     }),
   ),
   equipment: z.array(
@@ -411,12 +413,12 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
     for (const e of boatData.engines) {
       const row = await one<{ id: string }>(
         client,
-        `insert into public.engines (boat_id, label, position, brand, model, serial, sort_order, notes, external_ref, created_by, updated_by)
-         values ($1, $2, $3::public.engine_position, $4, $5, $6, $7, $8, $9, $10, $10)
+        `insert into public.engines (boat_id, label, position, brand, model, serial, sort_order, notes, tracks_hours, external_ref, created_by, updated_by)
+         values ($1, $2, $3::public.engine_position, $4, $5, $6, $7, $8, $9, $10, $11, $11)
          on conflict (boat_id, external_ref) do update set label = excluded.label, position = excluded.position,
            brand = coalesce(excluded.brand, public.engines.brand), model = coalesce(excluded.model, public.engines.model),
            serial = coalesce(excluded.serial, public.engines.serial), sort_order = excluded.sort_order,
-           notes = coalesce(public.engines.notes, excluded.notes)
+           notes = coalesce(public.engines.notes, excluded.notes), tracks_hours = excluded.tracks_hours
          returning id`,
         [
           boat.id,
@@ -427,6 +429,7 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
           clean(e.serial),
           e.sort_order ?? 0,
           clean(e.notes),
+          e.tracks_hours ?? true,
           e.external_ref,
           by,
         ],

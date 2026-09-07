@@ -74,11 +74,13 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       .maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase.from("boat_dashboard_stats").select("*").eq("boat_id", boatId).maybeSingle(),
+    // D73: an engine without an hour meter has no counter to show and no reading to ask for.
     supabase
       .from("engines")
       .select("id, label")
       .eq("boat_id", boatId)
       .eq("is_active", true)
+      .eq("tracks_hours", true)
       .order("sort_order"),
     supabase.from("engine_current_hours").select("engine_id, hours, read_at").eq("boat_id", boatId),
     supabase.rpc("boat_todo_queue", { p_boat_id: boatId, p_limit: QUEUE_LIMIT }),
@@ -357,6 +359,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
                 review: reviewCount === 0,
                 checklist: false,
               }}
+              hasCounters={engineList.length > 0}
               canContribute={canContribute}
             />
           ) : null}

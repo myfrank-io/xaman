@@ -15,6 +15,7 @@ import { textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { PageHeader } from "@/components/common/PageHeader";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -35,6 +36,7 @@ export type EngineFormValues = {
   model: string | null;
   serial: string | null;
   installedAt: string | null;
+  tracksHours: boolean;
   notes: string | null;
   updatedAt: string;
 };
@@ -49,6 +51,7 @@ type EngineForm = {
   model: string;
   serial: string;
   installedAt: string | null;
+  tracksHours: boolean;
   notes: string;
 };
 type EngineOutput = z.output<typeof upsertEngineSchema>;
@@ -80,6 +83,7 @@ export function EngineForm({
       model: textToInput(engine?.model),
       serial: textToInput(engine?.serial),
       installedAt: engine?.installedAt ?? null,
+      tracksHours: engine?.tracksHours ?? true,
       notes: textToInput(engine?.notes),
     },
   });
@@ -178,6 +182,29 @@ export function EngineForm({
           />
         </Field>
       </div>
+      {/* D73: a dinghy outboard has no meter. The box is written as the absence, the way it is
+          lived — « pas de compteur » — and stops the app asking for a reading it will never get. */}
+      <Controller
+        control={form.control}
+        name="tracksHours"
+        render={({ field }) => (
+          <label className="flex min-h-11 items-start gap-3 rounded-xl border border-border bg-surface-2 p-4">
+            <Checkbox
+              className="mt-0.5"
+              checked={!field.value}
+              onCheckedChange={(checked) => field.onChange(checked !== true)}
+            />
+            <span className="min-w-0">
+              <span className="block text-body font-medium text-foreground">
+                {t("fields.noCounter")}
+              </span>
+              <span className="mt-0.5 block text-caption text-ink-2">
+                {t("fields.noCounterHelp")}
+              </span>
+            </span>
+          </label>
+        )}
+      />
       <Field id="engine-notes" label={t("fields.notes")} error={fieldError(errors.notes)}>
         <Textarea
           id="engine-notes"

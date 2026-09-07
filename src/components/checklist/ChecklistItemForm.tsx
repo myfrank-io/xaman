@@ -71,7 +71,7 @@ export function ChecklistItemForm({
 }: {
   boatId: string;
   categories: CategoryChoice[];
-  engines: { id: string; label: string }[];
+  engines: { id: string; label: string; tracksHours: boolean }[];
   item: ChecklistItemFormValues | null;
   defaultCategoryId: string;
   existingLabels: string[];
@@ -99,6 +99,11 @@ export function ChecklistItemForm({
   const [saved, setSaved] = useState(false);
   const [confirmActive, setConfirmActive] = useState(false);
   const guard = useUnsavedGuard(dirty && !saved);
+
+  // D73: an hour interval on an engine without a meter is a deadline nothing can ever compute.
+  // Non-blocking: the value is kept, and comes back the day a meter is fitted.
+  const meterless =
+    engineId !== "" && engines.find((engine) => engine.id === engineId)?.tracksHours === false;
 
   const category = categories.find((choice) => choice.id === categoryId);
   const duplicate =
@@ -266,7 +271,12 @@ export function ChecklistItemForm({
         ) : null}
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="item-hours" label={t("hours")} error={errors.intervalHours}>
+        <Field
+          id="item-hours"
+          label={t("hours")}
+          warning={meterless && intervalHours.trim() !== "" ? t("hoursNoCounter") : undefined}
+          error={errors.intervalHours}
+        >
           <NumericField
             id="item-hours"
             mode="numeric"

@@ -13,6 +13,8 @@ export type ChecklistRow = {
   categoryColor: string;
   engineId: string | null;
   engineLabel: string | null;
+  /** false when the linked engine has no hour meter (D73): no hours are ever asked for. */
+  engineTracksHours: boolean;
   intervalMonths: number | null;
   intervalHours: number | null;
   sortOrder: number;
@@ -50,6 +52,7 @@ export function toChecklistRow(
     categoryColor: category.color,
     engineId: row.engine_id,
     engineLabel,
+    engineTracksHours: row.engine_tracks_hours ?? true,
     intervalMonths: row.interval_months,
     intervalHours: row.interval_hours,
     sortOrder: row.sort_order ?? 0,

@@ -61,6 +61,7 @@ export async function upsertEngine(input: unknown): Promise<ActionResult<{ engin
       model: values.model,
       serial: values.serial,
       installed_at: values.installedAt,
+      tracks_hours: values.tracksHours,
       notes: values.notes,
       updated_by: userId,
       ...(sortOrder === undefined ? {} : { sort_order: sortOrder, created_by: userId }),

@@ -25,7 +25,7 @@
   "engines": [
     { "external_ref": "xaman-engine-sb", "label": "Moteur SB", "position": "starboard", "brand": "Yanmar", "model": "TODO", "serial": null, "sort_order": 1, "notes": "Commandes électriques ZF au poste de barre" },
     { "external_ref": "xaman-engine-bb", "label": "Moteur BB", "position": "port", "brand": "Yanmar", "model": "TODO", "serial": null, "sort_order": 2, "notes": "Commandes électriques ZF au poste de barre" },
-    { "external_ref": "xaman-engine-outboard", "label": "Annexe (hors-bord)", "position": "outboard", "brand": "Suzuki", "model": "45 ch", "serial": null, "sort_order": 3 }
+    { "external_ref": "xaman-engine-outboard", "label": "Annexe (hors-bord)", "position": "outboard", "brand": "Suzuki", "model": "45 ch", "serial": null, "sort_order": 3, "tracks_hours": false }
   ],
   "equipment": [
     { "external_ref": "hull-sandwich", "category_ref": "hull_deck", "name": "Coque sandwich PVC foam core / vinylester", "specs": { "materiau": "Sandwich mousse PVC / vinylester" } },

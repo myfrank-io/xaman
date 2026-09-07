@@ -28,7 +28,7 @@ export default async function NewChecklistItemPage({
       .order("sort_order"),
     supabase
       .from("engines")
-      .select("id, label")
+      .select("id, label, tracks_hours")
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
@@ -38,7 +38,11 @@ export default async function NewChecklistItemPage({
     <ChecklistItemForm
       boatId={boatId}
       categories={categories ?? []}
-      engines={engines ?? []}
+      engines={(engines ?? []).map((engine) => ({
+        id: engine.id,
+        label: engine.label,
+        tracksHours: engine.tracks_hours,
+      }))}
       item={null}
       defaultCategoryId=""
       // The duplicate-label warning compares within one category, and none is chosen yet: it
