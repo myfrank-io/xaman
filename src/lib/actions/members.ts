@@ -26,14 +26,24 @@ function membersPath(boatId: string) {
   return `/boats/${boatId}/members`;
 }
 
-// Invite by e-mail: the row is inserted with the user's client (RLS: owner only), then the token is
-// read with the service key and the e-mail goes out through Supabase Auth (invite template for new
-// accounts, magic link for existing ones), redirecting to /invite/[token].
 type InvitationRole = "owner" | "editor" | "pro" | "viewer";
 
-// Inserts the row with the user's client (RLS decides who may invite whom), reads nothing
-// sensitive back, and sends the e-mail through Supabase Auth (invite template for new accounts,
-// magic link for existing ones), landing on /invite/[token]. Returns the link for sharing.
+/**
+ * Inserts the row with the user's client (RLS decides who may invite whom), reads nothing
+ * sensitive back, and sends the e-mail through Supabase Auth, landing on /invite/[token].
+ * Returns the link so the dialog can also offer it to copy or share.
+ *
+ * Two templates, because Supabase has two doors (both in `supabase/templates/`, both in Xaman's
+ * colours since D71):
+ *   - a new address goes through `invite`, which is the real invitation e-mail: `data` below
+ *     becomes `user_metadata`, and the template reads it back as `{{ .Data.boat_name }}`,
+ *     `{{ .Data.inviter_name }}` and `{{ .Data.role_label }}` — the boat, the inviter, the role;
+ *   - an address that already has an account cannot be invited twice, so it gets a sign-in code
+ *     pointing at the same page. `signInWithOtp` carries no metadata for an existing user — that
+ *     e-mail cannot name the boat, and says instead that the link leads to the invitation.
+ * Either way the person lands on /invite/[token], which names everything again before they
+ * accept.
+ */
 async function createInvitation(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
@@ -67,7 +77,7 @@ async function createInvitation(
       redirectTo,
     });
     if (inviteError) {
-      // already registered: send a magic link that lands on the invitation page
+      // Already registered: a sign-in code that lands on the invitation page.
       const { error: otpError } = await admin.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: redirectTo, shouldCreateUser: false },

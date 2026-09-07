@@ -28,7 +28,14 @@ git push -u origin main
 5. `get_project_url` et `get_publishable_keys` → `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. La clé service (`SUPABASE_SERVICE_ROLE_KEY`) se récupère dans le dashboard Supabase (Settings → API) ; elle ne sert qu'aux Server Actions d'invitation et au script de seed.
 6. Écrire `.env.local` (ignoré par git) et `.env.example` (noms seuls).
 7. Après E0-3 : `supabase link --project-ref <ref>` puis `supabase db push` pour appliquer les migrations ; `get_advisors` (security) après chaque migration RLS. Alternative : `apply_migration` via MCP, mais le fichier doit **aussi** exister dans `supabase/migrations/` (règle 3 de `CLAUDE.md`).
-8. Auth : dans le dashboard, activer le provider Email avec OTP (code), désactiver les mots de passe si l'option existe, personnaliser les templates en français (E1-1), ajouter l'URL Vercel dans « Redirect URLs ».
+8. Auth : dans le dashboard, activer le provider Email avec OTP (code) et ajouter l'URL Vercel dans « Redirect URLs ».
+9. **Gabarits d'e-mail** (D71) : ils vivent dans `supabase/templates/`, pas dans le dashboard. Créer un jeton d'accès personnel (Supabase → Account → Access Tokens) puis, **une fois par projet et après chaque `pnpm gen:emails`** :
+
+   ```
+   SUPABASE_ACCESS_TOKEN=sbp_… SUPABASE_PROJECT_REF=<ref> pnpm emails:push
+   ```
+
+   La commande met à jour les douze champs `mailer_*` du projet et rien d'autre. **Ne pas** utiliser `supabase config push` : elle enverrait aussi `site_url = "http://localhost:3000"` et les limites de débit locales. Tant qu'elle n'a pas été lancée, la production envoie les gabarits anglais par défaut — et « Code par e-mail » envoie un lien au lieu d'un code, parce que le gabarit par défaut ne contient pas `{{ .Token }}`.
 
 ### 2.3 Vercel (MCP)
 1. `list_teams` → choisir l'équipe / le compte de Joseph.
