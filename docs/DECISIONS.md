@@ -1126,3 +1126,31 @@ pour un cas qui, aujourd'hui, ne s'est encore jamais produit.
 Tant que la commande n'est pas passée, la production continue d'envoyer les gabarits anglais par
 défaut — et « Code par e-mail » continue d'envoyer un lien.
 
+## 2026-09-07 — D72 : « Ajouter un bateau » a une porte de sortie
+
+**Question.** « Quand je suis sur ajouter un nouveau bateau, je ne peux pas revenir à l'app. »
+
+**Ce qui se passait.** `/boats/new` est l'étape 1 de la mise en route (D67), et elle a été dessinée
+pour quelqu'un qui n'a **rien** : `/boats` l'y envoie, il n'y a pas de carnet derrière, et le seul
+bouton de bas de page — « Se déconnecter » — est la bonne sortie pour ce cas-là. Mais l'écran a une
+seconde porte d'entrée : « Ajouter un bateau » dans le menu compte, ouverte par curiosité aussi
+souvent que par intention. Cette personne-là a un carnet, et l'écran ne le savait pas : pas
+d'onglets (`BoatsShell` n'est pas `AppShell`), pas de fil d'Ariane, pas de barre d'adresse ni de
+geste de retour en mode autonome sur iPad. Rien, sauf se déconnecter — pour revenir au même
+endroit après s'être reconnecté.
+
+**Décision.** L'écran lit s'il existe déjà un bateau (une ligne, la RLS répond pour cette personne)
+et se présente en conséquence :
+
+- **avec un carnet** : « ‹ Retour à l'application » en tête du bandeau navy, et le bouton de
+  déconnexion disparaît — il est dans le menu compte, où il a toujours été ;
+- **sans carnet** : rien de neuf. Aucun retour n'est proposé parce qu'il n'y a nulle part où
+  retourner, et « Se déconnecter » reste la seule issue honnête.
+
+Le retour vise `/boats`, jamais un tableau de bord : cette page mène au carnet quand il y en a un
+seul, au sélecteur quand il y en a plusieurs. Une seule destination, juste dans les deux cas.
+
+Le retour est offert par `BoatsShell`, donc le sélecteur de bateaux pourrait le porter aussi ; il
+ne le fait pas, il est déjà une racine. Les étapes 2 et 3 non plus, et pour la raison écrite dans
+`OnboardingSteps` : le flux n'avance que vers l'avant, et chacune a déjà sa sortie (« Passer cette
+étape », « Ouvrir mon carnet »).
