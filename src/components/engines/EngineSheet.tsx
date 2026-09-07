@@ -224,53 +224,13 @@ export function EngineSheet({
         </div>
       </SectionCard>
 
-      <SectionCard
-        title={t("linkedItems")}
-        actionHref={items.length > 0 ? checklistPath(boatId) : undefined}
-        actionLabel={items.length > 0 ? tc("viewAll") : undefined}
-      >
-        {items.length === 0 ? (
-          <div className="flex flex-col items-start gap-3 px-5 py-4">
-            <p className="text-body text-ink-2">{t("noLinkedItems")}</p>
-            {canWrite && engine.isActive && hasTemplate && linkedCount === 0 ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={pending}
-                onClick={() =>
-                  run(
-                    () => generateEngineChecklist({ boatId, engineId: engine.id }),
-                    t("generated"),
-                  )
-                }
-              >
-                {t("generateItems")}
-              </Button>
-            ) : null}
-          </div>
-        ) : (
-          items.map((item) => (
-            <ListRow
-              key={item.id}
-              lead={<ChecklistStateBadge state={item.status} />}
-              title={item.label}
-              meta={intervalLabel(item)}
-              trailing={
-                <DueLabel
-                  status={item.status}
-                  daysRemaining={item.daysRemaining}
-                  hoursRemaining={item.hoursRemaining}
-                  hasCounter={item.hasCounter}
-                />
-              }
-              href={categoryPath(boatId, item.categoryId)}
-            />
-          ))
-        )}
-      </SectionCard>
+      {/* The history sits with the number it explains, before the checklist points: opening an
+          engine from its tile is nine times out of ten « what does the counter say, and what did
+          it say before », and reading that meant scrolling past eleven checklist rows.
 
-      {/* Nothing is lost: an engine that loses its meter keeps the readings it already has.
-          Only the empty « Aucun relevé » block goes, on an engine that will never have one. */}
+          Nothing is lost when the meter goes (D73): an engine that loses its counter keeps the
+          readings it already has. Only the empty « Aucun relevé » block goes, on an engine that
+          will never have one. */}
       {!engine.tracksHours && readings.length === 0 ? null : (
         <SectionCard title={t("readings")}>
           {readings.length === 0 ? (
@@ -339,6 +299,51 @@ export function EngineSheet({
           )}
         </SectionCard>
       )}
+
+      <SectionCard
+        title={t("linkedItems")}
+        actionHref={items.length > 0 ? checklistPath(boatId) : undefined}
+        actionLabel={items.length > 0 ? tc("viewAll") : undefined}
+      >
+        {items.length === 0 ? (
+          <div className="flex flex-col items-start gap-3 px-5 py-4">
+            <p className="text-body text-ink-2">{t("noLinkedItems")}</p>
+            {canWrite && engine.isActive && hasTemplate && linkedCount === 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={() =>
+                  run(
+                    () => generateEngineChecklist({ boatId, engineId: engine.id }),
+                    t("generated"),
+                  )
+                }
+              >
+                {t("generateItems")}
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          items.map((item) => (
+            <ListRow
+              key={item.id}
+              lead={<ChecklistStateBadge state={item.status} />}
+              title={item.label}
+              meta={intervalLabel(item)}
+              trailing={
+                <DueLabel
+                  status={item.status}
+                  daysRemaining={item.daysRemaining}
+                  hoursRemaining={item.hoursRemaining}
+                  hasCounter={item.hasCounter}
+                />
+              }
+              href={categoryPath(boatId, item.categoryId)}
+            />
+          ))
+        )}
+      </SectionCard>
 
       {/* The act starts where the subject is named (D35): the form arrives with this engine's
           category chosen and its hours field open and focused — two taps to a saved line. */}
