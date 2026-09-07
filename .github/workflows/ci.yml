@@ -60,3 +60,49 @@ jobs:
           name: playwright-report
           path: test-results
           retention-days: 7
+
+  journeys:
+    name: Parcours SPEC 6.1-6.4
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # The journeys sign a real user in and write real rows, so they need Auth and PostgREST,
+      # not just Postgres: the whole stack, on this runner, never the production project (D76).
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - run: supabase db reset --local
+
+      # The stack prints its own URL and keys; the app and the tests read them from here, so
+      # nothing about a local key is written down in the repository.
+      - name: Export the local stack's URL and keys
+        run: |
+          supabase status -o env | sed 's/^/SUPABASE_/' > /tmp/stack.env
+          . /tmp/stack.env
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY"
+            echo "E2E_SUPABASE_URL=$SUPABASE_API_URL"
+            echo "E2E_SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3000"
+          } >> "$GITHUB_ENV"
+
+      - run: pnpm test:e2e:journeys
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-journeys
+          path: test-results
+          retention-days: 7

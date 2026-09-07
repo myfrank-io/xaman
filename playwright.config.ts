@@ -7,6 +7,10 @@ const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
 export default defineConfig({
   testDir: "tests/e2e",
+  // The touch audit and the journeys are two different suites: the audit is stateless and runs
+  // everywhere, the journeys need a live Supabase stack (E9-3, D76). `testIgnore` keeps the
+  // five audit viewports off the journeys; the journey projects below opt back in.
+  testIgnore: /journeys\//,
   timeout: 60_000,
   expect: { timeout: 10_000 },
   // Every test here is a self-contained `page.goto` + assertions: no fixture, no session, no
@@ -49,6 +53,21 @@ export default defineConfig({
       // either — it is where a layout that cannot shrink shows itself first.
       name: "phone-narrow",
       use: { ...devices["Desktop Chrome"], viewport: { width: 320, height: 568 }, hasTouch: true },
+    },
+    // The real journeys of SPEC.md §6.1–§6.4, on the two devices the boat actually uses: the
+    // iPad Xavier keeps aboard and the phone the mechanic arrives with. They sign a seeded user
+    // in and write rows, so they run one at a time and only where a stack is wired up.
+    {
+      name: "journeys-ipad",
+      testMatch: /journeys\/.*\.spec\.ts/,
+      testIgnore: [],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 }, hasTouch: true },
+    },
+    {
+      name: "journeys-iphone",
+      testMatch: /journeys\/.*\.spec\.ts/,
+      testIgnore: [],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, hasTouch: true },
     },
   ],
   webServer: process.env.E2E_BASE_URL
