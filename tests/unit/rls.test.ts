@@ -1123,6 +1123,9 @@ describe("invitations issued by an editor (D28)", () => {
   it("an owner keeps inviting any role, with or without an end date", async () => {
     expect((await invite(U.owner, "editor", "ow-editor", null)).ok).toBe(true);
     expect((await invite(U.owner, "pro", "ow-pro", 365)).ok).toBe(true);
+    // D73: the UI now offers `owner` at the invitation. The policy always allowed it — this is
+    // what says so, and what would fail if a later migration decided to close it.
+    expect((await invite(U.owner, "owner", "ow-owner", null)).ok, "owner role").toBe(true);
     expect((await invite(U.pro, "viewer", "pro-viewer", 30)).ok, "a pro invites nobody").toBe(
       false,
     );

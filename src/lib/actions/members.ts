@@ -9,6 +9,7 @@ import { getTranslations } from "next-intl/server";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { publicEnv } from "@/lib/env";
 import { addDays, toIsoDate } from "@/lib/numbers";
+import { EDITOR_ASSIGNABLE_ROLES } from "@/lib/permissions";
 import {
   acceptInvitationSchema,
   changeMemberRoleSchema,
@@ -105,12 +106,18 @@ export async function inviteMember(
   } = await supabase.auth.getUser();
   if (!user) return fail("errors.forbidden");
 
-  // D28: an editor invites pro/viewer only, always with an end date (≤ 90 days).
+  // D28: an editor invites a pro or a viewer, never a peer and never an owner, and always with
+  // an end date (≤ 90 days). The insert policy refuses the same thing; this only turns a bare
+  // « forbidden » into the sentence that says which half was wrong.
   const { data: inviterRole } = await supabase.rpc("boat_role", { p_boat_id: boatId });
-  if (inviterRole === "editor" && (role === "editor" || duration === "unlimited")) {
-    return fail("errors.invitation_duration_required");
+  if (inviterRole === "editor") {
+    if (!EDITOR_ASSIGNABLE_ROLES.includes(role)) return fail("errors.forbidden");
+    if (duration === "unlimited") return fail("errors.invitation_duration_required");
   }
-  const validUntil = duration === "unlimited" ? null : addDays(toIsoDate(), Number(duration));
+  // D73: an owner never expires. A proprietor whose access lapses on a date is not a proprietor,
+  // and the form hides the question rather than asking it — this is what makes that true.
+  const validUntil =
+    role === "owner" || duration === "unlimited" ? null : addDays(toIsoDate(), Number(duration));
   return createInvitation(supabase, user.id, { boatId, email, role, validUntil });
 }
 
