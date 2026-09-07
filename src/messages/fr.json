@@ -498,6 +498,34 @@
         "expired": "Expirée",
         "accepted": "Acceptée",
         "revoked": "Annulée"
+      },
+      "delivery": {
+        "sent": "envoi en cours",
+        "delivered": "e-mail remis",
+        "delayed": "remise retardée",
+        "badge": {
+          "bounced": "Non délivré",
+          "complained": "Indésirable",
+          "failed": "Non envoyé"
+        },
+        "title": {
+          "bounced": "L'invitation n'est jamais arrivée",
+          "complained": "L'invitation a été signalée comme indésirable",
+          "failed": "L'e-mail n'a pas pu être envoyé"
+        },
+        "reasons": {
+          "no_email": "Cette adresse n'existe pas. Vérifiez l'orthographe, puis renvoyez l'invitation à la bonne adresse.",
+          "mailbox_full": "La boîte de réception du destinataire est pleine. Réessayez plus tard.",
+          "suppressed": "Cette adresse est bloquée après un échec précédent : plus rien ne lui sera envoyé. Utilisez une autre adresse.",
+          "blocked": "Le serveur du destinataire a refusé le message définitivement — le plus souvent, l'adresse n'existe pas. Vérifiez l'orthographe.",
+          "content": "Le serveur du destinataire a refusé le contenu du message.",
+          "spam": "Le destinataire ne recevra plus d'e-mail de notre part. Transmettez-lui le lien d'invitation autrement.",
+          "temporary": "La remise a échoué temporairement. Elle sera retentée automatiquement.",
+          "unknown": "L'e-mail n'a pas pu être remis."
+        },
+        "reinvite": "Réinviter",
+        "reinviteTitle": "Réinviter {email}",
+        "reinviteDescription": "Corrigez l'adresse si besoin : une nouvelle invitation part, l'ancienne reste en attente jusqu'à ce que vous l'annuliez."
       }
     },
     "expired": "Accès expiré le {date}",

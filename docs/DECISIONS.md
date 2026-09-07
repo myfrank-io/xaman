@@ -1436,3 +1436,59 @@ ne réagissait pas au doigt.
 vue ne fait jamais : « Sans catégorie » n'apparaissait donc nulle part dans `/dev/ui`. Corrigé, et
 `/dev/ui/supplies?category=none` entre dans l'audit tactile — l'état actif d'une ligne est un état
 qu'aucune autre URL de la galerie n'atteignait.
+
+## 2026-09-07 — D79 : un e-mail qui n'arrive pas le dit dans l'app
+
+**Question.** « Il faut absolument que tu montres quand les mails sont en bounce dans l'app »,
+capture du tableau de bord de l'expéditeur à l'appui : « Vous êtes invité à bord — Xaman »,
+`Sent` 19:00, `Bounced` 19:00, `Suppressed` 19:00, *« Recipient not found: the recipient address
+doesn't exist »*. L'adresse invitée portait une lettre de travers.
+
+**Le constat.** Dans l'application, cette invitation affichait **« En attente »**. Elle l'aurait
+affiché quatorze jours, puis « Expirée » — les deux mêmes mots qu'une invitation en train d'être
+lue à l'instant. Le seul fait utile (personne ne recevra jamais ce message, l'adresse est à
+corriger) était connu **trois secondes après l'envoi**, par l'expéditeur seul, sur un tableau de
+bord où l'on ne va pas. Et il empire tout seul : après un rebond définitif l'adresse passe en
+liste de suppression, si bien qu'on peut réinviter dix fois sans que rien ne parte.
+
+**Décision.** L'invitation porte désormais ce que l'expéditeur sait (`0023`) : `email_id`,
+`delivery_status`, `delivery_reason`, `delivery_detail`, `delivery_updated_at`. L'écran Membres
+lit les trois qui le concernent — l'identifiant du message et la phrase anglaise du fournisseur
+ne sont pas accordés à `authenticated`, comme le token avant eux.
+
+**Deux chemins vers la même colonne.** Un **webhook signé** (`/api/webhooks/resend`, signature
+Standard Webhooks vérifiée avec `node:crypto`, aucune dépendance ajoutée) écrit l'événement dès
+qu'il arrive ; et l'écran Membres **redemande** l'état des invitations encore en attente au
+moment de les afficher. Le second existe parce que le premier se configure hors dépôt : E9-6 et
+E13-8 attendent encore un secret posé à la main, et « personne n'a reçu ça » ne doit pas attendre
+qu'un tableau de bord soit ouvert. La relance ne coûte rien en régime établi — `delivered` et
+`bounced` sont définitifs, et rien n'est redemandé deux fois dans la minute.
+
+**Ce que l'écran dit.** Un rebond prime sur « En attente » — attendre est précisément ce que
+cette invitation ne fait pas : la pastille passe en `Non délivré`, et sous la ligne un encart
+donne la cause **en français** (« Cette adresse n'existe pas. Vérifiez l'orthographe, puis
+renvoyez l'invitation à la bonne adresse. ») et la sortie : **Réinviter**, qui rouvre le
+dialogue d'invitation avec l'adresse déjà remplie — une faute de frappe se corrige là où on la
+lit. Les états sains se disent aussi, discrètement, en fin de ligne : « e-mail remis », « envoi
+en cours », « remise retardée ».
+
+**Le vocabulaire est fermé des deux côtés.** Six états et huit causes, traduits une fois depuis
+la classification du fournisseur (`src/lib/email/delivery-status.ts`), repris à l'identique par
+une contrainte `check` en base ; un test compare les deux listes à la migration, un autre exige
+une phrase française pour chacune. L'anglais du fournisseur est stocké (`delivery_detail`) mais
+n'atteint jamais un écran (règle 7).
+
+**Ce qui ne bouge pas.** Sans expéditeur configuré (D75), les cinq colonnes restent nulles et
+l'écran affiche exactement ce qu'il affichait hier : **null, c'est inconnu, jamais « remis »**.
+L'invitation continue d'exister quoi qu'il arrive, et le lien reste offert dans le dialogue.
+
+**Écarté :** une table générique d'événements d'e-mail (`email_deliveries`) — la seule question
+posée est « cette invitation est-elle arrivée ? », et une colonne sur l'invitation y répond sans
+table, RLS ni tests supplémentaires ; l'e-mail hebdomadaire, lui, n'a personne à prévenir.
+Écarté aussi : attendre avant d'annoncer la panne (« ça va peut-être arriver ») — un rebond
+définitif l'est dès la première seconde. Écarté enfin : renvoyer automatiquement le même message
+à la même adresse, qui est en liste de suppression et ne repartira pas.
+
+**À faire hors dépôt** : dans Resend → Webhooks, ajouter `https://<app>/api/webhooks/resend` sur
+les événements `email.*`, puis poser `RESEND_WEBHOOK_SECRET` (le *signing secret*) dans les
+variables Vercel. Sans lui l'endpoint refuse tout et seule la relance à la lecture travaille.
