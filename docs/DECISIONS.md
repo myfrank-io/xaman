@@ -1359,3 +1359,46 @@ s'active le jour où elle est posée.
 domaine `xaman.boats` y est vérifié depuis ce midi. L'envoi est un `fetch` — un POST, aucune
 dépendance ajoutée. Un échec d'envoi ne détruit pas l'invitation : la ligne existe, et le dialogue
 propose le lien à copier ou à partager.
+
+## 2026-09-07 — D76 : l'étape 1 compte jusqu'à quatre moteurs
+
+**Question.** Signalé à l'usage sur l'étape 1, la puce « Moteurs » sous le type de bateau : « ici
+donne la possibilité de rajouter d'autres moteurs direct ».
+
+**Le constat.** Le toggle s'arrêtait à *2 moteurs*, et `newBoatEngines` créait deux moteurs pour
+tout compte supérieur ou égal à deux. Un tri-moteur ou un quad était donc plafonné sur le premier
+écran, sans que rien ne le dise : le carnet s'ouvrait avec deux moteurs et il fallait aller en
+ajouter un troisième depuis l'écran Bateau, puis lui générer ses points. Le plafond n'était pas
+une décision, c'était le cas `else if (count >= 2)` d'une fonction écrite pour un catamaran.
+
+**Décision.** Le toggle offre **0, 1, 2, 3, 4**. Au-delà de deux, « bâbord / tribord » ne nomme
+plus les moteurs, alors la table des noms change avec le nombre :
+
+| Nombre | Noms | Positions |
+|---|---|---|
+| 1 | Moteur (Hors-bord sur un semi-rigide) | `center` |
+| 2 | Moteur bâbord · Moteur tribord | `port` · `starboard` |
+| 3 | Moteur bâbord · Moteur central · Moteur tribord | `port` · `center` · `starboard` |
+| 4 | Moteur bâbord extérieur · bâbord intérieur · tribord intérieur · tribord extérieur | `port` · `port` · `starboard` · `starboard` |
+
+Un quad se lit de l'extérieur vers l'intérieur, comme on le compte depuis le ponton. Deux moteurs
+d'un même bord partagent leur position : seul le nom les distingue, et un test garantit que deux
+moteurs n'en portent jamais le même. Sur un semi-rigide, toutes les positions passent à
+`outboard` — ce n'est pas cosmétique, `engine_scope` filtre dessus (D68) et un hors-bord rangé en
+`center` récolterait les points d'un in-bord.
+
+**Pourquoi quatre et pas six.** `create_boat` accepte six moteurs, et l'annexe s'ajoute derrière :
+quatre plus l'annexe font cinq, sous le plafond. Un cinquième moteur *du bord* est assez rare
+pour ne pas valoir deux puces de plus sur l'écran d'arrivée ; il s'ajoute depuis l'écran Bateau,
+où il est nommé et positionné à la main. Un compte hors bornes arrivant d'ailleurs est ramené à
+quatre plutôt que refusé : un carnet doit s'ouvrir quoi qu'il arrive.
+
+**Ce qui ne bouge pas.** Le pré-réglage (deux pour un multicoque, un pour le reste), la puce
+« Aucun » en tête, et l'annexe qui reste une question à part.
+
+**Écarté :** un éditeur de liste à l'étape 1, une ligne par moteur avec son nom et sa position.
+D65 et D67 tiennent cet écran à cinq questions et zéro tap superflu ; les noms générés sont
+modifiables sur l'écran Bateau, où l'on est déjà pour tout le reste. Écarté aussi : des puces
+numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le groupe passe à deux
+lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
+sans avoir à remonter au libellé du champ.
