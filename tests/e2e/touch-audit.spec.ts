@@ -28,6 +28,9 @@ const PAGES = [
   "/dev/ui/review",
   "/dev/ui/import",
   "/dev/ui/install",
+  // The six e-mails Supabase sends (D71). The frame around them is what is measured here — the
+  // e-mail itself lives in a sandboxed iframe, and an inbox is nobody's viewport to audit.
+  "/dev/ui/emails",
   // The account screen had no preview at all until D45 put a password card on it.
   "/dev/ui/profile",
   // The densest row in the app: title, two metadata lines, an amount and two buttons (D40).

@@ -1060,46 +1060,97 @@ modeste : l'audit tactile reste le chemin critique à 3 min 48, et le vrai plafo
 Les trois leviers qui restent sont écrits ci-dessus — conteneur `postgres:17`, build de
 production pour l'audit, ou un viewport de moins — et chacun se paie en rigueur, pas en YAML.
 
-## 2026-09-07 — D71 : un moteur peut n'avoir aucun compteur d'heures
+## 2026-09-07 — D71 : les e-mails d'authentification sont des écrans
 
-**Question.** Signalé sur l'onglet Moteurs de Xaman : « dans moteurs mets une check box pour les
-annexes où on n'a pas le compteur d'heures ». La carte de l'annexe Suzuki y affichait
-« compteur inconnu », entre deux Yanmar qui affichent 580 h et 1 008 h.
+**Question.** Deux remarques du même jour : « fais les mails d'ajouts de membres au clean, je veux
+un truc niquel, brande les mails aux couleurs de Xaman » et « la connexion via code est fausse, on
+ne reçoit pas de code, on reçoit un magic link ».
 
-**Le constat.** « Compteur inconnu » est une phrase d'attente : elle dit *on ne sait pas encore*,
-et l'app se comporte en conséquence. Elle demandait donc un relevé qui n'arrivera jamais — bouton
-« Relevé » sur la carte et sur la fiche, puce dans le bandeau du tableau de bord, ligne dans
-« moteurs sans relevé », champ d'heures dans chaque intervention — parce qu'un hors-bord d'annexe
-n'a pas de compteur sur son capot. Il n'y a rien à relever : ce n'est pas une donnée manquante,
-c'est une donnée qui n'existe pas.
+**Ce sont deux symptômes d'une seule cause.** Personne n'avait jamais écrit les gabarits d'e-mail
+du projet. Supabase envoyait donc les siens : *You have been invited*, *Follow this link to login*,
+en anglais, sur fond blanc, sans une ligne sur le bateau ni sur le rôle — et surtout, le gabarit
+« Magic Link » par défaut ne contient que `{{ .ConfirmationURL }}`. C'est ce détail qui décide :
+avec l'URL seule, GoTrue envoie un lien ; **avec `{{ .Token }}`, il envoie le code à 6 chiffres**.
+L'écran de connexion demandait donc six chiffres que rien n'avait jamais produits, et le message
+« Vous recevrez un code à 6 chiffres » était faux depuis le premier jour.
 
-**Décision.** `engines.tracks_hours` (booléen, défaut `true`), une case sur la fiche du moteur
-écrite dans le sens où elle est vécue — **« Pas de compteur d'heures »**, à cocher, plutôt qu'un
-« suit les heures » à décocher. Ce que l'absence de compteur entraîne, partout, sans autre
-réglage :
+**Décision.** Les six e-mails que Supabase Auth peut envoyer sont écrits, en français, aux couleurs
+de la marque, et vivent dans le dépôt : `supabase/templates/*.html`.
 
-- la carte et la fiche disent **« sans compteur d'heures »** en gris, jamais l'ambre
-  « à mettre à jour » d'un relevé en retard ; le bouton « Relevé » disparaît des deux ;
-- le moteur quitte le bandeau des compteurs du tableau de bord, la phrase « moteurs sans relevé »
-  et le compte `boat_dashboard_stats.engines_without_reading` ;
-- l'intervention ne lui ouvre plus de champ d'heures ;
-- ses points de checklist perdent leur échéance en heures : `checklist_item_status` remet
-  `interval_hours` à null pour eux, donc plus de « toutes les 100 h » affiché, plus de statut
-  calculé sur un compteur absent, et surtout plus de **cul-de-sac au cochage** — le trigger
-  `check_completion_hours` exigeait des heures que personne ne pouvait lire, et refusait la
-  réalisation. Un « Entretien du hors-bord » hérité d'un modèle générique redevient ce qu'il est
-  en vrai : une échéance annuelle.
+| Gabarit | Envoyé quand | Porte |
+|---|---|---|
+| `invite` | un propriétaire ajoute quelqu'un à l'équipage | le bateau, l'invitant, le rôle, un bouton |
+| `magic_link` | « Code par e-mail » sur un compte existant | **le code**, puis le lien en second |
+| `confirmation` | première connexion d'un invité (le compte se crée) | **le code**, puis le lien |
+| `recovery` | « Mot de passe oublié ? » (D26) | le lien, et le rappel de D45 |
+| `email_change` | changement d'adresse (les deux confirment) | le code et le bouton |
+| `reauthentication` | opération sensible | le code |
 
-**Rien n'est effacé.** `checklist_items.interval_hours` garde sa valeur, les relevés déjà saisis
-gardent leurs lignes et restent lisibles sur la fiche. La case se décoche, et tout revient — c'est
-ce qui arrive le jour où un compteur est posé sur l'annexe.
+**La plaque, la ligne d'or, le papier.** Le cadre est celui de l'application : bandeau `--navy`,
+filet de laiton (`--brass-hairline`, le seul endroit où le laiton apparaît, règle 12), carte
+blanche sur le papier chiffon `--background`, encre `--foreground`, bouton `--primary` de 44 px de
+haut. La police d'affichage est la moitié repli de `--font-display` (`Iowan Old Style`, `Palatino`,
+`Georgia`) : Fraunces ne s'installe pas dans une boîte de réception. Tout est en tableaux et en
+styles *inline* — une boîte mail n'a ni feuille de style ni propriétés personnalisées — et le seul
+`<style>` porte le mode sombre, que perdre ne coûte rien.
 
-**Le défaut reste `true`.** Un moteur existant suit ses heures jusqu'à ce que quelqu'un dise le
-contraire ; la migration ne change rien pour les deux Yanmar. L'annexe de `seed/xaman-boat.json`
-part, elle, avec `tracks_hours: false` : c'est l'état réel du bateau.
+**Pourquoi un générateur.** Un gabarit GoTrue n'a pas d'inclusion : l'en-tête, le filet et le pied
+seraient copiés six fois et divergeraient à la première retouche. `scripts/gen-email-templates.mjs`
+tient la coquille une fois ; `pnpm gen:emails` écrit les six fichiers, qui sont **commités** parce
+que c'est ce que lisent `supabase start` et la mise en production. Même discipline que le
+catalogue de modèles (D69) : `tests/unit/email-templates.test.ts` échoue si le HTML commité ne
+correspond plus à son générateur, si un gabarit perd son `{{ .Token }}`, ou si `config.toml` ne
+pointe plus sur un fichier qui existe.
 
-**Écarté :** déduire l'absence de compteur de la position `outboard`. Un semi-rigide est propulsé
-par un hors-bord qui, lui, a bien un compteur ; la position dit où le moteur est monté, pas ce
-qu'on peut lire dessus. Écarté aussi : refuser la case tant que le moteur porte des relevés. Un
-compteur peut avoir été relevé une fois à la louche puis abandonné, et une case qui refuse de se
-cocher n'explique jamais assez bien pourquoi.
+**Pourquoi pas `supabase config push`.** Elle enverrait aussi `site_url = "http://localhost:3000"`
+et les limites de débit locales au projet hébergé : une bonne façon de casser l'authentification
+de production un mardi. `pnpm emails:push` fait une seule requête, `PATCH /v1/projects/{ref}/config/auth`,
+sur les douze champs `mailer_*` et rien d'autre. Le jeton d'accès personnel reste dans
+l'environnement de qui lance la commande, jamais dans le dépôt.
+
+**Et pour les regarder avant qu'ils partent.** `/dev/ui/emails` affiche les six, remplis de valeurs
+d'exemple, dans une `iframe` isolée — la même page que le reste de la galerie. Ce sont les seuls
+écrans de Xaman qu'aucun `pnpm build` ne compile et qu'on ne peut pas rouvrir une fois envoyés :
+sans cette page, ils seraient découverts dans la boîte de quelqu'un.
+
+**Ce qui reste imparfait, et pourquoi on l'accepte.** Inviter une adresse **qui a déjà un compte**
+ne peut pas passer par le gabarit `invite` — Supabase refuse d'inviter deux fois — donc cette
+personne reçoit un code de connexion, pas une invitation nommant le bateau : `signInWithOtp` ne
+transporte aucune métadonnée pour un compte existant. Le gabarit le dit (« si vous venez d'être
+invité à bord d'un carnet, ce lien vous y conduit ») et la page `/invite/[token]` renomme tout
+avant d'accepter. Y remédier demanderait d'envoyer nos propres e-mails (Resend, comme le résumé
+hebdomadaire) : c'est la porte de sortie si le cas devient courant, pas une dépendance à ajouter
+pour un cas qui, aujourd'hui, ne s'est encore jamais produit.
+
+**À faire une fois, hors dépôt.** `SUPABASE_ACCESS_TOKEN=… SUPABASE_PROJECT_REF=… pnpm emails:push`.
+Tant que la commande n'est pas passée, la production continue d'envoyer les gabarits anglais par
+défaut — et « Code par e-mail » continue d'envoyer un lien.
+
+## 2026-09-07 — D72 : « Ajouter un bateau » a une porte de sortie
+
+**Question.** « Quand je suis sur ajouter un nouveau bateau, je ne peux pas revenir à l'app. »
+
+**Ce qui se passait.** `/boats/new` est l'étape 1 de la mise en route (D67), et elle a été dessinée
+pour quelqu'un qui n'a **rien** : `/boats` l'y envoie, il n'y a pas de carnet derrière, et le seul
+bouton de bas de page — « Se déconnecter » — est la bonne sortie pour ce cas-là. Mais l'écran a une
+seconde porte d'entrée : « Ajouter un bateau » dans le menu compte, ouverte par curiosité aussi
+souvent que par intention. Cette personne-là a un carnet, et l'écran ne le savait pas : pas
+d'onglets (`BoatsShell` n'est pas `AppShell`), pas de fil d'Ariane, pas de barre d'adresse ni de
+geste de retour en mode autonome sur iPad. Rien, sauf se déconnecter — pour revenir au même
+endroit après s'être reconnecté.
+
+**Décision.** L'écran lit s'il existe déjà un bateau (une ligne, la RLS répond pour cette personne)
+et se présente en conséquence :
+
+- **avec un carnet** : « ‹ Retour à l'application » en tête du bandeau navy, et le bouton de
+  déconnexion disparaît — il est dans le menu compte, où il a toujours été ;
+- **sans carnet** : rien de neuf. Aucun retour n'est proposé parce qu'il n'y a nulle part où
+  retourner, et « Se déconnecter » reste la seule issue honnête.
+
+Le retour vise `/boats`, jamais un tableau de bord : cette page mène au carnet quand il y en a un
+seul, au sélecteur quand il y en a plusieurs. Une seule destination, juste dans les deux cas.
+
+Le retour est offert par `BoatsShell`, donc le sélecteur de bateaux pourrait le porter aussi ; il
+ne le fait pas, il est déjà une racine. Les étapes 2 et 3 non plus, et pour la raison écrite dans
+`OnboardingSteps` : le flux n'avance que vers l'avant, et chacune a déjà sa sortie (« Passer cette
+étape », « Ouvrir mon carnet »).

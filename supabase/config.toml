@@ -242,10 +242,39 @@ otp_expiry = 600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# The six Supabase Auth e-mails, in French and in Xaman's colours. The HTML is GENERATED —
+# `pnpm gen:emails` writes it from scripts/gen-email-templates.mjs, and a unit test fails if the
+# committed files drift. Two things matter beyond the branding:
+#   - magic_link / confirmation carry `{{ .Token }}`, which is what makes Supabase send a
+#     6-digit CODE rather than a magic link (« Code par e-mail » in the sign-in screen);
+#   - invite reads `{{ .Data.boat_name }}` / `inviter_name` / `role_label`, passed by
+#     src/lib/actions/members.ts, so the invitation names the boat and the role.
+# `supabase start` reads this file; the hosted project is updated with `pnpm emails:push`
+# (see KICKOFF.md) — never `supabase config push`, which would also send `site_url` and the
+# local rate limits to production, and never the dashboard, which nothing can review.
+[auth.email.template.invite]
+subject = "Vous êtes invité à bord — Xaman"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.magic_link]
+subject = "{{ .Token }} — votre code de connexion Xaman"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.confirmation]
+subject = "{{ .Token }} — votre code Xaman"
+content_path = "./supabase/templates/confirm-signup.html"
+
+[auth.email.template.recovery]
+subject = "Réinitialiser votre mot de passe Xaman"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirmez votre nouvelle adresse e-mail — Xaman"
+content_path = "./supabase/templates/email-change.html"
+
+[auth.email.template.reauthentication]
+subject = "{{ .Token }} — code de vérification Xaman"
+content_path = "./supabase/templates/reauthentication.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
