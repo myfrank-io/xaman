@@ -47,7 +47,7 @@ export type CompletableItem = {
     label: string;
     lastHours: number | null;
     lastDate: string | null;
-    /** false: no hour meter on this engine (D71) — the hours field does not exist. */
+    /** false: no hour meter on this engine (D73) — the hours field does not exist. */
     tracksHours: boolean;
   } | null;
   lastCompletedAt: string | null;
@@ -171,7 +171,7 @@ function CompleteForm({
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  // D71: an engine without a meter has no hours to give — the field disappears and the database
+  // D73: an engine without a meter has no hours to give — the field disappears and the database
   // no longer demands them either (check_completion_hours).
   const engine = item.engine?.tracksHours === false ? null : item.engine;
   const hoursRequired = item.intervalHours !== null && item.engine?.tracksHours !== false;

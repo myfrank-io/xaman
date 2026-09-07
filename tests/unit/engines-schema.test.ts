@@ -20,9 +20,9 @@ function engine(over: Record<string, unknown> = {}) {
   };
 }
 
-// D71: the box on the engine form is « pas de compteur d'heures », so the schema carries its
+// D73: the box on the engine form is « pas de compteur d'heures », so the schema carries its
 // opposite — an engine tracks its hours unless someone says it has no meter.
-describe("upsertEngineSchema — tracksHours (D71)", () => {
+describe("upsertEngineSchema — tracksHours (D73)", () => {
   it("assumes a meter when the form says nothing", () => {
     const parsed = upsertEngineSchema.parse(engine());
     expect(parsed.tracksHours).toBe(true);

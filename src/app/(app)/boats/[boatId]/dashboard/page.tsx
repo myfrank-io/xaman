@@ -74,7 +74,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       .maybeSingle(),
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase.from("boat_dashboard_stats").select("*").eq("boat_id", boatId).maybeSingle(),
-    // D71: an engine without an hour meter has no counter to show and no reading to ask for.
+    // D73: an engine without an hour meter has no counter to show and no reading to ask for.
     supabase
       .from("engines")
       .select("id, label")

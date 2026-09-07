@@ -13,7 +13,7 @@ export type ChecklistRow = {
   categoryColor: string;
   engineId: string | null;
   engineLabel: string | null;
-  /** false when the linked engine has no hour meter (D71): no hours are ever asked for. */
+  /** false when the linked engine has no hour meter (D73): no hours are ever asked for. */
   engineTracksHours: boolean;
   intervalMonths: number | null;
   intervalHours: number | null;

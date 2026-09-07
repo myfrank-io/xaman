@@ -41,7 +41,7 @@ export async function logFormData(
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
-    // D71: no meter, no hour field on the intervention.
+    // D73: no meter, no hour field on the intervention.
     supabase
       .from("engines")
       .select("id, label, sort_order")

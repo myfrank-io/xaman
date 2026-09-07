@@ -25,7 +25,7 @@ alter table public.engines
   add column if not exists tracks_hours boolean not null default true;
 
 comment on column public.engines.tracks_hours is
-  'false when the engine has no hour meter (a dinghy outboard, D71): no reading is asked for, and '
+  'false when the engine has no hour meter (a dinghy outboard, D73): no reading is asked for, and '
   'its checklist points lose their hour deadline. The stored interval_hours is kept, not erased.';
 
 -- ---------------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ $$;
 
 comment on function public.check_completion_hours() is
   'engine_hours is mandatory when the item counts engine hours — unless its engine has no meter '
-  '(engines.tracks_hours = false, D71), where no counter can ever be read.';
+  '(engines.tracks_hours = false, D73), where no counter can ever be read.';
 
 -- ---------------------------------------------------------------------------------------------
 -- 2. checklist_item_status: same columns as 0004 in the same order (create or replace keeps the
@@ -85,7 +85,7 @@ base as (
     i.label,
     i.description,
     i.interval_months,
-    -- an hour deadline needs a meter: without one it is not a deadline, it is a wish (D71)
+    -- an hour deadline needs a meter: without one it is not a deadline, it is a wish (D73)
     case when i.engine_id is not null and not coalesce(e.tracks_hours, true)
          then null::int
          else i.interval_hours
@@ -168,7 +168,7 @@ cross join lateral public.checklist_compute_status(
 comment on view public.checklist_item_status is
   'Status of every active checklist item (audit annex A): reference = last completion or anchor, '
   'a fixed next_due_at wins over the interval, hour deadlines neutralised after a counter reset '
-  'and on an engine without a meter (D71), items of an inactive engine excluded.';
+  'and on an engine without a meter (D73), items of an inactive engine excluded.';
 
 -- ---------------------------------------------------------------------------------------------
 -- 3. « Moteurs sans relevé » stops counting the engines that will never have one.

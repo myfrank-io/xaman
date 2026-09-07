@@ -215,7 +215,7 @@ export function EngineSheet({
             tracksHours={engine.tracksHours}
             size="lg"
           />
-          {/* D71: no meter — the block says why rather than showing a counter nobody can read. */}
+          {/* D73: no meter — the block says why rather than showing a counter nobody can read. */}
           {!engine.tracksHours ? (
             <p className="mt-1 text-caption text-ink-2">{t("noCounterHint")}</p>
           ) : currentByName ? (

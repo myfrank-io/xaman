@@ -28,7 +28,7 @@ export const upsertEngineSchema = z.object({
   model: nullableText(60),
   serial: nullableText(60),
   installedAt: isoDate.nullable(),
-  // D71: false for a dinghy outboard with no meter — no reading is ever asked for.
+  // D73: false for a dinghy outboard with no meter — no reading is ever asked for.
   tracksHours: z.boolean().default(true),
   notes: nullableText(2000),
 });

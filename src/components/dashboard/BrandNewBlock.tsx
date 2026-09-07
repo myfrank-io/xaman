@@ -31,7 +31,7 @@ export function BrandNewBlock({
   count: number;
   reviewCount: number;
   steps: StartSteps;
-  /** false when no engine of the boat has an hour meter (D71): nothing to read. */
+  /** false when no engine of the boat has an hour meter (D73): nothing to read. */
   hasCounters: boolean;
   canContribute: boolean;
 }) {
@@ -95,7 +95,7 @@ export function BrandNewBlock({
   // The review row only exists when there is something to review: on a boat that never imported
   // anything, « Vérifier les 0 lignes importées du carnet papier », struck through, is a step
   // about a paper logbook that never existed. Same for the hours: a boat whose engines have no
-  // meter — a dinghy outboard alone, say (D71) — has no counter to read.
+  // meter — a dinghy outboard alone, say (D73) — has no counter to read.
   const rows = allRows.filter(
     (row) => (row.key !== "review" || reviewCount > 0) && (row.key !== "hours" || hasCounters),
   );

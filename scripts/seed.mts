@@ -94,7 +94,7 @@ const boatFile = z.object({
       serial: nullableText,
       sort_order: z.number().int().optional(),
       notes: nullableText,
-      /** false for an engine with no hour meter (D71), e.g. a dinghy outboard. */
+      /** false for an engine with no hour meter (D73), e.g. a dinghy outboard. */
       tracks_hours: z.boolean().optional(),
     }),
   ),

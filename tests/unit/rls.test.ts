@@ -1391,9 +1391,9 @@ describe("status views", () => {
   });
 });
 
-// D71: the dinghy's outboard has no hour meter. Nothing asks it for a reading, and the hour
+// D73: the dinghy's outboard has no hour meter. Nothing asks it for a reading, and the hour
 // deadlines its checklist points inherited from the template stop pretending to be deadlines.
-describe("engine without an hour meter (D71)", () => {
+describe("engine without an hour meter (D73)", () => {
   const meterless = (c: PoolClient) =>
     c.query("update public.engines set tracks_hours = false where id = $1", [ENGINE]);
 

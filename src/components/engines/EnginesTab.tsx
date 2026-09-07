@@ -49,7 +49,7 @@ export function EngineCounter({
 }: {
   hours: number | null;
   readAt: string | null;
-  /** false: the engine has no hour meter (D71) — nothing to read, nothing to update. */
+  /** false: the engine has no hour meter (D73) — nothing to read, nothing to update. */
   tracksHours?: boolean;
   size?: "md" | "lg";
 }) {
@@ -163,7 +163,7 @@ export function EnginesTab({
     openReading && canContribute && active.some((engine) => engine.tracksHours),
   );
 
-  // Only engines that have a meter can be read (D71).
+  // Only engines that have a meter can be read (D73).
   const readingEngines: ReadingEngine[] = active
     .filter((engine) => engine.tracksHours)
     .map((engine) => ({
