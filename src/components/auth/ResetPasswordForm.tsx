@@ -17,15 +17,16 @@ import { newPasswordSchema, type NewPasswordInput } from "@/lib/schemas/auth";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Choosing a new password after following the recovery link.
+ * Choosing a new password after the recovery code.
  *
- * Reaching this screen only works with the session the link opened; without it the form is not
- * even shown, because a « save » that silently does nothing is worse than a refusal.
+ * Reaching this screen only works with the session `/forgot-password` opened by verifying that
+ * code (D78); without it the form is not even shown, because a « save » that silently does
+ * nothing is worse than a refusal.
  */
 export function ResetPasswordForm({
   /**
    * Skips the session probe and pins the state. Only `/dev/ui/reset-password` passes it: this
-   * screen exists solely at the end of a recovery link, so without the seam the preview — and
+   * screen exists solely at the end of the recovery code, so without the seam the preview — and
    * therefore the touch audit — could never see either of its two faces.
    */
   initialState,

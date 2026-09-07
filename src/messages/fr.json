@@ -253,30 +253,39 @@
     },
     "forgot": {
       "title": "Mot de passe oublié",
-      "subtitle": "Indiquez votre adresse : nous vous envoyons un lien pour en choisir un nouveau.",
-      "submit": "Recevoir le lien",
+      "subtitle": "Indiquez votre adresse : nous vous envoyons un code pour en choisir un nouveau.",
+      "submit": "Recevoir le code",
       "back": "Revenir à la connexion",
-      "sent": {
-        "title": "Lien envoyé",
-        "description": "Si un compte existe pour {email}, un lien de réinitialisation vient d'y être envoyé. Il est valable une heure."
+      "code": {
+        "title": "Saisissez le code reçu",
+        "help": "Si un compte existe pour {email}, un code vient d'y être envoyé. Pensez à vérifier vos courriers indésirables.",
+        "label": "Code reçu par e-mail",
+        "submit": "Continuer",
+        "back": "Changer d'adresse",
+        "resend": "Renvoyer le code",
+        "linkHint": "Demandez un seul code : en redemander un annule le précédent."
       },
-      "rateLimited": "Trop de messages ont été envoyés depuis cette application dans l'heure. Attendez une heure, ou changez votre mot de passe depuis votre profil si vous êtes déjà connecté."
+      "errors": {
+        "code": "Code incorrect ou expiré. Recopiez-le en entier, tel qu'il apparaît dans l'e-mail.",
+        "send": "Impossible d'envoyer le code. Réessayez dans une minute.",
+        "rateLimited": "Trop de messages ont été envoyés depuis cette application dans l'heure. Attendez une heure, ou changez votre mot de passe depuis votre profil si vous êtes déjà connecté."
+      }
     },
     "reset": {
       "title": "Choisir un nouveau mot de passe",
-      "subtitle": "Votre lien est valide. Choisissez le mot de passe que vous utiliserez désormais.",
+      "subtitle": "Votre code est validé. Choisissez le mot de passe que vous utiliserez désormais.",
       "password": "Nouveau mot de passe",
       "confirm": "Confirmer le mot de passe",
       "submit": "Enregistrer le mot de passe",
       "done": "Mot de passe modifié. Vous êtes connecté.",
       "expired": {
-        "title": "Ce lien n'est plus valable",
-        "description": "Les liens expirent au bout d'une heure. Demandez-en un nouveau.",
-        "action": "Demander un nouveau lien"
+        "title": "Cette demande n'est plus valable",
+        "description": "Un code de réinitialisation ne vaut qu'une heure, et il faut le saisir dans l'application. Demandez-en un nouveau.",
+        "action": "Demander un nouveau code"
       },
       "errors": {
         "weak": "Ce mot de passe est trop court ou trop courant. Choisissez-en un autre.",
-        "failed": "Le mot de passe n'a pas pu être modifié. Redemandez un lien."
+        "failed": "Le mot de passe n'a pas pu être modifié. Redemandez un code."
       }
     }
   },
@@ -498,6 +507,34 @@
         "expired": "Expirée",
         "accepted": "Acceptée",
         "revoked": "Annulée"
+      },
+      "delivery": {
+        "sent": "envoi en cours",
+        "delivered": "e-mail remis",
+        "delayed": "remise retardée",
+        "badge": {
+          "bounced": "Non délivré",
+          "complained": "Indésirable",
+          "failed": "Non envoyé"
+        },
+        "title": {
+          "bounced": "L'invitation n'est jamais arrivée",
+          "complained": "L'invitation a été signalée comme indésirable",
+          "failed": "L'e-mail n'a pas pu être envoyé"
+        },
+        "reasons": {
+          "no_email": "Cette adresse n'existe pas. Vérifiez l'orthographe, puis renvoyez l'invitation à la bonne adresse.",
+          "mailbox_full": "La boîte de réception du destinataire est pleine. Réessayez plus tard.",
+          "suppressed": "Cette adresse est bloquée après un échec précédent : plus rien ne lui sera envoyé. Utilisez une autre adresse.",
+          "blocked": "Le serveur du destinataire a refusé le message définitivement — le plus souvent, l'adresse n'existe pas. Vérifiez l'orthographe.",
+          "content": "Le serveur du destinataire a refusé le contenu du message.",
+          "spam": "Le destinataire ne recevra plus d'e-mail de notre part. Transmettez-lui le lien d'invitation autrement.",
+          "temporary": "La remise a échoué temporairement. Elle sera retentée automatiquement.",
+          "unknown": "L'e-mail n'a pas pu être remis."
+        },
+        "reinvite": "Réinviter",
+        "reinviteTitle": "Réinviter {email}",
+        "reinviteDescription": "Corrigez l'adresse si besoin : une nouvelle invitation part, l'ancienne reste en attente jusqu'à ce que vous l'annuliez."
       }
     },
     "expired": "Accès expiré le {date}",

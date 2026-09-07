@@ -265,7 +265,7 @@ subject = "{{ .Token }} — votre code Xaman"
 content_path = "./supabase/templates/confirm-signup.html"
 
 [auth.email.template.recovery]
-subject = "Réinitialiser votre mot de passe Xaman"
+subject = "{{ .Token }} — réinitialiser votre mot de passe Xaman"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.email_change]

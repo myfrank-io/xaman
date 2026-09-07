@@ -6,7 +6,7 @@
  * when the environment is not wired up they are skipped, and `pnpm test:e2e` still runs the
  * touch audit on its own.
  *
- * D79: they never point at the production project. These specs create interventions, tick
+ * D81: they never point at the production project. These specs create interventions, tick
  * checklist items and invite members; run against `xaman` they would write test data into
  * Xavier's real log.
  */

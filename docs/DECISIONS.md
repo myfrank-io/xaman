@@ -537,7 +537,8 @@ conservé ; seules la finition et l'identité changent.
 | 2026-09-03 | Anneau de focus | Azur marin (`--ring #1b5e96`) au lieu du bleu framework `#1d4ed8` | Le bleu par défaut est un marqueur « non designé » ; l'azur appartient à la palette |
 | 2026-09-03 | Badges de statut/état (révision de la règle DA « le plein = action requise ») | **Un seul langage teinté** : tous les badges (y compris En retard, Bientôt, Urgent) passent en teinte + `-fg` + liseré + icône, plus aucun aplat rouge/orange | Le mur d'aplats lisait « tableau de bord en alarme » ; la teinte garde l'instrument calme et reste lisible au soleil (contrastes `-fg`/`-border` mesurés), l'icône et le libellé portent le sens sans la couleur seule. Idem pour les pastilles de comptage (`Badge variant="danger"` ajouté) |
 | 2026-09-03 | Signature d'en-tête | Filet laiton (`brass-rule`) au bas de tout bandeau navy + dégradé multi-arrêt plus profond | Le « trait doré » d'une couverture de carnet ; détail de marque discret, jamais une alerte (respecte « le laiton ne porte jamais de donnée ») |
-| 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D79** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
+| 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D81** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
+| 2026-09-07 | « Le mail de mot de passe oublié ne fonctionne pas » — deuxième fois (après D45) | **D78** — le mot de passe oublié passe par un **code saisi dans l'application**, comme la connexion (D76), et l'app envoie elle-même l'e-mail par Resend quand un expéditeur est configuré (comme l'invitation, D75) | Le lien de récupération et le code sont le même jeton à usage unique : les analyseurs anti-hameçonnage ouvrent chaque URL d'un message et le consomment avant son destinataire (mesuré en D76). Et l'e-mail partait encore de la boîte SMTP intégrée de Supabase, quelques messages par heure — le `429` que D45 avait lu dans les journaux |
 
 ## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
 
@@ -1083,7 +1084,7 @@ de la marque, et vivent dans le dépôt : `supabase/templates/*.html`.
 | `invite` | un propriétaire ajoute quelqu'un à l'équipage | le bateau, l'invitant, le rôle, un bouton |
 | `magic_link` | « Code par e-mail » sur un compte existant | **le code**, puis le lien en second |
 | `confirmation` | première connexion d'un invité (le compte se crée) | **le code**, puis le lien |
-| `recovery` | « Mot de passe oublié ? » (D26) | le lien, et le rappel de D45 |
+| `recovery` | « Mot de passe oublié ? » (D26) | ~~le lien, et le rappel de D45~~ — **le code depuis D78** (2026-09-07), et le rappel de D45 |
 | `email_change` | changement d'adresse (les deux confirment) | le code et le bouton |
 | `reauthentication` | opération sensible | le code |
 
@@ -1405,7 +1406,7 @@ lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et «
 sans avoir à remonter au libellé du champ.
 
 
-## 2026-09-07 — D78 : l'e-mail de code ne contient aucun lien
+## 2026-09-07 — D80 : l'e-mail de code ne contient aucun lien
 
 **Question.** « Quand il arrive il est expiré » : « code incorrect ou expiré » à chaque tentative,
 sur une adresse d'école. La décision existait et était déjà citée dans le code sous le numéro D76,
@@ -1419,14 +1420,18 @@ anti-hameçonnage de la messagerie (une adresse d'école, donc Microsoft Defende
 URL d'un message. Or dans GoTrue le lien magique et le code sont **le même jeton à usage unique** :
 le code était donc consommé avant que son destinataire le lise. Reproductible à chaque envoi.
 
-**Décision.** Le gabarit `magic_link` ne contient plus aucun lien, et le dit. `confirmation` et
-`recovery` gardent le leur : le lien y **est** le parcours, il n'y a pas de code à protéger.
-L'aide sous le champ prévient de l'autre perte possible (« en redemander un annule le précédent »).
+**Décision.** Le gabarit `magic_link` ne contient plus aucun lien, et le dit. `confirmation` garde
+le sien : le lien y **est** le parcours, il n'y a pas de code à protéger. `recovery` l'a perdu
+ensuite, quand D78 a fait passer le mot de passe oublié par un code — le même raisonnement, appliqué
+au deuxième e-mail dont le jeton est le parcours. L'aide sous le champ prévient de l'autre perte
+possible (« en redemander un annule le précédent »).
 
-**Numérotation.** Cette décision porte D78 et non D76 : D76 était déjà pris. La collision vient de
-ce que le journal est numéroté à la main et que le numéro se choisit à l'écriture, pas à la fusion
-— deux branches ouvertes en même temps prennent le même. D79 (parcours E2E) a été renuméroté pour
-la même raison le même jour.
+**Numérotation.** Cette décision porte D80 et non D76 : D76 était déjà pris. Elle a d'abord visé
+D78, puis D79 — pris tous les deux, entre-temps, par des branches ouvertes en parallèle. C'est la
+démonstration du problème plutôt qu'un accident : le numéro se choisit **à l'écriture** et se
+vérifie contre une `main` qui bouge, donc deux branches simultanées prennent le même et le
+constatent à la fusion. Une clé `date + slug`, ou un numéro attribué à la fusion, supprimerait la
+course. D81 (parcours E2E) a été déplacé trois fois pour la même raison le même jour.
 
 ## 2026-09-07 — D77 : une part du total est une question, et la ligne qui la porte est la réponse
 
@@ -1460,3 +1465,121 @@ ne réagissait pas au doigt.
 vue ne fait jamais : « Sans catégorie » n'apparaissait donc nulle part dans `/dev/ui`. Corrigé, et
 `/dev/ui/supplies?category=none` entre dans l'audit tactile — l'état actif d'une ligne est un état
 qu'aucune autre URL de la galerie n'atteignait.
+
+## 2026-09-07 — D78 : le mot de passe oublié passe par un code, et part de l'application
+
+**Question.** Signalé à l'usage, pour la deuxième fois : « le mail de mot de passe oublié ne
+fonctionne pas ». D45 avait déjà répondu à cette phrase le 2026-09-03 — en ajoutant la carte
+**Mot de passe** au profil, qui écrit le nouveau mot de passe sans e-mail. C'était un contournement
+pour quelqu'un de déjà connecté ; le parcours, lui, n'avait pas été réparé.
+
+**Le constat, en deux pannes qui suffisent chacune.**
+
+1. **L'expéditeur.** `resetPasswordForEmail` laissait GoTrue envoyer le message, donc par la boîte
+   SMTP intégrée de Supabase : quelques messages par heure pour tout le projet, réservée au
+   développement. C'est le `429 email rate limit exceeded` que D45 avait lu dans les journaux
+   quatorze secondes avant un `/recover → 200`. L'invitation avait quitté ce chemin en D75
+   (Resend) ; la récupération y était restée seule.
+2. **Le lien.** Même arrivé, il ne servait à personne. D76 (E13-13) l'a établi sur l'e-mail de
+   connexion, journaux à l'appui : les analyseurs anti-hameçonnage d'une messagerie ouvrent
+   **chaque URL** d'un message trois secondes après sa livraison — toutes les vérifications
+   réussies venaient d'adresses Amazon et Azure. Or dans GoTrue le lien de récupération et le code
+   de récupération sont **le même jeton à usage unique**. Le scanner le consomme, et la personne
+   qui l'a demandé lit « ce lien n'est plus valable ». D76 avait laissé son lien à `recovery` en
+   jugeant que « le lien y **est** le parcours » : c'était exactement la raison de le retirer.
+
+Une troisième panne dormait dessous : `resetPasswordForEmail` appelé depuis le navigateur ouvre un
+échange PKCE, dont le vérificateur reste dans le navigateur qui a demandé. Demander depuis l'iPad
+et ouvrir le message sur le Mac ne pouvait pas marcher — `exchangeCodeForSession` échouait, et
+`/login?error=link` était tout ce qu'on en voyait. Sur un carnet partagé, ce n'est pas un cas rare.
+
+**Décision.** Le mot de passe oublié devient **un code saisi dans l'application**, comme la
+connexion :
+
+- le gabarit `recovery` porte `{{ .Token }}` et **plus aucun lien**, avec la phrase de D76 qui dit
+  pourquoi ; le sujet porte le code, comme les autres e-mails de code ;
+- `/forgot-password` a désormais deux faces — l'adresse, puis le code — et
+  `verifyOtp({ type: "recovery" })` ouvre la session ; `/reset-password` ne change pas : il refuse
+  toujours de s'afficher sans elle ;
+- **l'application envoie l'e-mail elle-même** quand `RESEND_API_KEY` est posée, comme
+  l'invitation (D75). `generateLink({ type: "recovery" })` frappe le jeton **sans rien envoyer**,
+  donc ce chemin ne touche jamais la boîte SMTP de Supabase — la panne 1 disparaît par
+  construction. `RECOVERY_HTML` est généré depuis `supabase/templates/recovery.html`, un test
+  compare octet par octet ;
+- **sans `RESEND_API_KEY`, le comportement d'avant est conservé** : GoTrue envoie son propre
+  gabarit `recovery`, qui porte maintenant le code lui aussi. Livrable avant que la variable
+  existe, exactement comme D75.
+
+**La réponse reste la même que l'adresse existe ou non.** Une adresse inconnue reçoit « envoyé »
+— dire quelles adresses ont un compte ici, c'est dire qui navigue avec qui. Le quota horaire est la
+seule exception : il appartient à l'application, pas à l'adresse, donc le nommer ne trahit rien, et
+se taire laisserait quelqu'un attendre un message qui ne partira pas.
+
+**Ce qui ne bouge pas.** La carte **Mot de passe** du profil (D45) — déjà connecté, on n'a jamais
+eu besoin de ce détour, et l'e-mail continue de le rappeler. `/auth/callback` garde son traitement
+de `token_hash` + `type` : un ancien message de récupération encore dans une boîte fonctionne.
+
+**Écarté :** garder le lien *en plus* du code, comme `confirmation` le fait. Sur `confirmation` le
+lien est un second chemin vers la même confirmation, et le perdre ne coûte rien ; ici le lien et le
+code sont un seul jeton, donc le lien ne serait pas une aide de plus — il serait la panne, laissée
+en place. Écarté aussi : allonger la durée de validité, ou augmenter le quota Supabase. Ni l'un ni
+l'autre ne touche à un jeton consommé par un robot trois secondes après l'envoi.
+
+**À refaire côté Supabase** : `pnpm emails:push`, pour appliquer `recovery.html` et son nouveau
+sujet au projet hébergé.
+
+## 2026-09-07 — D79 : un e-mail qui n'arrive pas le dit dans l'app
+
+**Question.** « Il faut absolument que tu montres quand les mails sont en bounce dans l'app »,
+capture du tableau de bord de l'expéditeur à l'appui : « Vous êtes invité à bord — Xaman »,
+`Sent` 19:00, `Bounced` 19:00, `Suppressed` 19:00, *« Recipient not found: the recipient address
+doesn't exist »*. L'adresse invitée portait une lettre de travers.
+
+**Le constat.** Dans l'application, cette invitation affichait **« En attente »**. Elle l'aurait
+affiché quatorze jours, puis « Expirée » — les deux mêmes mots qu'une invitation en train d'être
+lue à l'instant. Le seul fait utile (personne ne recevra jamais ce message, l'adresse est à
+corriger) était connu **trois secondes après l'envoi**, par l'expéditeur seul, sur un tableau de
+bord où l'on ne va pas. Et il empire tout seul : après un rebond définitif l'adresse passe en
+liste de suppression, si bien qu'on peut réinviter dix fois sans que rien ne parte.
+
+**Décision.** L'invitation porte désormais ce que l'expéditeur sait (`0023`) : `email_id`,
+`delivery_status`, `delivery_reason`, `delivery_detail`, `delivery_updated_at`. L'écran Membres
+lit les trois qui le concernent — l'identifiant du message et la phrase anglaise du fournisseur
+ne sont pas accordés à `authenticated`, comme le token avant eux.
+
+**Deux chemins vers la même colonne.** Un **webhook signé** (`/api/webhooks/resend`, signature
+Standard Webhooks vérifiée avec `node:crypto`, aucune dépendance ajoutée) écrit l'événement dès
+qu'il arrive ; et l'écran Membres **redemande** l'état des invitations encore en attente au
+moment de les afficher. Le second existe parce que le premier se configure hors dépôt : E9-6 et
+E13-8 attendent encore un secret posé à la main, et « personne n'a reçu ça » ne doit pas attendre
+qu'un tableau de bord soit ouvert. La relance ne coûte rien en régime établi — `delivered` et
+`bounced` sont définitifs, et rien n'est redemandé deux fois dans la minute.
+
+**Ce que l'écran dit.** Un rebond prime sur « En attente » — attendre est précisément ce que
+cette invitation ne fait pas : la pastille passe en `Non délivré`, et sous la ligne un encart
+donne la cause **en français** (« Cette adresse n'existe pas. Vérifiez l'orthographe, puis
+renvoyez l'invitation à la bonne adresse. ») et la sortie : **Réinviter**, qui rouvre le
+dialogue d'invitation avec l'adresse déjà remplie — une faute de frappe se corrige là où on la
+lit. Les états sains se disent aussi, discrètement, en fin de ligne : « e-mail remis », « envoi
+en cours », « remise retardée ».
+
+**Le vocabulaire est fermé des deux côtés.** Six états et huit causes, traduits une fois depuis
+la classification du fournisseur (`src/lib/email/delivery-status.ts`), repris à l'identique par
+une contrainte `check` en base ; un test compare les deux listes à la migration, un autre exige
+une phrase française pour chacune. L'anglais du fournisseur est stocké (`delivery_detail`) mais
+n'atteint jamais un écran (règle 7).
+
+**Ce qui ne bouge pas.** Sans expéditeur configuré (D75), les cinq colonnes restent nulles et
+l'écran affiche exactement ce qu'il affichait hier : **null, c'est inconnu, jamais « remis »**.
+L'invitation continue d'exister quoi qu'il arrive, et le lien reste offert dans le dialogue.
+
+**Écarté :** une table générique d'événements d'e-mail (`email_deliveries`) — la seule question
+posée est « cette invitation est-elle arrivée ? », et une colonne sur l'invitation y répond sans
+table, RLS ni tests supplémentaires ; l'e-mail hebdomadaire, lui, n'a personne à prévenir.
+Écarté aussi : attendre avant d'annoncer la panne (« ça va peut-être arriver ») — un rebond
+définitif l'est dès la première seconde. Écarté enfin : renvoyer automatiquement le même message
+à la même adresse, qui est en liste de suppression et ne repartira pas.
+
+**À faire hors dépôt** : dans Resend → Webhooks, ajouter `https://<app>/api/webhooks/resend` sur
+les événements `email.*`, puis poser `RESEND_WEBHOOK_SECRET` (le *signing secret*) dans les
+variables Vercel. Sans lui l'endpoint refuse tout et seule la relance à la lecture travaille.

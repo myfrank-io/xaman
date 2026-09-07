@@ -179,7 +179,12 @@ export type Database = {
           accepted_by: string | null
           boat_id: string
           created_at: string
+          delivery_detail: string | null
+          delivery_reason: string | null
+          delivery_status: string | null
+          delivery_updated_at: string | null
           email: string
+          email_id: string | null
           expires_at: string
           id: string
           invited_by: string | null
@@ -194,7 +199,12 @@ export type Database = {
           accepted_by?: string | null
           boat_id: string
           created_at?: string
+          delivery_detail?: string | null
+          delivery_reason?: string | null
+          delivery_status?: string | null
+          delivery_updated_at?: string | null
           email: string
+          email_id?: string | null
           expires_at?: string
           id?: string
           invited_by?: string | null
@@ -209,7 +219,12 @@ export type Database = {
           accepted_by?: string | null
           boat_id?: string
           created_at?: string
+          delivery_detail?: string | null
+          delivery_reason?: string | null
+          delivery_status?: string | null
+          delivery_updated_at?: string | null
           email?: string
+          email_id?: string | null
           expires_at?: string
           id?: string
           invited_by?: string | null
@@ -1956,6 +1971,9 @@ export type Database = {
           accepted_by: string | null
           boat_id: string | null
           created_at: string | null
+          delivery_reason: string | null
+          delivery_status: string | null
+          delivery_updated_at: string | null
           email: string | null
           expires_at: string | null
           id: string | null

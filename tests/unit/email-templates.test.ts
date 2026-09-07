@@ -14,8 +14,14 @@ import { payload, subjectsFromConfig } from "../../scripts/push-email-templates.
 
 import { SAMPLE_VALUES, renderEmailPreview, unresolvedPlaceholders } from "@/lib/email-preview";
 import { invitationEmail } from "@/lib/email/invitation";
-import { INVITATION_HTML, INVITATION_SUBJECT } from "@/lib/email/invitation.generated";
+import { recoveryEmail } from "@/lib/email/recovery";
 import { unresolvedPlaceholders as unresolvedIn } from "@/lib/email/render";
+import {
+  INVITATION_HTML,
+  INVITATION_SUBJECT,
+  RECOVERY_HTML,
+  RECOVERY_SUBJECT,
+} from "@/lib/email/templates.generated";
 
 type Template = {
   key: string;
@@ -34,7 +40,7 @@ const html = (file: string) => readFileSync(path.join(TEMPLATE_DIR as string, fi
  * The six e-mails Supabase Auth sends are the only Xaman screens nobody can look at before they
  * arrive in someone's inbox, and the only ones no `pnpm build` compiles. These tests are what
  * stands in for that: the committed HTML matches its generator, config.toml points at the files
- * that exist, and the two templates that MUST carry a code still do.
+ * that exist, and the templates that MUST carry a code still do.
  */
 describe("auth e-mail templates", () => {
   it("match their generator — regenerate with pnpm gen:emails", () => {
@@ -44,14 +50,34 @@ describe("auth e-mail templates", () => {
   });
 
   /**
-   * The app sends its own invitation when a mailer is configured (D75). It must be the same
-   * e-mail Supabase would have sent, which is why the module is generated rather than written.
+   * The app sends its own invitation (D75) and its own recovery code (D78) when a mailer is
+   * configured. Both must be the very e-mail Supabase would have sent, which is why the module
+   * is generated rather than written.
    */
-  it("hand the app the very invitation Supabase would have sent", () => {
+  it("hand the app the very e-mails Supabase would have sent", () => {
     expect(readFileSync(APP_TEMPLATE as string, "utf8")).toBe(renderAppTemplate());
     const invite = templates.find((t) => t.key === "invite")!;
     expect(INVITATION_HTML).toBe(html(invite.file));
     expect(INVITATION_SUBJECT).toBe(invite.subject);
+    const recovery = templates.find((t) => t.key === "recovery")!;
+    expect(RECOVERY_HTML).toBe(html(recovery.file));
+    expect(RECOVERY_SUBJECT).toBe(recovery.subject);
+  });
+
+  /**
+   * D78. The recovery e-mail the app sends carries the raw OTP `generateLink` hands back — in
+   * the body and in the subject, which is where an iPad notification stops.
+   */
+  it("fill the recovery e-mail the app sends with the code, and leave no link in it", () => {
+    const { subject, html: body } = recoveryEmail({
+      code: "418273",
+      appUrl: "https://xaman.boats",
+    });
+    expect(subject).toBe("418273 — réinitialiser votre mot de passe Xaman");
+    expect(body).toContain("418273");
+    expect(body).toContain("https://xaman.boats");
+    expect(body).not.toContain("{{ .ConfirmationURL }}");
+    expect(unresolvedIn(body, {})).toEqual([]);
   });
 
   it("fill the invitation the app sends with the boat, the inviter and the role", () => {
@@ -103,7 +129,7 @@ describe("auth e-mail templates", () => {
    * digits nobody ever received. `{{ .Token }}` is what switches it to a code.
    */
   it("send a code, not a link, wherever the app asks for six digits", () => {
-    for (const key of ["magic_link", "confirmation", "reauthentication"]) {
+    for (const key of ["magic_link", "confirmation", "reauthentication", "recovery"]) {
       const template = templates.find((t) => t.key === key);
       expect(template, key).toBeDefined();
       expect(html(template!.file), key).toContain("{{ .Token }}");
@@ -111,16 +137,21 @@ describe("auth e-mail templates", () => {
   });
 
   /**
-   * D78. In GoTrue the magic link and the code are the same one-time token, and a mailbox's
-   * anti-phishing scanner opens every URL in a message seconds after it arrives — burning the
-   * code before its owner reads it. Measured here: three `/verify 303` from Amazon and Azure
-   * addresses, then the human's own attempt refused. A code e-mail carries nothing to open.
+   * D80, extended to the recovery e-mail by D78. In GoTrue the link and the code are the same
+   * one-time token, and a mailbox's anti-phishing scanner opens every URL in a message seconds
+   * after it arrives — burning the token before its owner reads it. Measured here: three
+   * `/verify 303` from Amazon and Azure addresses, then the human's own attempt refused. The two
+   * e-mails whose token IS the journey carry nothing to open.
    */
-  it("give a scanner nothing to open in the sign-in code e-mail", () => {
-    const magicLink = html("magic-link.html");
-    expect(magicLink).toContain("{{ .Token }}");
-    expect(magicLink).not.toContain("{{ .ConfirmationURL }}");
-    expect(magicLink).not.toContain('<a href="http');
+  it("give a scanner nothing to open in the sign-in and recovery code e-mails", () => {
+    for (const file of ["magic-link.html", "recovery.html"]) {
+      const content = html(file);
+      expect(content, file).toContain("{{ .Token }}");
+      expect(content, file).not.toContain("{{ .ConfirmationURL }}");
+      // The footer's `{{ .SiteURL }}` is the app's own home page, not a one-time token: a
+      // scanner opening it costs nothing. Every other link would.
+      expect(content.match(/<a href="(?!\{\{ \.SiteURL)/), file).toBeNull();
+    }
   });
 
   // The invitation is the one e-mail that has something to say: which boat, from whom, as what.
