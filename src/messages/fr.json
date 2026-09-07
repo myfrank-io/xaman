@@ -1105,8 +1105,7 @@
     "readOn": "relevé le {date}",
     "readBy": "par {name}",
     "stale": "à mettre à jour",
-    "addReading": "Relevé",
-    "addReadingLong": "Relever les heures",
+    "addReading": "Relever les heures",
     "fields": {
       "label": "Nom",
       "position": "Position",

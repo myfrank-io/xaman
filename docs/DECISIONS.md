@@ -1198,3 +1198,42 @@ par un hors-bord qui, lui, a bien un compteur ; la position dit où le moteur es
 qu'on peut lire dessus. Écarté aussi : refuser la case tant que le moteur porte des relevés. Un
 compteur peut avoir été relevé une fois à la louche puis abandonné, et une case qui refuse de se
 cocher n'explique jamais assez bien pourquoi.
+
+## 2026-09-07 — D74 : la vignette d'un moteur s'ouvre, et ce qu'elle ouvre commence par l'histoire du compteur
+
+**Question.** « Fais en sorte que je puisse cliquer sur les blocs pour avoir accès à l'historique
+des relevés en même temps que la modification sur moteur. Là c'est pas très lisible franchement. »
+
+**Le constat.** D19 dit depuis le 2 septembre que les vignettes moteur sont tappables. Elles ne
+l'étaient pas : le seul chemin vers la fiche était un bouton fantôme en bas à droite de la carte,
+libellé **« 11 points liés »** avec un chevron. Le libellé nommait autre chose que sa
+destination — le lire comme « ouvre la checklist » était la lecture honnête — et le reste de la
+carte, nom, compteur, date, ne réagissait pas au doigt. À côté, un bouton **« Relevé »** : un
+nom, pas un acte, donc indiscernable d'un lien vers les relevés.
+
+**Décision.**
+
+1. **Le corps de la carte est le lien** vers la fiche du moteur, chevron à côté du nom. Le
+   bouton de relevé reste à côté du lien, jamais dedans — la règle de `ListRow` : un bouton ne
+   s'imbrique pas dans une ancre. Le compte des points liés redevient ce qu'il est, du texte.
+2. **Un acte, un nom** (D35) : « Relevé » devient **« Relever les heures »**, sur la carte comme
+   sur la fiche. La clé `addReadingLong`, qui portait déjà ce libellé sans être utilisée nulle
+   part, disparaît.
+3. **« À mettre à jour » est un état, pas la queue d'une date** : triangle + ambre pour l'état,
+   gris neutre pour la date, au lieu d'une seule longue ligne ambre collée par un « · ». La
+   couleur seule ne survit pas au soleil ; c'est la règle des badges appliquée à la seule ligne
+   qui y échappait.
+4. **Sur téléphone, le chiffre rejoint la ligne du titre** (D54) et la carte passe de 183 à
+   ~135 px : trois moteurs tiennent dans un écran au lieu d'un et demi. Ce n'est pas un
+   embellissement — rendre le bloc tappable l'a fait entrer dans la règle que l'audit tactile
+   mesure (une rangée répétée ≤ 120 px sur téléphone), et la carte la violait déjà sans que rien
+   ne le voie. Une phrase (« sans compteur d'heures », « compteur inconnu ») n'est pas un chiffre
+   et garde sa ligne : en haut, elle mangeait le modèle du moteur.
+5. **La fiche ouvre sur l'histoire du compteur** : « Derniers relevés » passe juste sous
+   « Compteur », avant les points de checklist. Ouvrir un moteur depuis sa vignette, c'est neuf
+   fois sur dix demander ce que dit le compteur et ce qu'il disait avant ; l'atteindre demandait
+   de faire défiler onze lignes de checklist. Le bouton « Modifier » n'a pas bougé : l'histoire
+   et la modification sont désormais dans le même premier écran, ce que la demande réclamait.
+
+**Rien n'est retiré.** Aucune information ne quitte la carte : elle est réarrangée, et le seul
+chemin qui disparaît (le faux bouton « N points liés ») est remplacé par un vrai, plus grand.
