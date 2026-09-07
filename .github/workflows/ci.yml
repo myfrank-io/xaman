@@ -31,9 +31,14 @@ jobs:
 
       # Postgres with the migrations and supabase/seed.sql applied: tests/unit/rls.test.ts
       # connects to it directly on DATABASE_URL.
+      #
+      # Pinned, not `latest`: resolving « latest » is a call to the GitHub releases API from a
+      # shared runner, and it answered `rate limit exceeded` twice in fifteen minutes, killing
+      # two runs before a single test had started. A version reaches its asset directly. It is
+      # the one in devDependencies, so CI installs what a contributor runs.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.116.0
       - run: supabase db start
       - run: supabase db reset --local
 
@@ -79,7 +84,7 @@ jobs:
       # not just Postgres: the whole stack, on this runner, never the production project (D77).
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.116.0
       - run: supabase start
       - run: supabase db reset --local
 
