@@ -48,7 +48,12 @@ export async function requestPasswordReset(input: unknown): Promise<ActionResult
     if (minted.state === "unknown") return ok(undefined);
     if (minted.state === "ready") {
       const { subject, html } = recoveryEmail({ code: minted.code, appUrl: publicEnv.appUrl });
-      if (!(await sendMail({ to: email, subject, html }))) return fail("auth.forgot.errors.send");
+      // `sent`, not the result object: D79 gave `sendMail` an id to hand back, and a bare
+      // truthiness test on it would read every failure as a success — the screen would ask for
+      // a code out of a message that never left. The id itself is the invitation's to keep;
+      // a recovery code has no row to hang a delivery status on.
+      const { sent } = await sendMail({ to: email, subject, html });
+      if (!sent) return fail("auth.forgot.errors.send");
       return ok(undefined);
     }
     // `unavailable`: a mailer but no service-role key to mint a code with. Falling through to
