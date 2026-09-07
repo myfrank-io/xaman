@@ -7,22 +7,16 @@ import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { LogsList } from "@/components/logs/LogsList";
+import { LogsTabs } from "@/components/logs/LogsTabs";
 import { LogsToolbar, type LogsFilters } from "@/components/logs/LogsToolbar";
 import { firstParam } from "@/components/logs/log-form-values";
 import { toLogRow } from "@/components/logs/rows";
 import { Button } from "@/components/ui/button";
 import { NO_MATCH_ID, STOCK_FILTER } from "@/lib/logs-filters";
 import { can, type BoatRole } from "@/lib/permissions";
-import {
-  boatPath,
-  importPath,
-  logsPath,
-  logsReviewPath,
-  newLogPath,
-} from "@/lib/queries/boat-routes";
+import { importPath, logsPath, logsReviewPath, newLogPath } from "@/lib/queries/boat-routes";
 import { LOG_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 const OPEN_STATUSES = ["planned", "in_progress", "urgent"] as const;
@@ -141,9 +135,8 @@ export default async function LogsPage({
     });
   }
 
-  const [t, tn, tc, ti] = await Promise.all([
+  const [t, tc, ti] = await Promise.all([
     getTranslations("logs"),
-    getTranslations("nav"),
     getTranslations("create"),
     getTranslations("import"),
   ]);
@@ -154,11 +147,6 @@ export default async function LogsPage({
   const canContribute = can(boatRole, "contribute");
   // Importing writes whole rows: owner and editor only, like any other bulk write.
   const canWrite = can(boatRole, "write");
-
-  const tabs: { key: "history" | "planned"; label: string; href: string }[] = [
-    { key: "history", label: t("tabs.history"), href: logsPath(boatId) },
-    { key: "planned", label: t("tabs.planned"), href: logsPath(boatId, { tab: "planned" }) },
-  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -195,29 +183,7 @@ export default async function LogsPage({
         }
       />
 
-      <div className="flex flex-wrap gap-2 border-b border-border">
-        {tabs.map((entry) => (
-          <Link
-            key={entry.key}
-            href={entry.href as Route}
-            aria-current={tab === entry.key ? "page" : undefined}
-            className={cn(
-              "inline-flex min-h-11 items-center border-b-2 px-3 text-label font-medium",
-              tab === entry.key
-                ? "border-primary text-foreground"
-                : "border-transparent text-ink-2",
-            )}
-          >
-            {entry.label}
-          </Link>
-        ))}
-        <Link
-          href={boatPath(boatId, "haulOuts") as Route}
-          className="inline-flex min-h-11 items-center border-b-2 border-transparent px-3 text-label font-medium text-ink-2"
-        >
-          {tn("haulOuts")}
-        </Link>
-      </div>
+      <LogsTabs boatId={boatId} active={tab} />
 
       <LogsToolbar
         boatId={boatId}

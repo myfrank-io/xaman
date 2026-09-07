@@ -1,15 +1,25 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
+import { PlusIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { HaulOutsList, type HaulOutListItem } from "@/components/haul-outs/HaulOutsList";
+import { LogsTabs } from "@/components/logs/LogsTabs";
+import { Button } from "@/components/ui/button";
 import { daysAshore } from "@/lib/haul-outs";
 import { can, type BoatRole } from "@/lib/permissions";
+import { newHaulOutPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Sorties de l'eau (E6-1), reached from the « Plus » sheet and from the dashboard recap.
- * Most recent first; « à terre » is what the list must answer at a glance.
+ * Sorties de l'eau (E6-1): the third tab of the Journal (D9), reached from its strip and from
+ * the dashboard recap. Most recent first; « à terre » is what the list must answer at a glance.
+ *
+ * The screen wears the section it belongs to — same heading, same strip, Interventions lit in
+ * the menu — because it IS that section: a list of haul-outs is one of the three ways of
+ * reading the log book, not a place of its own.
  */
 export default async function HaulOutsPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
@@ -56,11 +66,35 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
     daysAshore: daysAshore(haulOut.started_at, haulOut.ended_at),
   }));
 
-  const t = await getTranslations("haulOuts");
+  const [t, tl, tc] = await Promise.all([
+    getTranslations("haulOuts"),
+    getTranslations("logs"),
+    getTranslations("create"),
+  ]);
+  const canWrite = can(role as BoatRole, "write");
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={t("title")} subtitle={t("count", { count: list.length })} />
-      <HaulOutsList boatId={boatId} haulOuts={list} canWrite={can(role as BoatRole, "write")} />
+      {/* The heading names the section, the strip below says which of its three views is open —
+          as on the two other tabs. The object of this one is named at the top right (D35), so
+          the frame's control steps aside here exactly as it does on the journal. */}
+      <PageHeader
+        title={tl("title")}
+        subtitle={t("subtitle")}
+        actions={
+          canWrite ? (
+            <Button asChild size="xl">
+              <Link href={newHaulOutPath(boatId) as Route}>
+                <PlusIcon />
+                {tc("newHaulOut")}
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <LogsTabs boatId={boatId} active="haulOuts" />
+
+      <HaulOutsList boatId={boatId} haulOuts={list} canWrite={canWrite} />
     </div>
   );
 }

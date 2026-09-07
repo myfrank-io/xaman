@@ -206,7 +206,16 @@ describe("buildTrail", () => {
   });
 
   it("hangs the haul-outs off the Journal, the tab they are reached from (D9)", () => {
-    expect(at("/haul-outs")).toEqual([{ key: "logs", href: path("/logs") }, { key: "haulOuts" }]);
+    // The list IS that tab: it carries the journal's heading and its strip, so a trail would
+    // say « Interventions › Sorties de l'eau » over both. Everything under it hangs off the
+    // tab without being it, and keeps the trail.
+    expect(at("/haul-outs")).toEqual([]);
+    expect(labels(at(`/haul-outs/${HAUL_OUT}`))).toEqual([
+      "Interventions",
+      "Sorties de l'eau",
+      "Fiche",
+    ]);
+    expect(at(`/haul-outs/${HAUL_OUT}`)[1]?.href).toBe(path("/haul-outs"));
     expect(labels(at(`/haul-outs/${HAUL_OUT}/edit`))).toEqual([
       "Interventions",
       "Sorties de l'eau",
