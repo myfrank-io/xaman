@@ -29,7 +29,12 @@ test.describe("§6.3 spring check", () => {
     const taps = new TapCounter(page);
 
     // 1 — "Fait" on the row opens the dialog, already on today and on the signed-in member.
-    await taps.tap(page.getByRole("button", { name: fr.checklist.markDone }).first());
+    await taps.tap(
+      // "Fait" is a substring of the "Jamais fait" filter, and Playwright matches an
+      // accessible name by substring unless told otherwise — without exact, .first()
+      // taps the filter chip and no dialog ever opens.
+      page.getByRole("button", { name: fr.checklist.markDone, exact: true }).first(),
+    );
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
@@ -55,6 +60,9 @@ test.describe("§6.3 spring check", () => {
 
     const label = `Drisse hookée du Code 0 ${Date.now()}`;
     await page.getByLabel(fr.checklist.form.label).fill(label);
+    // A point belongs to a category, and the form opened from the checklist itself carries
+    // none: the chips are how one is chosen (rule 13).
+    await page.getByRole("radio", { name: SEED.category }).first().tap();
     await page.getByRole("button", { name: fr.common.save }).tap();
 
     // §6.3 ends on the point being there for the next person to see.
