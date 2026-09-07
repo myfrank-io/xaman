@@ -48,6 +48,7 @@ const PAGES = [
   "/dev/ui/checklist-plan",
   "/dev/ui/members",
   "/dev/ui/report",
+  "/dev/ui/forgot-password",
   "/dev/ui/reset-password",
   "/dev/ui/checklist-setup",
   "/dev/ui/checklist-form",

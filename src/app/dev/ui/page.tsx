@@ -86,6 +86,7 @@ const PREVIEWS: { href: string; label: string }[] = [
   { href: "/dev/ui/onboarding", label: "Mise en route · 2 le carnet, 3 la prise en main" },
   { href: "/dev/ui/checklist-plan", label: "Checklist · choisir un plan" },
   { href: "/dev/ui/profile", label: "Mon compte" },
+  { href: "/dev/ui/forgot-password", label: "Mot de passe oublié" },
   { href: "/dev/ui/reset-password", label: "Nouveau mot de passe" },
   { href: "/dev/ui/install", label: "Installer l'application" },
   { href: "/dev/ui/emails", label: "E-mails d'authentification" },

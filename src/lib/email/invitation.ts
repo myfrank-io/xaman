@@ -1,4 +1,4 @@
-import { INVITATION_HTML, INVITATION_SUBJECT } from "@/lib/email/invitation.generated";
+import { INVITATION_HTML, INVITATION_SUBJECT } from "@/lib/email/templates.generated";
 import { renderTemplate } from "@/lib/email/render";
 
 /**
