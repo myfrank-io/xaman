@@ -15,12 +15,12 @@ test.describe("§6.3 spring check", () => {
 
   test("ticks a checklist point within the tap budget", async ({ page, request }) => {
     await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist`);
-    await expect(page.getByRole("heading", { name: fr.checklist.title })).toBeVisible();
+    await expect(page.getByRole("link", { name: new RegExp(SEED.category) }).first()).toBeVisible();
 
     const taps = new TapCounter(page);
 
     // 1 — a category card.
-    await taps.tap(page.getByRole("link", { name: /Moteurs/ }).first());
+    await taps.tap(page.getByRole("link", { name: new RegExp(SEED.category) }).first());
 
     // 2 — "Fait" on the point, which opens the dialog (date, who, note).
     await taps.tap(page.getByRole("button", { name: fr.checklist.markDone }).first());

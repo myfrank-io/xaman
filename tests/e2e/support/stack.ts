@@ -25,6 +25,10 @@ export const skipReason =
  */
 export const SEED = {
   boat: "00000000-0000-0000-0000-00000000b001",
+  /** The dashboard's h1 is the boat, not the page: the screen says where you are, not what it is. */
+  boatName: "Bateau test",
+  category: "Moteurs",
+  item: "Vidange huile moteur — Moteur",
   users: {
     owner: "owner@test.xaman",
     editor: "editor@test.xaman",

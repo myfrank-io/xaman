@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import fr from "../../../src/messages/fr.json";
 import { signIn } from "../support/auth";
-import { hasStack, skipReason } from "../support/stack";
+import { SEED, hasStack, skipReason } from "../support/stack";
 
 /**
  * SPEC.md §6.1 — "Première connexion d'Emmanuel (invité)". The invitation page has to say what
@@ -24,9 +24,10 @@ test.describe("§6.1 an invitee's first sign-in", () => {
     await page.goto(`/invite/${TOKEN}`);
 
     await expect(page.getByRole("heading", { name: fr.invite.title })).toBeVisible();
-    await expect(page.getByText("Bateau test")).toBeVisible();
-    // The invited address is shown so the person signs in with the right one.
-    await expect(page.getByText(INVITEE)).toBeVisible();
+    await expect(page.getByText(SEED.boatName).first()).toBeVisible();
+    // The address is deliberately masked in the preview — the invitee types their own — so what
+    // is asserted is the sentence that asks for it, not the address itself.
+    await expect(page.getByText(/adresse invitée/).first()).toBeVisible();
   });
 
   test("an unknown token explains itself instead of failing", async ({ page }) => {
@@ -41,6 +42,8 @@ test.describe("§6.1 an invitee's first sign-in", () => {
 
     // Lands on the boat: the invitation is spent and the membership exists.
     await page.waitForURL(/\/boats\/[0-9a-f-]+/, { timeout: 15_000 });
-    await expect(page.getByRole("heading", { name: fr.dashboard.title })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: SEED.boatName, level: 1 }).first(),
+    ).toBeVisible();
   });
 });

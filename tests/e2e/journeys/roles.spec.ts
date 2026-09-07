@@ -18,7 +18,9 @@ test.describe("§6.4 the mechanic comes aboard", () => {
     await signIn(page, request, SEED.users.pro, `/boats/${SEED.boat}/dashboard`);
 
     // He sees the boat: engine hours are the reason he is here.
-    await expect(page.getByRole("heading", { name: fr.dashboard.title })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: SEED.boatName, level: 1 }).first(),
+    ).toBeVisible();
     await expect(page.getByText(fr.dashboard.engines.title)).toBeVisible();
 
     // He records his own work.
@@ -44,7 +46,9 @@ test.describe("§6.4 the mechanic comes aboard", () => {
   test("a viewer is offered no way to write", async ({ page, request }) => {
     await signIn(page, request, SEED.users.viewer, `/boats/${SEED.boat}/dashboard`);
 
-    await expect(page.getByRole("heading", { name: fr.dashboard.title })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: SEED.boatName, level: 1 }).first(),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: fr.create.primary })).toHaveCount(0);
   });
 });

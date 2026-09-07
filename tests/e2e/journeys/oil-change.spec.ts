@@ -17,7 +17,9 @@ test.describe("§6.2 oil change at the dock", () => {
 
   test("notes an intervention within the tap budget", async ({ page, request }) => {
     await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/dashboard`);
-    await expect(page.getByRole("heading", { name: fr.dashboard.title })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: SEED.boatName, level: 1 }).first(),
+    ).toBeVisible();
 
     const taps = new TapCounter(page);
 
@@ -29,7 +31,7 @@ test.describe("§6.2 oil change at the dock", () => {
     await page.getByLabel(fr.logs.title).fill("Vidange moteur SB");
 
     // 2 — the category, as a chip rather than a select (rule 13).
-    await taps.tap(page.getByRole("button", { name: "Moteurs" }).first());
+    await taps.tap(page.getByRole("button", { name: SEED.category }).first());
 
     // 3 — save. Date, status and engine hours are already carrying their defaults.
     await taps.tap(page.getByRole("button", { name: fr.common.save }));
