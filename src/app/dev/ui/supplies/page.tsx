@@ -7,7 +7,7 @@ import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
 import { PurchaseForm } from "@/components/supplies/PurchaseForm";
 import { StockList } from "@/components/parts/StockList";
-import { EXPENSE_SOURCES, resolveRange } from "@/lib/expenses";
+import { EXPENSE_SOURCES, NO_CATEGORY, resolveRange } from "@/lib/expenses";
 import { gasFacts } from "@/lib/gas";
 import { countLowStock } from "@/lib/parts";
 
@@ -32,11 +32,26 @@ import {
 export default async function DevSuppliesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dialog?: string }>;
+  searchParams: Promise<{ dialog?: string; category?: string }>;
 }) {
-  const { dialog } = await searchParams;
+  const { dialog, category } = await searchParams;
   const t = await getTranslations("supplies");
   const range = resolveRange("rolling12", {});
+  // `?category=` previews the breakdown once one of its rows has been tapped: the row marked as
+  // the active filter, everything else narrowed to it, exactly as the real screen behaves.
+  const categoryId = category ?? null;
+  const keep = (id: string | null | undefined) =>
+    categoryId === null || (categoryId === NO_CATEGORY ? !id : id === categoryId);
+  const rows = SAMPLE_EXPENSES.rows.filter((row) => keep(row.categoryId));
+  const data = categoryId
+    ? {
+        ...SAMPLE_EXPENSES,
+        rows,
+        lines: SAMPLE_EXPENSES.lines.filter((line) =>
+          rows.some((row) => row.entityId === line.entityId),
+        ),
+      }
+    : SAMPLE_EXPENSES;
   const facts = gasFacts(SAMPLE_GAS_DATES);
   const gasTotal = SAMPLE_GAS_PURCHASES.reduce((sum, purchase) => sum + (purchase.amount ?? 0), 0);
 
@@ -51,11 +66,11 @@ export default async function DevSuppliesPage({
             range={range}
             sources={[...EXPENSE_SOURCES]}
             kind={null}
-            categoryId={null}
+            categoryId={categoryId}
             categories={SAMPLE_SUPPLY_CATEGORIES}
-            data={SAMPLE_EXPENSES}
+            data={data}
             canWrite
-            filtered={false}
+            filtered={categoryId !== null}
           />
         </div>
 

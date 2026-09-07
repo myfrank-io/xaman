@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { exportExpensesCsv } from "@/lib/actions/expenses";
 import type { DateRange, ExpenseSource } from "@/lib/expenses";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import type { PurchaseKind } from "@/lib/schemas/purchases";
 
 /**
  * « Exporter en CSV » (E5-5): the Server Action returns the text, the browser writes the
@@ -19,11 +20,16 @@ export function ExportExpensesButton({
   boatId,
   range,
   sources,
+  kind,
+  categoryId,
   disabled,
 }: {
   boatId: string;
   range: DateRange;
   sources: ExpenseSource[];
+  /** The file follows what is on screen: the same period, sources, kind and category. */
+  kind?: PurchaseKind | null;
+  categoryId?: string | null;
   disabled?: boolean;
 }) {
   const t = useTranslations("supplies.expenses");
@@ -32,7 +38,7 @@ export function ExportExpensesButton({
 
   function download() {
     startTransition(async () => {
-      const result = await exportExpensesCsv({ boatId, ...range, sources });
+      const result = await exportExpensesCsv({ boatId, ...range, sources, kind, categoryId });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;

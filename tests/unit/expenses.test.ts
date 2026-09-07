@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildExpensesCsv,
+  expenseFilterQuery,
   groupByCategory,
   parseSources,
   previousRange,
   resolveRange,
   totalAmount,
   variation,
+  NO_CATEGORY,
   type ExpenseRow,
 } from "@/lib/expenses";
 
@@ -102,6 +104,68 @@ describe("expense sources", () => {
   it("keeps the listed sources only", () => {
     expect(parseSources("purchase,haul_out")).toEqual(["purchase", "haul_out"]);
     expect(parseSources("log, nonsense")).toEqual(["log"]);
+  });
+});
+
+/**
+ * The filter panel and the category breakdown both navigate with this. It is what keeps a
+ * tap on « Voiles & Gréement » from quietly dropping the custom dates chosen just above it.
+ */
+describe("expense filters in the URL", () => {
+  const RANGE = { from: "2026-01-01", to: "2026-06-30" };
+  const state = {
+    period: "all" as const,
+    range: RANGE,
+    sources: ["log", "purchase", "haul_out"] as const,
+    kind: null,
+    categoryId: null,
+  };
+
+  it("writes nothing when every filter is at its default", () => {
+    expect(expenseFilterQuery({ ...state, sources: [...state.sources] })).toEqual({
+      period: undefined,
+      from: undefined,
+      to: undefined,
+      source: undefined,
+      kind: undefined,
+      category: undefined,
+    });
+  });
+
+  it("carries the bounds of a custom period, and only of a custom period", () => {
+    expect(
+      expenseFilterQuery({ ...state, sources: [...state.sources], period: "custom" }),
+    ).toMatchObject({
+      period: "custom",
+      from: RANGE.from,
+      to: RANGE.to,
+    });
+    expect(
+      expenseFilterQuery({ ...state, sources: [...state.sources], period: "year" }),
+    ).toMatchObject({ period: "year", from: undefined, to: undefined });
+  });
+
+  it("writes a source list only once it is a subset", () => {
+    expect(expenseFilterQuery({ ...state, sources: ["log", "purchase"] }).source).toBe(
+      "log,purchase",
+    );
+  });
+
+  it("drops the sources a kind already implies", () => {
+    expect(expenseFilterQuery({ ...state, sources: ["log"], kind: "gas" })).toMatchObject({
+      kind: "gas",
+      source: undefined,
+    });
+  });
+
+  it("carries a category, including the « no category » bucket", () => {
+    expect(
+      expenseFilterQuery({ ...state, sources: [...state.sources], categoryId: "c1" }).category,
+    ).toBe("c1");
+    expect(
+      expenseFilterQuery({ ...state, sources: [...state.sources], categoryId: NO_CATEGORY })
+        .category,
+    ).toBe("none");
   });
 });
 

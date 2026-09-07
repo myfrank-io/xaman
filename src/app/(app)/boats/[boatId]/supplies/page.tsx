@@ -12,6 +12,7 @@ import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
 import {
   isExpensePeriod,
+  NO_CATEGORY,
   parseSources,
   previousRange,
   resolveRange,
@@ -114,7 +115,9 @@ export default async function SuppliesPage({
     .lte("date", range.to)
     .in("source", sources);
   if (kind) listQuery = listQuery.eq("purchase_kind", kind);
-  if (categoryId) listQuery = listQuery.eq("category_id", categoryId);
+  // « Sans catégorie » is a bucket, not an id: it is the one filter that reads a null.
+  if (categoryId === NO_CATEGORY) listQuery = listQuery.is("category_id", null);
+  else if (categoryId) listQuery = listQuery.eq("category_id", categoryId);
 
   const [{ data: rows }, { data: history }, { data: contacts }, { data: gasRows }] =
     await Promise.all([
