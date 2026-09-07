@@ -34,5 +34,6 @@ export const SEED = {
     editor: "editor@test.xaman",
     pro: "pro@test.xaman",
     viewer: "viewer@test.xaman",
+    stranger: "stranger@test.xaman",
   },
 } as const;

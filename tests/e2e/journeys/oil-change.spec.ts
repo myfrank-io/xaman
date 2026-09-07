@@ -25,10 +25,10 @@ test.describe("§6.2 oil change at the dock", () => {
 
     // 1 — the one primary action of the screen opens the intervention form.
     await taps.tap(page.getByRole("link", { name: fr.create.primary }).first());
-    await expect(page.getByLabel(fr.logs.title)).toBeVisible();
+    await expect(page.getByLabel(fr.logs.form.title)).toBeVisible();
 
     // Typing is not a tap: the field is already focused by the tap that opened the form.
-    await page.getByLabel(fr.logs.title).fill("Vidange moteur SB");
+    await page.getByLabel(fr.logs.form.title).fill("Vidange moteur SB");
 
     // 2 — the category, as a chip rather than a select (rule 13).
     await taps.tap(page.getByRole("radio", { name: SEED.category }).first());
