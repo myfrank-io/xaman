@@ -188,13 +188,13 @@
       "label": "Adresse e-mail",
       "placeholder": "prenom@exemple.fr",
       "submit": "Recevoir mon code",
-      "help": "Vous recevrez un code à 6 chiffres valable 10 minutes, ainsi qu'un lien de secours.",
+      "help": "Vous recevrez un code par e-mail, valable 10 minutes, ainsi qu'un lien de secours.",
       "invalid": "Saisissez une adresse e-mail valide."
     },
     "code": {
       "title": "Saisissez le code reçu",
-      "help": "Un code à 6 chiffres a été envoyé à {email}. Pensez à vérifier vos courriers indésirables.",
-      "label": "Code à 6 chiffres",
+      "help": "Un code a été envoyé à {email}. Pensez à vérifier vos courriers indésirables.",
+      "label": "Code reçu par e-mail",
       "submit": "Se connecter",
       "back": "Changer d'adresse",
       "resend": "Renvoyer le code",
@@ -203,7 +203,7 @@
     "errors": {
       "send": "Impossible d'envoyer le code. Réessayez dans une minute.",
       "noAccount": "Aucun compte n'existe pour cette adresse. Demandez une invitation au propriétaire du bateau.",
-      "code": "Code incorrect ou expiré.",
+      "code": "Code incorrect ou expiré. Recopiez-le en entier, tel qu'il apparaît dans l'e-mail.",
       "link": "Ce lien de connexion n'est plus valable. Demandez un nouveau code.",
       "hint": "Vérifiez l'adresse saisie, ou demandez un nouveau code.",
       "credentials": "Adresse e-mail ou mot de passe incorrect.",

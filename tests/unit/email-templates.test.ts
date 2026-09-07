@@ -3,10 +3,19 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { TEMPLATES, TEMPLATE_DIR, render } from "../../scripts/gen-email-templates.mjs";
+import {
+  APP_TEMPLATE,
+  TEMPLATES,
+  TEMPLATE_DIR,
+  render,
+  renderAppTemplate,
+} from "../../scripts/gen-email-templates.mjs";
 import { payload, subjectsFromConfig } from "../../scripts/push-email-templates.mjs";
 
 import { SAMPLE_VALUES, renderEmailPreview, unresolvedPlaceholders } from "@/lib/email-preview";
+import { invitationEmail } from "@/lib/email/invitation";
+import { INVITATION_HTML, INVITATION_SUBJECT } from "@/lib/email/invitation.generated";
+import { unresolvedPlaceholders as unresolvedIn } from "@/lib/email/render";
 
 type Template = {
   key: string;
@@ -32,6 +41,51 @@ describe("auth e-mail templates", () => {
     for (const template of templates) {
       expect(html(template.file), template.file).toBe(render(template));
     }
+  });
+
+  /**
+   * The app sends its own invitation when a mailer is configured (D75). It must be the same
+   * e-mail Supabase would have sent, which is why the module is generated rather than written.
+   */
+  it("hand the app the very invitation Supabase would have sent", () => {
+    expect(readFileSync(APP_TEMPLATE as string, "utf8")).toBe(renderAppTemplate());
+    const invite = templates.find((t) => t.key === "invite")!;
+    expect(INVITATION_HTML).toBe(html(invite.file));
+    expect(INVITATION_SUBJECT).toBe(invite.subject);
+  });
+
+  it("fill the invitation the app sends with the boat, the inviter and the role", () => {
+    const { subject, html: body } = invitationEmail({
+      email: "emmanuel@exemple.fr",
+      inviteUrl: "https://xaman.boats/invite/tok",
+      boatName: "Xaman",
+      inviterName: "Xavier",
+      roleLabel: "Éditeur",
+      appUrl: "https://xaman.boats",
+    });
+    expect(subject).toBe(INVITATION_SUBJECT);
+    for (const value of ["Xaman", "Xavier", "Éditeur", "emmanuel@exemple.fr"]) {
+      expect(body).toContain(value);
+    }
+    // The link is the invitation's own address, not an auth verification URL: opening it
+    // creates nobody's account, /invite/[token] asks for the sign-in.
+    expect(body).toContain("https://xaman.boats/invite/tok");
+    expect(unresolvedIn(body, {})).toEqual([]);
+  });
+
+  // A boat with no name, or an invitation whose inviter has neither name nor e-mail on file.
+  it("still read as an invitation when the metadata is empty", () => {
+    const { html: body } = invitationEmail({
+      email: "e@exemple.fr",
+      inviteUrl: "https://xaman.boats/invite/tok",
+      boatName: "",
+      inviterName: "",
+      roleLabel: "",
+      appUrl: "https://xaman.boats",
+    });
+    expect(body).toContain("Le carnet du bord");
+    expect(body).toContain("Vous êtes invité à rejoindre");
+    expect(unresolvedIn(body, {})).toEqual([]);
   });
 
   it("are all declared in config.toml, with the subject the push script sends", () => {
