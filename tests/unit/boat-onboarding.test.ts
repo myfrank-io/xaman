@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ENGINE_COUNT_CHOICES,
+  ENGINE_COUNT_MAX,
   TENDER_CHOICES,
   asksAboutTender,
   EXISTING_LOG_FORMATS,
@@ -24,6 +25,11 @@ const LABELS: EngineLabels = {
   single: "Moteur",
   port: "Moteur bâbord",
   starboard: "Moteur tribord",
+  center: "Moteur central",
+  portOuter: "Moteur bâbord extérieur",
+  portInner: "Moteur bâbord intérieur",
+  starboardInner: "Moteur tribord intérieur",
+  starboardOuter: "Moteur tribord extérieur",
   outboard: "Hors-bord",
   tender: "Hors-bord d'annexe",
 };
@@ -99,6 +105,55 @@ describe("newBoatEngines", () => {
     ]);
   });
 
+  it("gives a triple its centre engine", () => {
+    expect(newBoatEngines(3, "motor", LABELS)).toEqual([
+      { label: LABELS.port, position: "port" },
+      { label: LABELS.center, position: "center" },
+      { label: LABELS.starboard, position: "starboard" },
+    ]);
+  });
+
+  /** A quad is counted the way it is seen from the pontoon: outside in, side by side. */
+  it("reads a quad from the outside in", () => {
+    expect(newBoatEngines(4, "motor", LABELS)).toEqual([
+      { label: LABELS.portOuter, position: "port" },
+      { label: LABELS.portInner, position: "port" },
+      { label: LABELS.starboardInner, position: "starboard" },
+      { label: LABELS.starboardOuter, position: "starboard" },
+    ]);
+  });
+
+  it("keeps a triple and a quad on a rigid inflatable outboard", () => {
+    for (const count of [3, 4]) {
+      const engines = newBoatEngines(count, "rib", LABELS);
+      expect(engines).toHaveLength(count);
+      expect(engines.every((engine) => engine.position === "outboard")).toBe(true);
+    }
+  });
+
+  it("creates exactly the number of engines the toggle asked for", () => {
+    for (const count of ENGINE_COUNT_CHOICES) {
+      expect(newBoatEngines(count, "catamaran", LABELS)).toHaveLength(count);
+    }
+  });
+
+  /** Two engines of the same side share a position, so only the label tells them apart. */
+  it("never gives two engines the same name", () => {
+    for (const count of ENGINE_COUNT_CHOICES) {
+      for (const type of ["catamaran", "motor", "rib"] as const) {
+        const labels = newBoatEngines(count, type, LABELS, "outboard").map((e) => e.label);
+        expect(new Set(labels).size).toBe(labels.length);
+      }
+    }
+  });
+
+  /** The toggle offers 0…4; anything wider arriving from elsewhere must still open a carnet. */
+  it("clamps a count nobody can tap", () => {
+    expect(newBoatEngines(9, "motor", LABELS)).toEqual(
+      newBoatEngines(ENGINE_COUNT_MAX, "motor", LABELS),
+    );
+  });
+
   it("creates nothing for a boat without an engine", () => {
     expect(newBoatEngines(0, "monohull_sail", LABELS)).toEqual([]);
     expect(newBoatEngines(-1, "catamaran", LABELS)).toEqual([]);
@@ -109,6 +164,19 @@ describe("newBoatEngines", () => {
       for (const engine of newBoatEngines(count, "catamaran", LABELS)) {
         expect(engine.label.trim().length).toBeGreaterThan(0);
       }
+    }
+  });
+});
+
+/**
+ * The engine names of step 1 come from `fr.json` (rule 7). A key missing there would not fail to
+ * compile — it would name an engine after its key on the screen of whoever taps four engines.
+ */
+describe("the engine names of step 1", () => {
+  it("has every label the form asks for", () => {
+    const onboarding: Record<string, string> = fr.engines.onboarding;
+    for (const key of Object.keys(LABELS) as (keyof EngineLabels)[]) {
+      expect(onboarding[key]?.trim(), key).toBeTruthy();
     }
   });
 });
