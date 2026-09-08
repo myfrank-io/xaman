@@ -24,14 +24,17 @@ import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatTabPath, enginePath } from "@/lib/queries/boat-routes";
 import {
   enginePositionSchema,
+  enginePropulsionSchema,
   upsertEngineSchema,
   type EnginePosition,
+  type EnginePropulsion,
 } from "@/lib/schemas/engines";
 
 export type EngineFormValues = {
   id: string;
   label: string;
   position: EnginePosition;
+  propulsion: EnginePropulsion;
   brand: string | null;
   model: string | null;
   serial: string | null;
@@ -47,6 +50,7 @@ type EngineForm = {
   expectedUpdatedAt?: string;
   label: string;
   position: EnginePosition;
+  propulsion: EnginePropulsion;
   brand: string;
   model: string;
   serial: string;
@@ -66,6 +70,7 @@ export function EngineForm({
 }) {
   const t = useTranslations("engines");
   const tp = useTranslations("enginePosition");
+  const tpr = useTranslations("enginePropulsion");
   const errorMessage = useErrorMessage();
   const fieldError = useFieldError();
   const router = useRouter();
@@ -79,6 +84,7 @@ export function EngineForm({
       expectedUpdatedAt: engine?.updatedAt,
       label: engine?.label ?? "",
       position: engine?.position ?? "starboard",
+      propulsion: engine?.propulsion ?? "shaft",
       brand: textToInput(engine?.brand),
       model: textToInput(engine?.model),
       serial: textToInput(engine?.serial),
@@ -142,6 +148,36 @@ export function EngineForm({
                 {enginePositionSchema.options.map((position) => (
                   <ToggleGroupItem key={position} value={position} className="min-h-11">
                     {tp(position)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            )}
+          />
+        </Field>
+        {/* What drives it (D83): the thing the plan matches its points on — a Z-drive's bellows, a
+            shaft line's stern gland, an outboard's gear oil. Five chips, the whole width. */}
+        <Field
+          id="engine-propulsion"
+          label={t("fields.propulsion")}
+          required
+          help={t("fields.propulsionHelp")}
+          error={fieldError(errors.propulsion)}
+          className="sm:col-span-2"
+        >
+          <Controller
+            control={form.control}
+            name="propulsion"
+            render={({ field }) => (
+              <ToggleGroup
+                type="single"
+                id="engine-propulsion"
+                value={field.value}
+                onValueChange={(next) => next && field.onChange(next)}
+                className="w-full"
+              >
+                {enginePropulsionSchema.options.map((propulsion) => (
+                  <ToggleGroupItem key={propulsion} value={propulsion} className="min-h-11">
+                    {tpr(propulsion)}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>

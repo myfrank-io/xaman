@@ -9,7 +9,7 @@ import {
   requiredText,
   uuid,
 } from "@/lib/schemas/common";
-import { enginePositionSchema } from "@/lib/schemas/engines";
+import { enginePositionSchema, enginePropulsionSchema } from "@/lib/schemas/engines";
 
 export const boatTypeSchema = z.enum([
   "catamaran",
@@ -20,6 +20,13 @@ export const boatTypeSchema = z.enum([
   "other",
 ]);
 export type BoatType = z.infer<typeof boatTypeSchema>;
+
+/**
+ * How far the boat goes (D83): « côtier ou hauturier ». A coastal boat is not asked about the
+ * liferaft, the EPIRB, the AIS — `apply_checklist_template` leaves the offshore points out.
+ */
+export const navigationZoneSchema = z.enum(["coastal", "offshore"]);
+export type NavigationZone = z.infer<typeof navigationZoneSchema>;
 
 /**
  * The registration number issued by the maritime administration (FR: immatriculation).
@@ -39,6 +46,7 @@ export const updateBoatSchema = z.object({
   expectedUpdatedAt,
   name: requiredText(80),
   type: boatTypeSchema,
+  navigationZone: navigationZoneSchema,
   builder: nullableText(80),
   model: nullableText(80),
   hullNumber: nullableText(40),
@@ -78,12 +86,15 @@ export const NEW_BOAT_ENGINES_MAX = 6;
 export const newBoatEngineSchema = z.object({
   label: requiredText(60),
   position: enginePositionSchema,
+  propulsion: enginePropulsionSchema,
 });
 
 export const createBoatSchema = z.object({
   boatId: uuid,
   name: requiredText(80),
   type: boatTypeSchema,
+  /** Côtier ou hauturier (D83). Pre-set from the hull; the default is the complete list. */
+  navigationZone: navigationZoneSchema.default("offshore"),
   builder: nullableText(80),
   model: nullableText(80),
   engines: z.array(newBoatEngineSchema).max(NEW_BOAT_ENGINES_MAX).default([]),

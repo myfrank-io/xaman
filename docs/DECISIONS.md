@@ -1741,3 +1741,68 @@ qui allume le point rouge. Rien ne se déplace sous le doigt de qui a déjà cho
 saisie de quelqu'un d'autre, et « planifié aujourd'hui » est légitime. Écarté aussi : une
 troisième puce « Dans une semaine », qui ferait trois raccourcis là où le calendrier natif fait
 déjà le travail au-delà de demain.
+
+## 2026-09-08 — D83 : la checklist sait ce qui entraîne le moteur, et jusqu'où va le bateau
+
+**Question.** Premier retour d'un propriétaire de bateau à moteur (Andréa, 7 septembre) : « quand je
+mets semi-rigide par exemple, que ce soit que des trucs liés au bateau à moteur » ; « demander aussi
+si le bateau est côtier ou hauturier — la checklist d'un côtier c'est plus simple » ; « entre
+hors-bord, in-bord, jet, semi hors-bord… sur moteur t'as une tonne de trucs » ; et, en filigrane :
+« soit ils sont vieux, soit ils aiment pas se faire chier, donc faut simplifier au maximum ».
+
+**Le constat.** L'app connaissait un bit sur un moteur : sa position, et par elle « hors-bord ou
+pas » — `apply_checklist_template` appariait `engine_scope` sur `position`. Un semi-rigide recevait
+le plan du bateau à moteur, dont les points sans moteur (ligne d'arbre, presse-étoupe, groupe
+électrogène, climatisation, toilettes, chauffe-eau) n'ont rien à faire sur un bateau qu'on
+remorque ; et aucune question n'était posée sur la zone, si bien qu'un semi-rigide de plage
+héritait du radeau, de la balise et de l'AIS.
+
+**Décision.** Trois données, aucune table nouvelle, et pas un tap de plus dans le cas courant.
+
+1. **`engines.propulsion`** — hors-bord · in-bord (ligne d'arbre) · saildrive · semi hors-bord
+   (Z-drive) · jet. C'est ce que le modèle apparie désormais (`engine_scope_matches`, `0024`) ;
+   la position ne dit plus que « où ». `inboard` continue de vouloir dire « tout sauf un hors-bord »,
+   donc les modèles existants (ORC 50 compris) ne changent pas de comportement ; les quatre scopes
+   fins servent aux points propres à une transmission : soufflet de saildrive, presse-étoupe de
+   ligne d'arbre, soufflets et cardan de Z-drive, bague d'usure et grille d'un jet.
+   À l'étape 1, une rangée de puces **« Motorisation »**, dont les choix suivent la coque et dont la
+   première est pré-réglée (semi-rigide → hors-bord, multicoque → saildrive, monocoque → ligne
+   d'arbre, moteur → hors-bord) ; posée une fois pour tous les moteurs, un bateau mixte se corrige
+   ensuite moteur par moteur sur la fiche du moteur, où la puce existe aussi. Les moteurs existants
+   sont rétro-remplis à `0024` : position `outboard` → hors-bord, catamaran / trimaran → saildrive,
+   sinon ligne d'arbre.
+2. **`boats.navigation_zone`** — côtier · hauturier. Un point de modèle peut dire
+   `zone_scope = 'offshore'` (radeau, balise, AIS, radar, dessalinisateur, licence MMSI) et
+   `apply_checklist_template` le saute sur un bateau côtier. Pré-réglé **dans le sens qui coûte le
+   moins quand il est faux** : côtier pour un semi-rigide ou un bateau à moteur, hauturier pour un
+   voilier — un point de radeau en trop s'archive en un tap, un point de radeau manquant est un
+   radeau que personne ne révise. Les bateaux existants sont hauturiers : rien ne leur est retiré.
+   Modifiable sur la fiche du bateau ; **passer en hauturier réapplique le plan** (idempotent sur
+   `(boat_id, external_ref)`, donc exactement les points manquants arrivent), repasser en côtier ne
+   retire rien.
+3. **Un modèle « Semi-rigide — modèle générique »** (`0025`) : six systèmes — Moteurs, Coque &
+   Flotteurs, Électricité, Électronique / Nav, Sécurité, et **Remorque** (roulements, freins,
+   treuil, éclairage, rinçage) — et 62 points dont 46 visibles pour un semi-rigide côtier à
+   hors-bord, contre les 70-odd points du modèle moteur dont plus de la moitié ne le concernaient
+   pas. Le modèle moteur gagne les points hors-bord détaillés (huile d'embase, bougies, turbine,
+   anodes, hélice, relevage, câbles, distribution) au lieu d'une « révision du hors-bord » qui en
+   cachait la liste, et les points Z-drive et jet.
+
+**Coût pour la personne.** Deux rangées de puces de plus à l'étape 1, toutes deux pré-remplies par
+la coque : zéro tap dans le cas courant, un tap pour un semi-rigide à jet ou un voilier qui reste
+au port. C'est la réponse à « simplifier au maximum » : moins de points sur l'écran, pas plus de
+questions sur le chemin.
+
+**Ce qui ne bouge pas.** Aucune politique RLS ; aucune suppression nulle part — un point qui ne
+correspondrait plus reste sur les bateaux qui l'ont ; `0016` est figée et `0025` porte l'édition
+complète du registre en upsert ; la vue `checklist_item_status` est inchangée, donc la copie TS
+(`checklist-status.ts`) aussi.
+
+**Écarté.** Filtrer les points hauturiers dans la vue plutôt qu'à l'application (une case
+« côtier » qui fait disparaître des lignes existantes est un piège, et les autres lecteurs de
+`checklist_items` ne verraient pas la même chose) ; un déclencheur SQL sur le changement de zone
+(il aurait fait échouer une mise à jour faite sans session, seed ou admin — la Server Action fait
+le même geste en six lignes, là où il est lisible) ; une catégorie « Remorque » sur le modèle
+moteur (la plupart des bateaux à moteur du catalogue ne se remorquent pas). **Non fait, et à
+part** : « revoir le design », remarque générale du même échange, qui n'est pas une question de
+schéma.

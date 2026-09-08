@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 /**
- * Regenerates supabase/migrations/0016_generic_templates.sql from seed/generic-checklists.json.
+ * Regenerates supabase/migrations/0025_generic_templates_v2.sql from seed/generic-checklists.json.
+ *
+ * 0016 was the first edition of the same registry and has run in production: it is frozen, and a
+ * content change lands as a fresh migration carrying the whole payload (the upsert makes that
+ * safe — same external_ref keys, wording updated in place, nothing duplicated). When the content
+ * changes again, bump TARGET to the next free number rather than rewriting a migration that has
+ * already been applied.
  *
  * The generic models have to reach production, and production never runs `pnpm seed:xaman` — the
  * seed carries Xaman's own data and needs a database password. So the registry ships as a
@@ -19,32 +25,29 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const SOURCE = path.join(root, "seed", "generic-checklists.json");
-export const TARGET = path.join(root, "supabase", "migrations", "0016_generic_templates.sql");
+export const TARGET = path.join(root, "supabase", "migrations", "0025_generic_templates_v2.sql");
 
-const HEADER = `-- 0016_generic_templates.sql — the model registry, so that no boat is ever turned away.
+const HEADER = `-- 0025_generic_templates_v2.sql — the model registry, second edition (D83).
 --
 -- Generated from seed/generic-checklists.json by scripts/gen-template-migration.mjs.
 -- Do not edit by hand: edit the JSON and re-run the script (tests/unit/template-migration.test.ts
--- fails if the two drift).
+-- fails if the two drift). 0016 carried the first edition and stays as it ran.
 --
--- 0015 made the model compulsory when a boat is created: it is what makes the carnet arrive
--- already filled, and « création libre de bateaux sans modèle » is on the audit's do-not list
--- (§2). That only works if there is always a model to choose. Until now there was exactly one —
--- « ORC 50 — Marsaudon Composites » — and it is loaded by \`pnpm seed:xaman\`, which carries
--- Xaman's own data and never runs against production. A production database therefore had an
--- empty registry, and anyone who was not Xavier had nothing to pick.
+-- What changed since 0016, all of it asked for by the first motor-boat owner to try the app:
 --
--- These three are the floor the audit deferred (« modèle générique (reporté) », §3.4), now that
--- the deferral has become the thing standing between a new owner and their carnet. They are not
--- placeholders: same eight systems and same colours as the ORC 50 model, 60 to 70 points each
--- drawn from what any boat of that kind actually needs, and step-by-step actions on the dozen
--- jobs where the steps are the point (oil, impeller, anodes, seacocks, liferaft, gas).
+--   * a fourth model, « Semi-rigide — modèle générique »: six systems, sixty-odd points, and
+--     nothing a boat you tow on a trailer does not have — no shaft line, no generator, no
+--     toilets; a « Remorque » system instead;
+--   * the drive-specific points say which drive (engine_scope shaft / saildrive / sterndrive /
+--     jet, matched on engines.propulsion by 0024), so a Z-drive's bellows never land on a shaft
+--     line and a saildrive boot never on an outboard;
+--   * detailed outboard points (gear oil, plugs, impeller, anodes…) on the motor and semi-rigide
+--     models, where a single « révision du hors-bord » was hiding a real list;
+--   * zone_scope = offshore on liferaft, EPIRB, AIS, radar, watermaker and the MMSI licence: a
+--     coastal boat (boats.navigation_zone) is not asked about them.
 --
--- An exact model always beats a generic one and the picker ranks it first; these exist so that a
--- boat whose builder has published nothing still opens on a real maintenance plan.
---
--- Idempotent, on the same external_ref keys scripts/seed.mts upserts on: re-running updates the
--- wording in place and never duplicates a category or a point. A boat already instantiated from
+-- Idempotent, on the same external_ref keys 0016 and scripts/seed.mts upsert on: rows already
+-- there are updated in place, new ones added, none duplicated. A boat already instantiated from
 -- one of these keeps its own rows — \`apply_checklist_template\` copies, it does not track.
 `;
 
@@ -107,7 +110,7 @@ begin
         v_item_order := v_item_order + 1;
         insert into public.checklist_template_items (
           template_category_id, label, description, interval_months, interval_hours,
-          engine_scope, actions, source, sort_order, external_ref
+          engine_scope, zone_scope, actions, source, sort_order, external_ref
         )
         values (
           v_category_id,
@@ -116,6 +119,7 @@ begin
           (v_item ->> 'interval_months')::int,
           (v_item ->> 'interval_hours')::int,
           coalesce(v_item ->> 'engine_scope', 'none'),
+          coalesce(v_item ->> 'zone_scope', 'all'),
           coalesce(v_item -> 'actions', '[]'::jsonb),
           coalesce(v_item ->> 'source', 'proposal'),
           v_item_order,
@@ -127,6 +131,7 @@ begin
               interval_months = excluded.interval_months,
               interval_hours = excluded.interval_hours,
               engine_scope = excluded.engine_scope,
+              zone_scope = excluded.zone_scope,
               actions = excluded.actions,
               source = excluded.source,
               sort_order = excluded.sort_order;

@@ -49,7 +49,11 @@ const templateFile = z.object({
           description: nullableText,
           interval_months: z.number().int().positive().nullable().optional(),
           interval_hours: z.number().int().positive().nullable().optional(),
-          engine_scope: z.enum(["none", "inboard", "outboard", "all"]).optional(),
+          engine_scope: z
+            .enum(["none", "inboard", "outboard", "all", "shaft", "saildrive", "sterndrive", "jet"])
+            .optional(),
+          /** `offshore` on a point a coastal boat does not carry (D83); absent = all. */
+          zone_scope: z.enum(["all", "offshore"]).optional(),
           source: z.enum(["briefing", "proposal", "builder"]).optional(),
           actions: z.array(z.string()).optional(),
         }),
@@ -89,6 +93,8 @@ const boatFile = z.object({
       external_ref: z.string(),
       label: z.string(),
       position: z.enum(["port", "starboard", "center", "outboard"]),
+      /** What drives it (D83); an outboard position means an outboard, anything else a shaft. */
+      propulsion: z.enum(["outboard", "shaft", "saildrive", "sterndrive", "jet"]).optional(),
       brand: nullableText,
       model: nullableText,
       serial: nullableText,
@@ -330,11 +336,12 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
         sort += 1;
         await client.query(
           `insert into public.checklist_template_items
-             (template_category_id, label, description, interval_months, interval_hours, engine_scope, actions, source, sort_order, external_ref)
-           values ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10)
+             (template_category_id, label, description, interval_months, interval_hours, engine_scope, zone_scope, actions, source, sort_order, external_ref)
+           values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)
            on conflict (template_category_id, external_ref) do update set label = excluded.label,
              description = excluded.description, interval_months = excluded.interval_months,
              interval_hours = excluded.interval_hours, engine_scope = excluded.engine_scope,
+             zone_scope = excluded.zone_scope,
              actions = excluded.actions, source = excluded.source, sort_order = excluded.sort_order`,
           [
             category.id,
@@ -343,6 +350,7 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
             item.interval_months ?? null,
             item.interval_hours ?? null,
             item.engine_scope ?? "none",
+            item.zone_scope ?? "all",
             JSON.stringify(item.actions ?? []),
             item.source ?? null,
             sort,
@@ -413,9 +421,10 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
     for (const e of boatData.engines) {
       const row = await one<{ id: string }>(
         client,
-        `insert into public.engines (boat_id, label, position, brand, model, serial, sort_order, notes, tracks_hours, external_ref, created_by, updated_by)
-         values ($1, $2, $3::public.engine_position, $4, $5, $6, $7, $8, $9, $10, $11, $11)
+        `insert into public.engines (boat_id, label, position, propulsion, brand, model, serial, sort_order, notes, tracks_hours, external_ref, created_by, updated_by)
+         values ($1, $2, $3::public.engine_position, $4::public.engine_propulsion, $5, $6, $7, $8, $9, $10, $11, $12, $12)
          on conflict (boat_id, external_ref) do update set label = excluded.label, position = excluded.position,
+           propulsion = excluded.propulsion,
            brand = coalesce(excluded.brand, public.engines.brand), model = coalesce(excluded.model, public.engines.model),
            serial = coalesce(excluded.serial, public.engines.serial), sort_order = excluded.sort_order,
            notes = coalesce(public.engines.notes, excluded.notes), tracks_hours = excluded.tracks_hours
@@ -424,6 +433,7 @@ export async function runSeed(pool: Pool, options: SeedOptions): Promise<SeedRep
           boat.id,
           e.label,
           e.position,
+          e.propulsion ?? (e.position === "outboard" ? "outboard" : "shaft"),
           clean(e.brand),
           clean(e.model),
           clean(e.serial),

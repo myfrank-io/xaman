@@ -391,6 +391,7 @@ export type Database = {
           length_m: number | null
           model: string | null
           name: string
+          navigation_zone: Database["public"]["Enums"]["navigation_zone"]
           notes: string | null
           organization_id: string | null
           photo_path: string | null
@@ -416,6 +417,7 @@ export type Database = {
           length_m?: number | null
           model?: string | null
           name: string
+          navigation_zone?: Database["public"]["Enums"]["navigation_zone"]
           notes?: string | null
           organization_id?: string | null
           photo_path?: string | null
@@ -441,6 +443,7 @@ export type Database = {
           length_m?: number | null
           model?: string | null
           name?: string
+          navigation_zone?: Database["public"]["Enums"]["navigation_zone"]
           notes?: string | null
           organization_id?: string | null
           photo_path?: string | null
@@ -803,6 +806,7 @@ export type Database = {
           source: string | null
           template_category_id: string
           updated_at: string
+          zone_scope: string
         }
         Insert: {
           actions?: NonNullable<Json>
@@ -818,6 +822,7 @@ export type Database = {
           source?: string | null
           template_category_id: string
           updated_at?: string
+          zone_scope?: string
         }
         Update: {
           actions?: NonNullable<Json>
@@ -833,6 +838,7 @@ export type Database = {
           source?: string | null
           template_category_id?: string
           updated_at?: string
+          zone_scope?: string
         }
         Relationships: [
           {
@@ -1122,6 +1128,7 @@ export type Database = {
           model: string | null
           notes: string | null
           position: Database["public"]["Enums"]["engine_position"]
+          propulsion: Database["public"]["Enums"]["engine_propulsion"]
           serial: string | null
           sort_order: number
           tracks_hours: boolean
@@ -1143,6 +1150,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           position: Database["public"]["Enums"]["engine_position"]
+          propulsion: Database["public"]["Enums"]["engine_propulsion"]
           serial?: string | null
           sort_order?: number
           tracks_hours?: boolean
@@ -1164,6 +1172,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           position?: Database["public"]["Enums"]["engine_position"]
+          propulsion?: Database["public"]["Enums"]["engine_propulsion"]
           serial?: string | null
           sort_order?: number
           tracks_hours?: boolean
@@ -2438,9 +2447,17 @@ export type Database = {
           p_engines?: Json
           p_model?: string
           p_name: string
+          p_navigation_zone?: Database["public"]["Enums"]["navigation_zone"]
           p_type: Database["public"]["Enums"]["boat_type"]
         }
         Returns: string
+      }
+      engine_scope_matches: {
+        Args: {
+          p_propulsion: Database["public"]["Enums"]["engine_propulsion"]
+          p_scope: string
+        }
+        Returns: boolean
       }
       enqueue_weekly_digest: {
         Args: Record<PropertyKey, never>
@@ -2532,8 +2549,10 @@ export type Database = {
       checklist_item_source: "template" | "custom"
       checklist_state: "never" | "ok" | "soon" | "overdue"
       engine_position: "port" | "starboard" | "center" | "outboard"
+      engine_propulsion: "outboard" | "shaft" | "saildrive" | "sterndrive" | "jet"
       hour_reading_source: "manual" | "maintenance_log" | "checklist" | "import"
       log_status: "planned" | "in_progress" | "done" | "urgent"
+      navigation_zone: "coastal" | "offshore"
       organization_type:
         | "private"
         | "charter"
@@ -2689,8 +2708,10 @@ export const Constants = {
       checklist_item_source: ["template", "custom"],
       checklist_state: ["never", "ok", "soon", "overdue"],
       engine_position: ["port", "starboard", "center", "outboard"],
+      engine_propulsion: ["outboard", "shaft", "saildrive", "sterndrive", "jet"],
       hour_reading_source: ["manual", "maintenance_log", "checklist", "import"],
       log_status: ["planned", "in_progress", "done", "urgent"],
+      navigation_zone: ["coastal", "offshore"],
       organization_type: [
         "private",
         "charter",

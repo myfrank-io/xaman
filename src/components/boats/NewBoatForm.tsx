@@ -30,12 +30,16 @@ import {
   TENDER_CHOICES,
   asksAboutTender,
   defaultEngineCount,
+  defaultNavigationZone,
+  defaultPropulsion,
   newBoatEngines,
+  propulsionChoices,
   type TenderChoice,
 } from "@/lib/boat-onboarding";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { onboardingPath } from "@/lib/queries/boat-routes";
-import { boatTypeSchema, createBoatSchema } from "@/lib/schemas/boat";
+import { boatTypeSchema, createBoatSchema, navigationZoneSchema } from "@/lib/schemas/boat";
+import { enginePropulsionSchema, type EnginePropulsion } from "@/lib/schemas/engines";
 
 /**
  * The form holds strings; the schema turns them into what the action receives. `engines` is not a
@@ -49,9 +53,13 @@ type NewBoatFormState = {
   boatId: string;
   name: string;
   type: string;
+  /** Côtier ou hauturier (D83): what the plan leaves out. */
+  navigationZone: string;
   builder: string;
   model: string;
   engineCount: string;
+  /** What drives the engines (D83): what each of them collects from the plan. */
+  propulsion: EnginePropulsion;
   /** The annexe's outboard (D68) — an engine like any other, appended after the boat's own. */
   tender: TenderChoice;
 };
@@ -78,6 +86,8 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
   const t = useTranslations("boats.new");
   const tb = useTranslations("boatType");
   const te = useTranslations("engines.onboarding");
+  const tpr = useTranslations("enginePropulsion");
+  const tz = useTranslations("navigationZone");
   const errorMessage = useErrorMessage();
   const fieldError = useFieldError();
   const router = useRouter();
@@ -93,9 +103,11 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
       boatId,
       name: "",
       type: "monohull_sail",
+      navigationZone: defaultNavigationZone("monohull_sail"),
       builder: "",
       model: "",
       engineCount: "1",
+      propulsion: defaultPropulsion("monohull_sail"),
       tender: "none",
     },
   });
@@ -105,6 +117,8 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
   const type = useWatch({ control: form.control, name: "type" }) as z.infer<typeof boatTypeSchema>;
   const builder = useWatch({ control: form.control, name: "builder" });
   const model = useWatch({ control: form.control, name: "model" });
+  const engineCount = Number(useWatch({ control: form.control, name: "engineCount" }));
+  const propulsions = useMemo(() => propulsionChoices(type), [type]);
 
   const builders = useMemo(() => builderSuggestions(models, builder), [models, builder]);
   const suggestedModels = useMemo(
@@ -114,11 +128,18 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
 
   function setType(next: string) {
     form.setValue("type", next, { shouldValidate: form.formState.isSubmitted });
-    // The hull knows how many engines it usually carries. A count already corrected by hand is
-    // never overwritten.
+    const parsed = boatTypeSchema.safeParse(next);
+    const hull = parsed.success ? parsed.data : null;
+    // The hull knows how many engines it usually carries, what drives them and how far the boat
+    // goes. An answer already corrected by hand is never overwritten.
     if (!form.getFieldState("engineCount").isDirty) {
-      const parsed = boatTypeSchema.safeParse(next);
-      form.setValue("engineCount", String(defaultEngineCount(parsed.success ? parsed.data : null)));
+      form.setValue("engineCount", String(defaultEngineCount(hull)));
+    }
+    if (!form.getFieldState("propulsion").isDirty) {
+      form.setValue("propulsion", defaultPropulsion(hull));
+    }
+    if (!form.getFieldState("navigationZone").isDirty) {
+      form.setValue("navigationZone", defaultNavigationZone(hull));
     }
   }
 
@@ -157,9 +178,17 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
             starboardInner: te("starboardInner"),
             starboardOuter: te("starboardOuter"),
             outboard: te("outboard"),
+            outboardPort: te("outboardPort"),
+            outboardStarboard: te("outboardStarboard"),
+            outboardCenter: te("outboardCenter"),
+            outboardPortOuter: te("outboardPortOuter"),
+            outboardPortInner: te("outboardPortInner"),
+            outboardStarboardInner: te("outboardStarboardInner"),
+            outboardStarboardOuter: te("outboardStarboardOuter"),
             tender: te("tender"),
           },
           form.getValues("tender"),
+          form.getValues("propulsion"),
         ),
       });
       if (!result.ok) {
@@ -292,6 +321,39 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
         />
       </Field>
 
+      {/* Asked once for all the engines, and only when there is one to ask about. The chips
+          follow the hull — a semi-rigide is not offered a saildrive — and the first is pre-set,
+          so the common case costs no tap (D83). */}
+      {engineCount > 0 ? (
+        <Field
+          id={`boat-propulsion-${propulsions[0] ?? "shaft"}`}
+          label={t("propulsion")}
+          help={t("propulsionHelp")}
+        >
+          <Controller
+            control={form.control}
+            name="propulsion"
+            render={({ field }) => (
+              <ToggleGroup
+                type="single"
+                value={field.value}
+                aria-label={t("propulsion")}
+                onValueChange={(next) => {
+                  const parsed = enginePropulsionSchema.safeParse(next);
+                  if (parsed.success) field.onChange(parsed.data);
+                }}
+              >
+                {propulsions.map((choice) => (
+                  <ToggleGroupItem key={choice} value={choice} id={`boat-propulsion-${choice}`}>
+                    {tpr(choice)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            )}
+          />
+        </Field>
+      ) : null}
+
       {asksAboutTender(type) ? (
         <Field id="boat-tender-none" label={t("tender")} help={t("tenderHelp")}>
           <Controller
@@ -314,6 +376,29 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
           />
         </Field>
       ) : null}
+
+      {/* « Côtier ou hauturier » (D83): the one question that makes a coastal list shorter. Pre-set
+          from the hull, editable later on the Bateau screen. */}
+      <Field id="boat-zone-coastal" label={t("zone")} help={t("zoneHelp")}>
+        <Controller
+          control={form.control}
+          name="navigationZone"
+          render={({ field }) => (
+            <ToggleGroup
+              type="single"
+              value={field.value}
+              aria-label={t("zone")}
+              onValueChange={(next) => next && field.onChange(next)}
+            >
+              {navigationZoneSchema.options.map((zone) => (
+                <ToggleGroupItem key={zone} value={zone} id={`boat-zone-${zone}`}>
+                  {tz(zone)}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          )}
+        />
+      </Field>
 
       <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
         {pending ? <Spinner /> : <ArrowRightIcon />}

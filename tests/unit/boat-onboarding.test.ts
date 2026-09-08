@@ -9,17 +9,21 @@ import {
   ONBOARDING_BOAT_STEPS,
   ONBOARDING_STEPS,
   defaultEngineCount,
+  defaultNavigationZone,
+  defaultPropulsion,
   isExistingLogFormat,
   isOnboardingBoatStep,
   newBoatEngines,
   parseOnboardingBoatStep,
+  propulsionChoices,
   splitTemplates,
   type EngineLabels,
   type TemplateOption,
 } from "@/lib/boat-onboarding";
 import fr from "@/messages/fr.json";
 import { onboardingPath } from "@/lib/queries/boat-routes";
-import { boatTypeSchema } from "@/lib/schemas/boat";
+import { boatTypeSchema, navigationZoneSchema } from "@/lib/schemas/boat";
+import { enginePropulsionSchema } from "@/lib/schemas/engines";
 
 const LABELS: EngineLabels = {
   single: "Moteur",
@@ -31,6 +35,13 @@ const LABELS: EngineLabels = {
   starboardInner: "Moteur tribord intérieur",
   starboardOuter: "Moteur tribord extérieur",
   outboard: "Hors-bord",
+  outboardPort: "Hors-bord bâbord",
+  outboardStarboard: "Hors-bord tribord",
+  outboardCenter: "Hors-bord central",
+  outboardPortOuter: "Hors-bord bâbord extérieur",
+  outboardPortInner: "Hors-bord bâbord intérieur",
+  outboardStarboardInner: "Hors-bord tribord intérieur",
+  outboardStarboardOuter: "Hors-bord tribord extérieur",
   tender: "Hors-bord d'annexe",
 };
 
@@ -76,50 +87,123 @@ describe("defaultEngineCount", () => {
   });
 });
 
+/**
+ * D83: what drives the engines is asked once, per hull, and pre-set on what most boats of that
+ * kind carry. The choices are what the chips show, so they must all be drives the schema knows.
+ */
+describe("propulsionChoices / defaultPropulsion", () => {
+  it("offers a semi-rigide an outboard first and never a saildrive", () => {
+    expect(propulsionChoices("rib")[0]).toBe("outboard");
+    expect(propulsionChoices("rib")).not.toContain("saildrive");
+    expect(defaultPropulsion("rib")).toBe("outboard");
+  });
+
+  it("offers a multihull a saildrive first, a monohull a shaft line", () => {
+    expect(defaultPropulsion("catamaran")).toBe("saildrive");
+    expect(defaultPropulsion("trimaran")).toBe("saildrive");
+    expect(defaultPropulsion("monohull_sail")).toBe("shaft");
+  });
+
+  it("offers a motor boat the four drives the remark listed", () => {
+    expect([...propulsionChoices("motor")].sort()).toEqual(
+      ["jet", "outboard", "shaft", "sterndrive"].sort(),
+    );
+  });
+
+  it("only ever offers a drive the schema accepts, and the default is among the choices", () => {
+    for (const type of boatTypeSchema.options) {
+      const choices = propulsionChoices(type);
+      expect(choices.length).toBeGreaterThan(0);
+      for (const choice of choices) expect(enginePropulsionSchema.options).toContain(choice);
+      expect(choices).toContain(defaultPropulsion(type));
+    }
+    expect(enginePropulsionSchema.options).toContain(defaultPropulsion(null));
+  });
+});
+
+/**
+ * « Côtier ou hauturier » (D83): pre-set in the direction that costs least when wrong — a motor
+ * boat is coastal more often than not, and a sailing boat is offshore because a missing liferaft
+ * point is worse than an unwanted one.
+ */
+describe("defaultNavigationZone", () => {
+  it("puts a semi-rigide and a motor boat on the coast, everything else offshore", () => {
+    expect(defaultNavigationZone("rib")).toBe("coastal");
+    expect(defaultNavigationZone("motor")).toBe("coastal");
+    expect(defaultNavigationZone("catamaran")).toBe("offshore");
+    expect(defaultNavigationZone("monohull_sail")).toBe("offshore");
+    expect(defaultNavigationZone("other")).toBe("offshore");
+    expect(defaultNavigationZone(null)).toBe("offshore");
+  });
+
+  it("only ever answers a zone the schema accepts", () => {
+    for (const type of boatTypeSchema.options) {
+      expect(navigationZoneSchema.options).toContain(defaultNavigationZone(type));
+    }
+  });
+});
+
 describe("newBoatEngines", () => {
-  it("names the two engines of a multihull by their side", () => {
+  it("names the two engines of a multihull by their side, on saildrives", () => {
     expect(newBoatEngines(2, "catamaran", LABELS)).toEqual([
-      { label: "Moteur bâbord", position: "port" },
-      { label: "Moteur tribord", position: "starboard" },
+      { label: "Moteur bâbord", position: "port", propulsion: "saildrive" },
+      { label: "Moteur tribord", position: "starboard", propulsion: "saildrive" },
     ]);
   });
 
   it("puts a single inboard in the centre", () => {
     expect(newBoatEngines(1, "monohull_sail", LABELS)).toEqual([
-      { label: "Moteur", position: "center" },
+      { label: "Moteur", position: "center", propulsion: "shaft" },
     ]);
   });
 
   /**
    * The distinction is not cosmetic: `apply_checklist_template` matches `engine_scope` on the
-   * position, so an outboard filed as `center` would collect the inboard points (impeller,
-   * saildrive) and none of its own.
+   * propulsion, so an outboard filed as a shaft line would collect the inboard points (impeller,
+   * stern gland) and none of its own.
    */
   it("gives a rigid inflatable an outboard, not an inboard", () => {
     expect(newBoatEngines(1, "rib", LABELS)).toEqual([
-      { label: "Hors-bord", position: "outboard" },
+      { label: "Hors-bord", position: "outboard", propulsion: "outboard" },
     ]);
-    expect(newBoatEngines(2, "rib", LABELS).map((e) => e.position)).toEqual([
-      "outboard",
-      "outboard",
+    const twin = newBoatEngines(2, "rib", LABELS);
+    expect(twin.map((e) => e.propulsion)).toEqual(["outboard", "outboard"]);
+    // Two outboards have a side each; they are named as outboards, not as « Moteur ».
+    expect(twin.map((e) => e.position)).toEqual(["port", "starboard"]);
+    expect(twin.map((e) => e.label)).toEqual(["Hors-bord bâbord", "Hors-bord tribord"]);
+  });
+
+  it("follows the propulsion it is given, whatever the hull", () => {
+    expect(newBoatEngines(1, "monohull_sail", LABELS, "none", "outboard")).toEqual([
+      { label: "Hors-bord", position: "outboard", propulsion: "outboard" },
+    ]);
+    expect(newBoatEngines(2, "motor", LABELS, "none", "sterndrive")).toEqual([
+      { label: LABELS.port, position: "port", propulsion: "sterndrive" },
+      { label: LABELS.starboard, position: "starboard", propulsion: "sterndrive" },
     ]);
   });
 
   it("gives a triple its centre engine", () => {
-    expect(newBoatEngines(3, "motor", LABELS)).toEqual([
-      { label: LABELS.port, position: "port" },
-      { label: LABELS.center, position: "center" },
-      { label: LABELS.starboard, position: "starboard" },
+    expect(newBoatEngines(3, "motor", LABELS, "none", "shaft")).toEqual([
+      { label: LABELS.port, position: "port", propulsion: "shaft" },
+      { label: LABELS.center, position: "center", propulsion: "shaft" },
+      { label: LABELS.starboard, position: "starboard", propulsion: "shaft" },
     ]);
   });
 
   /** A quad is counted the way it is seen from the pontoon: outside in, side by side. */
   it("reads a quad from the outside in", () => {
-    expect(newBoatEngines(4, "motor", LABELS)).toEqual([
-      { label: LABELS.portOuter, position: "port" },
-      { label: LABELS.portInner, position: "port" },
-      { label: LABELS.starboardInner, position: "starboard" },
-      { label: LABELS.starboardOuter, position: "starboard" },
+    expect(newBoatEngines(4, "motor", LABELS, "none", "shaft")).toEqual([
+      { label: LABELS.portOuter, position: "port", propulsion: "shaft" },
+      { label: LABELS.portInner, position: "port", propulsion: "shaft" },
+      { label: LABELS.starboardInner, position: "starboard", propulsion: "shaft" },
+      { label: LABELS.starboardOuter, position: "starboard", propulsion: "shaft" },
+    ]);
+    expect(newBoatEngines(4, "motor", LABELS).map((e) => e.label)).toEqual([
+      LABELS.outboardPortOuter,
+      LABELS.outboardPortInner,
+      LABELS.outboardStarboardInner,
+      LABELS.outboardStarboardOuter,
     ]);
   });
 
@@ -127,8 +211,19 @@ describe("newBoatEngines", () => {
     for (const count of [3, 4]) {
       const engines = newBoatEngines(count, "rib", LABELS);
       expect(engines).toHaveLength(count);
-      expect(engines.every((engine) => engine.position === "outboard")).toBe(true);
+      expect(engines.every((engine) => engine.propulsion === "outboard")).toBe(true);
     }
+  });
+
+  /** The annexe's outboard is an outboard, whatever drives the boat itself (D68, D83). */
+  it("gives the annexe an outboard behind saildrives", () => {
+    const engines = newBoatEngines(2, "catamaran", LABELS, "outboard");
+    expect(engines).toHaveLength(3);
+    expect(engines[2]).toEqual({
+      label: LABELS.tender,
+      position: "outboard",
+      propulsion: "outboard",
+    });
   });
 
   it("creates exactly the number of engines the toggle asked for", () => {
@@ -177,6 +272,18 @@ describe("the engine names of step 1", () => {
     const onboarding: Record<string, string> = fr.engines.onboarding;
     for (const key of Object.keys(LABELS) as (keyof EngineLabels)[]) {
       expect(onboarding[key]?.trim(), key).toBeTruthy();
+    }
+  });
+
+  /** The chips of D83 are labelled from the enums, so every value needs its word. */
+  it("names every propulsion and every navigation zone", () => {
+    const propulsion: Record<string, string> = fr.enginePropulsion;
+    for (const key of enginePropulsionSchema.options) {
+      expect(propulsion[key]?.trim(), key).toBeTruthy();
+    }
+    const zone: Record<string, string> = fr.navigationZone;
+    for (const key of navigationZoneSchema.options) {
+      expect(zone[key]?.trim(), key).toBeTruthy();
     }
   });
 });
@@ -246,24 +353,28 @@ describe("the three steps", () => {
 describe("the annexe", () => {
   it("comes after the boat's own engines, as an outboard", () => {
     expect(newBoatEngines(2, "catamaran", LABELS, "outboard")).toEqual([
-      { label: LABELS.port, position: "port" },
-      { label: LABELS.starboard, position: "starboard" },
-      { label: LABELS.tender, position: "outboard" },
+      { label: LABELS.port, position: "port", propulsion: "saildrive" },
+      { label: LABELS.starboard, position: "starboard", propulsion: "saildrive" },
+      { label: LABELS.tender, position: "outboard", propulsion: "outboard" },
     ]);
   });
 
-  /** `engine_scope` matches on the position: an annexe given `center` would collect the saildrive
+  /** `engine_scope` matches on the propulsion (D83): an annexe filed as a saildrive would collect the saildrive
    * points and none of its own. */
   it("is always an outboard, whatever the hull carries", () => {
     for (const type of ["catamaran", "monohull_sail", "motor", "other"] as const) {
       const engines = newBoatEngines(1, type, LABELS, "outboard");
-      expect(engines.at(-1)).toEqual({ label: LABELS.tender, position: "outboard" });
+      expect(engines.at(-1)).toEqual({
+        label: LABELS.tender,
+        position: "outboard",
+        propulsion: "outboard",
+      });
     }
   });
 
   it("is the only engine of a boat that has none of its own", () => {
     expect(newBoatEngines(0, "monohull_sail", LABELS, "outboard")).toEqual([
-      { label: LABELS.tender, position: "outboard" },
+      { label: LABELS.tender, position: "outboard", propulsion: "outboard" },
     ]);
   });
 
@@ -278,7 +389,7 @@ describe("the annexe", () => {
   it("is not asked of a semi-rigide, and not added to one either", () => {
     expect(asksAboutTender("rib")).toBe(false);
     expect(newBoatEngines(1, "rib", LABELS, "outboard")).toEqual([
-      { label: LABELS.outboard, position: "outboard" },
+      { label: LABELS.outboard, position: "outboard", propulsion: "outboard" },
     ]);
     for (const type of ["catamaran", "trimaran", "monohull_sail", "motor", "other"] as const) {
       expect(asksAboutTender(type)).toBe(true);

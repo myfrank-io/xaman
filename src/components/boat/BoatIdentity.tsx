@@ -39,13 +39,20 @@ import {
 import { looksLikeFrenchRegistration } from "@/lib/boat-registration";
 import { formatNumber } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { boatTypeSchema, updateBoatSchema, type BoatType } from "@/lib/schemas/boat";
+import {
+  boatTypeSchema,
+  navigationZoneSchema,
+  updateBoatSchema,
+  type BoatType,
+  type NavigationZone,
+} from "@/lib/schemas/boat";
 
 type IdentityForm = {
   boatId: string;
   expectedUpdatedAt?: string;
   name: string;
   type: BoatType;
+  navigationZone: NavigationZone;
   builder: string;
   model: string;
   hullNumber: string;
@@ -67,6 +74,7 @@ function toForm(boat: Boat): IdentityForm {
     expectedUpdatedAt: boat.updated_at,
     name: boat.name,
     type: boat.type,
+    navigationZone: boat.navigation_zone,
     builder: textToInput(boat.builder),
     model: textToInput(boat.model),
     hullNumber: textToInput(boat.hull_number),
@@ -125,6 +133,7 @@ export function BoatIdentity({
   // `<ul aria-label="Modèle">` does not collide with the `<input>` that already has that name.
   const ts = useTranslations("boats.new");
   const tt = useTranslations("boatType");
+  const tz = useTranslations("navigationZone");
   const errorMessage = useErrorMessage();
   const fieldError = useFieldError();
   const router = useRouter();
@@ -257,6 +266,10 @@ export function BoatIdentity({
                     <Value>{tt(boat.type)}</Value>
                   </div>
                   <div>
+                    <Term>{t("navigationZone")}</Term>
+                    <Value>{tz(boat.navigation_zone)}</Value>
+                  </div>
+                  <div>
                     <Term>{t("builder")}</Term>
                     <Value>{boat.builder}</Value>
                   </div>
@@ -341,6 +354,23 @@ export function BoatIdentity({
                 {boatTypeSchema.options.map((type) => (
                   <option key={type} value={type}>
                     {tt(type)}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Field>
+            {/* Côtier ou hauturier (D83). Going offshore re-applies the plan and adds its offshore
+                points; going coastal takes nothing away — the help says both. */}
+            <Field
+              id="boat-zone"
+              label={t("navigationZone")}
+              required
+              help={t("navigationZoneHelp")}
+              error={fieldError(errors.navigationZone)}
+            >
+              <NativeSelect id="boat-zone" {...form.register("navigationZone")}>
+                {navigationZoneSchema.options.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {tz(zone)}
                   </option>
                 ))}
               </NativeSelect>

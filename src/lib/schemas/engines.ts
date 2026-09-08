@@ -13,6 +13,20 @@ import {
 export const enginePositionSchema = z.enum(["port", "starboard", "center", "outboard"]);
 export type EnginePosition = z.infer<typeof enginePositionSchema>;
 
+/**
+ * What drives the engine (D83): an outboard, an in-bord on a shaft line, a saildrive, a Z-drive
+ * (« semi hors-bord ») or a jet. It is what a template point's `engine_scope` is matched on —
+ * the position only says where the engine sits.
+ */
+export const enginePropulsionSchema = z.enum([
+  "outboard",
+  "shaft",
+  "saildrive",
+  "sterndrive",
+  "jet",
+]);
+export type EnginePropulsion = z.infer<typeof enginePropulsionSchema>;
+
 export const ENGINE_HOURS_MAX = 99_999.9;
 // A jump larger than this since the previous reading triggers a soft warning (UX §3e).
 export const ENGINE_HOURS_JUMP_WARNING = 500;
@@ -24,6 +38,7 @@ export const upsertEngineSchema = z.object({
   expectedUpdatedAt,
   label: requiredText(60),
   position: enginePositionSchema,
+  propulsion: enginePropulsionSchema,
   brand: nullableText(60),
   model: nullableText(60),
   serial: nullableText(60),

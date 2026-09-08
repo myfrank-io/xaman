@@ -119,6 +119,17 @@
     "center": "Central",
     "outboard": "Hors-bord"
   },
+  "enginePropulsion": {
+    "outboard": "Hors-bord",
+    "shaft": "In-bord (ligne d'arbre)",
+    "saildrive": "Saildrive",
+    "sterndrive": "Semi hors-bord (Z-drive)",
+    "jet": "Jet"
+  },
+  "navigationZone": {
+    "coastal": "Côtier",
+    "offshore": "Hauturier"
+  },
   "units": {
     "hours": "{count, plural, one {# h} other {# h}}",
     "engineHours": "{hours} h moteur",
@@ -313,12 +324,16 @@
       "optional": "Facultatif",
       "engines": "Moteurs",
       "enginesHelp": "Les entretiens en heures s'y rattacheront. Vous les nommerez et relèverez les compteurs ensuite.",
+      "propulsion": "Motorisation",
+      "propulsionHelp": "Elle décide des points de chaque moteur : ligne d'arbre, embase, hors-bord… Un bateau mixte se corrige ensuite moteur par moteur.",
       "tender": "Annexe",
       "tenderHelp": "Son hors-bord a ses propres entretiens : il arrive dans le carnet comme un moteur du bord.",
       "tenderOption": {
         "none": "Aucune",
         "outboard": "Avec hors-bord"
       },
+      "zone": "Navigation",
+      "zoneHelp": "Un bateau côtier n'a ni radeau, ni balise, ni AIS dans sa liste. Modifiable ensuite depuis la fiche du bateau.",
       "submit": "Continuer",
       "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement.",
       "suggestionsLabel": "Suggestions :",
@@ -1112,6 +1127,8 @@
       "edit": "Modifier la fiche",
       "name": "Nom",
       "type": "Type",
+      "navigationZone": "Navigation",
+      "navigationZoneHelp": "Passer en hauturier ajoute au plan d'entretien les points hauturiers (radeau, balise, AIS…). Repasser en côtier ne retire rien.",
       "builder": "Constructeur",
       "model": "Modèle",
       "hullNumber": "N° de coque",
@@ -1160,6 +1177,8 @@
     "fields": {
       "label": "Nom",
       "position": "Position",
+      "propulsion": "Motorisation",
+      "propulsionHelp": "Décide des points de checklist de ce moteur : « Générer les points de ce moteur » les tire de la motorisation.",
       "brand": "Marque",
       "model": "Modèle",
       "serial": "N° de série",
@@ -1228,6 +1247,13 @@
       "starboardInner": "Moteur tribord intérieur",
       "starboardOuter": "Moteur tribord extérieur",
       "outboard": "Hors-bord",
+      "outboardPort": "Hors-bord bâbord",
+      "outboardStarboard": "Hors-bord tribord",
+      "outboardCenter": "Hors-bord central",
+      "outboardPortOuter": "Hors-bord bâbord extérieur",
+      "outboardPortInner": "Hors-bord bâbord intérieur",
+      "outboardStarboardInner": "Hors-bord tribord intérieur",
+      "outboardStarboardOuter": "Hors-bord tribord extérieur",
       "tender": "Hors-bord d'annexe"
     }
   },

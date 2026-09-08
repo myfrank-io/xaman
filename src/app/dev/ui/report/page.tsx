@@ -28,13 +28,21 @@ export default function DevReportPage() {
         today="2026-09-03"
         showCosts
         engines={[
-          { id: "e1", label: "Bâbord", brand: "Volvo Penta", model: "D2-75", position: "port" },
+          {
+            id: "e1",
+            label: "Bâbord",
+            brand: "Volvo Penta",
+            model: "D2-75",
+            position: "port",
+            propulsion: "shaft",
+          },
           {
             id: "e2",
             label: "Tribord",
             brand: "Volvo Penta",
             model: "D2-75",
             position: "starboard",
+            propulsion: "shaft",
           },
         ]}
         hours={[

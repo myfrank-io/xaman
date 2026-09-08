@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
+import { engineKind } from "@/components/engines/engine-kind";
 import { formatCurrency, formatDate, formatHours, formatPercent } from "@/lib/format";
 import type { Database } from "@/types/database";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ export type ReportEngine = {
   brand: string | null;
   model: string | null;
   position: Database["public"]["Enums"]["engine_position"];
+  propulsion: Database["public"]["Enums"]["engine_propulsion"];
 };
 
 export type ReportReading = {
@@ -131,11 +133,12 @@ export async function ReportDocument({
   /** The « hide costs » link and the print button — they need the boat's own routes. */
   actions?: React.ReactNode;
 }) {
-  const [t, tb, ts, tp, tc] = await Promise.all([
+  const [t, tb, ts, tp, tpr, tc] = await Promise.all([
     getTranslations("report"),
     getTranslations("boatType"),
     getTranslations("checklistState"),
     getTranslations("enginePosition"),
+    getTranslations("enginePropulsion"),
     getTranslations("common"),
   ]);
   const hoursByEngine = new Map(hours.map((row) => [row.engine_id, row]));
@@ -205,7 +208,7 @@ export async function ReportDocument({
                     <tr key={engine.id}>
                       <td className={td}>
                         {engine.label}
-                        <span className="text-ink-3"> · {tp(engine.position)}</span>
+                        <span className="text-ink-3"> · {engineKind(engine, tp, tpr)}</span>
                       </td>
                       <td className={td}>
                         {[engine.brand, engine.model].filter(Boolean).join(" ")}

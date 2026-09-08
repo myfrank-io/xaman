@@ -11,6 +11,7 @@ function engine(over: Record<string, unknown> = {}) {
     boatId: BOAT,
     label: "Annexe (hors-bord)",
     position: "outboard",
+    propulsion: "outboard",
     brand: null,
     model: null,
     serial: null,
@@ -35,5 +36,21 @@ describe("upsertEngineSchema — tracksHours (D73)", () => {
 
   it("refuses anything that is not a yes or a no", () => {
     expect(upsertEngineSchema.safeParse(engine({ tracksHours: "non" })).success).toBe(false);
+  });
+});
+
+// D83: what drives the engine is what the plan matches its points on, so it is never guessed.
+describe("upsertEngineSchema — propulsion (D83)", () => {
+  it("accepts the five drives", () => {
+    for (const propulsion of ["outboard", "shaft", "saildrive", "sterndrive", "jet"]) {
+      expect(upsertEngineSchema.parse(engine({ propulsion })).propulsion).toBe(propulsion);
+    }
+  });
+
+  it("refuses an engine that does not say what drives it", () => {
+    const { propulsion: _omitted, ...withoutPropulsion } = engine();
+    void _omitted;
+    expect(upsertEngineSchema.safeParse(withoutPropulsion).success).toBe(false);
+    expect(upsertEngineSchema.safeParse(engine({ propulsion: "warp" })).success).toBe(false);
   });
 });

@@ -39,7 +39,9 @@ export default async function BoatPage({
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase
       .from("engines")
-      .select("id, label, position, brand, model, installed_at, is_active, tracks_hours")
+      .select(
+        "id, label, position, propulsion, brand, model, installed_at, is_active, tracks_hours",
+      )
       .eq("boat_id", boatId)
       .order("sort_order")
       .order("label"),
@@ -93,6 +95,7 @@ export default async function BoatPage({
     id: engine.id,
     label: engine.label,
     position: engine.position,
+    propulsion: engine.propulsion,
     brand: engine.brand,
     model: engine.model,
     installedAt: engine.installed_at,
