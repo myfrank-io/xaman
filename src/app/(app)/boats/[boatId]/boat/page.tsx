@@ -7,8 +7,10 @@ import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab"
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
 import { applyStockFilter, countLowStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
+import { inboundDomain } from "@/lib/inbox/receive";
 import { boatModels } from "@/lib/queries/boat-models";
 import { loadStockItems, toRestockList } from "@/lib/queries/stock";
+import { inboxAddress } from "@/lib/schemas/inbox";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -83,6 +85,9 @@ export default async function BoatPage({
         .maybeSingle()
     : { data: null };
 
+  // The boat's own address (D84), when a receiving domain is configured.
+  const domain = inboundDomain();
+
   const hoursByEngine = new Map(
     (currentHours ?? []).map((row) => [row.engine_id, { hours: row.hours, readAt: row.read_at }]),
   );
@@ -130,6 +135,7 @@ export default async function BoatPage({
         canEdit={can(boatRole, "write")}
         templateName={template?.name ?? null}
         models={models}
+        inboxAddress={domain ? inboxAddress(boat.name, boat.inbox_token, domain) : null}
       />
       <BoatTabs
         boatId={boatId}

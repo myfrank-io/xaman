@@ -1806,3 +1806,66 @@ le même geste en six lignes, là où il est lisible) ; une catégorie « Remorq
 moteur (la plupart des bateaux à moteur du catalogue ne se remorquent pas). **Non fait, et à
 part** : « revoir le design », remarque générale du même échange, qui n'est pas une question de
 schéma.
+
+## 2026-09-08 — D84 : un document arrive tout seul, une personne le range d'un tap
+
+**Question.** « Je prends en photo mon ticket de caisse, ça l'analyse et ça crée automatiquement
+la facture adéquate » ; « chaque bateau a une adresse e-mail dédiée : quand un fichier est envoyé
+en pièce jointe, l'intervention est uploadée et pré-remplie, il faut juste vérifier les infos
+pour la valider ; le user reçoit un mail dès qu'une intervention est à valider, et quand elle
+est validée ». Annoncé à Andréa le 7 septembre comme « very soon ».
+
+**Le constat.** Le carnet savait déjà recevoir des documents (E10-1, « Importer des documents »),
+mais chaque document coûtait un titre, une date et un système à taper — sur un ticket qui porte
+déjà les trois — et rien n'arrivait sans que quelqu'un ouvre l'app avec le fichier à la main. Les
+factures existent pourtant : dans une boîte mail, celle du propriétaire ou de son comptable.
+
+**Décision. Une boîte de réception, deux portes, un tap.**
+
+1. **`inbox_items`** (`0026`) : une ligne par document arrivé, avec le fichier dans le bucket et
+   la lecture dans `suggestion`. Une ligne est une **proposition**. Rien n'est écrit dans le
+   journal ni dans les dépenses par une machine seule : « Valider » appelle les Server Actions des
+   formulaires (`saveLog`, `upsertPurchase`), donc une ligne validée obéit exactement aux règles
+   d'une ligne tapée — RLS, schémas zod partagés, upsert idempotent — et le document devient sa
+   pièce jointe (même objet, nouvelle ligne `attachments`).
+2. **La photo** : sur l'écran « À valider », « Photographier un ticket » ouvre l'appareil (`capture`),
+   la photo est réduite et envoyée comme une pièce jointe, puis lue **pendant que la personne
+   attend** (barre de progression, une trentaine de secondes) : une carte qui dirait « en cours »
+   pour toujours serait pire qu'une attente visible.
+3. **L'adresse** : `<slug>-<token>@INBOUND_EMAIL_DOMAIN`, où le slug n'est que le nom du bateau pour
+   le lecteur et le **token** (12 hexadécimaux, `boats.inbox_token`) la seule chose que le webhook
+   apparie : un bateau renommé garde son adresse, un nom deviné n'ouvre rien. L'événement
+   `email.received` de Resend arrive sur le webhook existant (D79) ; les pièces jointes sont
+   récupérées **avant** de répondre (une ligne sans objet serait une carte illisible), la lecture
+   tourne **après** la réponse (`after`), puis **un** e-mail part aux owners et editors, quel que
+   soit le nombre de pièces jointes. Aucune liste d'expéditeurs autorisés : la facture vient
+   souvent d'une adresse que le bateau ne connaît pas (le comptable), et une ligne n'est de toute
+   façon qu'une proposition ; l'expéditeur est affiché, jamais cru.
+4. **La lecture** : Claude Opus 5, sortie structurée, effort moyen — c'est une lecture, pas un
+   raisonnement. Le prompt stable (mis en cache) dit ce que sont les deux listes ; le tour du
+   document porte le vocabulaire **du bateau** : ses systèmes, ses moteurs, ses intervenants, avec
+   leurs identifiants, pour que la lecture atterrisse sur une puce existante et pas sur du texte à
+   re-ranger. La réponse est **rendue sûre** avant d'être stockée (`normaliseSuggestion`) : un id
+   que le bateau n'a pas est abandonné, une date qui n'en est pas une devient nulle, les textes
+   sont coupés à la taille des colonnes, et le tout repasse par le schéma. Sans clé, sans format
+   lisible (HEIC), ou sur un échec : la ligne sort quand même `ready`, avec la raison, et la carte
+   se remplit à la main. **Jamais une ligne coincée.**
+5. **Les e-mails** : « Un document est arrivé » aux owners et editors, seulement pour ce qui vient
+   par mail (qui vient de photographier un ticket est devant l'écran où il atterrit) ; « C'est dans
+   le carnet » aux autres owners et editors, jamais à celui qui a validé. Même coque que les six
+   e-mails d'authentification, générés par le même script, sans gabarit Supabase.
+
+**Où.** Un écran « À valider » (`/boats/[id]/inbox`) en tête de la feuille « Plus », avec le
+compte en indice — pas de point rouge, rien ici n'est dû aujourd'hui (D81) ; un bandeau sur le
+tableau de bord quand quelque chose attend, avant les lignes importées à vérifier ; l'adresse sur
+la fiche du bateau, avec « Copier ».
+
+**Ce qui n'a pas été fait.** La suggestion de points de checklist depuis le document (le
+formulaire d'intervention le fait déjà à l'édition) ; une adresse régénérable ; un corps de mail
+sans pièce jointe qui deviendrait une intervention. **Hors de ce dépôt** : le domaine de réception
+(Resend → Domains → « Receiving », enregistrement MX), le webhook abonné à `email.received`, et
+`ANTHROPIC_API_KEY` / `INBOUND_EMAIL_DOMAIN` sur Vercel — sans quoi l'adresse n'est pas affichée
+et les documents sont rangés à la main. Les chemins de l'API de réception de Resend
+(`/emails/receiving/{id}/attachments/{id}` → `download_url`) sont écrits d'après sa documentation,
+que le proxy de ce poste n'a pas pu ouvrir : à vérifier au moment du branchement, en un seul
+fichier (`src/lib/inbox/resend-inbound.ts`).

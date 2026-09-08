@@ -388,6 +388,7 @@ export type Database = {
           home_port: string | null
           hull_number: string | null
           id: string
+          inbox_token: string
           length_m: number | null
           model: string | null
           name: string
@@ -414,6 +415,7 @@ export type Database = {
           home_port?: string | null
           hull_number?: string | null
           id?: string
+          inbox_token?: string
           length_m?: number | null
           model?: string | null
           name: string
@@ -440,6 +442,7 @@ export type Database = {
           home_port?: string | null
           hull_number?: string | null
           id?: string
+          inbox_token?: string
           length_m?: number | null
           model?: string | null
           name?: string
@@ -1408,6 +1411,116 @@ export type Database = {
             columns: ["yard_contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_items: {
+        Row: {
+          attachment_id: string | null
+          boat_id: string
+          created_at: string
+          created_by: string | null
+          error_key: string | null
+          external_ref: string | null
+          file_name: string
+          id: string
+          log_id: string | null
+          mime_type: string
+          purchase_id: string | null
+          received_at: string
+          sender_email: string | null
+          sender_name: string | null
+          size_bytes: number
+          source: Database["public"]["Enums"]["inbox_source"]
+          status: Database["public"]["Enums"]["inbox_status"]
+          storage_path: string
+          subject: string | null
+          suggestion: Json | null
+          updated_at: string
+          updated_by: string | null
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          attachment_id?: string | null
+          boat_id: string
+          created_at?: string
+          created_by?: string | null
+          error_key?: string | null
+          external_ref?: string | null
+          file_name: string
+          id?: string
+          log_id?: string | null
+          mime_type: string
+          purchase_id?: string | null
+          received_at?: string
+          sender_email?: string | null
+          sender_name?: string | null
+          size_bytes: number
+          source: Database["public"]["Enums"]["inbox_source"]
+          status?: Database["public"]["Enums"]["inbox_status"]
+          storage_path: string
+          subject?: string | null
+          suggestion?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          attachment_id?: string | null
+          boat_id?: string
+          created_at?: string
+          created_by?: string | null
+          error_key?: string | null
+          external_ref?: string | null
+          file_name?: string
+          id?: string
+          log_id?: string | null
+          mime_type?: string
+          purchase_id?: string | null
+          received_at?: string
+          sender_email?: string | null
+          sender_name?: string | null
+          size_bytes?: number
+          source?: Database["public"]["Enums"]["inbox_source"]
+          status?: Database["public"]["Enums"]["inbox_status"]
+          storage_path?: string
+          subject?: string | null
+          suggestion?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_items_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
             referencedColumns: ["id"]
           },
         ]
@@ -2551,6 +2664,8 @@ export type Database = {
       engine_position: "port" | "starboard" | "center" | "outboard"
       engine_propulsion: "outboard" | "shaft" | "saildrive" | "sterndrive" | "jet"
       hour_reading_source: "manual" | "maintenance_log" | "checklist" | "import"
+      inbox_source: "email" | "upload"
+      inbox_status: "received" | "analysing" | "ready" | "validated" | "dismissed"
       log_status: "planned" | "in_progress" | "done" | "urgent"
       navigation_zone: "coastal" | "offshore"
       organization_type:
@@ -2710,6 +2825,8 @@ export const Constants = {
       engine_position: ["port", "starboard", "center", "outboard"],
       engine_propulsion: ["outboard", "shaft", "saildrive", "sterndrive", "jet"],
       hour_reading_source: ["manual", "maintenance_log", "checklist", "import"],
+      inbox_source: ["email", "upload"],
+      inbox_status: ["received", "analysing", "ready", "validated", "dismissed"],
       log_status: ["planned", "in_progress", "done", "urgent"],
       navigation_zone: ["coastal", "offshore"],
       organization_type: [

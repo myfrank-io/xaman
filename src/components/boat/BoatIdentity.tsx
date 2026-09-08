@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { PencilIcon } from "lucide-react";
+import { CopyIcon, PencilIcon } from "lucide-react";
 import type { z } from "zod";
 
 import type { Boat } from "@/components/boat/BoatProvider";
@@ -121,12 +121,15 @@ export function BoatIdentity({
   canEdit,
   templateName,
   models,
+  inboxAddress = null,
 }: {
   boat: Boat;
   canEdit: boolean;
   templateName: string | null;
   /** The catalogue (D69) — suggestions here, and the dimensions of a model that is tapped. */
   models: BoatModelOption[];
+  /** Where to mail the invoices (D84); null while no receiving domain is configured. */
+  inboxAddress?: string | null;
 }) {
   const t = useTranslations("boat.identity");
   // Shared with the creation screen: the chip lists need names of their own, so that a
@@ -322,6 +325,29 @@ export function BoatIdentity({
                     {boat.notes || <span className="text-ink-3">{t("noNotes")}</span>}
                   </p>
                 </div>
+                {inboxAddress ? (
+                  <div className="border-t border-border pt-4">
+                    <h2 className="text-overline text-ink-2 uppercase">{t("inboxAddress")}</h2>
+                    <p className="mt-2 num text-body break-all text-foreground select-all">
+                      {inboxAddress}
+                    </p>
+                    <p className="mt-1 text-caption text-ink-3">{t("inboxAddressHelp")}</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => {
+                        void navigator.clipboard
+                          ?.writeText(inboxAddress)
+                          .then(() => toast.success(t("inboxCopied")));
+                      }}
+                    >
+                      <CopyIcon />
+                      {t("inboxCopy")}
+                    </Button>
+                  </div>
+                ) : null}
                 <p className="text-caption text-ink-3">
                   {templateName ? t("template", { name: templateName }) : t("noTemplate")}
                 </p>

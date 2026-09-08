@@ -104,6 +104,14 @@ values
   ('00000000-0000-0000-0000-000000008002', '00000000-0000-0000-0000-00000000b001', 'maintenance_log', '00000000-0000-0000-0000-000000002002', 'boats/00000000-0000-0000-0000-00000000b001/maintenance_log/00000000-0000-0000-0000-000000002002/facture.pdf', 'facture.pdf', 'application/pdf', 4321, 'Facture pro', '00000000-0000-0000-0000-000000000013')
 on conflict (id) do nothing;
 
+-- inbox (D84): one document mailed to the boat, read and waiting for a decision
+insert into public.inbox_items (id, boat_id, source, status, sender_email, subject, file_name, mime_type, size_bytes, storage_path, suggestion, external_ref)
+values ('00000000-0000-0000-0000-000000009001', '00000000-0000-0000-0000-00000000b001', 'email', 'ready', 'compta@chantier.test', 'Facture 118', 'facture-118.pdf', 'application/pdf', 12345,
+  'boats/00000000-0000-0000-0000-00000000b001/inbox/00000000-0000-0000-0000-000000009001.pdf',
+  '{"documentType":"invoice","kind":"log","purchaseKind":"service","title":"Vidange moteur","date":"2026-05-02","amount":312.46,"currency":"EUR","supplierName":"Chantier test","contactId":null,"categoryId":null,"engineHours":[],"lineItems":[],"notes":null,"confidence":"high","warnings":[]}'::jsonb,
+  'resend:test-mail:att-1')
+on conflict (id) do nothing;
+
 -- Boat 2: owned by the outsider (tenant isolation) --------------------------------------------
 insert into public.boats (id, name, type, external_ref, created_by)
 values ('00000000-0000-0000-0000-00000000b002', 'Autre bateau', 'motor', 'other-boat', '00000000-0000-0000-0000-000000000015')

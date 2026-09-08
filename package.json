@@ -35,6 +35,7 @@
     "test:e2e:journeys": "playwright test --project=journeys-ipad --project=journeys-iphone --workers=1"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
     "@hookform/resolvers": "^5.9.1",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.114.0",

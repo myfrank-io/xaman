@@ -1,0 +1,267 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { getTranslations } from "next-intl/server";
+
+import { saveLog } from "@/lib/actions/logs";
+import { upsertPurchase } from "@/lib/actions/purchases";
+import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
+import { analyseInboxItem, type AnalysisOutcome } from "@/lib/inbox/analyse";
+import { notifyInboxValidated } from "@/lib/inbox/notify";
+import { boatPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
+import {
+  createInboxUploadSchema,
+  inboxItemRefSchema,
+  validateInboxItemSchema,
+} from "@/lib/schemas/inbox";
+import { createClient } from "@/lib/supabase/server";
+import { currentUserId } from "@/lib/supabase/user";
+
+/**
+ * The inbox (D84): what turns a document into a line of the carnet, and only on a person's tap.
+ *
+ * Reading a document runs with the service key (`analyseInboxItem`): it is the same reading for
+ * a photo and for a mail, and neither has a session where it runs. Everything that writes the
+ * carnet runs with the person's own client, through the very Server Actions the forms call —
+ * `saveLog`, `upsertPurchase` — so a validated document obeys exactly the rules a typed line
+ * does: RLS, the shared zod schemas, the idempotent upsert on an id drawn beforehand.
+ */
+function revalidateInbox(boatId: string) {
+  revalidatePath(inboxPath(boatId));
+  revalidatePath(boatPath(boatId, "dashboard"));
+}
+
+/**
+ * A photo taken in the app, after the browser put the object in the bucket. The row is written
+ * with the person's client (RLS: contribute), then read at once: the person is waiting on the
+ * screen, and thirty seconds with a progress bar beat a card that says « en cours » forever.
+ */
+export async function createInboxUpload(
+  input: unknown,
+): Promise<ActionResult<{ itemId: string } & AnalysisOutcome>> {
+  const parsed = parseInput(createInboxUploadSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const values = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { error } = await supabase.from("inbox_items").upsert(
+    {
+      id: values.id,
+      boat_id: values.boatId,
+      source: "upload",
+      status: "received",
+      file_name: values.fileName,
+      mime_type: values.mimeType,
+      size_bytes: values.sizeBytes,
+      storage_path: values.storagePath,
+      created_by: userId,
+      updated_by: userId,
+    },
+    { onConflict: "id", ignoreDuplicates: true },
+  );
+  if (error) return fail(dbErrorKey(error));
+
+  const outcome = await analyseInboxItem(values.id);
+  revalidateInbox(values.boatId);
+  return ok({ itemId: values.id, ...outcome });
+}
+
+/** « Relire » — the analysis again, for a document that failed or that arrived unconfigured. */
+export async function reanalyseInboxItem(input: unknown): Promise<ActionResult<AnalysisOutcome>> {
+  const parsed = parseInput(inboxItemRefSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, itemId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+  // RLS answers the question « may this person see this item » before the service key reads it.
+  const { data: item, error } = await supabase
+    .from("inbox_items")
+    .select("id, status")
+    .eq("id", itemId)
+    .eq("boat_id", boatId)
+    .maybeSingle();
+  if (error) return fail(dbErrorKey(error));
+  if (!item) return fail("errors.forbidden");
+  if (item.status === "validated" || item.status === "dismissed") return fail("errors.conflict");
+
+  const outcome = await analyseInboxItem(itemId);
+  revalidateInbox(boatId);
+  return ok(outcome);
+}
+
+/**
+ * « Valider » — the tap that writes the carnet. The intervention or the purchase is created by
+ * the form's own action, the document becomes its attachment (same object, new row), and the
+ * inbox row remembers what it became. Idempotent: a second tap on a validated row is refused
+ * with a conflict, never a second line.
+ */
+export async function validateInboxItem(
+  input: unknown,
+): Promise<ActionResult<{ kind: "log" | "purchase"; entityId: string; href: string }>> {
+  const parsed = parseInput(validateInboxItemSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const values = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { data: item, error: readError } = await supabase
+    .from("inbox_items")
+    .select("id, status, storage_path, file_name, mime_type, size_bytes, log_id, purchase_id")
+    .eq("id", values.itemId)
+    .eq("boat_id", values.boatId)
+    .maybeSingle();
+  if (readError) return fail(dbErrorKey(readError));
+  if (!item) return fail("errors.forbidden");
+  if (item.status === "validated" || item.status === "dismissed") return fail("errors.conflict");
+
+  // The ids are drawn here rather than by the form: the row is the memory of the tap, and an
+  // action that fails after the line is written finds it again below (`log_id` / `purchase_id`).
+  const entityId = item.log_id ?? item.purchase_id ?? crypto.randomUUID();
+  const notes = values.notes;
+
+  if (values.kind === "log") {
+    const created = await saveLog({
+      id: entityId,
+      boatId: values.boatId,
+      title: values.title,
+      categoryId: values.categoryId ?? "",
+      status: "done",
+      performedAt: values.date,
+      cost: values.amount,
+      contactId: values.contactId,
+      equipmentId: null,
+      haulOutId: null,
+      notes,
+      engineHours: values.engineHours,
+      checklistItemIds: [],
+    });
+    if (!created.ok) return created;
+  } else {
+    const created = await upsertPurchase({
+      id: entityId,
+      boatId: values.boatId,
+      kind: values.purchaseKind,
+      designation: values.title,
+      amount: values.amount,
+      purchasedAt: values.date,
+      supplierContactId: values.contactId,
+      supplierName: values.supplierName,
+      categoryId: values.categoryId,
+      bottleType: null,
+      maintenanceLogId: null,
+      notes,
+      needsReview: false,
+    });
+    if (!created.ok) return created;
+  }
+
+  // The document, hung on the line it produced. Same object in the bucket, one more row.
+  const attachmentId = crypto.randomUUID();
+  const { error: attachmentError } = await supabase.from("attachments").upsert(
+    {
+      id: attachmentId,
+      boat_id: values.boatId,
+      entity_type: values.kind === "log" ? "maintenance_log" : "purchase",
+      entity_id: entityId,
+      storage_path: item.storage_path,
+      file_name: item.file_name,
+      mime_type: item.mime_type,
+      size_bytes: item.size_bytes,
+      caption: null,
+      created_by: userId,
+      updated_by: userId,
+    },
+    { onConflict: "storage_path", ignoreDuplicates: true },
+  );
+  if (attachmentError) return fail(dbErrorKey(attachmentError));
+
+  const { error: updateError, count } = await supabase
+    .from("inbox_items")
+    .update(
+      {
+        status: "validated",
+        log_id: values.kind === "log" ? entityId : null,
+        purchase_id: values.kind === "purchase" ? entityId : null,
+        attachment_id: attachmentId,
+        validated_by: userId,
+        validated_at: new Date().toISOString(),
+        updated_by: userId,
+      },
+      { count: "exact" },
+    )
+    .eq("id", values.itemId)
+    .eq("boat_id", values.boatId);
+  if (updateError) return fail(dbErrorKey(updateError));
+  if (!count) return fail("errors.forbidden");
+
+  // The others hear about it once the response is gone — never before, never instead.
+  const [t, { data: profile }] = await Promise.all([
+    getTranslations("inbox"),
+    supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
+  ]);
+  const kindLabel = t(`kind.${values.kind}`);
+  const validatorName = profile?.full_name ?? profile?.email ?? "";
+  after(() =>
+    notifyInboxValidated({
+      boatId: values.boatId,
+      validatorId: userId,
+      validatorName,
+      kind: values.kind,
+      entityId,
+      title: values.title,
+      date: values.date,
+      amount: values.amount,
+      kindLabel,
+    }),
+  );
+
+  revalidateInbox(values.boatId);
+  revalidatePath(boatPath(values.boatId, values.kind === "log" ? "logs" : "supplies"));
+  return ok({
+    kind: values.kind,
+    entityId,
+    href:
+      values.kind === "log"
+        ? logPath(values.boatId, entityId)
+        : boatPath(values.boatId, "supplies"),
+  });
+}
+
+/** « Ignorer » — a status, not a deletion: the document stays readable in the history. */
+export async function dismissInboxItem(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(inboxItemRefSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, itemId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { error, count } = await supabase
+    .from("inbox_items")
+    .update(
+      {
+        status: "dismissed",
+        validated_by: userId,
+        validated_at: new Date().toISOString(),
+        updated_by: userId,
+      },
+      { count: "exact" },
+    )
+    .eq("id", itemId)
+    .eq("boat_id", boatId)
+    .in("status", ["received", "analysing", "ready"]);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+
+  revalidateInbox(boatId);
+  return ok(undefined);
+}

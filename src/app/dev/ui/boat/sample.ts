@@ -20,6 +20,7 @@ export const SAMPLE_BOAT: Boat = {
   organization_id: null,
   name: "Xaman",
   navigation_zone: "offshore",
+  inbox_token: "e1ee647f8965",
   builder: "Marsaudon Composites",
   model: "ORC 50",
   hull_number: "25",

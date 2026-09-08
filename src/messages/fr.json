@@ -61,6 +61,7 @@
     "supplies": "Dépenses",
     "haulOuts": "Sorties de l'eau",
     "contacts": "Intervenants",
+    "inbox": "À valider",
     "boat": "Bateau",
     "members": "Membres",
     "settings": "Paramètres",
@@ -77,6 +78,7 @@
       "boat": "Bateau",
       "supplies": "Dépenses",
       "contacts": "Intervenants",
+      "inbox": "À valider",
       "trash": "Corbeille",
       "more": "Plus",
       "haulOuts": "Sorties",
@@ -714,6 +716,10 @@
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
       "action": "Vérifier"
     },
+    "inbox": {
+      "banner": "{count, plural, one {# document attend votre validation} other {# documents attendent votre validation}}",
+      "action": "Valider"
+    },
     "markDone": "Fait",
     "state": {
       "overdue": "{count, plural, one {# point en retard} other {# points en retard}}",
@@ -1129,6 +1135,10 @@
       "type": "Type",
       "navigationZone": "Navigation",
       "navigationZoneHelp": "Passer en hauturier ajoute au plan d'entretien les points hauturiers (radeau, balise, AIS…). Repasser en côtier ne retire rien.",
+      "inboxAddress": "Adresse du carnet",
+      "inboxAddressHelp": "Les pièces jointes envoyées à cette adresse arrivent dans « À valider », pré-remplies : facture, ticket, devis.",
+      "inboxCopy": "Copier l'adresse",
+      "inboxCopied": "Adresse copiée",
       "builder": "Constructeur",
       "model": "Modèle",
       "hullNumber": "N° de coque",
@@ -2152,5 +2162,87 @@
       "attachAll": "{count, plural, one {Rattacher le document} other {Rattacher les # documents}}",
       "noCategories": "Ce bateau n'a encore aucun système : un document ne peut pas devenir une intervention sans en avoir un. Ajoutez-en depuis les paramètres du bateau."
     }
+  },
+  "inbox": {
+    "title": "À valider",
+    "subtitle": "Ce qui est arrivé par photo ou par e-mail, prêt à entrer dans le carnet.",
+    "capture": "Photographier un ticket",
+    "choose": "Choisir un document",
+    "captureHelp": "Une facture, un ticket de caisse, un devis : la lecture pré-remplit l'intervention, vous vérifiez, vous validez.",
+    "readOnly": "Seuls les membres qui écrivent dans le carnet peuvent valider un document.",
+    "address": {
+      "title": "Par e-mail",
+      "help": "Envoyez vos factures en pièce jointe à l'adresse du carnet — depuis votre boîte, ou depuis celle de votre comptable.",
+      "copy": "Copier l'adresse",
+      "copied": "Adresse copiée"
+    },
+    "empty": {
+      "title": "Rien à valider",
+      "description": "Photographiez un ticket, ou envoyez une facture à l'adresse du carnet : le document arrive ici, pré-rempli."
+    },
+    "pending": "{count, plural, =0 {Rien en attente} one {# document à valider} other {# documents à valider}}",
+    "history": "Déjà traités",
+    "source": {
+      "email": "Reçu par e-mail",
+      "upload": "Photographié dans l'app"
+    },
+    "from": "De {sender}",
+    "subjectLabel": "Objet : {subject}",
+    "status": {
+      "received": "Reçu, lecture à venir",
+      "analysing": "Lecture du document…",
+      "ready": "Prêt à valider",
+      "validated": "Validé",
+      "dismissed": "Ignoré"
+    },
+    "kind": {
+      "log": "Intervention",
+      "purchase": "Achat"
+    },
+    "confidence": {
+      "high": "Lecture sûre",
+      "medium": "Lecture à vérifier",
+      "low": "Lecture incertaine"
+    },
+    "warnings": "À vérifier",
+    "lineItems": "Lignes lues",
+    "errors": {
+      "notConfigured": "La lecture automatique n'est pas configurée : remplissez les champs à la main.",
+      "unsupportedFormat": "Ce format n'est pas lu automatiquement (photo HEIC ?) : remplissez à la main, ou renvoyez le document en JPEG ou en PDF.",
+      "download": "Le document n'a pas pu être récupéré auprès de la messagerie.",
+      "analysis": "La lecture a échoué. Relisez, ou remplissez les champs à la main.",
+      "refused": "Le document n'a pas pu être lu automatiquement : remplissez les champs à la main."
+    },
+    "fields": {
+      "kind": "Ranger comme",
+      "title": "Titre",
+      "designation": "Désignation",
+      "date": "Date",
+      "category": "Système",
+      "amount": "Montant TTC",
+      "contact": "Prestataire",
+      "noContact": "Sans prestataire",
+      "supplier": "Fournisseur",
+      "supplierPlaceholder": "Tel qu'écrit sur le document",
+      "purchaseKind": "Type d'achat",
+      "hours": "Heures moteur",
+      "notes": "Notes"
+    },
+    "categoryRequired": "Choisissez un système pour ranger une intervention.",
+    "validate": "Valider",
+    "dismiss": "Ignorer",
+    "reanalyse": "Relire le document",
+    "open": "Ouvrir le document",
+    "validated": "Validé : {title}",
+    "dismissed": "Document ignoré",
+    "went": {
+      "log": "Voir l'intervention",
+      "purchase": "Voir dans Dépenses"
+    },
+    "uploadStage": {
+      "analysing": "Lecture du document…"
+    },
+    "uploaded": "Document lu : vérifiez puis validez.",
+    "uploadedNoRead": "Document reçu : remplissez les champs puis validez."
   }
 }

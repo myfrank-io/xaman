@@ -96,6 +96,7 @@ const BUSINESS_TABLES = [
   "parts",
   "purchases",
   "attachments",
+  "inbox_items",
 ] as const;
 
 const WRITE_ONLY_TABLES = [
@@ -365,6 +366,68 @@ describe("insert", () => {
 
     expect(seen.admin).toEqual(["bm-live", "bm-retired"]);
     expect(seen.stranger).toEqual(["bm-live"]);
+  });
+});
+
+/**
+ * The inbox (D84, migration 0026). Members read it, contributors add to it — a pro photographing
+ * the invoice of their own work — and only owner / editor validate or dismiss, because that is
+ * what writes the carnet. Nobody deletes: a dismissed document is a status.
+ */
+describe("inbox_items", () => {
+  const INBOX = "00000000-0000-0000-0000-000000009001";
+  const path = (id: string) => `boats/${BOAT}/inbox/${id}.jpg`;
+  const insert = (user: User, id: string, createdBy = user.id) =>
+    run(
+      user,
+      `insert into public.inbox_items (id, boat_id, source, status, file_name, mime_type, size_bytes, storage_path, created_by)
+       values ($1, $2, 'upload', 'received', 'ticket.jpg', 'image/jpeg', 1000, $3, $4)`,
+      [id, BOAT, path(id), createdBy],
+    );
+
+  it("a contributor adds a document of their own; a viewer and a stranger cannot", async () => {
+    expect((await insert(U.pro, "00000000-0000-0000-0000-000000009101")).ok).toBe(true);
+    expect((await insert(U.editor, "00000000-0000-0000-0000-000000009102")).ok).toBe(true);
+    expect((await insert(U.viewer, "00000000-0000-0000-0000-000000009103")).ok).toBe(false);
+    expect((await insert(U.stranger, "00000000-0000-0000-0000-000000009104")).ok).toBe(false);
+    // created_by must be oneself: a row signed with someone else's id is refused.
+    expect((await insert(U.pro, "00000000-0000-0000-0000-000000009105", U.owner.id)).ok).toBe(
+      false,
+    );
+  });
+
+  it("only owner and editor validate or dismiss; a pro and a viewer cannot", async () => {
+    const dismiss = (user: User) =>
+      run(user, "update public.inbox_items set status = 'dismissed' where id = $1", [INBOX]);
+    for (const role of ["owner", "editor", "admin"] as Role[]) {
+      const res = await dismiss(U[role]);
+      expect(res.ok && res.rowCount === 1, role).toBe(true);
+    }
+    for (const role of ["pro", "viewer", "stranger"] as Role[]) {
+      const res = await dismiss(U[role]);
+      expect(res.ok ? res.rowCount : 0, role).toBe(0);
+    }
+  });
+
+  it("nobody deletes a document, and the path must belong to the boat", async () => {
+    const del = await run(U.owner, "delete from public.inbox_items where id = $1", [INBOX]);
+    expect(del.ok ? del.rowCount : 0).toBe(0);
+    const wrongBoat = await run(
+      U.owner,
+      `insert into public.inbox_items (id, boat_id, source, file_name, mime_type, size_bytes, storage_path, created_by)
+       values ($1, $2, 'upload', 'x.jpg', 'image/jpeg', 1, $3, $4)`,
+      ["00000000-0000-0000-0000-000000009106", BOAT, `boats/${BOAT2}/inbox/x.jpg`, U.owner.id],
+    );
+    expect(wrongBoat.ok).toBe(false);
+  });
+
+  it("gives every boat an address token, unreadable by nobody but unguessable", async () => {
+    const out = await as(U.viewer, async (c) => {
+      const res = await c.query("select inbox_token from public.boats where id = $1", [BOAT]);
+      return (res.rows[0] as { inbox_token: string }).inbox_token;
+    });
+    expect(out).toMatch(/^[0-9a-f]{12}$/);
+    expect(await count(U.stranger, "boats", "inbox_token = $1", [out])).toBe(0);
   });
 });
 

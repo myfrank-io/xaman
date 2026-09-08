@@ -1,8 +1,12 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 
 import { applyDelivery } from "@/lib/email/delivery";
 import { deliveryFromEvent } from "@/lib/email/delivery-status";
 import { verifyWebhookSignature } from "@/lib/email/webhook-signature";
+import { analyseInboxItem } from "@/lib/inbox/analyse";
+import { notifyInboxReceived } from "@/lib/inbox/notify";
+import { receiveInboundEmail } from "@/lib/inbox/receive";
+import { inboundFromEvent } from "@/lib/inbox/resend-inbound";
 
 /**
  * Where the mailer says what became of a message it accepted (D79).
@@ -16,9 +20,17 @@ import { verifyWebhookSignature } from "@/lib/email/webhook-signature";
  * accepted. Nothing else in the app depends on it — without the webhook the screen still catches
  * up by asking (`refreshInvitationDeliveries`), only a minute later rather than at once.
  *
- * To wire it: Resend → Webhooks → this URL, events `email.*`, then `RESEND_WEBHOOK_SECRET`.
+ * Since D84 the same endpoint receives `email.received`: a message sent to a boat's own address.
+ * Its attachments become rows of the inbox before the mailer gets its answer — the bytes have to
+ * be fetched while the event is fresh — and the reading of each document, which takes as long as
+ * a Claude call, runs after the response (`after`), then one e-mail tells the crew.
+ *
+ * To wire it: Resend → Webhooks → this URL, events `email.*` (sending) and `email.received`
+ * (the receiving domain of `INBOUND_EMAIL_DOMAIN`), then `RESEND_WEBHOOK_SECRET`.
  */
 export const dynamic = "force-dynamic";
+/** Fetching a few attachments, then reading them: the platform's floor is too short for both. */
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   const secret = process.env.RESEND_WEBHOOK_SECRET ?? "";
@@ -43,6 +55,26 @@ export async function POST(request: NextRequest) {
     payload = JSON.parse(body);
   } catch {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
+  }
+
+  // A message for a boat (D84). « Ignored » for an address that is nobody's: retrying would not
+  // make it somebody's.
+  const inbound = inboundFromEvent(payload);
+  if (inbound) {
+    try {
+      const received = await receiveInboundEmail(inbound);
+      if (!received) return NextResponse.json({ ignored: true });
+      if (received.itemIds.length > 0) {
+        after(async () => {
+          for (const itemId of received.itemIds) await analyseInboxItem(itemId);
+          await notifyInboxReceived(received.boatId, received.itemIds);
+        });
+      }
+      return NextResponse.json({ received: received.itemIds.length, skipped: received.skipped });
+    } catch (error) {
+      console.error("resend webhook: could not receive the message", error);
+      return NextResponse.json({ error: "storage failed" }, { status: 500 });
+    }
   }
 
   // An event the app has nothing to store (opened, clicked, one added later) is not an error:

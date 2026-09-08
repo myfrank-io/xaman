@@ -55,6 +55,34 @@ export async function uploadAttachmentFile({
   file: File;
   onStage?: (stage: UploadStage) => void;
 }): Promise<UploadOutcome> {
+  return uploadFileTo({
+    file,
+    onStage,
+    storagePathFor: (prepared) =>
+      attachmentStoragePath({
+        boatId,
+        owner,
+        attachmentId,
+        fileName: prepared.fileName,
+        mimeType: prepared.mimeType,
+      }),
+  });
+}
+
+/**
+ * The same journey for an object whose path is not an attachment's — a document of the inbox
+ * (D84) lives under `boats/{boatId}/inbox/`. The path is decided once the file is prepared,
+ * because the extension follows the re-encoding (« facture.HEIC » is stored as a JPEG).
+ */
+export async function uploadFileTo({
+  file,
+  storagePathFor,
+  onStage,
+}: {
+  file: File;
+  storagePathFor: (prepared: { fileName: string; mimeType: string }) => string;
+  onStage?: (stage: UploadStage) => void;
+}): Promise<UploadOutcome> {
   const refused = rejectionReason(file);
   if (refused) return { ok: false, error: refused };
 
@@ -62,13 +90,7 @@ export async function uploadAttachmentFile({
   const prepared = await prepareForUpload(file);
   if (isTooLargeToStore(prepared.sizeBytes)) return { ok: false, error: "tooLarge" };
 
-  const storagePath = attachmentStoragePath({
-    boatId,
-    owner,
-    attachmentId,
-    fileName: prepared.fileName,
-    mimeType: prepared.mimeType,
-  });
+  const storagePath = storagePathFor(prepared);
 
   onStage?.("uploading");
   const supabase = createClient();

@@ -56,6 +56,10 @@ create type navigation_zone as enum ('coastal', 'offshore');
 -- Côtier / hauturier (D83, `0024`) : un point de modèle `zone_scope = 'offshore'` n'est pas appliqué
 -- à un bateau côtier.
 
+create type inbox_source as enum ('email', 'upload');
+create type inbox_status as enum ('received', 'analysing', 'ready', 'validated', 'dismissed');
+-- La boîte de réception (D84, `0026`) : d'où vient un document, et où il en est.
+
 create type log_status as enum ('planned', 'in_progress', 'done', 'urgent');
 create type log_priority as enum ('low', 'normal', 'high');
 
@@ -116,6 +120,7 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | registration | text | | immatriculation délivrée par les affaires maritimes (D69, `0018`). Texte libre : aucune liste de référence, aucun registre consultable. Distincte de `hull_number` et de `sail_number` |
 | year | int | | |
 | type | boat_type | not null default 'monohull_sail' | |
+| inbox_token | text | not null unique, default 12 hex aléatoires | la partie aléatoire de l'adresse e-mail du bateau `<slug>-<token>@INBOUND_EMAIL_DOMAIN` (D84, `0026`). Le webhook apparie un message sur le seul token ; le nom devant n'est que lisibilité. Lisible par les membres (ils doivent pouvoir l'envoyer), jamais par `anon` |
 | navigation_zone | navigation_zone | not null default 'offshore' | côtier / hauturier (D83, `0024`). Lu par `apply_checklist_template`, qui saute les points `zone_scope = 'offshore'` d'un bateau côtier. Passer de côtier à hauturier fait réappliquer le plan par la Server Action (les points hauturiers arrivent) ; l'inverse ne retire rien |
 | flag | text | | pavillon |
 | home_port | text | | |
@@ -478,6 +483,29 @@ Index : `attachments_entity_idx (boat_id, entity_type, entity_id)`, `attachments
 
 La contrainte `attachments_path_boat` est écrite avec `is not distinct from` et non `=` : un chemin malformé renvoie `null`, et un `check` accepte `null` — un `photo.jpg` sans préfixe serait passé.
 
+### 3.20 `inbox_items` (documents à valider — D84, `0026`)
+
+Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, une photo prise dans l'app — et attend qu'une personne le range. Une ligne est une **proposition** : rien n'est écrit dans `maintenance_logs` ni `purchases` avant le tap « Valider », qui passe par les Server Actions des formulaires (`saveLog`, `upsertPurchase`).
+
+| Colonne | Type | Contraintes | Notes |
+|---|---|---|---|
+| id | uuid | PK | tiré côté client pour une photo (règle 11) ; par le webhook pour un e-mail |
+| boat_id | uuid | FK boats on delete cascade | |
+| source | inbox_source | not null | `email` / `upload` |
+| status | inbox_status | not null default 'received' | `received` → `analysing` → `ready` (avec ou sans `suggestion`) → `validated` / `dismissed` |
+| received_at | timestamptz | not null default now() | |
+| sender_email / sender_name / subject | text | | l'expéditeur, affiché sur la carte, jamais utilisé pour décider quoi que ce soit |
+| file_name / mime_type / size_bytes | | mêmes checks que `attachments` | |
+| storage_path | text | not null unique, check `boat_id_from_storage_path(storage_path) is not distinct from boat_id` | `boats/{boat_id}/inbox/{item_id}.{ext}` dans `boat-files` ; le document garde ce chemin après validation, la ligne `attachments` créée pointe dessus |
+| suggestion | jsonb | null | la lecture du document par Claude (`inboxSuggestionSchema`), revalidée à la lecture |
+| error_key | text | null | pourquoi il n'y a pas de suggestion : `notConfigured`, `unsupportedFormat`, `download`, `analysis`, `refused` |
+| log_id / purchase_id / attachment_id | uuid | FK on delete set null | ce que la validation a produit |
+| validated_by / validated_at | | | |
+| external_ref | text | unique `(boat_id, external_ref)` | idempotence du webhook : `resend:{email_id}:{attachment_id}` |
+| created_by / updated_by / created_at / updated_at | | | `created_by` null pour un e-mail (écrit par la clé service) |
+
+RLS : select `is_boat_member` ; insert `can_contribute_boat and created_by = auth.uid()` (un pro photographie la facture de son propre travail) ; update `can_write_boat` (valider ou ignorer écrit le carnet) ; **aucune politique delete** — ignoré est un statut, l'objet reste dans le bucket. Le webhook écrit avec la clé service.
+
 ## 4. Fonctions et triggers
 
 ```sql
@@ -764,6 +792,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0012** : la corbeille couvre tout ce qui porte l'historique ou l'inventaire du bateau (D40 / D41). Ajoute `parts.deleted_at` et `contacts.deleted_at`, remplace leurs `unique (boat_id, external_ref)` par des index uniques **partiels** `where deleted_at is null` (sans quoi un réimport après mise à la corbeille levait `23505` contre une ligne invisible), ajoute les index « vivants » et « corbeille » des deux tables, fait refuser une ligne à la corbeille par `adjust_part_quantity()`, retire les pièces à la corbeille de `boat_dashboard_stats.low_stock_parts`, et étend `purge_trash()` à `parts`, `contacts` **et `attachments`** (qui portaient `deleted_at` depuis `0011` sans qu'aucune purge ne les nomme). Aucune politique RLS nouvelle : `parts` et `contacts` sont des tables owner / editor dont l'`update` est déjà `can_write_boat` des deux côtés.
 
 - **0024** (D83) : `engines.propulsion`, `boats.navigation_zone`, `checklist_template_items.zone_scope`, contrainte `engine_scope` élargie aux quatre propulsions, `engine_scope_matches()`, `apply_checklist_template` réécrite (appariement sur la propulsion, points hauturiers sautés sur un bateau côtier), `create_boat` avec `p_navigation_zone` et `propulsion` par moteur (signature `0021` supprimée), `generic_template_for_boat_type` : semi-rigide → `generic-rib-v1`. Aucune table nouvelle, aucune politique modifiée ; rien n'est supprimé sur les bateaux existants (`navigation_zone` par défaut `offshore`, propulsion rétro-remplie).
+- **0026** (D84) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (Claude, `src/lib/inbox/analyse.ts`) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0025** (D83) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés
