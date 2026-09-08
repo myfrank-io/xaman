@@ -24,13 +24,13 @@
  *      below it. This is what catches a number taken without bumping the line, whatever notation
  *      it was written in — the new number has to appear *somewhere* to be worth anything.
  *
- *   3. Nothing dated on or after the day the counter appeared carries a number below the value it
- *      started at. Rule 2 guards the top of the series; this guards the bottom, where a number is
- *      not raced for but *re-taken*. That is not hypothetical: a branch opened before the counter
- *      existed took D81 for a new heading while D81 already named a table row, and merged —
- *      neither of the first two rules sees it, and the counter line cannot help, being an addition
- *      on one side only that git merges without a word. A branch that predates the rule cannot
- *      follow it; this is what makes it answer for it anyway.
+ *   3. Nothing dated on or after the day the rule takes effect carries a number below the value
+ *      the counter started at. Rule 2 guards the top of the series; this guards the bottom, where
+ *      a number is not raced for but *re-taken*. That is not hypothetical: a branch opened before
+ *      the counter existed took D81 for a new heading while D81 already named a table row, and
+ *      merged — neither of the first two rules sees it, and the counter line cannot help, being an
+ *      addition on one side only that git merges without a word. See SERIES_START for why the
+ *      effective date is later than the day the counter was written.
  *
  * What it deliberately does not check: that a cited number resolves to a decision. Nothing here
  * could have caught boat-onboarding.ts quoting « D74 » for a sentence that belongs to D76 — that
@@ -158,11 +158,18 @@ export function duplicateFailures(entries) {
 }
 
 /**
- * The day the counter line appeared, and the value it started at. Every decision written from
- * that day on takes its number from the line, and the line only ever grows — so a lower number on
- * a later entry means the line was not read.
+ * The day rule 3 takes effect, and the value the counter started at. From that day on, every
+ * decision takes its number from the line, and the line only ever grows — so a lower number on a
+ * later entry means the line was not read.
+ *
+ * The date is deliberately *later* than the day the counter was written. A branch opened before
+ * the counter reaches `main` cannot see it, and the number it picks — the next one free on the
+ * `main` it can see — is a sound choice, not a mistake: #57 took D82 that way while this was still
+ * in review, and D82 was genuinely free there. Dating the rule from the day the counter was
+ * written would have failed that branch for doing the right thing. So it is dated from the day by
+ * which every branch will have had the counter, and rule 1 covers the interval on its own.
  */
-export const SERIES_START = { date: "2026-09-08", number: 85 };
+export const SERIES_START = { date: "2026-09-10", number: 85 };
 
 /** Rule 3, over the entries alone. */
 export function reuseFailures(entries, start = SERIES_START) {

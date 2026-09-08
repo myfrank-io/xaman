@@ -40,11 +40,11 @@ type Sent = { email: string; url: string; validUntil: string | null };
 const DURATIONS: AccessDuration[] = ["7", "30", "90", "unlimited"];
 
 /**
- * Invitation (E1-5, D28, D29, D82): role, access duration, the sentence that says what the role
+ * Invitation (E1-5, D28, D29, D89): role, access duration, the sentence that says what the role
  * really allows, then the link to copy or share in addition to the e-mail. An editor invites
  * pro/viewer only, always dated (≤ 90 days).
  *
- * Since D82 the list carries `owner` too. It brings its own rule: the duration question
+ * Since D89 the list carries `owner` too. It brings its own rule: the duration question
  * disappears, because an owner has no end date (`inviteMember` writes null whatever the form
  * held), and a warning takes its place — the person invited this way can remove the person
  * inviting them.
@@ -218,7 +218,7 @@ export function InviteMemberDialog({
                 ))}
               </NativeSelect>
             </Field>
-            {/* An owner has no end date (D82): the question is removed rather than asked and
+            {/* An owner has no end date (D89): the question is removed rather than asked and
                 then ignored — the alert below says so in words. */}
             <Controller
               control={form.control}

@@ -16,7 +16,7 @@ import {
 } from "../../scripts/check-numbering.mjs";
 
 type Entry = { number: number; date: string; where: string; title: string };
-const start = SERIES_START as { date: string; number: number };
+type Start = { date: string; number: number };
 
 /**
  * The numbering of docs/DECISIONS.md.
@@ -68,14 +68,20 @@ describe("numérotation des décisions", () => {
   });
 
   it("ne réutilise aucun numéro depuis que le compteur existe", () => {
+    const start = SERIES_START as Start;
+    // Dated after the day it was written, on purpose: a branch that cannot yet see the counter
+    // takes the next number free on the main it sees, and that is the right answer, not a fault.
+    expect(start.date > "2026-09-08").toBe(true);
     expect(reuseFailures(definitions() as Entry[])).toEqual([]);
+    expect(reuseFailures(definitions() as Entry[], start)).toEqual([]);
   });
 
   it("signale un numéro repris par une entrée postérieure au compteur", () => {
     // Verbatim from the branch that did it: opened before the counter existed, it took D81 for a
     // new heading while D81 already named a row of the table above, and it merged. Neither of the
     // other two rules sees that — the number is not defined twice by a heading, and it sits below
-    // the counter. It is D88 now.
+    // the counter. It is D88 now. The start is synthetic here: the real one is dated later on
+    // purpose (see SERIES_START), and this case is about the shape, not the day.
     const failures = reuseFailures(
       [
         {
@@ -91,7 +97,7 @@ describe("numérotation des décisions", () => {
           title: "un e-mail qui n'arrive pas le dit dans l'app",
         },
       ] as Entry[],
-      start,
+      { date: "2026-09-08", number: 85 },
     );
     expect(failures).toHaveLength(1);
     expect(failures[0]).toContain("D81 ouvre");

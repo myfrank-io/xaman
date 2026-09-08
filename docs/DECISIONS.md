@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D89.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D90.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -1246,7 +1246,7 @@ nom, pas un acte, donc indiscernable d'un lien vers les relevés.
 **Rien n'est retiré.** Aucune information ne quitte la carte : elle est réarrangée, et le seul
 chemin qui disparaît (le faux bouton « N points liés ») est remplacé par un vrai, plus grand.
 
-## 2026-09-07 — D82 : tous les rôles dès l'invitation, une seule porte vers la propriété
+## 2026-09-07 — D89 : tous les rôles dès l'invitation, une seule porte vers la propriété
 
 **Question.** « Pourquoi on a que ça en sélection ? Et une fois ajouté j'ai la possibilité de
 changer. » Puis : « Je veux pouvoir ajouter tous les rôles dès l'ajout. »
@@ -1640,10 +1640,18 @@ de tableau ou au milieu d'une phrase, ce que le journal fait aussi.
 branche ouverte avant le compteur ne peut pas le suivre : la ligne est un ajout d'un seul côté,
 donc git la fusionne sans un mot. #56 a ainsi pris **D81** pour un nouveau titre alors que D81
 nommait déjà une ligne du tableau ci-dessus, et a fusionné — ni la première règle (le numéro
-n'ouvre pas deux titres) ni la deuxième (81 est sous le compteur) ne le voient. La date le voit :
-une entrée du 2026-09-08 qui porte moins de D85 n'a pas lu la ligne. C'est le bas de la série que
-celle-ci garde, là où un numéro n'est pas disputé mais **repris**. Le point rouge est donc **D88**,
-et ses vingt-cinq citations suivent.
+n'ouvre pas deux titres) ni la deuxième (81 est sous le compteur) ne le voient. La date le voit.
+C'est le bas de la série que cette règle garde, là où un numéro n'est pas disputé mais **repris**.
+Le point rouge est donc **D88**, et ses vingt-cinq citations suivent.
+
+**Elle prend effet plus tard que le jour où le compteur est écrit,** et c'est délibéré : #57 a pris
+**D82** pendant que cette PR était en revue, et D82 était réellement libre sur le `main` qu'elle
+voyait. Une branche qui ne peut pas voir la ligne fait le bon choix en prenant le suivant ; la
+faire échouer pour cela serait un faux positif, et un garde-fou qui crie au loup ne sert personne.
+La règle est donc datée du jour où toutes les branches auront eu le compteur, et la règle 1 couvre
+l'intervalle. Le corollaire vaut pour cette PR même : c'est **la nôtre** qui a cédé D82, puisque
+c'est celle qui n'avait pas encore fusionné — la règle « le second change » se lit depuis `main`,
+pas depuis la branche où l'on travaille.
 
 **Ce qu'il ne vérifie pas** : qu'un numéro cité désigne la bonne décision. Rien n'aurait pu
 attraper le « D74 » de `boat-onboarding.ts` — ce numéro existait, il voulait simplement dire autre
@@ -1808,3 +1816,47 @@ destination change sous le doigt est un piège ; c'est la pastille sur l'onglet 
 mène la suite. Écarté enfin : laisser le badge « Bientôt » sur un point dû le jour même, avec la
 seule échéance en rouge à droite — c'est exactement le mot qui empêchait de trouver la ligne que
 l'onglet annonçait.
+
+## 2026-09-08 — D82 : la date d'une intervention regarde dans le sens de son statut
+
+**Question.** « Pourquoi quand je mets en planifié ça ne met pas que des trucs dans le futur ? »,
+capture du formulaire à l'appui : *Planifié* sélectionné, et sous « Date » les deux seuls
+raccourcis du formulaire — **Aujourd'hui · Hier**.
+
+**Le constat.** Le modèle savait déjà qu'une date à venir n'a de sens que sur du travail qui
+n'a pas eu lieu (D17 : `FUTURE_ALLOWED_STATUSES`, la validation refuse une intervention
+*terminée* datée demain). L'écran, lui, l'ignorait complètement : mêmes puces tournées vers
+hier quel que soit le statut, aucune borne sur la roulette native, le même mot « Date », et un
+avertissement ambre **« Date dans le futur »** affiché sur une intervention planifiée — c'est-à-dire
+sur la seule chose qui doit précisément l'être. Le formulaire disait donc l'inverse de la règle
+qu'il applique.
+
+**Décision.** Le statut décide du sens de la date, et l'écran le montre à trois endroits :
+
+- **les puces** — « Aujourd'hui · Hier » sur du fait, « Aujourd'hui · **Demain** » sur du
+  planifié ou de l'urgent (`DateField` gagne `future`) ;
+- **la roulette** — une intervention terminée ou en cours est bornée à aujourd'hui, donc le
+  calendrier natif ne propose plus une date que la validation refusera ;
+- **les mots** — le champ s'appelle **« Prévu le »** au lieu de « Date », et l'avertissement
+  ambre ne se déclenche plus que là où il veut dire quelque chose (une date à venir sur du
+  travail déclaré fait).
+
+La liste des statuts qui autorisent l'avenir n'est pas réécrite dans le formulaire : il lit
+`FUTURE_ALLOWED_STATUSES`, la constante dont la validation se sert (règle 6). Les deux ne
+peuvent donc pas diverger.
+
+**Ce qui n'est pas bloqué : le passé sur du planifié.** La question demandait « que des trucs
+dans le futur » ; la réponse est non, et c'est délibéré. Un travail prévu la semaine dernière et
+pas fait n'est pas une faute de saisie, c'est **du retard** — l'état que D81 vient précisément de
+faire remonter en rouge, de l'onglet jusqu'à la ligne. Poser un `min` sur « Prévu le »
+interdirait de saisir ce retard et d'en corriger la date. Les puces pointent devant, la roulette
+reste libre derrière.
+
+**Ce qui ne bouge pas.** La date par défaut reste **aujourd'hui**, y compris quand on bascule sur
+« Planifié » : une intervention planifiée le jour même est un cas courant et, depuis D81, celui
+qui allume le point rouge. Rien ne se déplace sous le doigt de qui a déjà choisi une date.
+
+**Écarté :** avancer automatiquement la date à demain au passage en « Planifié » — c'est la
+saisie de quelqu'un d'autre, et « planifié aujourd'hui » est légitime. Écarté aussi : une
+troisième puce « Dans une semaine », qui ferait trois raccourcis là où le calendrier natif fait
+déjà le travail au-delà de demain.

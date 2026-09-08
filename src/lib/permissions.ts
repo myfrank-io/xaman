@@ -32,9 +32,9 @@ export function can(role: BoatRole | null | undefined, permission: Permission): 
 
 /**
  * Roles an owner hands out from the UI — at the invitation and on a member already aboard, the
- * same four (D82). `renter` is V2 and is never granted.
+ * same four (D89). `renter` is V2 and is never granted.
  *
- * `owner` is in the list since D82. It was not before: ownership only moved through the guided
+ * `owner` is in the list since D89. It was not before: ownership only moved through the guided
  * transfer (D30), while the members list quietly offered it anyway from a plain dropdown — one
  * door documented, one door open. Both are now the same door, and the transfer screen keeps its
  * own value: it invites *and* makes the former owner leave once the invitation is accepted.
