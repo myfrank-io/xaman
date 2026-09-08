@@ -160,7 +160,7 @@ export function totalAmount(rows: readonly ExpenseRow[]): number {
  * `fallbackName` with a neutral colour: a category colour never travels alone (rule 12).
  *
  * Kept for the CSV export, which reads whole rows. The screen's own breakdown comes from
- * `boat_expense_totals` (D110): it counts every matching line, not the page that was fetched.
+ * `boat_expense_totals` (D111): it counts every matching line, not the page that was fetched.
  */
 export function groupByCategory(
   rows: readonly ExpenseRow[],
@@ -187,7 +187,7 @@ export function groupByCategory(
 }
 
 /**
- * The breakdown as `boat_expense_totals` returns it (D110): one object per system, already
+ * The breakdown as `boat_expense_totals` returns it (D111): one object per system, already
  * summed and ordered by the database over **every** matching line — not over the page the list
  * happens to have fetched. A null system is the « Sans catégorie » bucket, and it keeps the
  * empty id the screen already uses for it.

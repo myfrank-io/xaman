@@ -33,7 +33,7 @@ import type { PurchaseKind } from "@/lib/schemas/purchases";
 import { cn } from "@/lib/utils";
 
 export type ExpensesData = {
-  /** The page of lines that was fetched — never the whole selection (D110). */
+  /** The page of lines that was fetched — never the whole selection (D111). */
   lines: ExpenseLine[];
   /**
    * The five figures below are counted by the database over **every** matching line, so they

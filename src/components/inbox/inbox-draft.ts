@@ -1,7 +1,11 @@
 import { formatCurrency, todayString } from "@/lib/format";
 import { parseDecimal } from "@/lib/numbers";
 import type { InboxItem } from "@/lib/queries/inbox";
-import { validateInboxItemSchema, type InboxKind, type InboxSuggestion } from "@/lib/schemas/inbox";
+import {
+  validateInboxItemSchema,
+  type InboxFiling,
+  type InboxSuggestion,
+} from "@/lib/schemas/inbox";
 import type { VisiblePurchaseKind } from "@/lib/schemas/purchases";
 
 /**
@@ -14,10 +18,12 @@ import type { VisiblePurchaseKind } from "@/lib/schemas/purchases";
 
 /** An engine of the boat, as the hour fields name it. */
 export type InboxEngine = { id: string; label: string };
+/** An intervention a document can join instead of becoming one (D109). */
+export type InboxLogChoice = { id: string; title: string; performedAt: string };
 
 /** What the card holds, field by field, in the strings the touch inputs speak. */
 export type InboxDraft = {
-  kind: InboxKind;
+  kind: InboxFiling;
   title: string;
   date: string;
   categoryId: string;
@@ -27,6 +33,8 @@ export type InboxDraft = {
   purchaseKind: VisiblePurchaseKind;
   notes: string;
   hours: Record<string, string>;
+  /** The intervention an `attach` joins; empty until one is picked (D109). */
+  logId: string;
 };
 
 /** What the card opens on: the suggestion, or the document alone when there is none. */
@@ -54,6 +62,8 @@ export function draftFrom(item: InboxItem, suggestion: InboxSuggestion | null): 
     purchaseKind: suggestion?.purchaseKind ?? "service",
     notes: [suggestion?.notes, lines].filter(Boolean).join("\n\n"),
     hours,
+    // Never proposed by the reading: joining an existing line is the person's call.
+    logId: "",
   };
 }
 
@@ -74,6 +84,7 @@ export function toValidateInput(
     supplierName: draft.supplierName,
     purchaseKind: draft.purchaseKind,
     notes: draft.notes,
+    logId: draft.kind === "attach" ? draft.logId : null,
     engineHours: engineIds.map((engineId) => ({
       engineId,
       hours:

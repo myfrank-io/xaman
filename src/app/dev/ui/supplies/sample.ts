@@ -222,7 +222,7 @@ const EXPENSE_LINES: ExpenseLine[] = EXPENSE_ROWS.map((row) => ({
 
 /**
  * The gallery stands in for the database: the screen now receives its totals already counted
- * (D110), so the sample counts them over the sample rows exactly as `boat_expense_totals` does.
+ * (D111), so the sample counts them over the sample rows exactly as `boat_expense_totals` does.
  */
 export function sampleExpenses(rows: ExpenseRow[] = EXPENSE_ROWS): ExpensesData {
   return {

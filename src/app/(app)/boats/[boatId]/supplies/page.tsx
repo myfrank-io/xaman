@@ -109,7 +109,7 @@ export default async function SuppliesPage({
   else if (categoryId) listQuery = listQuery.eq("category_id", categoryId);
 
   /**
-   * Les totaux sont comptés par la base (D110), pas par la page.
+   * Les totaux sont comptés par la base (D111), pas par la page.
    *
    * L'écran affiche un total, une répartition par système, un nombre de lignes, un cumul depuis
    * l'origine et la période précédente. Tout cela se calculait en TypeScript sur le tableau des

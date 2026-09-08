@@ -1,13 +1,8 @@
 import { AttachmentGallery } from "@/components/attachments/AttachmentGallery";
 import { AttachmentPicker } from "@/components/attachments/AttachmentPicker";
-import { DocumentImport } from "@/components/attachments/DocumentImport";
-import type { CategoryChoice } from "@/components/common/CategoryChips";
 
 import { DevShell, DEV_BOAT_ID } from "../DevShell";
-import { SAMPLE_CATEGORIES } from "../sample-data";
-import { DEV_ATTACHMENTS, DEV_ATTACHMENT_OWNER, DEV_DOCUMENT_LOGS } from "./sample";
-
-const CATEGORIES: CategoryChoice[] = SAMPLE_CATEGORIES.map((category) => ({ ...category }));
+import { DEV_ATTACHMENTS, DEV_ATTACHMENT_OWNER } from "./sample";
 
 function Section({
   title,
@@ -61,18 +56,6 @@ export default async function DevAttachmentsPage() {
             boatId={DEV_BOAT_ID}
             owner={{ type: "maintenance_log", id: DEV_ATTACHMENT_OWNER }}
             initial={DEV_ATTACHMENTS.slice(0, 2)}
-          />
-        </Section>
-
-        <Section
-          title="Import en lot"
-          description="Un lot déposé d'un coup ; rien ne part avant qu'on ait dit où le ranger."
-        >
-          <DocumentImport
-            boatId={DEV_BOAT_ID}
-            logs={DEV_DOCUMENT_LOGS}
-            categories={CATEGORIES}
-            canWrite
           />
         </Section>
       </div>

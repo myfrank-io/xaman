@@ -97,7 +97,7 @@ export default async function BoatLayout({
   };
 
   return (
-    // The frame's own words only (D109): each section layout under `children` hands the client
+    // The frame's own words only (D110): each section layout under `children` hands the client
     // the groups its screens read, and a nested provider replaces rather than merges.
     <Translations of={BOAT_SHELL}>
       <BoatProvider boat={boat} role={boatRole}>

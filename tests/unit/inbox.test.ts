@@ -19,9 +19,11 @@ import fr from "@/messages/fr.json";
 import {
   INBOX_CONFIDENCES,
   INBOX_ERROR_KEYS,
+  INBOX_FILINGS,
   INBOX_KINDS,
   INBOX_SOURCES,
   INBOX_STATUSES,
+  createInboxUploadSchema,
   inboxAddress,
   inboxEntityId,
   inboxStoragePath,
@@ -258,6 +260,40 @@ describe("validating a card", () => {
     expect(parsed.contactId).toBeNull();
     expect(parsed.purchaseKind).toBe("service");
     expect(parsed.engineHours[0]?.hours).toBe(1250);
+    // A card that is not an attachment carries no intervention to join.
+    expect(parsed.logId).toBeNull();
+  });
+
+  it("hangs a document on an existing intervention with nothing but its id (D109)", () => {
+    const LOG = "00000000-0000-4000-8000-0000000000f1";
+    // The title, the system, the amount are the intervention's already: none is asked for.
+    const attach = { ...base, kind: "attach", title: "", categoryId: "", logId: LOG };
+    const parsed = validateInboxItemSchema.parse(attach);
+    expect(parsed.kind).toBe("attach");
+    expect(parsed.logId).toBe(LOG);
+    // Without the intervention there is nothing to attach to.
+    expect(validateInboxItemSchema.safeParse({ ...attach, logId: "" }).success).toBe(false);
+    expect(validateInboxItemSchema.safeParse({ ...attach, logId: undefined }).success).toBe(false);
+    // The other two filings still need their title.
+    expect(validateInboxItemSchema.safeParse({ ...base, title: "  " }).success).toBe(false);
+  });
+});
+
+describe("dropping a pile", () => {
+  const upload = {
+    id: ITEM,
+    boatId: BOAT,
+    storagePath: `boats/${BOAT}/inbox/${ITEM}.jpg`,
+    fileName: "facture.jpg",
+    mimeType: "image/jpeg",
+    sizeBytes: 120_000,
+  };
+
+  it("reads a single photo on the spot, and a pile after the response (D109)", () => {
+    expect(createInboxUploadSchema.parse(upload).deferReading).toBe(false);
+    expect(createInboxUploadSchema.parse({ ...upload, deferReading: true }).deferReading).toBe(
+      true,
+    );
   });
 });
 
@@ -269,11 +305,30 @@ describe("the inbox's words", () => {
     ["status", INBOX_STATUSES],
     ["badge", INBOX_STATUSES],
     ["kind", INBOX_KINDS],
+    ["kind", INBOX_FILINGS],
     ["confidence", INBOX_CONFIDENCES],
     ["errors", INBOX_ERROR_KEYS],
   ] as const)("names every %s", (section, keys) => {
     const words = inbox[section] as Record<string, string>;
     for (const key of keys) expect(words[key]?.trim(), `${section}.${key}`).toBeTruthy();
+  });
+
+  it("names the one door and the third filing (D109)", () => {
+    for (const key of [
+      "entry",
+      "drop",
+      "attach",
+      "attached",
+      "attachHelp",
+      "uploadedMany",
+    ] as const)
+      expect((inbox[key] as string)?.trim(), key).toBeTruthy();
+    const fields = inbox.fields as Record<string, string>;
+    for (const key of ["existingLog", "existingLogPlaceholder"] as const)
+      expect(fields[key]?.trim(), `fields.${key}`).toBeTruthy();
+    // The pile's toast counts; the old screen's words are gone with it.
+    expect(inbox.uploadedMany).toContain("{count");
+    expect((fr.attachments as Record<string, unknown>).import).toBeUndefined();
   });
 
   it("gives an ignored document a way back and a way out (D93)", () => {

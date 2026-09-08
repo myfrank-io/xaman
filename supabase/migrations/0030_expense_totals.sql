@@ -1,4 +1,4 @@
--- 0030_expense_totals.sql — les totaux de l'écran Dépenses, comptés par la base (D110).
+-- 0030_expense_totals.sql — les totaux de l'écran Dépenses, comptés par la base (D111).
 --
 -- L'écran lisait **toutes** les lignes de dépense du bateau pour n'en afficher que vingt : la
 -- pagination était un `slice(0, 20)` en TypeScript, posé derrière une requête sans `limit`.
@@ -119,7 +119,7 @@ $$;
 comment on function public.boat_expense_totals(
   uuid, date, date, text[], public.purchase_kind, uuid, boolean, date, date
 ) is
-  'Totaux de l''écran Dépenses (D110) : total et nombre de lignes de la sélection, répartition '
+  'Totaux de l''écran Dépenses (D111) : total et nombre de lignes de la sélection, répartition '
   'par système, cumul et première dépense sur les sources retenues, total de la période '
   'précédente. Permet à la liste de ne demander que sa page sans fausser un seul chiffre.';
 

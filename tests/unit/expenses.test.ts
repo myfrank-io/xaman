@@ -187,7 +187,7 @@ describe("expense totals", () => {
   });
 
   /**
-   * The breakdown now arrives already counted by `boat_expense_totals` (D110) rather than
+   * The breakdown now arrives already counted by `boat_expense_totals` (D111) rather than
    * summed over the rows the list fetched. These cases pin the reading of that payload: the
    * screen must survive a null system, a numeric that travelled as a string, and a shape it
    * did not expect — a money screen that throws is worse than one that shows nothing.

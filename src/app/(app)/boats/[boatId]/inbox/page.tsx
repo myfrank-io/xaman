@@ -15,6 +15,9 @@ export const dynamic = "force-dynamic";
 /** A photo is read while the person waits: a Claude call needs more than the platform's floor. */
 export const maxDuration = 60;
 
+/** How far back the picker of existing interventions goes: a season of paperwork, not a decade. */
+const RECENT_LOGS = 200;
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("inbox");
   return { title: t("title") };
@@ -29,13 +32,21 @@ export default async function InboxPage({ params }: { params: Promise<{ boatId: 
   const { boatId } = await params;
   const supabase = await createClient();
   // Les traductions ne coûtent aucun aller-retour : les lire d'abord met tout le reste — le
-  // bateau, le rôle, la liste des documents et les listes du formulaire — dans une seule vague.
+  // bateau, le rôle, la liste des documents, les listes du formulaire et les interventions
+  // qu'un document peut rejoindre — dans une seule vague.
   const tl = await getTranslations("logs.form");
-  const [{ data: boat }, { data: role }, items, form] = await Promise.all([
+  const [{ data: boat }, { data: role }, items, form, { data: logs }] = await Promise.all([
     readBoatRow(boatId),
     readBoatRole(boatId),
     listInboxItems(supabase, boatId),
     logFormData(supabase, boatId, tl("equipmentRemoved")),
+    // A document can join an intervention the carnet already has (D109): the recent ones.
+    supabase
+      .from("maintenance_logs_view")
+      .select("id, title, performed_at")
+      .eq("boat_id", boatId)
+      .order("performed_at", { ascending: false })
+      .limit(RECENT_LOGS),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -49,9 +60,13 @@ export default async function InboxPage({ params }: { params: Promise<{ boatId: 
       categories={form.categories}
       engines={form.engines.map((engine) => ({ id: engine.id, label: engine.label }))}
       contacts={form.contacts}
+      logs={(logs ?? []).map((log) => ({
+        id: log.id ?? "",
+        title: log.title ?? "",
+        performedAt: log.performed_at ?? "",
+      }))}
       canContribute={can(boatRole, "contribute")}
       canWrite={can(boatRole, "write")}
-      analysisEnabled
       inboxAddress={domain ? inboxAddress(boat.name, boat.inbox_token, domain) : null}
     />
   );

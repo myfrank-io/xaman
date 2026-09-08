@@ -12,6 +12,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   MailIcon,
+  PaperclipIcon,
   PencilIcon,
   RefreshCwIcon,
   RotateCcwIcon,
@@ -29,6 +30,7 @@ import {
   toValidateInput,
   type InboxDraft,
   type InboxEngine,
+  type InboxLogChoice,
 } from "@/components/inbox/inbox-draft";
 import { InboxItemForm } from "@/components/inbox/InboxItemForm";
 import { InboxItemSummary } from "@/components/inbox/InboxItemSummary";
@@ -67,6 +69,7 @@ export function InboxItemCard({
   categories,
   engines,
   contacts,
+  logs,
   canWrite,
 }: {
   boatId: string;
@@ -74,6 +77,8 @@ export function InboxItemCard({
   categories: CategoryChoice[];
   engines: InboxEngine[];
   contacts: ContactOption[];
+  /** The interventions a document can join instead of becoming one (D109). */
+  logs: InboxLogChoice[];
   canWrite: boolean;
 }) {
   const t = useTranslations("inbox");
@@ -94,7 +99,8 @@ export function InboxItemCard({
   const showSummary = confident && !expanded;
   // The full list, `local` included (D94), on the form. The summary says the same thing in its
   // own sentence, so the box would only repeat it there.
-  const warnings = showSummary ? [] : (item.suggestion?.warnings ?? []);
+  const attaching = draft.kind === "attach";
+  const warnings = showSummary || attaching ? [] : (item.suggestion?.warnings ?? []);
 
   function validate() {
     const parsed = validateInboxItemSchema.safeParse(
@@ -116,7 +122,12 @@ export function InboxItemCard({
         toast.error(errorMessage(result.error));
         return;
       }
-      toast.success(t("validated", { title: parsed.data.title }));
+      // The line's own title, which for an attachment is the intervention's, not the card's.
+      toast.success(
+        parsed.data.kind === "attach"
+          ? t("attached", { title: result.data.title })
+          : t("validated", { title: result.data.title }),
+      );
       router.refresh();
     });
   }
@@ -319,7 +330,7 @@ export function InboxItemCard({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {item.error ? (
+          {item.error && !attaching ? (
             <p className="flex items-start gap-2 rounded-lg border border-warning-border bg-warning-tint p-3 text-caption text-warning-fg">
               <TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
               <span>{t(`errors.${item.error}`)}</span>
@@ -350,6 +361,7 @@ export function InboxItemCard({
               categories={categories}
               engines={engines}
               contacts={contacts}
+              logs={logs}
               canWrite={canWrite}
             />
           )}
@@ -362,8 +374,8 @@ export function InboxItemCard({
               disabled={!canWrite || pending}
               aria-busy={pending}
             >
-              {pending ? <Spinner /> : <CheckIcon />}
-              {t("validate")}
+              {pending ? <Spinner /> : attaching ? <PaperclipIcon /> : <CheckIcon />}
+              {attaching ? t("attach") : t("validate")}
             </Button>
             {showSummary ? (
               <Button

@@ -388,10 +388,10 @@
         "help": {
           "none": "Bateau neuf, ou vous préférez saisir au fil de l'eau : chaque liste garde son import pour plus tard.",
           "spreadsheet": "Votre fichier, puis « Importer ». L'export d'une autre application fait aussi l'affaire, et chaque ligne arrivera « à vérifier ».",
-          "paper": "Photographiez les pages et les factures : chacune devient une intervention, et « Tout rattacher » les envoie d'un coup."
+          "paper": "Photographiez vos factures et vos pages, par lot : un agent IA les lit et les pré-remplit, vous les validerez depuis « À valider »."
         },
         "importedRows": "{count, plural, one {# ligne reprise dans votre carnet} other {# lignes reprises dans votre carnet}}.",
-        "importedDocuments": "{count, plural, one {# document rattaché} other {# documents rattachés}}.",
+        "importedDocuments": "{count, plural, one {# document déposé : l'agent IA le lit, il vous attend} other {# documents déposés : l'agent IA les lit, ils vous attendent}} dans « À valider ».",
         "next": "Continuer",
         "skip": "Passer cette étape"
       },
@@ -2080,40 +2080,16 @@
       "unsupported": "Format non accepté : photos et PDF seulement.",
       "upload": "L'envoi a échoué. Réessayez quand le réseau revient.",
       "save": "Le document est envoyé mais n'a pas pu être rattaché."
-    },
-    "import": {
-      "title": "Importer des documents",
-      "description": "Déposez vos factures et vos photos en une fois, puis rattachez chacune à une intervention.",
-      "entry": "Importer des documents",
-      "drop": "Déposez vos fichiers ici",
-      "choose": "Choisir des fichiers",
-      "pending": "{count, plural, one {# document attend un choix} other {# documents attendent un choix}}",
-      "emptyTitle": "Aucun document pour l'instant",
-      "emptyDescription": "Choisissez des photos ou des PDF : rien n'est envoyé avant que vous ayez dit où le ranger.",
-      "modeExisting": "Intervention existante",
-      "modeNew": "Nouvelle intervention",
-      "existingLabel": "Intervention",
-      "existingPlaceholder": "Choisir une intervention…",
-      "newTitle": "Titre de l'intervention",
-      "newDate": "Date",
-      "newCategory": "Catégorie",
-      "attach": "Rattacher",
-      "createAndAttach": "Créer et rattacher",
-      "attached": "Rattaché à « {title} »",
-      "discard": "Retirer de la liste",
-      "done": "{count, plural, one {# document rattaché} other {# documents rattachés}}",
-      "noLogs": "Aucune intervention pour l'instant : créez-en une depuis un document.",
-      "readOnly": "Vous n'avez pas le droit d'ajouter des documents sur ce bateau.",
-      "attachAll": "{count, plural, one {Rattacher le document} other {Rattacher les # documents}}",
-      "noCategories": "Ce bateau n'a encore aucun système : un document ne peut pas devenir une intervention sans en avoir un. Ajoutez-en depuis les paramètres du bateau."
     }
   },
   "inbox": {
     "title": "À valider",
-    "subtitle": "Ce qui est arrivé par photo ou par e-mail, prêt à entrer dans le carnet.",
+    "subtitle": "Ce qui est arrivé par photo, par dépôt ou par e-mail, prêt à entrer dans le carnet.",
+    "entry": "Déposer des documents",
     "capture": "Photographier un ticket",
-    "choose": "Choisir un document",
-    "captureHelp": "Une facture, un ticket de caisse, un devis : un agent IA lit le document et pré-remplit l'intervention, vous vérifiez, vous validez.",
+    "choose": "Choisir des documents",
+    "drop": "Photos et PDF, 10 Mo par fichier, un ou plusieurs à la fois — ou glissez-les ici.",
+    "captureHelp": "Une facture, un ticket de caisse, un devis — seul ou par lot : un agent IA lit chaque document et pré-remplit l'intervention, vous vérifiez, vous validez.",
     "readOnly": "Seuls les membres qui écrivent dans le carnet peuvent valider un document.",
     "address": {
       "title": "Par e-mail",
@@ -2123,13 +2099,13 @@
     },
     "empty": {
       "title": "Rien à valider",
-      "description": "Photographiez un ticket, ou envoyez une facture à l'adresse du carnet : le document arrive ici, pré-rempli."
+      "description": "Photographiez un ticket, déposez vos factures, ou envoyez-les à l'adresse du carnet : chaque document arrive ici, pré-rempli."
     },
     "pending": "{count, plural, =0 {Rien en attente} one {# document à valider} other {# documents à valider}}",
     "history": "Déjà traités",
     "source": {
       "email": "Reçu par e-mail",
-      "upload": "Photographié dans l'app"
+      "upload": "Déposé dans l'app"
     },
     "from": "De {sender}",
     "subjectLabel": "Objet : {subject}",
@@ -2149,7 +2125,8 @@
     },
     "kind": {
       "log": "Intervention",
-      "purchase": "Achat"
+      "purchase": "Achat",
+      "attach": "Intervention existante"
     },
     "confidence": {
       "high": "Lecture sûre",
@@ -2189,10 +2166,14 @@
       "supplierPlaceholder": "Tel qu'écrit sur le document",
       "purchaseKind": "Type d'achat",
       "hours": "Heures moteur",
-      "notes": "Notes"
+      "notes": "Notes",
+      "existingLog": "Intervention",
+      "existingLogPlaceholder": "Choisir une intervention…"
     },
     "categoryRequired": "Choisissez un système pour ranger une intervention.",
+    "attachHelp": "Le document rejoint les pièces jointes de cette intervention ; rien d'autre n'est modifié.",
     "validate": "Valider",
+    "attach": "Rattacher",
     "dismiss": "Ignorer",
     "reanalyse": "Relire le document",
     "reopen": "Réouvrir",
@@ -2206,6 +2187,7 @@
     },
     "open": "Ouvrir le document",
     "validated": "Validé : {title}",
+    "attached": "Rattaché à : {title}",
     "dismissed": "Document ignoré",
     "went": {
       "log": "Voir l'intervention",
@@ -2216,6 +2198,7 @@
     },
     "uploaded": "Document lu : vérifiez puis validez.",
     "uploadedNoRead": "Document reçu : remplissez les champs puis validez.",
+    "uploadedMany": "{count, plural, one {# document déposé} other {# documents déposés}} : l'agent IA les lit, les cartes se remplissent d'elles-mêmes.",
     "summary": {
       "hint": "Un agent IA a lu le document : vérifiez cette ligne, puis validez.",
       "edit": "Modifier"

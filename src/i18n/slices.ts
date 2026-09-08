@@ -1,7 +1,7 @@
 import type { Namespace } from "@/i18n/namespaces";
 
 /**
- * Which message groups each surface hands to the client (D109).
+ * Which message groups each surface hands to the client (D110).
  *
  * One rule: **a slice stands on its own.** Nesting `NextIntlClientProvider` replaces the
  * messages rather than merging them, so a section repeats what its own screens read even when
@@ -39,6 +39,9 @@ export const ONBOARDING: readonly Namespace[] = [
   "contacts",
   "errors",
   "import",
+  // Step 2 drops its documents through the inbox's own dropzone since D109: one door, one
+  // reading, so the words of « À valider » are read here too.
+  "inbox",
 ];
 
 /** The account screen, outside any boat. */
@@ -143,6 +146,8 @@ export const BOAT_SECTIONS = {
     "common",
     "contacts",
     "errors",
+    // « Déposer des documents » is the inbox's dropzone (D109), opened from the journal.
+    "inbox",
     "logStatus",
     "logs",
     "offline",
