@@ -58,7 +58,7 @@ export async function boatPlanChoice(
  * semi-rigide has its own model and falls back to the motor boat's while it is missing. It is
  * only a pre-selection — every model stays choosable.
  */
-export function suggestFor(
+function suggestFor(
   templates: TemplateOption[],
   boatType: Database["public"]["Enums"]["boat_type"],
 ): string | null {

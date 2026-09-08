@@ -11,6 +11,7 @@ import { PurgeButton } from "@/components/trash/PurgeButton";
 import { RestoreButton, type TrashKind } from "@/components/trash/RestoreButton";
 import { formatCurrency, formatDate, toDate } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const RETENTION_DAYS = 30;
@@ -53,7 +54,7 @@ function daysLeft(deletedAt: string): number {
 export default async function TrashPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
   const supabase = await createClient();
-  const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  const { data: role } = await readBoatRole(boatId);
   if (!role) notFound();
   if (!can(role as BoatRole, "write")) notFound();
 

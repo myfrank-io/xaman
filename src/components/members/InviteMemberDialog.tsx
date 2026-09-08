@@ -35,7 +35,7 @@ import {
   type InviteMemberInput,
 } from "@/lib/schemas/members";
 
-type Sent = { email: string; url: string; validUntil: string | null };
+type Sent = { email: string; url: string; validUntil: string | null; emailFailed: boolean };
 
 const DURATIONS: AccessDuration[] = ["7", "30", "90", "unlimited"];
 
@@ -78,6 +78,10 @@ export function InviteMemberDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState<Sent | null>(null);
+  // Identity of the row this dialog is about to write, drawn once (rule 11): pressing
+  // « Inviter » again after a failure re-sends the same id, and the server writes the same
+  // single invitation instead of a second pending one for the same address.
+  const [invitationId, setInvitationId] = useState(() => crypto.randomUUID());
   const [pending, startTransition] = useTransition();
   const editor = inviterRole === "editor";
   const roles = editor ? EDITOR_ASSIGNABLE_ROLES : ASSIGNABLE_ROLES;
@@ -97,18 +101,23 @@ export function InviteMemberDialog({
 
   function onSubmit(values: InviteMemberInput) {
     startTransition(async () => {
-      const result = await inviteMember(values);
+      const result = await inviteMember({ ...values, id: invitationId });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
-      toast.success(t("invite.sent", { email: values.email }));
+      // The invitation exists either way; only the message may have stayed behind (D75).
+      if (result.data.emailFailed) toast.warning(t("invite.emailFailedTitle"));
+      else toast.success(t("invite.sent", { email: values.email }));
       setSent({
         email: values.email,
         url: result.data.inviteUrl,
         validUntil: result.data.validUntil,
+        emailFailed: result.data.emailFailed,
       });
       form.reset(defaults);
+      // That row is written: the next invitation is a new one.
+      setInvitationId(crypto.randomUUID());
       router.refresh();
     });
   }
@@ -155,10 +164,16 @@ export function InviteMemberDialog({
       <DialogContent>
         {sent ? (
           <div className="flex flex-col gap-5">
+            {/* The row exists in both cases; only the sentence changes. « Invitation envoyée »
+                over a message that never left is the one thing this screen must not say. */}
             <DialogHeader>
-              <DialogTitle>{t("invite.sentTitle")}</DialogTitle>
+              <DialogTitle>
+                {sent.emailFailed ? t("invite.emailFailedTitle") : t("invite.sentTitle")}
+              </DialogTitle>
               <DialogDescription>
-                {t("invite.sentDescription", { email: sent.email })}
+                {sent.emailFailed
+                  ? t("invite.emailFailed", { email: sent.email })
+                  : t("invite.sentDescription", { email: sent.email })}
                 {sent.validUntil
                   ? ` ${t("invite.validUntil", { date: formatDate(sent.validUntil) })}`
                   : ""}

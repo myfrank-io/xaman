@@ -6,6 +6,7 @@ import { ClipboardListIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -59,11 +60,23 @@ export function ChoosePlanBlock({
   }
 
   return (
-    <div className="flex flex-col items-center rounded-xl border border-border bg-surface-2 px-6 py-8 text-center">
-      <div className="mb-4 flex size-14 items-center justify-center rounded-full border border-border bg-surface text-n-400 [&_svg]:size-7">
-        <ClipboardListIcon aria-hidden />
-      </div>
-      <h2 className="font-display text-h1">{t("title")}</h2>
+    // The frame, the icon disc and the heading are `EmptyState`'s: this block is one — a
+    // checklist that does not exist yet — that happens to carry the way out of the void.
+    // The intro keeps its own `max-w-md`: it is a longer sentence than an empty state's line.
+    <EmptyState
+      className="py-8"
+      icon={<ClipboardListIcon aria-hidden />}
+      title={t("title")}
+      action={
+        <div className="flex flex-col items-center gap-4">
+          <Button type="button" size="lg" disabled={!templateId || pending} onClick={apply}>
+            {pending ? <Spinner /> : null}
+            {t("submit")}
+          </Button>
+          <p className="max-w-md text-caption text-ink-3">{t("orBlank")}</p>
+        </div>
+      }
+    >
       <p className="mt-2 max-w-md text-body text-ink-2">{t("intro")}</p>
 
       <div className="mt-5 flex w-full max-w-md flex-col gap-2 text-left">
@@ -100,18 +113,6 @@ export function ChoosePlanBlock({
             : t("help")}
         </p>
       </div>
-
-      <Button
-        type="button"
-        size="lg"
-        className="mt-5"
-        disabled={!templateId || pending}
-        onClick={apply}
-      >
-        {pending ? <Spinner /> : null}
-        {t("submit")}
-      </Button>
-      <p className="mt-4 max-w-md text-caption text-ink-3">{t("orBlank")}</p>
-    </div>
+    </EmptyState>
   );
 }

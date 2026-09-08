@@ -1,10 +1,11 @@
 import { getTranslations } from "next-intl/server";
 
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PageHeader } from "@/components/common/PageHeader";
+import { PageShell } from "@/components/layout/PageShell";
 import { DeleteAccountCard } from "@/components/profile/DeleteAccountCard";
 import { PasswordCard } from "@/components/profile/PasswordCard";
 import { ProfileForm } from "@/components/profile/ProfileForm";
-import { SignOutButton } from "@/components/auth/SignOutButton";
 
 /**
  * Visual acceptance of the account screen. It had no preview at all, so the touch audit never
@@ -16,7 +17,7 @@ export default async function DevProfilePage() {
   const t = await getTranslations("profile");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-4 py-8 sm:px-6">
+    <PageShell>
       <PageHeader
         title={t("title")}
         subtitle="xavier@example.com"
@@ -28,6 +29,6 @@ export default async function DevProfilePage() {
       <DeleteAccountCard
         blockingBoats={[{ id: "00000000-0000-4000-8000-000000000000", name: "Xaman" }]}
       />
-    </main>
+    </PageShell>
   );
 }

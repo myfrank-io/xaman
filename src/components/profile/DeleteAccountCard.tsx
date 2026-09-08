@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deleteAccount } from "@/lib/actions/profile";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
+import { boatPath } from "@/lib/queries/boat-routes";
 
 export function DeleteAccountCard({
   blockingBoats,
@@ -54,13 +55,13 @@ export function DeleteAccountCard({
             <AlertDescription className="flex flex-wrap items-center gap-3">
               {t("blockedDescription")}
               <Link
-                href={`/boats/${boat.id}/settings` as Route}
+                href={boatPath(boat.id, "settings") as Route}
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {t("transfer")}
               </Link>
               <Link
-                href={`/boats/${boat.id}/settings` as Route}
+                href={boatPath(boat.id, "settings") as Route}
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {t("deleteBoat")}

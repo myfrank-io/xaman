@@ -9,6 +9,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { PlusIcon, UploadIcon } from "lucide-react";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 // Intervenants (E6-2), reached from the « Plus » sheet.
@@ -16,7 +17,7 @@ export default async function ContactsPage({ params }: { params: Promise<{ boatI
   const { boatId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: contacts }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("contacts")
       .select("id, name, specialty, company, phone, email")

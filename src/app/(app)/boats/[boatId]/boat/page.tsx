@@ -11,6 +11,7 @@ import { inboundDomain } from "@/lib/inbox/receive";
 import { boatModels } from "@/lib/queries/boat-models";
 import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { inboxAddress } from "@/lib/schemas/inbox";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -37,8 +38,8 @@ export default async function BoatPage({
     allParts,
     models,
   ] = await Promise.all([
-    supabase.from("boats").select("*").eq("id", boatId).maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRow(boatId),
+    readBoatRole(boatId),
     supabase
       .from("engines")
       .select(

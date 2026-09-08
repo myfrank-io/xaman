@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { HaulOutForm } from "@/components/haul-outs/HaulOutForm";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 // New haul-out (E6-1, flow g phase 1): four taps at the lift-out, launch date left empty.
@@ -9,7 +10,7 @@ export default async function NewHaulOutPage({ params }: { params: Promise<{ boa
   const { boatId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: contacts }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("contacts")
       .select("id, name, specialty, company, phone")

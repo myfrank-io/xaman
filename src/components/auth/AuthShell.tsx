@@ -37,7 +37,7 @@ export async function AuthShell({
           {subtitle ? <p className="mt-2 text-body text-on-navy-2">{subtitle}</p> : null}
         </div>
       </header>
-      <section className="flex flex-1 items-center justify-center px-6 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+      <section className="flex flex-1 items-center justify-center px-6 pt-10 safe-pb-10">
         <div className="w-full max-w-md">{children}</div>
       </section>
     </main>

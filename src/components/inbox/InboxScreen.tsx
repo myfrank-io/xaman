@@ -16,7 +16,9 @@ import type { CategoryChoice } from "@/components/common/CategoryChips";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import type { ContactOption } from "@/components/contacts/specialties";
-import { InboxItemCard, type InboxEngine } from "@/components/inbox/InboxItemCard";
+import { confidentItems, type InboxEngine } from "@/components/inbox/inbox-draft";
+import { InboxItemCard } from "@/components/inbox/InboxItemCard";
+import { InboxValidateAll } from "@/components/inbox/InboxValidateAll";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { createInboxUpload } from "@/lib/actions/inbox";
@@ -33,13 +35,19 @@ const CAPTURE_PROGRESS: Record<CaptureStage, number> = {
   analysing: 80,
 };
 
+/** The fallback that stands in for Realtime while `inbox_items` is not published: see below. */
+const POLL_FIRST_MS = 3_000;
+const POLL_MAX_MS = 15_000;
+const POLL_BUDGET_MS = 120_000;
+
 /**
  * « À valider » (D91).
  *
- * Two ways in at the top — the camera, and the boat's own address to copy — then the documents
- * waiting for a decision, newest first, then the last ones filed. A document that arrived by mail
- * is read after the webhook answered; while it is, the screen asks again every few seconds, so
- * the card fills itself in without anyone pulling to refresh.
+ * Two ways in at the top — the camera, and the boat's own address to copy — then, when several
+ * documents were read without a single thing to flag, the one tap that files them all, and the
+ * documents waiting for a decision, newest first, then the last ones filed. A document that
+ * arrived by mail is read after the webhook answered; while it is, the screen asks again on a
+ * budget, so the card fills itself in without anyone pulling to refresh.
  */
 export function InboxScreen({
   boatId,
@@ -76,13 +84,42 @@ export function InboxScreen({
     error: AttachmentErrorKey | null;
   } | null>(null);
 
-  // A document mailed in is read after the response: ask again while one is still being read.
-  const reading = pending.some((item) => item.status !== "ready");
+  // A document mailed in is read after the webhook answered, and `inbox_items` is not on the
+  // Realtime publication yet (see `REALTIME_TABLES`), so the card cannot fill itself in. Until
+  // that migration lands, the screen asks again — but on a budget, not forever: every tick
+  // re-runs the whole server tree of the layout and the page, and a document that never leaves
+  // « Reçu » used to keep that going for as long as the tab stayed open. The delay grows, and
+  // the asking stops after two minutes; « Relire le document » is then the way on.
+  const readingIds = pending
+    .filter((item) => item.status !== "ready")
+    .map((item) => item.id)
+    .join(",");
   useEffect(() => {
-    if (!reading) return;
-    const timer = window.setInterval(() => router.refresh(), 5000);
-    return () => window.clearInterval(timer);
-  }, [reading, router]);
+    if (readingIds === "") return;
+    let delay = POLL_FIRST_MS;
+    let spent = 0;
+    let timer: number | undefined;
+    const tick = () => {
+      spent += delay;
+      router.refresh();
+      delay = Math.min(Math.round(delay * 1.6), POLL_MAX_MS);
+      if (spent + delay > POLL_BUDGET_MS) return;
+      timer = window.setTimeout(tick, delay);
+    };
+    timer = window.setTimeout(tick, delay);
+    // A document that arrives, or one that becomes ready, changes the list and starts a new
+    // budget: what is waiting now is not what was waiting two minutes ago.
+    return () => window.clearTimeout(timer);
+  }, [readingIds, router]);
+
+  // « Tout valider » (D91, one tap per document): the documents the reading had nothing to flag.
+  // The control shows itself only above two or more of them — below that, the card's own button
+  // is already the shortest way — and it is the one that decides, so that the count it reports
+  // survives the run that empties the list.
+  const confident = confidentItems(pending, {
+    boatId,
+    engineIds: engines.map((engine) => engine.id),
+  });
 
   async function pick(files: FileList | null) {
     const file = files?.[0];
@@ -233,6 +270,7 @@ export function InboxScreen({
 
       <section className="flex flex-col gap-4">
         <h2 className="text-h2">{t("pending", { count: pending.length })}</h2>
+        {canWrite ? <InboxValidateAll boatId={boatId} items={confident} engines={engines} /> : null}
         {pending.length === 0 ? (
           <EmptyState
             icon={<InboxIcon />}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { HaulOutDetail, type HaulOutLog } from "@/components/haul-outs/HaulOutDetail";
 import { daysAshore } from "@/lib/haul-outs";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -18,7 +19,7 @@ export default async function HaulOutPage({
   const supabase = await createClient();
 
   const [{ data: role }, { data: haulOut }, { data: logs }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("haul_outs")
       .select("*")

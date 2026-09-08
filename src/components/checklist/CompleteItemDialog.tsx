@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { undoToast } from "@/components/common/UndoToast";
 import { Field } from "@/components/forms/Field";
+import { readLastUsed, writeLastUsed } from "@/components/forms/use-last-used";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
 import { NumericField } from "@/components/ui/numeric-field";
 import { Spinner } from "@/components/ui/spinner";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useOnline } from "@/components/common/use-online";
 import { useOutbox } from "@/components/offline/use-outbox";
+import { addYearsTo, nextDueSentence } from "@/components/checklist/next-due";
 import { completeChecklistItem, deleteCompletion } from "@/lib/actions/checklist";
 import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -53,6 +55,11 @@ export type CompletableItem = {
   lastCompletedAt: string | null;
   lastCompletedByName: string | null;
   lastEngineHours: number | null;
+  /**
+   * `checklist_completions.next_due_at` already carried by this point (D11): the expiry printed
+   * on the object. Optional so a screen that does not read it simply gets no « Valide jusqu'au ».
+   */
+  fixedDueAt?: string | null;
 };
 
 export type CompletionMember = { id: string; name: string };
@@ -162,20 +169,54 @@ function CompleteForm({
   const [pending, startTransition] = useTransition();
   const outbox = useOutbox(boatId);
   const { online } = useOnline();
-  const [completionId] = useState(() => crypto.randomUUID());
-  const [completedAt, setCompletedAt] = useState(() => todayString());
-  const [by, setBy] = useState<string>("me");
-  const [otherName, setOtherName] = useState("");
-  const [hours, setHours] = useState("");
-  const [nextDueAt, setNextDueAt] = useState("");
-  const [note, setNote] = useState("");
-  const [errors, setErrors] = useState<FieldErrors>({});
-
   // D73: an engine without a meter has no hours to give — the field disappears and the database
   // no longer demands them either (check_completion_hours).
   const engine = item.engine?.tracksHours === false ? null : item.engine;
   const hoursRequired = item.intervalHours !== null && item.engine?.tracksHours !== false;
-  const alreadyToday = item.lastCompletedAt === todayString();
+  const today = todayString();
+  const alreadyToday = item.lastCompletedAt === today;
+  /**
+   * A reading taken today or yesterday is still what the counter shows: the field opens on it
+   * rather than asking someone to walk back to the engine room and type it again. Older than
+   * that, it stays empty — a stale number saved as a fresh reading is worse than a blank one —
+   * and « = reprendre » is there for whoever knows it has not moved.
+   */
+  const freshReading =
+    engine !== null &&
+    engine.lastHours !== null &&
+    engine.lastDate !== null &&
+    engine.lastDate >= addDays(today, -1);
+  const punctual = item.intervalMonths === null && item.intervalHours === null;
+
+  const [completionId] = useState(() => crypto.randomUUID());
+  const [completedAt, setCompletedAt] = useState(today);
+  // « Réalisé par » opens on the last answer given on this boat (D95). Read once: the dialog is
+  // mounted by the tap that opens it, so storage is already there. A member who has left the
+  // boat since — or a « Quelqu'un d'autre » whose name belonged to that one job — falls back
+  // to « Moi », never to a stale identity.
+  const [by, setBy] = useState<string>(() => {
+    const remembered = readLastUsed<string>(boatId, "completion.by");
+    if (remembered === null || remembered === currentUserId) return "me";
+    return remembered === "me" || members.some((member) => member.id === remembered)
+      ? remembered
+      : "me";
+  });
+  const [otherName, setOtherName] = useState("");
+  const [hours, setHours] = useState(() =>
+    freshReading && engine !== null && engine.lastHours !== null
+      ? String(engine.lastHours).replace(".", ",")
+      : "",
+  );
+  const [nextDueAt, setNextDueAt] = useState("");
+  const [note, setNote] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  /**
+   * « Valide jusqu'au » only means one thing: an expiry printed on an object (D11). It belongs
+   * to a point that has no interval — a raft, flares, an extinguisher, an insurance — or to one
+   * that already carries such a date. On a point that computes its own deadline from an interval
+   * it is noise on the screen everybody uses, so it waits behind one tap.
+   */
+  const [validUntilOpen, setValidUntilOpen] = useState(punctual || Boolean(item.fixedDueAt));
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -235,6 +276,25 @@ function CompleteForm({
         toast.error(errorMessage(outcome.error));
         return;
       }
+      // Written on the save and never on a keystroke: an abandoned dialog teaches nothing (D95).
+      // « Quelqu'un d'autre » is a name for one job, not a habit: it clears the memory.
+      writeLastUsed(boatId, "completion.by", by === "other" ? null : by);
+      // What the tick has just promised, read back in the toast that confirms it.
+      const nextDue = nextDueSentence(
+        {
+          completedAt: parsed.data.completedAt,
+          engineHours: parsed.data.engineHours,
+          intervalMonths: item.intervalMonths,
+          intervalHours: item.intervalHours,
+          fixedDueAt: parsed.data.nextDueAt,
+        },
+        {
+          date: formatDate,
+          hours: formatHours,
+          both: (values) => t("nextDueBoth", values),
+          sentence: (values) => t("nextDue", values),
+        },
+      );
       const saved: SavedCompletion = {
         id: completionId,
         completedAt: parsed.data.completedAt,
@@ -247,6 +307,7 @@ function CompleteForm({
       if (outcome.status === "queued") {
         undoToast({
           message: to("savedOnDevice"),
+          description: nextDue ?? undefined,
           undoLabel: t("undo"),
           onUndo: () => {
             outbox.discard(completionId);
@@ -258,6 +319,7 @@ function CompleteForm({
       }
       undoToast({
         message: t("saved", { label: item.label }),
+        description: nextDue ?? undefined,
         undoLabel: t("undo"),
         onUndo: () => {
           void deleteCompletion({ boatId, completionId }).then((undo) => {
@@ -285,20 +347,26 @@ function CompleteForm({
           max={todayString()}
         />
       </Field>
-      <Field id="complete-by" label={t("by")}>
-        <NativeSelect id="complete-by" value={by} onChange={(event) => setBy(event.target.value)}>
-          <option value="me">
-            {t("me")} ({currentUserName})
-          </option>
+      {/* A boat has two or three people: the answer is a row of chips, not a wheel to spin
+          on the gesture people repeat every week. « Autre » keeps the free-text line. */}
+      <Field id="complete-by" label={t("by")} group>
+        <ToggleGroup
+          type="single"
+          value={by}
+          aria-labelledby="complete-by-label"
+          className="flex-wrap justify-start"
+          onValueChange={(next) => next && setBy(next)}
+        >
+          <ToggleGroupItem value="me">{t("me")}</ToggleGroupItem>
           {members
             .filter((member) => member.id !== currentUserId)
             .map((member) => (
-              <option key={member.id} value={member.id}>
+              <ToggleGroupItem key={member.id} value={member.id}>
                 {member.name}
-              </option>
+              </ToggleGroupItem>
             ))}
-          <option value="other">{t("someoneElse")}</option>
-        </NativeSelect>
+          <ToggleGroupItem value="other">{t("otherChip")}</ToggleGroupItem>
+        </ToggleGroup>
       </Field>
       {by === "other" ? (
         <Field id="complete-other" label={t("otherName")} required error={errors.completedByName}>
@@ -345,21 +413,51 @@ function CompleteForm({
           </div>
         </Field>
       ) : null}
-      <Field
-        id="complete-valid-until"
-        label={t("validUntil")}
-        help={t("validUntilHelp")}
-        error={errors.nextDueAt}
-      >
-        <Input
+      {validUntilOpen ? (
+        <Field
           id="complete-valid-until"
-          type="date"
-          value={nextDueAt}
-          min={addDays(completedAt, 1)}
-          onChange={(event) => setNextDueAt(event.target.value)}
-          className="w-auto min-w-40 num"
-        />
-      </Field>
+          label={t("validUntil")}
+          help={t("validUntilHelp")}
+          error={errors.nextDueAt}
+        >
+          <div className="flex flex-col gap-2">
+            {/* Rule 13: chips + the native wheel. The field only ever means an expiry, so the
+                two shortcuts that matter are the two durations printed on the objects. */}
+            <DateField
+              id="complete-valid-until"
+              value={nextDueAt}
+              min={addDays(completedAt, 1)}
+              future
+              onValueChange={setNextDueAt}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNextDueAt(addYearsTo(completedAt, 1))}
+              >
+                {t("plusOneYear")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNextDueAt(addYearsTo(completedAt, 2))}
+              >
+                {t("plusTwoYears")}
+              </Button>
+            </div>
+          </div>
+        </Field>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          className="self-start px-2"
+          onClick={() => setValidUntilOpen(true)}
+        >
+          {t("addValidUntil")}
+        </Button>
+      )}
       <Field id="complete-note" label={t("note")} error={errors.note}>
         <Input
           id="complete-note"

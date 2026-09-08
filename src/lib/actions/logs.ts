@@ -52,6 +52,50 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     return fail("errors.conflict");
   }
 
+  // ---- what the ticked points will need, decided before anything is written ---------------
+  // Only work that is done acknowledges a checklist point.
+  const ticked = values.status === "done" ? checklistItemIds : [];
+  const filled = engineHours.filter(
+    (entry): entry is { engineId: string; hours: number } => entry.hours !== null,
+  );
+  const emptied = engineHours.filter((entry) => entry.hours === null).map((e) => e.engineId);
+  const hoursOf = (engineId: string | null) =>
+    engineId ? (filled.find((entry) => entry.engineId === engineId)?.hours ?? null) : null;
+
+  const { data: linked, error: linkedError } = await supabase
+    .from("checklist_completions")
+    .select("id, checklist_item_id")
+    .eq("boat_id", boatId)
+    .eq("maintenance_log_id", id);
+  if (linkedError) return fail(dbErrorKey(linkedError));
+
+  const obsolete = (linked ?? []).filter((row) => !ticked.includes(row.checklist_item_id));
+  const missing = ticked.filter(
+    (itemId) => !(linked ?? []).some((row) => row.checklist_item_id === itemId),
+  );
+
+  let newItems: { id: string; engine_id: string | null; interval_hours: number | null }[] = [];
+  if (missing.length > 0) {
+    const { data: items, error: itemsError } = await supabase
+      .from("checklist_items")
+      .select("id, engine_id, interval_hours")
+      .eq("boat_id", boatId)
+      .in("id", missing);
+    if (itemsError) return fail(dbErrorKey(itemsError));
+    newItems = items ?? [];
+
+    // The database refuses a completion without hours on an hour-based point; the form greys
+    // those points out, so reaching this is a race — say so instead of writing half the form.
+    //
+    // Asked here, before the first write, and not once the intervention is already in the
+    // journal: the person was told « rien n'a été enregistré » while the line was on screen
+    // behind the message. Nothing is written until everything the form asked for can be.
+    const blocked = newItems.find(
+      (item) => item.interval_hours !== null && hoursOf(item.engine_id) === null,
+    );
+    if (blocked) return fail("errors.engine_hours_required");
+  }
+
   const row = {
     id,
     boat_id: boatId,
@@ -82,11 +126,6 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
   if (error) return fail(dbErrorKey(error));
 
   // ---- engine readings ------------------------------------------------------------------
-  const filled = engineHours.filter(
-    (entry): entry is { engineId: string; hours: number } => entry.hours !== null,
-  );
-  const emptied = engineHours.filter((entry) => entry.hours === null).map((e) => e.engineId);
-
   if (filled.length > 0) {
     const { error: readingError } = await supabase.from("engine_hour_readings").upsert(
       filled.map((entry) => ({
@@ -113,15 +152,6 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
   }
 
   // ---- checklist completions ------------------------------------------------------------
-  // Only work that is done acknowledges a checklist point.
-  const ticked = values.status === "done" ? checklistItemIds : [];
-  const { data: linked, error: linkedError } = await supabase
-    .from("checklist_completions")
-    .select("id, checklist_item_id")
-    .eq("maintenance_log_id", id);
-  if (linkedError) return fail(dbErrorKey(linkedError));
-
-  const obsolete = (linked ?? []).filter((row) => !ticked.includes(row.checklist_item_id));
   if (obsolete.length > 0) {
     const { error: dropError } = await supabase
       .from("checklist_completions")
@@ -133,29 +163,9 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     if (dropError) return fail(dbErrorKey(dropError));
   }
 
-  const missing = ticked.filter(
-    (itemId) => !(linked ?? []).some((row) => row.checklist_item_id === itemId),
-  );
-  if (missing.length > 0) {
-    const { data: items, error: itemsError } = await supabase
-      .from("checklist_items")
-      .select("id, engine_id, interval_hours")
-      .eq("boat_id", boatId)
-      .in("id", missing);
-    if (itemsError) return fail(dbErrorKey(itemsError));
-
-    const hoursOf = (engineId: string | null) =>
-      engineId ? (filled.find((entry) => entry.engineId === engineId)?.hours ?? null) : null;
-
-    // The database refuses a completion without hours on an hour-based point; the form greys
-    // those points out, so reaching this is a race — say so instead of writing half the form.
-    const blocked = (items ?? []).find(
-      (item) => item.interval_hours !== null && hoursOf(item.engine_id) === null,
-    );
-    if (blocked) return fail("errors.engine_hours_required");
-
+  if (newItems.length > 0) {
     const { error: completionError } = await supabase.from("checklist_completions").upsert(
-      (items ?? []).map((item) => ({
+      newItems.map((item) => ({
         boat_id: boatId,
         checklist_item_id: item.id,
         completed_at: values.performedAt,

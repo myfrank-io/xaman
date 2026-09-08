@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { ChecklistItemForm } from "@/components/checklist/ChecklistItemForm";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditChecklistItemPage({
@@ -19,7 +20,7 @@ export default async function EditChecklistItemPage({
     { data: items },
     { count },
   ] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("checklist_items")
       .select("*")

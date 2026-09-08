@@ -94,7 +94,7 @@ function Tile({
         {badge ? <span className="hidden sm:block">{badge}</span> : null}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-body leading-tight font-medium sm:text-h3 sm:whitespace-normal">
+        <span className="block truncate text-body leading-tight font-medium sm:line-clamp-2 sm:text-h3 sm:break-words sm:whitespace-normal">
           {title}
         </span>
         <span className="block truncate num text-caption text-ink-2">{meta}</span>
@@ -122,7 +122,11 @@ export async function ChecklistGrid({
 }) {
   const t = await getTranslations("checklist.card");
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent lg:grid-cols-4">
+    // Three columns at `lg`, not four: the content box on the iPad in landscape is about 704 px
+    // (1024 − sidebar − gutters), so a fourth column left ~130 px of text per tile and « Élec-
+    // tricité / Électronique » or « Gréement et voiles » lost their end. Nine tiles / three is
+    // also a full last row. The fixed order is untouched — the position is the memory (D21).
+    <div className="overflow-hidden rounded-xl border border-border bg-surface sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent lg:grid-cols-3">
       {categories.map((category) => {
         const neverDone = category.total > 0 && category.neverRecorded === category.total;
         const ratio = neverDone || category.total === 0 ? null : category.progress;

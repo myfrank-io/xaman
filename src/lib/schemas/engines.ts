@@ -47,7 +47,6 @@ export const upsertEngineSchema = z.object({
   tracksHours: z.boolean().default(true),
   notes: nullableText(2000),
 });
-export type UpsertEngineInput = z.input<typeof upsertEngineSchema>;
 
 export const setEngineActiveSchema = z.object({
   boatId: uuid,
@@ -65,7 +64,6 @@ export const addHourReadingSchema = z.object({
   // D12: the counter was replaced, the lower value is legitimate
   counterReplaced: z.boolean().default(false),
 });
-export type AddHourReadingInput = z.input<typeof addHourReadingSchema>;
 
 export const updateHourReadingSchema = z.object({
   boatId: uuid,

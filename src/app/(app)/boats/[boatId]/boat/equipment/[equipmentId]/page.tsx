@@ -5,6 +5,7 @@ import { EquipmentSheet, type EquipmentLogRow } from "@/components/equipment/Equ
 import { can, type BoatRole } from "@/lib/permissions";
 import { AuditFooter } from "@/components/common/AuditFooter";
 import { auditNames } from "@/lib/queries/audit-names";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 function specsToList(specs: unknown): { key: string; value: string }[] {
@@ -30,7 +31,7 @@ export default async function EquipmentPage({
       .eq("boat_id", boatId)
       .is("deleted_at", null)
       .maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("maintenance_logs_view")
       .select("id, title, performed_at, status, cost, contact_name")

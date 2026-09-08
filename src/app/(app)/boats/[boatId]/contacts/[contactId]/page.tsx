@@ -20,6 +20,7 @@ import {
 } from "@/lib/queries/boat-routes";
 import { AuditFooter } from "@/components/common/AuditFooter";
 import { auditNames } from "@/lib/queries/audit-names";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const REFERENCE_LIMIT = 10;
@@ -39,7 +40,7 @@ export default async function ContactPage({
     { data: purchases, count: purchasesCount },
     { count: haulOutsCount },
   ] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     // A trashed provider has left the directory: their card is restored from /trash, not here.
     supabase
       .from("contacts")

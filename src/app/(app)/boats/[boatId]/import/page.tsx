@@ -7,6 +7,7 @@ import { loadImportCatalog } from "@/lib/import/catalog";
 import { descriptorOf, isImportEntity } from "@/lib/import/entities";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath, boatTabPath, stockPath } from "@/lib/queries/boat-routes";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -24,18 +25,20 @@ export default async function ImportPage({
   if (!isImportEntity(entity)) notFound();
 
   const supabase = await createClient();
-  const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
-  if (!role || !can(role as BoatRole, "write")) notFound();
 
   // What is already on the boat, so the screen can say « 3 reconnues » before writing anything.
+  // Tout ne dépend que de `?entity=` : le rôle n'a rien à apprendre aux deux lectures, il n'a
+  // donc pas à passer devant elles.
   const descriptor = descriptorOf(entity);
   let query = supabase.from(descriptor.table).select(descriptor.keyColumns).eq("boat_id", boatId);
   if (descriptor.softDeleted) query = query.is("deleted_at", null);
-  const [{ data: existing }, catalog] = await Promise.all([
+  const [{ data: role }, { data: existing }, catalog] = await Promise.all([
+    readBoatRole(boatId),
     query as unknown as Promise<{ data: Record<string, unknown>[] | null }>,
     // What a line may name: the boat's checklist points, or its engines and their counters.
     loadImportCatalog(supabase, boatId, descriptor),
   ]);
+  if (!role || !can(role as BoatRole, "write")) notFound();
   const existingKeys = (existing ?? [])
     .map((row) => descriptor.existingKey(row))
     .filter((key) => key !== "");

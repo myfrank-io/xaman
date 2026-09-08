@@ -34,7 +34,6 @@ export const completeItemSchema = z
       ctx.addIssue({ code: "custom", path: ["nextDueAt"], message: "next_due_after" });
     }
   });
-export type CompleteItemInput = z.input<typeof completeItemSchema>;
 
 export const deleteCompletionSchema = z.object({
   boatId: uuid,

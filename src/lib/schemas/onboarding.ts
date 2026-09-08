@@ -31,4 +31,3 @@ export const finishOnboardingSchema = z.object({
     .max(NEW_BOAT_ENGINES_MAX)
     .default([]),
 });
-export type FinishOnboardingInput = z.input<typeof finishOnboardingSchema>;

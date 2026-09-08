@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 import type { ContactOption } from "@/components/contacts/specialties";
 import { Field } from "@/components/forms/Field";
+import { numberToInput } from "@/components/forms/form-values";
+import { readLastUsed, writeLastUsed } from "@/components/forms/use-last-used";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { SupplierField } from "@/components/supplies/SupplierField";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,7 @@ import { NumericField } from "@/components/ui/numeric-field";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { upsertPurchase } from "@/lib/actions/purchases";
-import { formatDate, todayString } from "@/lib/format";
+import { formatCurrency, formatDate, todayString } from "@/lib/format";
 import type { GasFacts } from "@/lib/gas";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { upsertPurchaseSchema } from "@/lib/schemas/purchases";
@@ -115,6 +117,11 @@ function GasBottleForm({
   const [supplierName, setSupplierName] = useState(defaults.supplierName ?? "");
   const [amount, setAmount] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
+  // The price of the last bottle, offered as a chip rather than typed again (D95). A bottle
+  // costs the same from one change to the next, but not enough to fill the field unasked: a
+  // wrong amount written by the app would pass for a fact. Read once — the dialog is mounted
+  // by the tap that opens it, so storage is already there.
+  const [lastAmount] = useState(() => readLastUsed<number>(boatId, "gas.amount"));
 
   const bottleType = (choice === OTHER ? otherType : choice).trim();
 
@@ -152,6 +159,8 @@ function GasBottleForm({
         toast.error(errorMessage(result.error));
         return;
       }
+      // Written on the save and never on a keystroke: an abandoned form teaches nothing (D95).
+      writeLastUsed(boatId, "gas.amount", parsed.data.amount);
       toast.success(t("saved"), {
         description:
           facts.lastAt !== null && facts.daysSinceLast !== null
@@ -221,16 +230,27 @@ function GasBottleForm({
       </div>
 
       <Field id="gas-amount" label={tp("fields.amount")} error={errors.amount}>
-        <NumericField
-          id="gas-amount"
-          value={amount}
-          onValueChange={(raw) => setAmount(raw)}
-          suffix="€"
-          enterKeyHint="done"
-          className="max-w-40"
-          containerClassName="max-w-40"
-          aria-invalid={errors.amount ? true : undefined}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <NumericField
+            id="gas-amount"
+            value={amount}
+            onValueChange={(raw) => setAmount(raw)}
+            suffix="€"
+            enterKeyHint="done"
+            className="max-w-40"
+            containerClassName="max-w-40"
+            aria-invalid={errors.amount ? true : undefined}
+          />
+          {lastAmount !== null ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAmount(numberToInput(lastAmount))}
+            >
+              {t("lastPrice", { amount: formatCurrency(lastAmount) })}
+            </Button>
+          ) : null}
+        </div>
       </Field>
 
       {facts.previousAt ? (

@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { ChevronLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { CategoryDot } from "@/components/common/CategoryBadge";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ListRow } from "@/components/common/ListRow";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
@@ -79,7 +78,6 @@ export function EquipmentSheet({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [removing, setRemoving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [removedAt, setRemovedAt] = useState(() => todayString());
 
   const subtitle = [
@@ -123,9 +121,10 @@ export function EquipmentSheet({
         toast.error(errorMessage(result.error));
         return;
       }
-      setDeleting(false);
       undoToast({
         message: t("trash.done"),
+        // What the confirmation used to say, on the line the toast keeps for it (rule 13).
+        description: t("trash.kept", { name: item.name }),
         undoLabel: t("trash.undo"),
         onUndo: () => {
           void restoreTrashedEquipment({ boatId, id: item.id }).then((undo) => {
@@ -186,7 +185,13 @@ export function EquipmentSheet({
                     {t("remove")}
                   </Button>
                 )}
-                <Button type="button" variant="ghost" onClick={() => setDeleting(true)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  aria-busy={pending}
+                  onClick={trash}
+                >
                   <Trash2Icon />
                   {t("trash.action")}
                 </Button>
@@ -295,16 +300,6 @@ export function EquipmentSheet({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={deleting}
-        onOpenChange={setDeleting}
-        title={t("trash.title")}
-        description={t("trash.description", { name: item.name })}
-        confirmLabel={t("trash.confirm")}
-        pending={pending}
-        onConfirm={trash}
-      />
     </div>
   );
 }

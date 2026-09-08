@@ -42,8 +42,8 @@ export function RestockChecklist({
   canWrite: boolean;
 }) {
   const t = useTranslations("restock");
-  const ts = useTranslations("equipment.stock");
-  const tu = useTranslations("equipment.stock.units");
+  const ts = useTranslations("parts");
+  const tu = useTranslations("parts.units");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [, startTransition] = useTransition();

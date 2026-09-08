@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { HaulOutForm } from "@/components/haul-outs/HaulOutForm";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 // Edit a haul-out (E6-1): the same page form, `ended_at` filled at the launch.
@@ -13,7 +14,7 @@ export default async function EditHaulOutPage({
   const { boatId, haulOutId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: haulOut }, { data: contacts }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("haul_outs")
       .select("*")

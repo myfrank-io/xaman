@@ -14,6 +14,16 @@ describe("csv export", () => {
   it("neutralises formula injection", () => {
     expect(csvField("=SUM(A1)")).toBe("'=SUM(A1)");
     expect(csvField("-5")).toBe("'-5");
+    expect(csvField("+1")).toBe("'+1");
+    expect(csvField("@import")).toBe("'@import");
+  });
+
+  it("neutralises a formula through toCsv, quoting it when it also holds a separator", () => {
+    const csv = toCsv(
+      [{ designation: "=1+1;2" }],
+      [{ header: "Désignation", value: (row) => row.designation }],
+    );
+    expect(csv).toBe('\ufeffDésignation\r\n"\'=1+1;2"\r\n');
   });
 
   it("writes a BOM, a header line and CRLF line endings", () => {

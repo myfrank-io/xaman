@@ -9,8 +9,12 @@
 import { Pool, type PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+// Needs a database, like `import-write.test.ts`: DATABASE_URL, or the whole file skips itself.
+// Defaulting to the local stack's URL made `pnpm test` — the project's definition of done — red
+// with ECONNREFUSED on any machine without Docker running. CI sets the variable (.github/
+// workflows/ci.yml), so nothing here is skipped there.
+const DATABASE_URL = process.env.DATABASE_URL;
+const describeWithDb = DATABASE_URL ? describe : describe.skip;
 
 type User = { id: string; email: string };
 
@@ -111,6 +115,7 @@ const WRITE_ONLY_TABLES = [
 ] as const;
 
 beforeAll(async () => {
+  if (!DATABASE_URL) return;
   try {
     await pool.query("select 1");
   } catch (e) {
@@ -124,7 +129,7 @@ afterAll(async () => {
   await pool.end();
 });
 
-describe("read access (select)", () => {
+describeWithDb("read access (select)", () => {
   it.each(BUSINESS_TABLES)(
     "members of every role see %s of their boat, outsiders see nothing",
     async (table) => {
@@ -222,7 +227,7 @@ describe("read access (select)", () => {
   });
 });
 
-describe("insert", () => {
+describeWithDb("insert", () => {
   const insertLog = (u: User, createdBy: string) =>
     run(
       u,
@@ -376,7 +381,7 @@ describe("insert", () => {
  * a line waiting for a decision has to be ignored first, and a validated one is out of reach for
  * good — its file is the attachment of the intervention it produced.
  */
-describe("inbox_items", () => {
+describeWithDb("inbox_items", () => {
   const INBOX = "00000000-0000-0000-0000-000000009001";
   const path = (id: string) => `boats/${BOAT}/inbox/${id}.jpg`;
   const insert = (user: User, id: string, createdBy = user.id) =>
@@ -462,7 +467,7 @@ describe("inbox_items", () => {
  * has to a boat of their own, so what it refuses matters as much as what it creates — and since
  * D65 what it deliberately does NOT create matters too.
  */
-describe("create_boat", () => {
+describeWithDb("create_boat", () => {
   const NEW_BOAT = "00000000-0000-0000-0000-00000000b0f1";
   const ORC50 = "00000000-0000-0000-0000-0000000000a0";
 
@@ -899,7 +904,7 @@ describe("create_boat", () => {
   });
 });
 
-describe("update", () => {
+describeWithDb("update", () => {
   it("maintenance_logs: owner/editor edit everything; a pro edits only their own rows", async () => {
     const setTitle = (u: User, id: string) =>
       run(u, "update public.maintenance_logs set title = 'Modifié' where id = $1", [id]);
@@ -1032,7 +1037,7 @@ describe("update", () => {
   });
 });
 
-describe("delete", () => {
+describeWithDb("delete", () => {
   it("maintenance_logs: owner/editor may delete, pro and viewer may not (even their own rows)", async () => {
     const del = (u: User, id: string) =>
       run(u, "delete from public.maintenance_logs where id = $1", [id]);
@@ -1069,7 +1074,7 @@ describe("delete", () => {
   });
 });
 
-describe("invitation functions", () => {
+describeWithDb("invitation functions", () => {
   it("get_invitation_preview works anonymously and exposes only the preview", async () => {
     const preview = await as(null, async (c) => {
       const res = await c.query("select * from public.get_invitation_preview($1)", [
@@ -1112,7 +1117,7 @@ describe("invitation functions", () => {
   });
 });
 
-describe("storage bucket boat-files", () => {
+describeWithDb("storage bucket boat-files", () => {
   const OBJECT = `boats/${BOAT}/maintenance_log/${LOG_OWNER}/photo.jpg`;
   const insertObject = (u: User) =>
     run(u, "insert into storage.objects (bucket_id, name, owner) values ('boat-files', $1, $2)", [
@@ -1185,7 +1190,7 @@ const ATT_OWNER = "00000000-0000-0000-0000-000000008001";
 const ATT_PRO = "00000000-0000-0000-0000-000000008002";
 const PURCHASE = "00000000-0000-0000-0000-000000007001";
 
-describe("attachments (E10-1)", () => {
+describeWithDb("attachments (E10-1)", () => {
   const pathFor = (owner: string, entity: string, id: string, file: string) =>
     `boats/${owner}/${entity}/${id}/${file}`;
 
@@ -1348,7 +1353,7 @@ describe("attachments (E10-1)", () => {
 const COMPLETION_OWNER = "00000000-0000-0000-0000-000000004001";
 const COMPLETION_PRO = "00000000-0000-0000-0000-000000004002";
 
-describe("invitations issued by an editor (D28)", () => {
+describeWithDb("invitations issued by an editor (D28)", () => {
   const invite = (u: User, role: string, token: string, days: number | null) =>
     run(
       u,
@@ -1402,7 +1407,7 @@ describe("invitations issued by an editor (D28)", () => {
   });
 });
 
-describe("cancelling a completion (D15)", () => {
+describeWithDb("cancelling a completion (D15)", () => {
   const del = (u: User, id: string) =>
     run(u, "delete from public.checklist_completions where id = $1", [id]);
 
@@ -1456,7 +1461,7 @@ describe("cancelling a completion (D15)", () => {
   });
 });
 
-describe("engine deletion guard (D14)", () => {
+describeWithDb("engine deletion guard (D14)", () => {
   it("an engine carrying readings or checklist items cannot be deleted", async () => {
     const used = await run(U.owner, "delete from public.engines where id = $1", [ENGINE]);
     expect(used.ok).toBe(false);
@@ -1483,7 +1488,7 @@ describe("engine deletion guard (D14)", () => {
   });
 });
 
-describe("trash and engine hour readings (D5)", () => {
+describeWithDb("trash and engine hour readings (D5)", () => {
   it("trashing a log parks its readings in pending_engine_hours, restoring recreates them", async () => {
     const out = await as(U.owner, async (c) => {
       const readings = async () =>
@@ -1519,7 +1524,7 @@ describe("trash and engine hour readings (D5)", () => {
   });
 });
 
-describe("future dates (D17)", () => {
+describeWithDb("future dates (D17)", () => {
   it("a completion dated in the future is refused", async () => {
     const res = await run(
       U.owner,
@@ -1562,7 +1567,7 @@ describe("future dates (D17)", () => {
   });
 });
 
-describe("status views", () => {
+describeWithDb("status views", () => {
   const VIEWS = [
     "checklist_item_status",
     "checklist_category_progress",
@@ -1642,7 +1647,7 @@ describe("status views", () => {
 
 // D73: the dinghy's outboard has no hour meter. Nothing asks it for a reading, and the hour
 // deadlines its checklist points inherited from the template stop pretending to be deadlines.
-describe("engine without an hour meter (D73)", () => {
+describeWithDb("engine without an hour meter (D73)", () => {
   const meterless = (c: PoolClient) =>
     c.query("update public.engines set tracks_hours = false where id = $1", [ENGINE]);
 
@@ -1723,7 +1728,7 @@ describe("engine without an hour meter (D73)", () => {
 });
 
 // E1-6b: the secondary views follow the same tenant isolation as the tables they read.
-describe("secondary views", () => {
+describeWithDb("secondary views", () => {
   it.each(["expenses_by_category", "engine_current_hours"] as const)(
     "%s: members see their boat, outsiders see nothing, anon is denied",
     async (v) => {
@@ -1785,7 +1790,7 @@ describe("secondary views", () => {
   });
 });
 
-describe("boat_todo_queue", () => {
+describeWithDb("boat_todo_queue", () => {
   const seedQueue = async (c: PoolClient) => {
     await c.query("set local role service_role");
     await c.query(
@@ -1834,7 +1839,7 @@ describe("boat_todo_queue", () => {
   });
 });
 
-describe("journal helpers (0005)", () => {
+describeWithDb("journal helpers (0005)", () => {
   const suggestions = (u: User | null, query: string) =>
     as(u, async (c) => {
       try {
@@ -1962,7 +1967,7 @@ describe("journal helpers (0005)", () => {
   });
 });
 
-describe("parts stock (0010)", () => {
+describeWithDb("parts stock (0010)", () => {
   const PART = "00000000-0000-0000-0000-000000006001";
 
   it("an editor adjusts the quantity atomically and the line counts as checked", async () => {
@@ -2041,7 +2046,7 @@ describe("parts stock (0010)", () => {
 // ---------------------------------------------------------------------------------------------
 // The trash covers the stock and the directory (migration 0012, D40 / D41)
 // ---------------------------------------------------------------------------------------------
-describe("trash for parts and contacts (0012)", () => {
+describeWithDb("trash for parts and contacts (0012)", () => {
   const PART = "00000000-0000-0000-0000-000000006001";
   const CONTACT = "00000000-0000-0000-0000-00000000d001";
 
@@ -2237,7 +2242,7 @@ describe("trash for parts and contacts (0012)", () => {
   });
 });
 
-describe("trash for equipment (0014)", () => {
+describeWithDb("trash for equipment (0014)", () => {
   const EQUIP = "00000000-0000-0000-0000-00000000f001";
 
   it("owner and editor may trash and restore; pro, viewer and stranger may not", async () => {
@@ -2339,7 +2344,7 @@ describe("trash for equipment (0014)", () => {
  * That is not a policy to loosen: it is what stops a `pro` from filing a line under someone
  * else's name. The action is what must change, and these cases pin both halves.
  */
-describe("editing an existing row (D42)", () => {
+describeWithDb("editing an existing row (D42)", () => {
   const UPSERT_WITHOUT_CREATED_BY = `
     insert into public.maintenance_logs (id, boat_id, title, status, performed_at, updated_by)
     values ($1, $2, 'Réécrit par un upsert', 'done', current_date, auth.uid())

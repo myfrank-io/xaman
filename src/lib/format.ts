@@ -3,7 +3,7 @@ import { fr } from "date-fns/locale";
 
 // Dates are stored as `yyyy-MM-dd` strings (Postgres `date`). All display formatting goes through here.
 
-export const DATE_FORMAT = "dd/MM/yyyy";
+const DATE_FORMAT = "dd/MM/yyyy";
 
 export function toDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
@@ -40,13 +40,20 @@ export function formatCurrency(amount: number | string | null | undefined): stri
   return Number.isFinite(n) ? currencyFormatter.format(n) : "—";
 }
 
-const hoursFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+const oneDecimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
 
 /** 1 234,5 h */
 export function formatHours(hours: number | string | null | undefined): string {
   if (hours === null || hours === undefined || hours === "") return "—";
   const n = typeof hours === "string" ? Number(hours) : hours;
-  return Number.isFinite(n) ? `${hoursFormatter.format(n)} h` : "—";
+  return Number.isFinite(n) ? `${oneDecimal.format(n)} h` : "—";
+}
+
+/** « 2,4 Mo », « 812 ko », « 800 o » — the weight shown next to a document chip. */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} ko`;
+  return `${oneDecimal.format(bytes / (1024 * 1024))} Mo`;
 }
 
 const numberFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });

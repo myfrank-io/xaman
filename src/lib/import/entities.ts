@@ -696,7 +696,8 @@ export function rejectionReason(
   if (entity === "readings") return readingReason(row, match);
   if (!cellText(row.name, IMPORT_NAME_MAX)) return "import.errors.noName";
   if (entity === "contacts") {
-    if (!cellText(row.specialty, 60)) return "import.errors.noSpecialty";
+    // A trade is optional (D95 batch): a phone number worth keeping is worth keeping without one,
+    // and « Autre » is what an empty trade reads as everywhere it is displayed.
     const email = cellText(row.email, 160);
     if (email && !EMAIL.test(email)) return "import.errors.badEmail";
   }

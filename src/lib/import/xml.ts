@@ -21,7 +21,7 @@ const ENTITIES: Record<string, string> = {
 };
 
 /** `&amp;`, `&#233;`, `&#xE9;` — everything Excel writes into a cell of text. */
-export function decodeEntities(value: string): string {
+function decodeEntities(value: string): string {
   if (!value.includes("&")) return value;
   return value.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, body: string) => {
     if (body.startsWith("#x") || body.startsWith("#X")) {

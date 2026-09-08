@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { can, type BoatRole } from "@/lib/permissions";
 import { usedSpecialties } from "@/lib/queries/contact-specialties";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditContactPage({
@@ -13,7 +14,7 @@ export default async function EditContactPage({
   const { boatId, contactId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: contact }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("contacts")
       .select("*")
