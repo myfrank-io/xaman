@@ -182,6 +182,14 @@ describeWithDb("read access (select)", () => {
       "select delivery_status, delivery_reason, delivery_updated_at from public.boat_invitations",
     );
     expect(delivery.ok).toBe(true);
+
+    // D112 (0031): the reminders are read on the Membres screen — « relancée 3 fois » is what
+    // ends the waiting — and written by the Server Action alone, with the service key.
+    const reminders = await run(
+      U.owner,
+      "select reminded_at, reminder_count from public.boat_invitations",
+    );
+    expect(reminders.ok).toBe(true);
     for (const column of ["email_id", "delivery_detail"]) {
       const hidden = await run(U.owner, `select ${column} from public.boat_invitations`);
       expect(hidden.ok, column).toBe(false);
@@ -1013,6 +1021,18 @@ describeWithDb("update", () => {
         [BOAT],
       ),
     ).toEqual({ ok: true, rowCount: 0 });
+
+    // D112 (0031): a reminder is a Server Action, never a browser writing a date on a row.
+    // `revoked_at` stays the single column `authenticated` may update on this table.
+    for (const column of ["reminded_at = now()", "reminder_count = 5", "expires_at = now()"]) {
+      const written = await run(
+        U.owner,
+        `update public.boat_invitations set ${column} where boat_id = $1`,
+        [BOAT],
+      );
+      expect(written.ok, column).toBe(false);
+      if (!written.ok) expect(written.code, column).toBe("42501");
+    }
   });
 
   it("profiles: a user edits their own display data only, never is_platform_admin", async () => {
@@ -1767,6 +1787,11 @@ describeWithDb("secondary views", () => {
     );
     expect(columns).not.toContain("email_id");
     expect(columns).not.toContain("delivery_detail");
+    // D112: the reminders are read from the same place as the rest of an invitation.
+    expect(columns).toEqual(expect.arrayContaining(["reminded_at", "reminder_count"]));
+    // A recreated view comes back granted to everyone by Supabase's default privileges; 0031
+    // restates what 0004 wanted, and this is what would have caught the drift 0023 left.
+    expect(await count(null, "boat_invitations_safe")).toBe(-1);
   });
 
   it("maintenance_logs_trash_view: a trashed log shows for owner/editor, nothing for outsiders", async () => {

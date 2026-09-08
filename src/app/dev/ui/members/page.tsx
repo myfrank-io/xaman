@@ -47,6 +47,11 @@ const MEMBERS: MemberRow[] = [
  * The four an invitation can be in since D79, in the order they hurt: an address that does not
  * exist (the one that started this — one letter wrong, « En attente » for fourteen days), one
  * still on its way, one received, and an expired one from before the mailer knew anything.
+ *
+ * Since D112 they also carry their reminders, and that is what to look at here: the bounced one
+ * has **no** « Relancer » (nothing will ever reach that address — the red panel below it is the
+ * way out), the delivered one has been relaunched twice and says so, and the expired one has
+ * never been. Three buttons on one line at 768 px is the shape to check.
  */
 const INVITATIONS: InvitationRow[] = [
   {
@@ -58,6 +63,8 @@ const INVITATIONS: InvitationRow[] = [
     validUntil: null,
     invitedByName: "Xavier Marin",
     delivery: { status: "bounced", reason: "no_email" },
+    remindedAt: null,
+    reminderCount: 0,
   },
   {
     id: "00000000-0000-4000-8000-0000000000b1",
@@ -68,6 +75,8 @@ const INVITATIONS: InvitationRow[] = [
     validUntil: "2027-03-03",
     invitedByName: "Xavier Marin",
     delivery: { status: "delivered", reason: null },
+    remindedAt: "2026-09-06T09:12:00.000Z",
+    reminderCount: 2,
   },
   {
     id: "00000000-0000-4000-8000-0000000000b3",
@@ -78,6 +87,8 @@ const INVITATIONS: InvitationRow[] = [
     validUntil: "2026-12-20",
     invitedByName: "Xavier Marin",
     delivery: { status: "sent", reason: null },
+    remindedAt: "2026-09-08T07:40:00.000Z",
+    reminderCount: 1,
   },
   {
     id: "00000000-0000-4000-8000-0000000000b2",
@@ -88,6 +99,8 @@ const INVITATIONS: InvitationRow[] = [
     validUntil: null,
     invitedByName: "Xavier Marin",
     delivery: null,
+    remindedAt: null,
+    reminderCount: 0,
   },
 ];
 

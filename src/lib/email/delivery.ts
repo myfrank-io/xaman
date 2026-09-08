@@ -90,6 +90,45 @@ export async function applyDelivery(emailId: string, delivery: Delivery): Promis
   return (data?.length ?? 0) > 0;
 }
 
+type PendingMessage = {
+  id: string;
+  email_id: string | null;
+  delivery_status: string | null;
+  delivery_updated_at: string | null;
+  created_at: string;
+  reminded_at: string | null;
+};
+
+const MESSAGE_COLUMNS = "id, email_id, delivery_status, delivery_updated_at, created_at";
+
+/**
+ * The invitations that carry a message, with when that message last went out.
+ *
+ * The second select is the deploy order (rule 3): the schema is pushed by hand, so a build can
+ * reach production before `0031` does and `reminded_at` may not exist yet. A read path degrades
+ * rather than stops — without it a resent invitation is simply asked about once a minute instead
+ * of every five seconds, which is a slower screen, not a wrong one.
+ */
+async function pendingMessages(
+  admin: ReturnType<typeof createAdminClient>,
+  invitationIds: string[],
+): Promise<PendingMessage[]> {
+  const withReminder = await admin
+    .from("boat_invitations")
+    .select(`${MESSAGE_COLUMNS}, reminded_at`)
+    .in("id", invitationIds)
+    .not("email_id", "is", null);
+  if (!withReminder.error) return withReminder.data;
+
+  console.error(`invitation delivery: read without the reminders — ${withReminder.error.message}`);
+  const { data } = await admin
+    .from("boat_invitations")
+    .select(MESSAGE_COLUMNS)
+    .in("id", invitationIds)
+    .not("email_id", "is", null);
+  return (data ?? []).map((row) => ({ ...row, reminded_at: null }));
+}
+
 /**
  * Asks the provider what became of the invitations about to be shown, and returns what changed.
  *
@@ -106,19 +145,17 @@ export async function refreshInvitationDeliveries(
 
   try {
     const admin = createAdminClient();
-    const { data: rows } = await admin
-      .from("boat_invitations")
-      .select("id, email_id, delivery_status, delivery_updated_at, created_at")
-      .in("id", invitationIds)
-      .not("email_id", "is", null);
+    const rows = await pendingMessages(admin, invitationIds);
 
     const now = Date.now();
-    const candidates = (rows ?? [])
+    const candidates = rows
       .filter((row) =>
         shouldAskAgain(
           {
             status: row.delivery_status,
-            sentAt: row.created_at,
+            // The last message this invitation sent, which a reminder replaces (D112): the ten
+            // minutes worth watching closely follow the send, not the invitation's birthday.
+            sentAt: row.reminded_at ?? row.created_at,
             askedAt: row.delivery_updated_at,
           },
           now,
