@@ -13,6 +13,12 @@ const PUBLIC_PREFIXES = [
   "/invite",
   "/health",
   "/dev",
+  // Machines with no session and no cookie jar: the mailer posting what became of an e-mail
+  // (D79). Being reachable is not being open — the endpoint's own door is the signature it
+  // verifies, and it refuses everything else. Without this line the POST is answered by a 307
+  // to /login, which a webhook sender does not follow: six events were lost that way before
+  // the logs showed it.
+  "/api/webhooks",
 ];
 
 // Screens a signed-in visitor has no business on: they already have what these ask for.
@@ -20,7 +26,7 @@ const PUBLIC_PREFIXES = [
 // link opened, and sending that visitor away would make the link do nothing.
 const SIGNED_IN_ELSEWHERE = ["/", "/login", "/signup"];
 
-function isPublic(pathname: string): boolean {
+export function isPublic(pathname: string): boolean {
   if (pathname === "/") return true;
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }

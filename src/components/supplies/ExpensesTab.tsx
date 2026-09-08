@@ -113,6 +113,15 @@ export async function ExpensesTab({
   const categoryTotals = groupByCategory(data.rows, t("uncategorized"), NO_CATEGORY_COLOR);
   const change = variation(total, data.previousTotal);
 
+  /**
+   * Where the lines are read (D86). Narrowing to a category used to move them a screen and a
+   * half down, under a heading that looked untouched: « ça sélectionne la ligne, c'est tout ».
+   * They now unroll under the row that was tapped — and the list below would be the same lines
+   * twice, so it steps aside. Without a breakdown to unroll into (a category filter that matches
+   * nothing) they stay downstairs, where the empty state offers the way out.
+   */
+  const linesUnderCategory = categoryId !== null && categoryTotals.length > 0;
+
   // The card carries the previous figure; the variation is the sentence under it.
   const comparison =
     data.previousTotal <= 0
@@ -241,6 +250,19 @@ export async function ExpensesTab({
                       label={category.name}
                     />
                   </Link>
+                  {/* The answer, right under the question. */}
+                  {active && linesUnderCategory ? (
+                    <div className="border-t border-border bg-surface-sunken">
+                      <ExpenseLines
+                        boatId={boatId}
+                        lines={data.lines}
+                        canWrite={canWrite}
+                        filtered={filtered}
+                        moreHref={data.moreHref}
+                        bare
+                      />
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
@@ -248,15 +270,17 @@ export async function ExpensesTab({
         </SectionCard>
       ) : null}
 
-      <SectionCard title={t("linesTitle")} bare>
-        <ExpenseLines
-          boatId={boatId}
-          lines={data.lines}
-          canWrite={canWrite}
-          filtered={filtered}
-          moreHref={data.moreHref}
-        />
-      </SectionCard>
+      {linesUnderCategory ? null : (
+        <SectionCard title={t("linesTitle")} bare>
+          <ExpenseLines
+            boatId={boatId}
+            lines={data.lines}
+            canWrite={canWrite}
+            filtered={filtered}
+            moreHref={data.moreHref}
+          />
+        </SectionCard>
+      )}
     </div>
   );
 }

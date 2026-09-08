@@ -2,8 +2,7 @@ import "server-only";
 
 import {
   deliveryFromEmail,
-  isFinalDelivery,
-  toDeliveryStatus,
+  shouldAskAgain,
   type Delivery,
   type DeliveryReason,
   type DeliveryStatus,
@@ -25,8 +24,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
  */
 const ENDPOINT = "https://api.resend.com/emails";
 
-/** Don't ask the provider about the same message twice in a minute. */
-const POLL_THROTTLE_MS = 60_000;
 /** Enough for a crew, few enough to never hold a screen: the rest catches up on the next visit. */
 const POLL_LIMIT = 4;
 
@@ -96,8 +93,9 @@ export async function applyDelivery(emailId: string, delivery: Delivery): Promis
 /**
  * Asks the provider what became of the invitations about to be shown, and returns what changed.
  *
- * Costs nothing in the steady state: a delivered or bounced message is final, and a message
- * asked about a minute ago is left alone — so the usual render polls nothing at all.
+ * Costs nothing in the steady state: a delivered or bounced message is final, and an old send
+ * is asked about at most once a minute — so the usual render polls nothing at all. A send from
+ * the last ten minutes is asked about every five seconds instead: see `shouldAskAgain`.
  */
 export async function refreshInvitationDeliveries(
   invitationIds: string[],
@@ -110,15 +108,22 @@ export async function refreshInvitationDeliveries(
     const admin = createAdminClient();
     const { data: rows } = await admin
       .from("boat_invitations")
-      .select("id, email_id, delivery_status, delivery_updated_at")
+      .select("id, email_id, delivery_status, delivery_updated_at, created_at")
       .in("id", invitationIds)
       .not("email_id", "is", null);
 
-    const stale = Date.now() - POLL_THROTTLE_MS;
+    const now = Date.now();
     const candidates = (rows ?? [])
-      .filter((row) => !isFinalDelivery(toDeliveryStatus(row.delivery_status)))
-      // Never asked about (no timestamp) counts as stale: the answer is what is missing.
-      .filter((row) => !row.delivery_updated_at || Date.parse(row.delivery_updated_at) < stale)
+      .filter((row) =>
+        shouldAskAgain(
+          {
+            status: row.delivery_status,
+            sentAt: row.created_at,
+            askedAt: row.delivery_updated_at,
+          },
+          now,
+        ),
+      )
       .slice(0, POLL_LIMIT);
 
     // Sequential on purpose: four at once is a burst the provider rate-limits, and a 429 here
@@ -143,9 +148,15 @@ async function fetchDelivery(emailId: string, key: string): Promise<Delivery | n
       headers: { Authorization: `Bearer ${key}` },
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // A refused read is the one failure that hides itself: the screen keeps saying « envoi en
+      // cours » for ever and nothing says why. A sending-only API key answers 401 here.
+      console.error(`resend GET /emails ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return null;
+    }
     return deliveryFromEmail(await res.json());
-  } catch {
+  } catch (error) {
+    console.error("resend GET /emails failed", error);
     return null;
   }
 }

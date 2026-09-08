@@ -4,7 +4,7 @@ import type { GasDefaults } from "@/components/supplies/GasBottleDialog";
 import type { ExpensesData } from "@/components/supplies/ExpensesTab";
 import type { ExpenseLine } from "@/components/supplies/ExpenseLines";
 import type { LogOption } from "@/components/supplies/PurchaseForm";
-import type { ExpenseRow } from "@/lib/expenses";
+import type { ExpenseDetail, ExpenseRow } from "@/lib/expenses";
 
 import { SAMPLE_CATEGORIES } from "../sample-data";
 
@@ -100,6 +100,106 @@ const SUPPLIERS: Record<string, string> = {
   p3: "Station Total Hyères",
 };
 
+/**
+ * What each line unrolls (D86). One of each shape the recap has to survive: an intervention
+ * with everything on it, one done by the crew with nothing but a note, a purchase attached to
+ * an intervention, one that is not, and the haul-out with its own interventions.
+ */
+const EXPENSE_DETAILS: Record<string, ExpenseDetail> = {
+  l1: {
+    source: "log",
+    status: "done",
+    contactName: "Paul Martin",
+    equipmentName: "Yanmar 4JH45 tribord",
+    notes: "Huile et filtre changés, filtre à gasoil contrôlé. Prochaine vidange à 800 h.",
+    engineHours: [{ label: "Moteur SB", hours: 742 }],
+    completionsCount: 2,
+    purchasesCount: 1,
+    attachmentsCount: 1,
+    needsReview: false,
+    haulOutId: null,
+  },
+  l2: {
+    source: "log",
+    status: "done",
+    contactName: null,
+    equipmentName: null,
+    notes: "Ponçage léger puis polissage complet des deux coques pendant la sortie de l'eau.",
+    engineHours: [],
+    completionsCount: 1,
+    purchasesCount: 0,
+    attachmentsCount: 0,
+    needsReview: false,
+    haulOutId: "h1",
+  },
+  l3: {
+    source: "log",
+    status: "done",
+    contactName: "Voilerie du Levant",
+    equipmentName: null,
+    notes: null,
+    engineHours: [],
+    completionsCount: 0,
+    purchasesCount: 0,
+    attachmentsCount: 2,
+    needsReview: false,
+    haulOutId: null,
+  },
+  l4: {
+    source: "log",
+    status: "done",
+    contactName: null,
+    equipmentName: null,
+    notes: null,
+    engineHours: [],
+    completionsCount: 1,
+    purchasesCount: 0,
+    attachmentsCount: 0,
+    needsReview: false,
+    haulOutId: null,
+  },
+  p1: {
+    source: "purchase",
+    designation: "Filtres à huile Yanmar",
+    supplier: "Accastillage Diffusion",
+    bottleType: null,
+    notes: "Deux filtres, un d'avance à bord.",
+    needsReview: false,
+    logId: "l1",
+    logTitle: "Vidange moteur SB",
+  },
+  p2: {
+    source: "purchase",
+    designation: "Bouteille de gaz — Butane 13 kg",
+    supplier: "Station Total Hyères",
+    bottleType: "Butane 13 kg",
+    notes: null,
+    needsReview: false,
+    logId: null,
+    logTitle: null,
+  },
+  p3: {
+    source: "purchase",
+    designation: "Bouteille de gaz — Butane 13 kg",
+    supplier: "Station Total Hyères",
+    bottleType: "Butane 13 kg",
+    notes: null,
+    needsReview: true,
+    logId: null,
+    logTitle: null,
+  },
+  h1: {
+    source: "haul_out",
+    yard: "Chantier Naval de Hyères",
+    startedAt: "2026-03-02",
+    endedAt: "2026-03-16",
+    daysAshore: 14,
+    works: "Carénage, anodes, contrôle des passe-coques et des safrans.",
+    logsCount: 1,
+    logsTotal: 450,
+  },
+};
+
 const EXPENSE_LINES: ExpenseLine[] = EXPENSE_ROWS.map((row) => ({
   source: (row.source ?? "purchase") as ExpenseLine["source"],
   entityId: row.entityId ?? "",
@@ -111,6 +211,7 @@ const EXPENSE_LINES: ExpenseLine[] = EXPENSE_ROWS.map((row) => ({
   kindLabel: KIND_LABELS[row.entityId ?? ""] ?? null,
   supplier: SUPPLIERS[row.entityId ?? ""] ?? null,
   needsReview: row.entityId === "p3",
+  detail: EXPENSE_DETAILS[row.entityId ?? ""] ?? null,
 }));
 
 export const SAMPLE_EXPENSES: ExpensesData = {

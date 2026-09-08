@@ -1,6 +1,8 @@
 import { subDays, subMonths, subYears } from "date-fns";
 
 import { toDate, toDateString } from "@/lib/format";
+import { daysAshore } from "@/lib/haul-outs";
+import type { Database } from "@/types/database";
 
 /**
  * Expenses tab (E5-5): period arithmetic, category totals and CSV. Pure module — the page
@@ -220,4 +222,178 @@ export function buildExpensesCsv(rows: readonly ExpenseRow[], labels: CsvLabels)
     );
   }
   return `﻿${lines.join("\r\n")}\r\n`;
+}
+
+/**
+ * What a line of the money list hides (D86). Tapping a line unrolls this under it instead of
+ * throwing the reader at the other end of the app: the answer to « c'est quoi, cette ligne ? »
+ * is read where the question is asked, and one more tap opens the intervention itself.
+ */
+export type ExpenseEngineHours = { label: string; hours: number };
+
+export type LogStatus = Database["public"]["Enums"]["log_status"];
+
+export type ExpenseDetail =
+  | {
+      source: "log";
+      status: LogStatus;
+      contactName: string | null;
+      equipmentName: string | null;
+      notes: string | null;
+      engineHours: ExpenseEngineHours[];
+      completionsCount: number;
+      purchasesCount: number;
+      attachmentsCount: number;
+      needsReview: boolean;
+      haulOutId: string | null;
+    }
+  | {
+      source: "purchase";
+      designation: string;
+      supplier: string | null;
+      bottleType: string | null;
+      notes: string | null;
+      needsReview: boolean;
+      /** The intervention this purchase paid for, when it carries one. */
+      logId: string | null;
+      logTitle: string | null;
+    }
+  | {
+      source: "haul_out";
+      yard: string | null;
+      startedAt: string;
+      endedAt: string | null;
+      daysAshore: number;
+      works: string | null;
+      logsCount: number;
+      logsTotal: number;
+    };
+
+/** One line of the merged list, identified across the three tables it can come from. */
+export function expenseKey(source: string | null, entityId: string | null): string {
+  return `${source ?? ""}:${entityId ?? ""}`;
+}
+
+/** The columns of `maintenance_logs_view` the recap needs, engine hours already parsed. */
+export type LogDetailRow = {
+  id: string | null;
+  status: LogStatus | null;
+  contact_name: string | null;
+  equipment_name: string | null;
+  notes: string | null;
+  completions_count: number | null;
+  purchases_count: number | null;
+  attachments_count: number | null;
+  needs_review: boolean | null;
+  haul_out_id: string | null;
+  engineHours: ExpenseEngineHours[];
+};
+
+export type PurchaseDetailRow = {
+  id: string;
+  designation: string | null;
+  bottle_type: string | null;
+  notes: string | null;
+  needs_review: boolean | null;
+  supplier_contact_id: string | null;
+  supplier_name: string | null;
+  maintenance_log_id: string | null;
+};
+
+export type HaulOutDetailRow = {
+  id: string;
+  yard_name: string | null;
+  yard_contact_id: string | null;
+  started_at: string;
+  ended_at: string | null;
+  works: string | null;
+};
+
+/**
+ * The recap of every line of the page, keyed by `expenseKey`. Pure: the page reads the rows,
+ * this decides what they say. Three things it does that a mapping would not — a haul-out
+ * carries the interventions of its period (count and total, the figure wanted at resale), a
+ * supplier or a yard is either a contact of the boat or a free-text name, and a purchase names
+ * the intervention it paid for.
+ */
+export function buildExpenseDetails({
+  logs = [],
+  purchases = [],
+  haulOuts = [],
+  haulOutLogs = [],
+  contactNames = new Map<string, string>(),
+  logTitles = new Map<string, string>(),
+  today,
+}: {
+  logs?: readonly LogDetailRow[];
+  purchases?: readonly PurchaseDetailRow[];
+  haulOuts?: readonly HaulOutDetailRow[];
+  /** Interventions attached to the haul-outs above: `{ haul_out_id, cost }` rows. */
+  haulOutLogs?: readonly { haul_out_id: string | null; cost: number | null }[];
+  contactNames?: ReadonlyMap<string, string>;
+  logTitles?: ReadonlyMap<string, string>;
+  today?: string | Date;
+}): Map<string, ExpenseDetail> {
+  const details = new Map<string, ExpenseDetail>();
+
+  for (const log of logs) {
+    if (!log.id) continue;
+    details.set(expenseKey("log", log.id), {
+      source: "log",
+      status: log.status ?? "done",
+      contactName: log.contact_name,
+      equipmentName: log.equipment_name,
+      notes: log.notes,
+      engineHours: log.engineHours,
+      completionsCount: log.completions_count ?? 0,
+      purchasesCount: log.purchases_count ?? 0,
+      attachmentsCount: log.attachments_count ?? 0,
+      needsReview: log.needs_review ?? false,
+      haulOutId: log.haul_out_id,
+    });
+  }
+
+  for (const purchase of purchases) {
+    const logId = purchase.maintenance_log_id;
+    details.set(expenseKey("purchase", purchase.id), {
+      source: "purchase",
+      designation: purchase.designation ?? "",
+      // The directory wins over the free-text name: a contact that was renamed stays right here.
+      supplier: purchase.supplier_contact_id
+        ? (contactNames.get(purchase.supplier_contact_id) ?? purchase.supplier_name)
+        : purchase.supplier_name,
+      bottleType: purchase.bottle_type,
+      notes: purchase.notes,
+      needsReview: purchase.needs_review ?? false,
+      logId,
+      logTitle: logId ? (logTitles.get(logId) ?? null) : null,
+    });
+  }
+
+  const linked = new Map<string, { count: number; total: number }>();
+  for (const row of haulOutLogs) {
+    if (!row.haul_out_id) continue;
+    const current = linked.get(row.haul_out_id) ?? { count: 0, total: 0 };
+    current.count += 1;
+    current.total += row.cost ?? 0;
+    linked.set(row.haul_out_id, current);
+  }
+
+  for (const haulOut of haulOuts) {
+    const logs = linked.get(haulOut.id);
+    details.set(expenseKey("haul_out", haulOut.id), {
+      source: "haul_out",
+      yard: haulOut.yard_contact_id
+        ? (contactNames.get(haulOut.yard_contact_id) ?? haulOut.yard_name)
+        : haulOut.yard_name,
+      startedAt: haulOut.started_at,
+      endedAt: haulOut.ended_at,
+      daysAshore: daysAshore(haulOut.started_at, haulOut.ended_at, today),
+      works: haulOut.works,
+      logsCount: logs?.count ?? 0,
+      logsTotal: logs?.total ?? 0,
+    });
+  }
+
+  return details;
 }

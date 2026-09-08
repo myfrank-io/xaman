@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D86.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D87.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -1594,7 +1594,9 @@ variables Vercel. Sans lui l'endpoint refuse tout et seule la relance à la lect
 
 **Question.** Sur une seule branche, dans la même journée, un numéro a dû être changé **trois fois
 de suite** — D76, puis D77, puis D79, chaque fois repris par une autre PR avant la fusion — et sur
-`main` **D43, D73 et D74 nommaient chacun deux décisions différentes**. Le journal git porte même la trace du problème se reproduisant :
+`main` **D43, D73 et D74 nommaient chacun deux décisions différentes**. Et pendant que cette
+décision s'écrivait, un **quatrième** doublon est arrivé : #55 a fusionné en D80 cinquante-six
+minutes après #50, qui l'avait pris. La démonstration n'a donc pas eu à être cherchée. Le journal git porte même la trace du problème se reproduisant :
 `docs(engines): renumber to E13-10 / D73 after the merge with main` — un renumérotage qui est
 entré en collision une seconde fois.
 
@@ -1619,12 +1621,13 @@ Actions, tests, `DATA-MODEL.md`. Les renommer serait un diff énorme et casserai
 références des PR déjà fusionnées, pour un identifiant qui n'a rien de faux. Ce n'est pas le
 numéro qui était mauvais, c'est la façon de l'attribuer.
 
-**Qui cède, pour les trois doublons.** Règle mécanique, aucune appréciation sur le travail de
+**Qui cède, pour les quatre doublons.** Règle mécanique, aucune appréciation sur le travail de
 quelqu'un : **celui qui est arrivé le second sur `main` change de numéro.** D73 reste au moteur
 sans compteur (#34, 15 h 58) et les rôles à l'invitation deviennent **D82** (#39, 17 h 32) ; D74
 reste à la fiche moteur (#38, 17 h 14) et la longueur du code devient **D83** (#40, 18 h 09) ; les
 deux D43 venant d'un même commit, c'est la seconde ligne du tableau — la carte Stock — qui devient
-**D84**. Leurs citations suivent, et `boat-onboarding.ts` cite enfin D76.
+**D84** ; et le récapitulatif d'une ligne de dépense, arrivé second sur D80, devient **D86**.
+Leurs citations suivent, et `boat-onboarding.ts` cite enfin D76.
 
 **Le garde-fou.** `scripts/check-decisions.mjs`, joué par `tests/unit/decisions.test.ts` donc par
 `pnpm test` et par la CI, tient deux règles : aucun numéro n'ouvre deux entrées, et le compteur
@@ -1640,3 +1643,48 @@ chose. Seule la lecture attrape cela.
 `E13-13` nomment chacun deux tickets. Ils se citent dans les noms de branches, les
 titres de PR et les messages de commit — hors du dépôt, donc hors de portée d'un compteur. Non
 traité ici.
+## 2026-09-08 — D86 : une ligne de dépense se déroule sur place, l'intervention reste à un geste
+
+**Question.** Deux signalements sur le même écran, Dépenses. Sur la liste : « quand je clique sur
+un détail de toutes les lignes, j'aimerais bien avoir un récap de l'intervention qui déroule et
+la possibilité d'accéder à l'intervention en 1 clic supplémentaire plutôt que d'être direct
+balancé à l'autre bout du software ». Sur le bloc « Par catégorie » : « quand je clique sur une,
+ça sélectionne la ligne mais ça me donne juste la possibilité de la désélectionner. J'aimerais
+bien avoir le détail en dessous des interventions qui ont coûté de l'argent par catégories avec
+la possibilité d'accéder à l'intervention si besoin ».
+
+**Le constat.** C'est la même remarque, deux étages plus haut à chaque fois. D77 avait rendu la
+ligne de catégorie cliquable en disant que « la réponse existait déjà, un mètre plus bas » — sauf
+qu'un mètre plus bas, sur un iPad, c'est hors de l'écran : le filtre s'appliquait à une liste que
+personne ne voyait bouger, donc le geste ne semblait rien faire d'autre que cocher la ligne. Et
+la liste, elle, coûtait cher au moindre coup d'œil : lire « c'est quoi, ces 320 € ? » quittait
+Dépenses pour la fiche de l'intervention, perdait la place dans la liste, les filtres, le
+scroll — et il fallait deux gestes pour revenir vérifier la ligne suivante.
+
+**Décision. La réponse est écrite là où la question est posée, et l'entité reste à un geste.**
+
+1. **Une ligne de dépense se déroule** au lieu de naviguer. Le panneau donne ce qu'on venait
+   vérifier — pour une intervention : statut, réalisé par, équipement, heures moteur relevées, la
+   note (quatre lignes au plus), « 2 points de checklist cochés · 1 achat lié · 1 document
+   joint » ; pour un achat : fournisseur, type de bouteille, intervention liée **nommée**, la
+   note, et la phrase du carnet papier quand la ligne est à vérifier ; pour une sortie de l'eau :
+   chantier, dates, travaux, « 14 jours à terre · 1 intervention · 450,00 € ». Puis **un** bouton :
+   « Ouvrir l'intervention ». Un achat n'a pas d'écran de lecture — son formulaire est là où on
+   le corrige — donc seul qui a le droit d'écrire y est envoyé, et « Ouvrir l'intervention liée »
+   passe devant quand l'achat en porte une.
+2. **Un seul panneau ouvert à la fois**, et le chevron de la ligne pivote : trois récapitulatifs
+   déroulés rendraient le registre illisible, ce qui était précisément le problème.
+3. **Le bloc « Par catégorie » déroule ses lignes sous la ligne touchée.** Le filtre continue de
+   passer par l'URL (D77 : le retour défait le filtre, une vue filtrée s'envoie), mais les lignes
+   remontent là où on a appuyé. Comme ce seraient les mêmes lignes deux fois, la carte « Toutes
+   les lignes » s'efface tant qu'une catégorie est active — sauf si le filtre ne ramène rien, où
+   elle reste pour porter l'état vide et sa sortie.
+4. **Ce que le panneau montre est lu avec la page**, pas au moment du geste : une requête par
+   source, sur les seuls identifiants de la page affichée. Pas de spinner sous le doigt, et le
+   récapitulatif tient dans le cache Next d'une page déjà ouverte.
+
+**Écarté :** une feuille modale ou un tiroir — c'est encore une couche par-dessus la liste, et
+« déroule » disait exactement le contraire. Écarté aussi : garder la carte « Toutes les lignes »
+sous le bloc filtré, qui affichait les mêmes lignes deux fois à un écran d'intervalle. Écarté
+enfin : rendre le bloc « Par catégorie » dépliable **sans** filtrer — les totaux, la comparaison
+et l'export ne suivraient plus ce qui est affiché, ce que D77 avait justement corrigé.

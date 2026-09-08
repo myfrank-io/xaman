@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildExpenseDetails,
   buildExpensesCsv,
   expenseFilterQuery,
+  expenseKey,
   groupByCategory,
   parseSources,
   previousRange,
@@ -224,5 +226,223 @@ describe("expenses CSV", () => {
   it("leaves an unknown amount empty rather than writing 0", () => {
     const csv = buildExpensesCsv([{ ...(ROWS[0] as ExpenseRow), amount: null }], labels);
     expect(csv.trimEnd().endsWith(";")).toBe(true);
+  });
+});
+
+describe("what a line unrolls (D86)", () => {
+  const CONTACTS = new Map([
+    ["ct1", "Accastillage Diffusion"],
+    ["ct2", "Chantier Naval de Hyères"],
+  ]);
+
+  it("keys every source apart, so two ids that collide never do", () => {
+    const details = buildExpenseDetails({
+      logs: [
+        {
+          id: "same",
+          status: "done",
+          contact_name: "Paul Martin",
+          equipment_name: null,
+          notes: null,
+          completions_count: 2,
+          purchases_count: 1,
+          attachments_count: 0,
+          needs_review: false,
+          haul_out_id: null,
+          engineHours: [],
+        },
+      ],
+      purchases: [
+        {
+          id: "same",
+          designation: "Filtres à huile",
+          bottle_type: null,
+          notes: null,
+          needs_review: false,
+          supplier_contact_id: null,
+          supplier_name: null,
+          maintenance_log_id: null,
+        },
+      ],
+    });
+    expect(details.get(expenseKey("log", "same"))?.source).toBe("log");
+    expect(details.get(expenseKey("purchase", "same"))?.source).toBe("purchase");
+    expect(details.get(expenseKey("haul_out", "same"))).toBeUndefined();
+  });
+
+  it("reads a supplier from the directory, and falls back to the free-text name", () => {
+    const details = buildExpenseDetails({
+      purchases: [
+        {
+          id: "p1",
+          designation: "Filtres",
+          bottle_type: null,
+          notes: null,
+          needs_review: false,
+          supplier_contact_id: "ct1",
+          supplier_name: "ancien nom",
+          maintenance_log_id: null,
+        },
+        {
+          id: "p2",
+          designation: "Gaz",
+          bottle_type: "Butane 13 kg",
+          notes: null,
+          needs_review: true,
+          supplier_contact_id: null,
+          supplier_name: "Station Total Hyères",
+          maintenance_log_id: null,
+        },
+      ],
+      contactNames: CONTACTS,
+    });
+    const first = details.get(expenseKey("purchase", "p1"));
+    const second = details.get(expenseKey("purchase", "p2"));
+    expect(first).toMatchObject({ supplier: "Accastillage Diffusion" });
+    expect(second).toMatchObject({ supplier: "Station Total Hyères", needsReview: true });
+  });
+
+  it("names the intervention a purchase paid for", () => {
+    const details = buildExpenseDetails({
+      purchases: [
+        {
+          id: "p1",
+          designation: "Filtres",
+          bottle_type: null,
+          notes: null,
+          needs_review: false,
+          supplier_contact_id: null,
+          supplier_name: null,
+          maintenance_log_id: "l1",
+        },
+        {
+          id: "p2",
+          designation: "Gaz",
+          bottle_type: null,
+          notes: null,
+          needs_review: false,
+          supplier_contact_id: null,
+          supplier_name: null,
+          maintenance_log_id: null,
+        },
+      ],
+      logTitles: new Map([["l1", "Vidange moteur SB"]]),
+    });
+    expect(details.get(expenseKey("purchase", "p1"))).toMatchObject({
+      logId: "l1",
+      logTitle: "Vidange moteur SB",
+    });
+    expect(details.get(expenseKey("purchase", "p2"))).toMatchObject({
+      logId: null,
+      logTitle: null,
+    });
+  });
+
+  it("counts the interventions of a haul-out and adds up what they cost", () => {
+    const details = buildExpenseDetails({
+      haulOuts: [
+        {
+          id: "h1",
+          yard_name: null,
+          yard_contact_id: "ct2",
+          started_at: "2026-03-02",
+          ended_at: "2026-03-16",
+          works: "Carénage",
+        },
+        {
+          id: "h2",
+          yard_name: "Port-Napoléon",
+          yard_contact_id: null,
+          started_at: "2025-11-04",
+          ended_at: "2025-11-10",
+          works: null,
+        },
+      ],
+      haulOutLogs: [
+        { haul_out_id: "h1", cost: 450 },
+        { haul_out_id: "h1", cost: null },
+        { haul_out_id: "h1", cost: 120.5 },
+        { haul_out_id: null, cost: 999 },
+      ],
+      contactNames: CONTACTS,
+    });
+    expect(details.get(expenseKey("haul_out", "h1"))).toMatchObject({
+      yard: "Chantier Naval de Hyères",
+      daysAshore: 14,
+      logsCount: 3,
+      logsTotal: 570.5,
+    });
+    // A haul-out nothing is attached to says « aucune intervention », not a wrong total.
+    expect(details.get(expenseKey("haul_out", "h2"))).toMatchObject({
+      yard: "Port-Napoléon",
+      logsCount: 0,
+      logsTotal: 0,
+    });
+  });
+
+  it("counts the days of a boat still ashore up to today", () => {
+    const details = buildExpenseDetails({
+      haulOuts: [
+        {
+          id: "h1",
+          yard_name: "Port-Napoléon",
+          yard_contact_id: null,
+          started_at: "2026-08-24",
+          ended_at: null,
+          works: null,
+        },
+      ],
+      today: TODAY,
+    });
+    expect(details.get(expenseKey("haul_out", "h1"))).toMatchObject({
+      endedAt: null,
+      daysAshore: 9,
+    });
+  });
+
+  it("survives the nulls the view is allowed to hold", () => {
+    const details = buildExpenseDetails({
+      logs: [
+        {
+          id: "l1",
+          status: null,
+          contact_name: null,
+          equipment_name: null,
+          notes: null,
+          completions_count: null,
+          purchases_count: null,
+          attachments_count: null,
+          needs_review: null,
+          haul_out_id: null,
+          engineHours: [],
+        },
+        // A row without an id cannot be keyed, so it is dropped rather than shadowing another.
+        {
+          id: null,
+          status: "urgent",
+          contact_name: null,
+          equipment_name: null,
+          notes: null,
+          completions_count: 1,
+          purchases_count: 0,
+          attachments_count: 0,
+          needs_review: false,
+          haul_out_id: null,
+          engineHours: [],
+        },
+      ],
+    });
+    expect(details.size).toBe(1);
+    expect(details.get(expenseKey("log", "l1"))).toMatchObject({
+      status: "done",
+      completionsCount: 0,
+      purchasesCount: 0,
+      attachmentsCount: 0,
+      needsReview: false,
+    });
+  });
+
+  it("returns nothing when there is nothing to read", () => {
+    expect(buildExpenseDetails({}).size).toBe(0);
   });
 });

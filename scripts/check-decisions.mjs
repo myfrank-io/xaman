@@ -54,8 +54,9 @@ const AUDIT_ROW = /^\| D(\d+) \| (.+?) \|/gm;
  * Any mention of a decision number.
  *
  * The leading `[^"'\w]` guard skips a number inside a string literal: `model: "D100"` in
- * src/app/dev/ui/boat/sample.ts is a boat model, not decision 100, and without the guard it would
- * hold the counter hostage at D101. A citation is never quoted — it lives in prose or a comment.
+ * src/app/dev/ui/boat/sample.ts is a boat model, not decision 100, and without the guard the
+ * counter would be held hostage above it. A citation is never quoted — it lives in prose or in a
+ * comment, which is also why this very sentence may not write one out in full.
  */
 const MENTION = /(?:^|[^"'\w])D(\d{1,3})\b/gm;
 
