@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D95.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D96.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2108,3 +2108,21 @@ devient meilleure, l'écran ne bouge pas. Le revers, assumé : le texte ne disti
 lecture par règles d'une lecture par modèle — c'est `warnings` (montant deviné, date sans
 étiquette, OCR douteux) qui dit ce qui mérite un second regard, document par document, et il reste
 plus utile que le nom du lecteur.
+
+## 2026-09-08 — D95 : l'app se souvient du dernier choix, par bateau et par appareil
+
+**Question.** Audit de simplification du 8 septembre : hors la bouteille de gaz, aucun formulaire
+ne se souvenait de rien. La catégorie de l'intervention, la personne qui a fait le travail, le
+chantier, le fournisseur, le prix d'une bouteille, l'onglet « À traiter » de la checklist se
+retapaient à chaque ouverture — alors qu'à bord la réponse est presque toujours celle de la fois
+d'avant.
+
+**Décision.** Une seule mémoire, `useLastUsed` / `readLastUsed` (`src/components/forms/use-last-used.ts`),
+dans le `localStorage` de l'appareil, clé par bateau, jamais envoyée au serveur. Un formulaire
+s'ouvre sur la dernière valeur retenue **quand aucun pré-remplissage plus sûr n'existe** (une valeur
+de l'URL ou de la ligne éditée prime toujours), et la mémoire n'est écrite **qu'à l'enregistrement
+réussi** — jamais à la frappe, pour qu'un brouillon abandonné n'apprenne rien de faux à l'app.
+
+**Raison.** C'est la différence entre « un formulaire » et « l'app me connaît » : un tap de moins sur
+l'acte dominant, à chaque fois, sans schéma ni synchronisation. Une préférence d'appareil n'a pas
+sa place en base : deux personnes sur deux appareils ont deux habitudes.
