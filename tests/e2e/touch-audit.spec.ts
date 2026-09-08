@@ -241,43 +241,73 @@ async function audit(page: Page): Promise<{
   );
 }
 
+/** Every rule of the audit, applied to one surface. `label` is what a failure names. */
+function expectTouchRules(
+  label: string,
+  result: Awaited<ReturnType<typeof audit>>,
+  errors: string[],
+) {
+  expect(
+    result.overflow,
+    `${label} scrolls horizontally by ${result.overflow}px`,
+  ).toBeLessThanOrEqual(0);
+  expect(
+    result.wider,
+    `${label} boxes running past the right edge: ${JSON.stringify(result.wider)}`,
+  ).toEqual([]);
+  expect(
+    result.controls,
+    `${label} controls under ${MIN_TARGET}px: ${JSON.stringify(result.controls)}`,
+  ).toEqual([]);
+  expect(
+    result.clipped,
+    `${label} labels wider than their button: ${JSON.stringify(result.clipped)}`,
+  ).toEqual([]);
+  expect(
+    result.fields,
+    `${label} fields under ${MIN_TARGET}px / ${MIN_FONT}px: ${JSON.stringify(result.fields)}`,
+  ).toEqual([]);
+  expect(
+    result.tall,
+    `${label} repeated rows over ${MAX_REPEATED_ROW}px on a phone: ${JSON.stringify(result.tall)}`,
+  ).toEqual([]);
+  expect(errors, `${label} console errors`).toEqual([]);
+}
+
+/** Collects everything the browser complains about while a surface is being opened. */
+function watchErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  return errors;
+}
+
 for (const path of PAGES) {
   test(`${path} renders cleanly and respects the touch rules`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(String(error)));
-    page.on("console", (message) => {
-      if (message.type() === "error") errors.push(message.text());
-    });
-
+    const errors = watchErrors(page);
     const response = await page.goto(path, { waitUntil: "networkidle" });
     expect(response?.status(), `${path} status`).toBe(200);
     await expect(page.locator("main, body").first()).toBeVisible();
+    expectTouchRules(path, await audit(page), errors);
+  });
+}
 
-    const result = await audit(page);
-    expect(
-      result.overflow,
-      `${path} scrolls horizontally by ${result.overflow}px`,
-    ).toBeLessThanOrEqual(0);
-    expect(
-      result.wider,
-      `${path} boxes running past the right edge: ${JSON.stringify(result.wider)}`,
-    ).toEqual([]);
-    expect(
-      result.controls,
-      `${path} controls under ${MIN_TARGET}px: ${JSON.stringify(result.controls)}`,
-    ).toEqual([]);
-    expect(
-      result.clipped,
-      `${path} labels wider than their button: ${JSON.stringify(result.clipped)}`,
-    ).toEqual([]);
-    expect(
-      result.fields,
-      `${path} fields under ${MIN_TARGET}px / ${MIN_FONT}px: ${JSON.stringify(result.fields)}`,
-    ).toEqual([]);
-    expect(
-      result.tall,
-      `${path} repeated rows over ${MAX_REPEATED_ROW}px on a phone: ${JSON.stringify(result.tall)}`,
-    ).toEqual([]);
-    expect(errors, `${path} console errors`).toEqual([]);
+/**
+ * The recap a line of Dépenses unrolls (D80). No URL of the gallery reaches it — it exists only
+ * after a tap — and it is the densest surface of that screen: a grid of facts, a note and two
+ * buttons folded inside a list row. One line of each of the three sources.
+ */
+for (const line of ["Vidange moteur SB", "Filtres à huile Yanmar", "Chantier Naval de Hyères"]) {
+  test(`the recap of « ${line} » respects the touch rules`, async ({ page }) => {
+    const errors = watchErrors(page);
+    await page.goto("/dev/ui/supplies", { waitUntil: "networkidle" });
+    await page
+      .getByRole("button", { name: new RegExp(line) })
+      .first()
+      .click();
+    await expect(page.getByRole("button", { expanded: true }).first()).toBeVisible();
+    expectTouchRules(`/dev/ui/supplies · ${line}`, await audit(page), errors);
   });
 }
