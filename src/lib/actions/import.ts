@@ -19,6 +19,8 @@ import {
   type RejectedRow,
 } from "@/lib/import/entities";
 import { normaliseHeader } from "@/lib/import/mapping";
+import { can, type BoatRole } from "@/lib/permissions";
+import { activeCategories } from "@/lib/queries/categories";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
@@ -60,7 +62,7 @@ export async function importRows(input: {
 
   // Roles are enforced by RLS on the write below; this only fails early with a clear message.
   const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
-  if (role !== "owner" && role !== "editor") return fail("errors.forbidden");
+  if (!role || !can(role as BoatRole, "write")) return fail("errors.forbidden");
 
   // The union of tables defeats the generated row types; the descriptor states its own columns.
   let query = supabase.from(descriptor.table).select(descriptor.keyColumns).eq("boat_id", boatId);
@@ -68,21 +70,15 @@ export async function importRows(input: {
   // rather than quietly reviving what someone chose to remove.
   if (descriptor.softDeleted) query = query.is("deleted_at", null);
 
-  const [{ data: existing }, { data: categories }, { data: contacts }, catalog] = await Promise.all(
-    [
-      query as unknown as Promise<{ data: Record<string, unknown>[] | null }>,
-      supabase
-        .from("boat_categories")
-        .select("id, name")
-        .eq("boat_id", boatId)
-        .eq("is_active", true),
-      descriptor.matchesContacts
-        ? supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null)
-        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-      // The checklist points and the engines a line may name (E12-4).
-      loadImportCatalog(supabase, boatId, descriptor),
-    ],
-  );
+  const [{ data: existing }, categories, { data: contacts }, catalog] = await Promise.all([
+    query as unknown as Promise<{ data: Record<string, unknown>[] | null }>,
+    activeCategories(supabase, boatId),
+    descriptor.matchesContacts
+      ? supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null)
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    // The checklist points and the engines a line may name (E12-4).
+    loadImportCatalog(supabase, boatId, descriptor),
+  ]);
 
   // An empty key means « never match this row » (a reading owned by an intervention): it must
   // not become an entry that some other line could land on.
@@ -92,7 +88,7 @@ export async function importRows(input: {
       .filter(([key]) => key !== ""),
   );
   const categoryByName = new Map(
-    (categories ?? []).map((category) => [normaliseHeader(category.name), category.id]),
+    categories.map((category) => [normaliseHeader(category.name), category.id]),
   );
   const contactByName = new Map(
     (contacts ?? []).map((contact) => [normaliseHeader(contact.name), contact.id]),

@@ -48,7 +48,7 @@
  * `tests/unit/numbering.test.ts` runs the same functions.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -83,10 +83,15 @@ const SKIPPED = /^(pnpm-lock\.yaml|docs\/audit\/|public\/|\.next\/)/;
 
 export function scannedFiles(root = ROOT) {
   const tracked = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" });
-  return tracked
-    .split("\0")
-    .filter(Boolean)
-    .filter((file) => SCANNED.test(file) && !SKIPPED.test(file));
+  return (
+    tracked
+      .split("\0")
+      .filter(Boolean)
+      .filter((file) => SCANNED.test(file) && !SKIPPED.test(file))
+      // `git ls-files` lists what git TRACKS, not what is on disk: a file deleted in the working
+      // tree is still listed until the deletion is staged. It has no mentions left to scan.
+      .filter((file) => existsSync(path.join(root, file)))
+  );
 }
 
 const matches = (re, text) => [...text.matchAll(re)];

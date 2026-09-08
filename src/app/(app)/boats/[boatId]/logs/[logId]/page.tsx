@@ -7,6 +7,7 @@ import { parseEngineHours } from "@/components/logs/rows";
 import { formatDate } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
 import { listAttachments } from "@/lib/queries/attachments";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -21,7 +22,7 @@ export default async function LogPage({
   const { boatId, logId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: log }, { data: auth }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("maintenance_logs_view")
       .select("*")

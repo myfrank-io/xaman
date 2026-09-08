@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { formResolver } from "@/components/forms/form-resolver";
 import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
+import { useLastUsed } from "@/components/forms/use-last-used";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { DateField } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,9 @@ type HaulOutFormState = {
 };
 type HaulOutOutput = z.output<typeof upsertHaulOutSchema>;
 
+/** What the boat remembers of its yard (D95): a directory entry, or the name typed by hand. */
+type LastYard = { contactId: string | null; name: string };
+
 /**
  * Haul-out form (E6-1, flow g), a page: two separate dates — « Sortie » and « Remise à
  * l'eau » — never a range picker (ux-flows §4.3), the yard from the directory or free text,
@@ -72,6 +76,8 @@ export function HaulOutForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [newId] = useState(() => crypto.randomUUID());
+  // A boat goes back to the same yard every year (D95): the last one is offered, never imposed.
+  const lastYard = useLastUsed<LastYard>(boatId, "haulOut.yard");
 
   const form = useForm<HaulOutFormState, unknown, HaulOutOutput>({
     resolver: formResolver<HaulOutFormState, HaulOutOutput>(upsertHaulOutSchema),
@@ -91,6 +97,27 @@ export function HaulOutForm({
   const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const errors = form.formState.errors;
   const backHref = haulOut ? haulOutPath(boatId, haulOut.id) : boatPath(boatId, "haulOuts");
+
+  // Storage is only readable after hydration, so the memory lands once, right after mount, and
+  // only on a blank creation: an edited haul-out and anything already typed always win (D95).
+  // `shouldDirty: false` keeps a merely pre-filled form from claiming unsaved changes.
+  const applied = useRef(false);
+  const remembered = lastYard.value;
+  useEffect(() => {
+    if (haulOut || applied.current || !remembered) return;
+    if (form.getValues("yardContactId") !== null || form.getValues("yardName") !== "") return;
+    applied.current = true;
+    if (remembered.contactId !== null) {
+      // A provider deleted since then is simply forgotten rather than pre-filled as a dead id.
+      if (contacts.some((contact) => contact.id === remembered.contactId)) {
+        form.setValue("yardContactId", remembered.contactId, { shouldDirty: false });
+      }
+      return;
+    }
+    if (remembered.name.trim() !== "") {
+      form.setValue("yardName", remembered.name, { shouldDirty: false });
+    }
+  }, [contacts, form, haulOut, remembered]);
   // useWatch and not form.watch(): the returned function cannot be memoized safely.
   const startedAt = useWatch({ control: form.control, name: "startedAt" });
   const yardContactId = useWatch({ control: form.control, name: "yardContactId" });
@@ -108,6 +135,8 @@ export function HaulOutForm({
         toast.error(errorMessage(result.error));
         return;
       }
+      // Written on the save and never on a keystroke: an abandoned form teaches nothing (D95).
+      lastYard.remember({ contactId: values.yardContactId, name: values.yardName ?? "" });
       toast.success(t("saved"));
       router.push(haulOutPath(boatId, result.data.haulOutId) as Parameters<typeof router.push>[0]);
       router.refresh();

@@ -31,11 +31,12 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-wrap items-start justify-between gap-3", className)}>
       <div className="min-w-0">
-        <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
+        {/* `text-h1` IS the token: it carries the size, the line height, the weight and the
+            display face (globals.css @layer base). The hand-rolled `text-xl sm:text-2xl` said
+            the same thing twice, one step below the scale, on some thirty screens. */}
+        <h1 className="text-h1">{title}</h1>
         {subtitle ? (
-          <p
-            className={cn("mt-1 hidden text-sm text-muted-foreground sm:block", subtitleClassName)}
-          >
+          <p className={cn("mt-1 hidden text-body text-ink-2 sm:block", subtitleClassName)}>
             {subtitle}
           </p>
         ) : null}

@@ -12,6 +12,7 @@ import {
   type CompletionMember,
   type SavedCompletion,
 } from "@/components/checklist/CompleteItemDialog";
+import { toCompletable, type EngineReadDates } from "@/components/checklist/completable";
 import { applyCompletion, isTodo, sortRows, type ChecklistRow } from "@/components/checklist/rows";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -28,6 +29,7 @@ export function TodoList({
   currentUserId,
   currentUserName,
   canContribute,
+  engineReadDates,
 }: {
   boatId: string;
   rows: ChecklistRow[];
@@ -36,6 +38,8 @@ export function TodoList({
   currentUserId: string;
   currentUserName: string;
   canContribute: boolean;
+  /** When each engine was last read, so a fresh reading fills the hours by itself. */
+  engineReadDates?: EngineReadDates;
 }) {
   const t = useTranslations("checklist");
   const router = useRouter();
@@ -117,26 +121,7 @@ export function TodoList({
               href={categoryPath(boatId, row.categoryId)}
               onDone={
                 canContribute
-                  ? (target) =>
-                      setCompleting({
-                        id: target.id,
-                        label: target.label,
-                        categoryName: target.categoryName,
-                        intervalMonths: target.intervalMonths,
-                        intervalHours: target.intervalHours,
-                        engine: target.engineId
-                          ? {
-                              id: target.engineId,
-                              label: target.engineLabel ?? "",
-                              lastHours: target.currentHours,
-                              lastDate: null,
-                              tracksHours: target.engineTracksHours,
-                            }
-                          : null,
-                        lastCompletedAt: target.lastCompletedAt,
-                        lastCompletedByName: target.lastCompletedByName,
-                        lastEngineHours: target.lastEngineHours,
-                      })
+                  ? (target) => setCompleting(toCompletable(target, engineReadDates))
                   : undefined
               }
             />

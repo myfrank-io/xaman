@@ -13,10 +13,12 @@ import {
   type CompletionMember,
   type SavedCompletion,
 } from "@/components/checklist/CompleteItemDialog";
+import { toCompletable, type EngineReadDates } from "@/components/checklist/completable";
 import { applyCompletion, isTodo, type ChecklistRow } from "@/components/checklist/rows";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { NextActionCard } from "@/components/dashboard/NextActionCard";
 import { LogDueLabel } from "@/components/logs/LogDueLabel";
 import { formatDate } from "@/lib/format";
 import { categoryPath, checklistPath, logPath, logsPath } from "@/lib/queries/boat-routes";
@@ -44,6 +46,13 @@ function entryKey(entry: UpcomingEntry): string {
  * « À faire prochainement » (ux-flows §2.4): the ranked queue of `boat_todo_queue`, with
  * « Fait » inline. A completed item is re-evaluated through the TS mirror and slides out
  * when it is no longer due; the undo of the toast puts it back.
+ *
+ * The first entry is promoted into a named block above the list (`NextActionCard`): the
+ * screen offered four doors to the same list before offering a single act. It is the same
+ * entry, never a copy — the list below starts at the second.
+ *
+ * `todoCount` counts what the destination shows, and nothing else: « en retard » + « bientôt »,
+ * exactly the two states the queue ranks and the « À traiter » tab lists.
  */
 export function UpcomingList({
   boatId,
@@ -55,6 +64,7 @@ export function UpcomingList({
   todoCount,
   openLogs,
   today,
+  engineReadDates,
 }: {
   boatId: string;
   entries: UpcomingEntry[];
@@ -66,33 +76,13 @@ export function UpcomingList({
   openLogs: number;
   /** Le jour tel que le serveur l'a lu, pour la puce « aujourd'hui / N j de retard ». */
   today: string;
+  /** When each engine was last read, so a fresh reading fills the hours by itself. */
+  engineReadDates?: EngineReadDates;
 }) {
   const t = useTranslations("dashboard.upcoming");
   const [entries, setEntries] = useState(initialEntries);
   const [snapshots] = useState(() => new Map<string, UpcomingEntry>());
   const [completing, setCompleting] = useState<CompletableItem | null>(null);
-
-  function toCompletable(row: ChecklistRow): CompletableItem {
-    return {
-      id: row.id,
-      label: row.label,
-      categoryName: row.categoryName,
-      intervalMonths: row.intervalMonths,
-      intervalHours: row.intervalHours,
-      engine: row.engineId
-        ? {
-            id: row.engineId,
-            label: row.engineLabel ?? "",
-            lastHours: row.currentHours,
-            lastDate: null,
-            tracksHours: row.engineTracksHours,
-          }
-        : null,
-      lastCompletedAt: row.lastCompletedAt,
-      lastCompletedByName: row.lastCompletedByName,
-      lastEngineHours: row.lastEngineHours,
-    };
-  }
 
   function onCompleted(item: CompletableItem, completion: SavedCompletion) {
     setEntries((current) =>
@@ -123,41 +113,62 @@ export function UpcomingList({
     });
   }
 
+  const [next, ...rest] = entries;
+
   return (
-    <div className="flex flex-col">
-      {entries.map((entry) =>
-        entry.kind === "item" ? (
-          <ChecklistItemRow
-            key={entryKey(entry)}
-            row={entry.row}
-            withCategory
-            compact
-            href={categoryPath(boatId, entry.row.categoryId)}
-            onDone={canContribute ? (row) => setCompleting(toCompletable(row)) : undefined}
-          />
-        ) : (
-          <ListRow
-            key={entryKey(entry)}
-            lead={<StatusBadge status={entry.status} className="w-28 justify-center" />}
-            title={entry.title}
-            meta={
-              <>
-                <CategoryDot color={entry.categoryColor} />
-                <span className="truncate">{entry.categoryName}</span>
-                <LogDueLabel status={entry.status} performedAt={entry.dueAt} today={today} />
-              </>
-            }
-            trailing={
-              entry.dueAt ? (
-                <span className="num text-caption text-ink-2">{formatDate(entry.dueAt)}</span>
-              ) : null
-            }
-            categoryColor={entry.categoryColor}
-            href={logPath(boatId, entry.id)}
-          />
-        ),
-      )}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2">
+    <div className="flex flex-col gap-3">
+      {next ? (
+        <NextActionCard
+          boatId={boatId}
+          entry={next}
+          today={today}
+          canContribute={canContribute}
+          onDone={
+            canContribute ? (row) => setCompleting(toCompletable(row, engineReadDates)) : undefined
+          }
+        />
+      ) : null}
+      {rest.length > 0 ? (
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+          {rest.map((entry) =>
+            entry.kind === "item" ? (
+              <ChecklistItemRow
+                key={entryKey(entry)}
+                row={entry.row}
+                withCategory
+                compact
+                href={categoryPath(boatId, entry.row.categoryId)}
+                onDone={
+                  canContribute
+                    ? (row) => setCompleting(toCompletable(row, engineReadDates))
+                    : undefined
+                }
+              />
+            ) : (
+              <ListRow
+                key={entryKey(entry)}
+                lead={<StatusBadge status={entry.status} className="w-28 justify-center" />}
+                title={entry.title}
+                meta={
+                  <>
+                    <CategoryDot color={entry.categoryColor} />
+                    <span className="truncate">{entry.categoryName}</span>
+                    <LogDueLabel status={entry.status} performedAt={entry.dueAt} today={today} />
+                  </>
+                }
+                trailing={
+                  entry.dueAt ? (
+                    <span className="num text-caption text-ink-2">{formatDate(entry.dueAt)}</span>
+                  ) : null
+                }
+                categoryColor={entry.categoryColor}
+                href={logPath(boatId, entry.id)}
+              />
+            ),
+          )}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
         <Link
           href={checklistPath(boatId, { view: "todo" }) as Route}
           className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
@@ -165,8 +176,10 @@ export function UpcomingList({
           {t("allChecklistCount", { count: todoCount })}
           <ChevronRightIcon className="size-4" aria-hidden />
         </Link>
+        {/* Vers l'onglet « Prévu », pas vers l'historique : le compte du lien est celui des
+            interventions ouvertes, et un lien doit mener à ce qu'il compte. */}
         <Link
-          href={logsPath(boatId) as Route}
+          href={logsPath(boatId, { tab: "planned" }) as Route}
           className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
         >
           {t("allLogsCount", { count: openLogs })}

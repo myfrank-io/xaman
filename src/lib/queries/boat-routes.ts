@@ -77,7 +77,7 @@ export function logsPath(
 }
 
 /**
- * « À valider » (D91, D95): the documents that arrived by mail, by photo or by the pile dropped
+ * « À valider » (D91, D109): the documents that arrived by mail, by photo or by the pile dropped
  * from the journal, waiting to be filed. The one door for documents.
  */
 export function inboxPath(boatId: string): string {

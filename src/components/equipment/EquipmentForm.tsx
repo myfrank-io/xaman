@@ -18,11 +18,13 @@ import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { Button } from "@/components/ui/button";
+import { DateField } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericField } from "@/components/ui/numeric-field";
 import { Textarea } from "@/components/ui/textarea";
 import { upsertEquipment } from "@/lib/actions/equipment";
+import { todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatTabPath, equipmentPath } from "@/lib/queries/boat-routes";
 import { upsertEquipmentSchema } from "@/lib/schemas/equipment";
@@ -181,12 +183,14 @@ export function EquipmentForm({
             control={form.control}
             name="installedAt"
             render={({ field }) => (
-              <Input
+              // Rule 13: chips + the native wheel. A piece of equipment was installed in the
+              // past — the chips look backwards, today is the ceiling, and a stored date
+              // already beyond it keeps its wheel so it can be corrected.
+              <DateField
                 id="equipment-installed"
-                type="date"
                 value={field.value ?? ""}
-                onChange={(event) => field.onChange(event.target.value || null)}
-                className="w-auto min-w-40 num"
+                max={(field.value ?? "") > todayString() ? undefined : todayString()}
+                onValueChange={(value) => field.onChange(value || null)}
               />
             )}
           />

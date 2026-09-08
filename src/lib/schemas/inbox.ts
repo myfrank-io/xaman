@@ -58,14 +58,61 @@ export const inboxKindSchema = z.enum(INBOX_KINDS);
 export type InboxKind = z.infer<typeof inboxKindSchema>;
 
 /**
- * What « Valider » can do with a card (D95): create an intervention, create a purchase, or hang
- * the document on an intervention that already exists — an invoice mailed in for last week's
- * work, a photo of a page the carnet already has. The reading never proposes `attach`: it is
- * the person's call, and the chip only shows when the boat has interventions to choose from.
+ * What « Valider » can do with a card (D109). The two kinds above create a line; `attach` hangs
+ * the document on an intervention the carnet already has — an invoice mailed in for last week's
+ * work, a photo of a page already noted. It is deliberately *not* an `InboxKind`: a kind is what
+ * a document becomes, and `inboxEntityId` derives an id from it (D97), whereas an attachment
+ * brings the id of the line the person picked. The reading never proposes it.
  */
 export const INBOX_FILINGS = ["log", "purchase", "attach"] as const;
 export const inboxFilingSchema = z.enum(INBOX_FILINGS);
 export type InboxFiling = z.infer<typeof inboxFilingSchema>;
+
+/**
+ * The id of the line a document is about to become — derived from the document, not drawn at
+ * random, so that a second « Valider » on the same card writes the same line again instead of a
+ * second one.
+ *
+ * Why derived rather than remembered: `inbox_items.log_id` and `purchase_id` carry a foreign key
+ * (migration `0026`), so the id cannot be written on the row *before* the intervention exists —
+ * the row would point at nothing and the update would be refused. Reserving it in the database
+ * would need a column that is not a foreign key, hence a migration. Deriving it needs nothing:
+ * the same document and the same kind always give the same id, on this device and on the next.
+ *
+ * The derivation keeps every bit of the item's own randomness (a XOR against a fixed mask, then
+ * the version and variant nibbles of a UUID v4), so two documents can no more collide here than
+ * two `crypto.randomUUID()` can; and a document filed as an intervention and the same document
+ * filed as a purchase never share an id, because the masks differ.
+ */
+const ENTITY_ID_MASK: Record<InboxKind, string> = {
+  log: "9b1d4a6f2c8e5730a41f6d92b8c30e75",
+  purchase: "3e7c85a09d24b16fc0538ea7412d9b6e",
+};
+
+export function inboxEntityId(itemId: string, kind: InboxKind): string {
+  const hex = itemId.replace(/-/g, "").toLowerCase();
+  if (!/^[0-9a-f]{32}$/.test(hex)) {
+    throw new TypeError("inboxEntityId: itemId must be a UUID");
+  }
+  const mask = ENTITY_ID_MASK[kind];
+  const bytes: number[] = [];
+  for (let i = 0; i < 32; i += 2) {
+    bytes.push(
+      Number.parseInt(hex.slice(i, i + 2), 16) ^ Number.parseInt(mask.slice(i, i + 2), 16),
+    );
+  }
+  // A uuid is all the column asks for: version 4, variant 1.
+  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x40;
+  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
+  const out = bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return [
+    out.slice(0, 8),
+    out.slice(8, 12),
+    out.slice(12, 16),
+    out.slice(16, 20),
+    out.slice(20, 32),
+  ].join("-");
+}
 
 /**
  * `boats/{boat_id}/inbox/{item_id}.{ext}` — the same first segment the storage policies and the
@@ -185,13 +232,12 @@ export const createInboxUploadSchema = z.object({
   mimeType: inboxMime,
   sizeBytes: z.number().int().min(1).max(ATTACHMENT_MAX_BYTES),
   /**
-   * Read after the response rather than while the person waits (D95). One photo is read on the
+   * Read after the response rather than while the person waits (D109). One photo is read on the
    * spot — a bar is a better wait than a card that says « lecture… ». A pile is not: the screen
    * would freeze for the whole batch, and one action would carry every reading past its budget.
    */
   deferReading: z.boolean().default(false),
 });
-export type CreateInboxUploadInput = z.input<typeof createInboxUploadSchema>;
 
 const emptyToNull = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? null : value;
@@ -204,7 +250,7 @@ const engineHoursEntry = z.object({
 /**
  * « Valider » — what the card holds once the person has corrected it. One schema for the three
  * filings: the intervention needs a system, the purchase needs a chip, the attachment needs the
- * intervention it goes on (D95) and nothing else — its fields are the intervention's already.
+ * intervention it goes on (D109) and nothing else — its fields are the intervention's already.
  */
 export const validateInboxItemSchema = z
   .object({
@@ -237,7 +283,5 @@ export const validateInboxItemSchema = z
       ctx.addIssue({ code: "custom", path: ["logId"], message: "required" });
     }
   });
-export type ValidateInboxItemInput = z.input<typeof validateInboxItemSchema>;
-export type ValidateInboxItemValues = z.output<typeof validateInboxItemSchema>;
 
 export const inboxItemRefSchema = z.object({ boatId: uuid, itemId: uuid });

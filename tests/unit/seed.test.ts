@@ -5,8 +5,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { runSeed, type SeedReport } from "../../scripts/seed.mts";
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+// Needs a database, like `rls.test.ts`: DATABASE_URL, or the suite skips itself instead of
+// failing with ECONNREFUSED on a machine with no local stack. CI sets it (ci.yml).
+const DATABASE_URL = process.env.DATABASE_URL;
+const describeWithDb = DATABASE_URL ? describe : describe.skip;
 const pool = new Pool({ connectionString: DATABASE_URL, max: 2 });
 const seedDir = path.resolve(import.meta.dirname, "../../seed");
 
@@ -40,6 +42,7 @@ let afterFirst: Record<string, number>;
 let afterSecond: Record<string, number>;
 
 beforeAll(async () => {
+  if (!DATABASE_URL) return;
   first = await runSeed(pool, { seedDir, auth: null });
   afterFirst = await counts();
   await runSeed(pool, { seedDir, auth: null });
@@ -47,6 +50,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (!DATABASE_URL) return pool.end();
   // leave the database as the RLS suite expects it (supabase/seed.sql only)
   await pool.query("delete from public.boats where external_ref = 'xaman'");
   await pool.query("delete from public.checklist_templates where external_ref = 'orc50-v1'");
@@ -54,7 +58,7 @@ afterAll(async () => {
   await pool.end();
 });
 
-describe("pnpm seed:xaman", () => {
+describeWithDb("pnpm seed:xaman", () => {
   it("loads the Xaman boat, its checklist and history", () => {
     expect(first.template_categories).toBe(8);
     expect(first.template_items).toBeGreaterThan(80);

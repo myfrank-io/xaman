@@ -93,26 +93,3 @@ export async function trashContact(input: unknown): Promise<ActionResult> {
   revalidateContactReferences(boatId);
   return ok(undefined);
 }
-
-/** « Annuler » of the toast, before the trash screen takes over. */
-export async function untrashContact(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(trashContactSchema, input);
-  if (!parsed.ok) return parsed.result;
-  const { boatId, contactId } = parsed.data;
-
-  const supabase = await createClient();
-  const userId = await currentUserId(supabase);
-  if (!userId) return fail("errors.forbidden");
-
-  const { error, count } = await supabase
-    .from("contacts")
-    .update({ deleted_at: null, updated_by: userId }, { count: "exact" })
-    .eq("id", contactId)
-    .eq("boat_id", boatId)
-    .not("deleted_at", "is", null);
-  if (error) return fail(dbErrorKey(error));
-  if (!count) return fail("errors.forbidden");
-
-  revalidateContactReferences(boatId);
-  return ok(undefined);
-}

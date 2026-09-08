@@ -8,6 +8,7 @@ import { can, type BoatRole } from "@/lib/permissions";
 import { listInboxItems } from "@/lib/queries/inbox";
 import { logFormData } from "@/lib/queries/log-form-data";
 import { inboxAddress } from "@/lib/schemas/inbox";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -30,18 +31,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function InboxPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
   const supabase = await createClient();
-  const [{ data: boat }, { data: role }, tl] = await Promise.all([
-    supabase.from("boats").select("id, name, inbox_token").eq("id", boatId).maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
-    getTranslations("logs.form"),
-  ]);
-  if (!boat || !role) notFound();
-  const boatRole = role as BoatRole;
-
-  const [items, form, { data: logs }] = await Promise.all([
+  // Les traductions ne coûtent aucun aller-retour : les lire d'abord met tout le reste — le
+  // bateau, le rôle, la liste des documents, les listes du formulaire et les interventions
+  // qu'un document peut rejoindre — dans une seule vague.
+  const tl = await getTranslations("logs.form");
+  const [{ data: boat }, { data: role }, items, form, { data: logs }] = await Promise.all([
+    readBoatRow(boatId),
+    readBoatRole(boatId),
     listInboxItems(supabase, boatId),
     logFormData(supabase, boatId, tl("equipmentRemoved")),
-    // A document can join an intervention the carnet already has (D95): the recent ones.
+    // A document can join an intervention the carnet already has (D109): the recent ones.
     supabase
       .from("maintenance_logs_view")
       .select("id, title, performed_at")
@@ -49,6 +48,8 @@ export default async function InboxPage({ params }: { params: Promise<{ boatId: 
       .order("performed_at", { ascending: false })
       .limit(RECENT_LOGS),
   ]);
+  if (!boat || !role) notFound();
+  const boatRole = role as BoatRole;
   const domain = inboundDomain();
 
   return (

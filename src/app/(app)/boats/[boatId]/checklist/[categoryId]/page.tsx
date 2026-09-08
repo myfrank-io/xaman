@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 
 import { CategoryItems, type CompletionRow } from "@/components/checklist/CategoryItems";
+import type { EngineReadDates } from "@/components/checklist/completable";
 import { toChecklistRow } from "@/components/checklist/rows";
 import { can, type BoatRole } from "@/lib/permissions";
 import { completionContext } from "@/lib/queries/completion-context";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CategoryPage({
@@ -22,9 +24,10 @@ export default async function CategoryPage({
     { data: disabled },
     { data: progress },
     { data: engines },
+    { data: readings },
     context,
   ] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("boat_categories")
       .select("id, name, color, icon, is_active")
@@ -50,12 +53,17 @@ export default async function CategoryPage({
       .eq("category_id", categoryId)
       .maybeSingle(),
     supabase.from("engines").select("id, label").eq("boat_id", boatId),
+    supabase.from("engine_current_hours").select("engine_id, read_at").eq("boat_id", boatId),
     completionContext(supabase, boatId),
   ]);
   if (!role || !category) notFound();
   const boatRole = role as BoatRole;
 
   const engineLabels = new Map((engines ?? []).map((engine) => [engine.id, engine.label]));
+  // The day each counter was last read: a fresh reading fills the hours of a tick by itself.
+  const engineReadDates: EngineReadDates = Object.fromEntries(
+    (readings ?? []).map((row) => [row.engine_id ?? "", row.read_at]),
+  );
   const rows = (status ?? []).map((row) =>
     toChecklistRow(
       row,
@@ -95,6 +103,7 @@ export default async function CategoryPage({
 
   return (
     <CategoryItems
+      engineReadDates={engineReadDates}
       boatId={boatId}
       category={{
         id: category.id,

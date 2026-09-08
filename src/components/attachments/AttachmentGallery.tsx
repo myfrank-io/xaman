@@ -5,8 +5,7 @@ import { FileTextIcon, ImageOffIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { formatBytes } from "@/lib/attachments/image";
-import { formatDate } from "@/lib/format";
+import { formatBytes, formatDate } from "@/lib/format";
 import type { AttachmentItem } from "@/lib/queries/attachments";
 import { isPdf } from "@/lib/schemas/attachments";
 import { cn } from "@/lib/utils";

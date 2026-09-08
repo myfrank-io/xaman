@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { ATTACHMENT_BUCKET } from "@/lib/schemas/attachments";
-import { restoreEntitySchema } from "@/lib/schemas/logs";
+import { entityRefSchema } from "@/lib/schemas/common";
 import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
 
@@ -27,7 +27,7 @@ export type Restorable =
 // Soft delete only (rule 9): restoring is `deleted_at = null`, nothing is ever re-created.
 // RLS reserves it to owner / editor; a pro never sees the trash.
 async function restore(table: Restorable, input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(restoreEntitySchema, input);
+  const parsed = parseInput(entityRefSchema, input);
   if (!parsed.ok) return parsed.result;
   const { boatId, id } = parsed.data;
 
@@ -54,7 +54,7 @@ async function restore(table: Restorable, input: unknown): Promise<ActionResult>
  * row that is not in the trash can never be destroyed through this path.
  */
 async function purge(table: Restorable, input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(restoreEntitySchema, input);
+  const parsed = parseInput(entityRefSchema, input);
   if (!parsed.ok) return parsed.result;
   const { boatId, id } = parsed.data;
 
@@ -140,7 +140,7 @@ export async function purgeEquipment(input: unknown): Promise<ActionResult> {
  * object last, so a failed delete never leaves a row pointing at a file that is gone.
  */
 export async function purgeAttachment(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(restoreEntitySchema, input);
+  const parsed = parseInput(entityRefSchema, input);
   if (!parsed.ok) return parsed.result;
   const { boatId, id } = parsed.data;
 

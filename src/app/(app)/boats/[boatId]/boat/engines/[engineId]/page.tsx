@@ -11,6 +11,7 @@ import {
 import { can, type BoatRole } from "@/lib/permissions";
 import { AuditFooter } from "@/components/common/AuditFooter";
 import { auditNames } from "@/lib/queries/audit-names";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EnginePage({
@@ -30,8 +31,8 @@ export default async function EnginePage({
     { count: linkedCount },
   ] = await Promise.all([
     supabase.from("engines").select("*").eq("id", engineId).eq("boat_id", boatId).maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
-    supabase.from("boats").select("checklist_template_id").eq("id", boatId).maybeSingle(),
+    readBoatRole(boatId),
+    readBoatRow(boatId),
     supabase
       .from("engine_current_hours")
       .select("hours, read_at, reading_id")

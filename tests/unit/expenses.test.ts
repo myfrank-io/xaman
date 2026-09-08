@@ -223,6 +223,15 @@ describe("expenses CSV", () => {
     expect(csv).toContain('"Contrôle ""vannes"""');
   });
 
+  // The expenses CSV is the one a person opens in Excel: a designation typed as « =2+5 » must
+  // arrive as text, not as a formula the spreadsheet runs (it shared no code with the guarded
+  // writer until this export was moved onto `toCsv`).
+  it("neutralises a designation that starts with a formula character", () => {
+    const csv = buildExpensesCsv([{ ...(ROWS[0] as ExpenseRow), label: "=SOMME(A1:A9)" }], labels);
+    expect(csv).toContain(";'=SOMME(A1:A9);");
+    expect(csv).not.toContain(";=SOMME(A1:A9);");
+  });
+
   it("leaves an unknown amount empty rather than writing 0", () => {
     const csv = buildExpensesCsv([{ ...(ROWS[0] as ExpenseRow), amount: null }], labels);
     expect(csv.trimEnd().endsWith(";")).toBe(true);

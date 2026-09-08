@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D96.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D110.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2109,7 +2109,186 @@ lecture par règles d'une lecture par modèle — c'est `warnings` (montant devi
 étiquette, OCR douteux) qui dit ce qui mérite un second regard, document par document, et il reste
 plus utile que le nom du lecteur.
 
-## 2026-09-08 — D95 : une seule porte pour les documents
+## 2026-09-08 — D95 : l'app se souvient du dernier choix, par bateau et par appareil
+
+**Question.** Audit de simplification du 8 septembre : hors la bouteille de gaz, aucun formulaire
+ne se souvenait de rien. La catégorie de l'intervention, la personne qui a fait le travail, le
+chantier, le fournisseur, le prix d'une bouteille, l'onglet « À traiter » de la checklist se
+retapaient à chaque ouverture — alors qu'à bord la réponse est presque toujours celle de la fois
+d'avant.
+
+**Décision.** Une seule mémoire, `useLastUsed` / `readLastUsed` (`src/components/forms/use-last-used.ts`),
+dans le `localStorage` de l'appareil, clé par bateau, jamais envoyée au serveur. Un formulaire
+s'ouvre sur la dernière valeur retenue **quand aucun pré-remplissage plus sûr n'existe** (une valeur
+de l'URL ou de la ligne éditée prime toujours), et la mémoire n'est écrite **qu'à l'enregistrement
+réussi** — jamais à la frappe, pour qu'un brouillon abandonné n'apprenne rien de faux à l'app.
+
+**Raison.** C'est la différence entre « un formulaire » et « l'app me connaît » : un tap de moins sur
+l'acte dominant, à chaque fois, sans schéma ni synchronisation. Une préférence d'appareil n'a pas
+sa place en base : deux personnes sur deux appareils ont deux habitudes.
+
+## 2026-09-08 — D96 : « À valider » se met à jour tout seul, et se valide en un tap
+
+**Question.** L'écran des documents reçus rafraîchissait la page **toutes les cinq secondes** tant
+qu'une lecture tournait — une douzaine de requêtes serveur par tick, indéfiniment si un document
+restait coincé — et chaque carte, même celle qu'aucune réserve n'accompagnait, ouvrait huit champs
+modifiables sur sept cents pixels.
+
+**Décision.** Trois changements qui vont ensemble :
+
+- `inbox_items` rejoint la publication `supabase_realtime` (`0028`). La carte, le compteur de la
+  navigation et la bannière du tableau de bord bougent ensemble, sur l'appareil qui a validé comme
+  sur l'autre. Le sondage reste, mais **borné** (3 s → 15 s, deux minutes au total), en filet pour
+  un projet dont le service temps réel serait éteint.
+- Une carte **sans réserve** s'ouvre sur une ligne — nature, titre, date, montant, fournisseur — avec
+  « Valider » et « Modifier ». L'avertissement `local`, que D94 pose sur *toute* lecture locale, ne
+  compte pas comme une réserve : le prendre en compte aurait rendu la règle inapplicable. Ce qui
+  mérite le formulaire, ce sont les vraies réserves de D92 (montant deviné, date sans étiquette,
+  OCR douteux).
+- « Tout valider » classe les cartes sûres **une par une** par la Server Action existante : un refus
+  laisse les autres classées, et chaque écriture reste idempotente.
+
+**Raison.** Cinq factures passaient de cinq taps et trois mille pixels de défilement à un seul tap.
+
+## 2026-09-08 — D97 : l'identité de la ligne qu'un document devient est dérivée du document
+
+**Question.** `validateInboxItem` tirait un identifiant neuf à chaque appel et ne l'écrivait qu'à la
+toute fin. Un échec après l'écriture de l'intervention laissait la carte en « À valider » ; le tap
+suivant tirait un **second** identifiant, donc une **seconde** intervention pour la même facture.
+
+**Décision.** L'identifiant est **dérivé** de celui du document (XOR d'un masque par nature), donc
+stable : rejouer « Valider » réécrit la même ligne. Le rattachement du fichier est relu par son
+`storage_path` au lieu d'être supposé.
+
+**Raison.** Réserver l'identifiant sur la ligne avant d'écrire l'entité est impossible sans
+migration : `inbox_items.log_id` et `purchase_id` portent des clés étrangères non différables.
+
+## 2026-09-08 — D98 : un seul compte pour « à traiter », celui de l'écran d'arrivée
+
+**Question.** Le tableau de bord annonçait « Tous les points à traiter (47) » sous une liste de six,
+et l'écran d'arrivée n'en montrait pas 47 : `overdue + soon + neverRecorded` additionnait un
+ensemble **qui se recoupe** — un point à intervalle jamais fait porte déjà un état.
+
+**Décision.** `todoCount = overdue + soon`, exactement ce que la file classe et ce que l'onglet
+« À traiter » liste. Même correction sur « Interventions ouvertes », dont le lien menait à
+l'historique et pointe désormais sur l'onglet « Prévu ».
+
+**Raison.** Un compte qui mène à une liste plus courte détruit la confiance dans tous les autres.
+
+## 2026-09-08 — D99 : le tableau de bord mène par l'acte, et récompense la semaine
+
+**Décision.** La première ligne de la file est promue en bloc « À faire maintenant » (libellé,
+raison, « Fait ») — c'est la même entrée, jamais une copie. La phrase d'état devient un bilan de
+sept jours (« 3 points réglés et 1 intervention notée cette semaine par Xavier et Emmanuel · rien
+de nouveau en retard ») et la quatrième vignette passe de « Dépenses 2026 » à « Réglés cette
+semaine ». Le récapitulatif se replie en un bloc de trois lignes, les dernières interventions
+passent de cinq à trois, et aucune destination n'est perdue.
+
+**Raison.** L'écran offrait quatre portes vers la même liste avant d'offrir un seul acte, et sa
+phrase répétait des compteurs affichés cinq centimètres plus bas. Un écart motive ; un niveau
+informe.
+
+## 2026-09-08 — D100 : rien n'est écrit tant que tout ne peut pas l'être
+
+**Question.** `saveLog` écrivait l'intervention **et** les relevés, puis refusait « heures moteur
+obligatoires » : le journal montrait la ligne pendant que le formulaire annonçait un échec.
+
+**Décision.** La vérification des points cochés passe avant la première écriture. Dans le même
+esprit : une Server Action qui **lève** devient un refus (`errors.unknown`) au lieu de faire
+tomber le formulaire dans la frontière d'erreur avec tout ce qui y était tapé, et le brouillon
+n'est pas réécrit tant que la bannière « Reprendre / Supprimer » n'a pas de réponse.
+
+**Raison.** Règle 13 : jamais de saisie perdue, et jamais un message qui ment sur ce qui est en base.
+
+## 2026-09-08 — D101 : un chemin de retour est résolu, jamais préfixé
+
+**Question.** `?next=//evil.com` et `?next=/\evil.com` passaient le test « commence par `/` » de la
+connexion et de l'inscription, et emmenaient une personne connectée sur un site tiers.
+
+**Décision.** Un seul helper (`safeNextPath`) résout le chemin contre l'origine de l'application et
+ne garde que `pathname + search` si l'origine correspond ; connexion, inscription et `/auth/callback`
+l'utilisent.
+
+**Raison.** Une redirection ouverte sur un écran de connexion est un hameçonnage clé en main.
+
+## 2026-09-08 — D102 : les props sont la vérité, l'optimiste est un calque
+
+**Question.** La liste d'une catégorie recopiait ses props dans un `useState` au premier rendu :
+un point coché sur un autre iPad n'apparaissait jamais, le rafraîchissement temps réel étant jeté
+par l'état local.
+
+**Décision.** Les listes temps réel dérivent leur affichage des props, avec un calque
+d'optimisme indexé par identifiant de réalisation, effacé dès que les props le portent. Dans la même
+veine : se déconnecter vide le cache de lecture persistant (l'iPad est partagé), et les suites de
+tests qui ont besoin d'une base se sautent sans `DATABASE_URL`, pour que `pnpm test` soit
+exécutable sans Docker.
+
+## 2026-09-08 — D103 : aucune confirmation devant une mise à la corbeille
+
+**Question.** Mettre à la corbeille une intervention, un achat, une pièce, un intervenant, une
+sortie de l'eau ou un équipement ouvrait un dialogue de confirmation — alors que le geste est
+réversible **deux fois** : un toast « Annuler » de 8 secondes, puis trente jours dans `/trash`
+(règle 9). La règle 13 dit déjà de préférer l'annulation à la confirmation ; six chemins disaient
+le contraire.
+
+**Décision.** Le dialogue disparaît sur ces six chemins. Ce qu'il expliquait passe en deuxième
+ligne du toast : le nombre de lignes qui citent un intervenant, le nom d'une pièce, ce qu'un
+équipement ou une intervention emporte avec eux. La confirmation reste **là où rien ne rattrape** :
+purge définitive, suppression du bateau, transfert, et suppression d'un document de « À valider ».
+
+**Raison.** Un ralentisseur devant un geste annulable ne protège personne : il ajoute un tap à
+chaque fois pour éviter un tap une fois sur cent.
+
+## 2026-09-08 — D104 : un seul chemin de restauration
+
+**Question.** Cinq modules réécrivaient à la main l'écriture que `actions/trash.ts` fait déjà
+(`deleted_at = null`), avec deux symboles `restorePurchase` et deux `restoreHaulOut` dans l'arbre —
+et **trois** d'entre eux (achats, sorties de l'eau, pièces jointes) oubliaient la garde
+`.not("deleted_at", "is", null)`, donc une ligne vivante pouvait être « restaurée ».
+
+**Décision.** `actions/trash.ts` porte toute restauration, sur une seule forme
+(`entityRefSchema`, `{boatId, id}`) ; les modules d'entité ne gardent que le sens « vers la
+corbeille ». Un seul bouton (`TrashEntityButton`) sert les quatre écrans qui en avaient un chacun.
+
+## 2026-09-08 — D105 : le stock porte son propre vocabulaire
+
+Les composants des pièces détachées lisaient leurs textes dans `equipment.stock.*`. L'écran vit
+dans l'onglet Équipements (D34), mais ses mots ne sont pas ceux de l'équipement : ils passent dans
+un espace `parts`.
+
+## 2026-09-08 — D106 : chaque onglet peint son squelette avant ses données
+
+**Question.** Aucun `loading.tsx` n'existait et le groupe `(app)` est en rendu dynamique : chaque
+tap d'onglet bloquait sur une douzaine à une vingtaine d'allers-retours, écran figé, sans un signe.
+
+**Décision.** Sept `loading.tsx` (les cinq onglets, la racine du bateau, le formulaire
+d'intervention) qui reprennent **les dimensions réelles** des composants — hauteur de ligne,
+hauteur de vignette, grille des systèmes — pour que rien ne saute à l'arrivée des données. Jamais
+un écran de rotation seule.
+
+## 2026-09-08 — D107 : le bateau et le rôle se lisent une fois par requête
+
+Trente-neuf pages sur quarante et une rejouaient `boat_role` que la mise en page venait de lire,
+et sept relisaient la ligne du bateau. Les deux lectures passent par `React.cache()`
+(`src/lib/queries/boat-context.ts`) ; une page ne nomme plus les colonnes de `boats`, puisque
+réutiliser la ligne déjà lue coûte zéro aller-retour.
+
+Dans la même veine : le pont temps réel ne rafraîchit plus le serveur pour un changement qui ne
+peut pas atteindre l'écran affiché, ni pendant que l'onglet est caché (il rejoue au retour).
+
+## 2026-09-08 — D108 : la lecture hors ligne est le travail du service worker
+
+**Question.** Le cache TanStack Query était persisté dans IndexedDB pour une semaine — pour **une
+seule** `useQuery` dans toute l'application, que `shouldDehydrateQuery` excluait par son nom. Le
+persisteur sérialisait donc un cache vide, à chaque seconde, dans le paquet de tout le monde.
+
+**Décision.** Persistance retirée (`@tanstack/react-query-persist-client` et
+`@tanstack/query-async-storage-persister` quittent le dépôt). Les pages du bateau reçoivent une
+route de service worker `NetworkFirst` avec un délai réseau de 5 secondes et leur propre cache,
+vidé à la déconnexion — D102 étendue au service worker. `idb-keyval` reste : c'est lui qui purge
+le cache déjà installé sur les iPad d'aujourd'hui.
+
+## 2026-09-08 — D109 : une seule porte pour les documents
 
 **Question.** « Utilise les mêmes techniques de préremplissage quand on le fait directement depuis
 Intervention. Pense à l'orga aussi, ça fait pas un peu doublon ? » — sur une capture du Journal

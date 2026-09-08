@@ -6,22 +6,24 @@
  * example, so the file comes back mapped without a single choice to make.
  */
 
+import { toCsv } from "@/lib/export/csv";
 import { type EntityDescriptor } from "@/lib/import/entities";
-
-/** A cell containing the separator, a quote or a newline has to be quoted. */
-function csvCell(value: string): string {
-  return `"${value.replaceAll('"', '""')}"`;
-}
 
 /**
  * Semicolon-separated with a byte order mark: that is what French Excel opens in columns
- * without asking anything. A comma-separated file lands in a single column here.
+ * without asking anything. A comma-separated file lands in a single column here. Written by
+ * the one CSV writer of the app (`toCsv`), which also neutralises formula injection — a
+ * template is a file someone opens in Excel, so it gets the same guard as the exports.
  */
 export function templateCsv(descriptor: EntityDescriptor): string {
-  const headers = descriptor.fields.map((field) => field.label);
   const sample = descriptor.fields.map((field) => field.sample ?? "");
-  const body = [headers, sample].map((cells) => cells.map(csvCell).join(";")).join("\r\n");
-  return `﻿${body}\r\n`;
+  return toCsv(
+    [sample],
+    descriptor.fields.map((field, index) => ({
+      header: field.label,
+      value: (row: string[]) => row[index] ?? "",
+    })),
+  );
 }
 
 export function templateFileName(descriptor: EntityDescriptor): string {

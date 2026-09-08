@@ -59,7 +59,7 @@ export function LogsToolbar({
   categories: CategoryChoice[];
   reviewCount: number;
   contactName: string | null;
-  /** Only someone who may add documents is offered the door to « À valider » (D95). */
+  /** Only someone who may add documents is offered the door to « À valider » (D109). */
   canContribute?: boolean;
 }) {
   const t = useTranslations("logs");
@@ -165,7 +165,7 @@ export function LogsToolbar({
         ) : null}
         {canContribute ? (
           /* Not a « + » (D19): a document creates nothing until someone validates it. The pile
-             goes to « À valider » (D95), where the agent reads it and each card is checked —
+             goes to « À valider » (D109), where the agent reads it and each card is checked —
              « Importer », in the header, is for a table, and says so with another verb. */
           <Button asChild variant="outline" className="shrink-0 sm:ml-auto">
             <Link href={inboxPath(boatId) as Route}>

@@ -17,13 +17,6 @@ const stateClasses: Record<ChecklistState, string> = {
   overdue: "border-state-overdue-border bg-state-overdue-tint text-state-overdue-fg",
 };
 
-export const stateDotClasses: Record<ChecklistState, string> = {
-  never: "bg-state-never",
-  ok: "bg-state-ok",
-  soon: "bg-state-soon",
-  overdue: "bg-state-overdue",
-};
-
 const stateIcons = {
   never: CircleIcon,
   ok: CircleCheckIcon,
@@ -64,20 +57,5 @@ export function ChecklistStateBadge({
       {today ? null : <Icon aria-hidden />}
       {today ? t("today") : t(state)}
     </Badge>
-  );
-}
-
-export function ChecklistStateDot({
-  state,
-  className,
-}: {
-  state: ChecklistState;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn("inline-block size-3 shrink-0 rounded-full", stateDotClasses[state], className)}
-      aria-hidden
-    />
   );
 }

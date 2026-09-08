@@ -16,6 +16,7 @@ import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { Button } from "@/components/ui/button";
+import { DateField } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -365,13 +366,13 @@ export function ChecklistItemForm({
         </div>
       </fieldset>
       <Field id="item-anchor" label={t("anchor")} help={t("anchorHelp")} error={errors.anchorDate}>
-        <Input
+        {/* Rule 13: a date is chips + the native wheel, never a bare field. The anchor is a
+            reference that has already happened — the chips look backwards, today is the ceiling. */}
+        <DateField
           id="item-anchor"
-          type="date"
           value={anchorDate}
           max={todayString()}
-          onChange={(event) => touch(setAnchorDate)(event.target.value)}
-          className="w-auto min-w-40 num"
+          onValueChange={touch(setAnchorDate)}
         />
       </Field>
       {item ? (

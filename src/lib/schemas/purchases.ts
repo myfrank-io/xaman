@@ -55,11 +55,8 @@ export const upsertPurchaseSchema = z.object({
   /** Set on save: a line the user has just typed is not « à vérifier ». */
   needsReview: z.boolean().default(false),
 });
-export type UpsertPurchaseInput = z.input<typeof upsertPurchaseSchema>;
-export type UpsertPurchaseValues = z.output<typeof upsertPurchaseSchema>;
 
 const purchaseRef = z.object({ boatId: uuid, purchaseId: uuid });
 
 export const trashPurchaseSchema = purchaseRef;
-export const restorePurchaseSchema = purchaseRef;
 export const markPurchaseReviewedSchema = purchaseRef;

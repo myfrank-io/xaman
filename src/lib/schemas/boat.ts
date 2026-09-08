@@ -60,7 +60,6 @@ export const updateBoatSchema = z.object({
   draftM: nullableDecimal({ scale: 2, max: 99 }),
   notes: nullableText(4000),
 });
-export type UpdateBoatInput = z.input<typeof updateBoatSchema>;
 
 // Deleting a boat requires typing its name (E2-5).
 export const deleteBoatSchema = z.object({
@@ -105,4 +104,3 @@ export const createBoatSchema = z.object({
    */
   boatModelId: uuid.nullable().default(null),
 });
-export type CreateBoatInput = z.input<typeof createBoatSchema>;

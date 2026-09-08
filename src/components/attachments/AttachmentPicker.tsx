@@ -26,13 +26,13 @@ import { undoToast } from "@/components/common/UndoToast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { formatBytes } from "@/lib/attachments/image";
 import {
-  restoreAttachment,
   saveAttachment,
   trashAttachment,
   updateAttachmentCaption,
 } from "@/lib/actions/attachments";
+import { restoreTrashedAttachment } from "@/lib/actions/trash";
+import { formatBytes } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatKeys } from "@/lib/queries/keys";
 import type { AttachmentItem } from "@/lib/queries/use-attachments";
@@ -265,7 +265,7 @@ export function AttachmentPicker({
       message: t("removed"),
       undoLabel: tc("undo"),
       onUndo: () => {
-        void restoreAttachment({ boatId, attachmentId: item.id }).then((restored) => {
+        void restoreTrashedAttachment({ boatId, id: item.id }).then((restored) => {
           if (restored.ok) {
             setItems((current) => [...current, item]);
             invalidateAttachments();

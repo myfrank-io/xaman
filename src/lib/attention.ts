@@ -40,6 +40,22 @@ export function isDueToday(item: AttentionItem): boolean {
   return item.status !== "overdue" && item.daysRemaining === 0;
 }
 
+/** La fenêtre de « cette semaine » : sept jours, la même des deux côtés de la phrase d'état. */
+export const WEEK_DAYS = 7;
+
+/**
+ * Passé en retard dans les sept derniers jours — la seule chose *nouvelle* d'un état, et la
+ * moitié droite de la phrase d'état du tableau de bord (« rien de nouveau en retard »).
+ *
+ * Une échéance en heures n'a pas de jour restant : on ne sait pas quand elle a basculé, donc
+ * elle n'est jamais comptée comme nouvelle. Elle reste dite par la tuile « En retard », qui,
+ * elle, compte tout.
+ */
+export function isNewlyOverdue(item: AttentionItem, windowDays: number = WEEK_DAYS): boolean {
+  if (item.status !== "overdue") return false;
+  return item.daysRemaining !== null && item.daysRemaining >= -windowDays;
+}
+
 /** Ce que la règle regarde d'une intervention. */
 export type AttentionLog = {
   status: LogStatus;

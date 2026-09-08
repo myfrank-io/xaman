@@ -8,8 +8,10 @@ import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 
 /**
- * « À valider » (D91) under the touch audit: a document being read, one read and waiting, one
- * the reading could not handle, and two already filed — every state of a card on one screen.
+ * « À valider » (D91) under the touch audit: a document being read, one read with something to
+ * check (which opens on the full form), one the reading could not handle, two read without a
+ * single reserve (which open on one line, and together bring out « Tout valider »), and two
+ * already filed — every state of a card on one screen.
  */
 const NOW = "2026-09-08T10:00:00.000Z";
 const CATEGORY = SAMPLE_CATEGORIES[0]?.id ?? "";
@@ -88,6 +90,69 @@ const ITEMS: InboxItem[] = [
     mimeType: "image/jpeg",
     sizeBytes: 1_204_224,
     error: "analysis",
+  },
+  // Two documents the reading had nothing to flag: each opens on its one line and its « Valider »
+  // (« Modifier » brings the form back), and together they put « Tout valider » above the list.
+  // Purchases, because a sample category id is not a uuid and an intervention needs one.
+  {
+    ...base,
+    id: "00000000-0000-4000-8000-000000009006",
+    source: "upload",
+    status: "ready",
+    receivedAt: "2026-09-04T11:40:00.000Z",
+    senderEmail: null,
+    senderName: null,
+    subject: null,
+    fileName: "ticket-manilles.jpg",
+    mimeType: "image/jpeg",
+    sizeBytes: 612_000,
+    suggestion: {
+      documentType: "receipt",
+      kind: "purchase",
+      purchaseKind: "part",
+      title: "Manilles inox 8 mm ×4",
+      date: "2026-09-04",
+      amount: 24.9,
+      currency: "EUR",
+      supplierName: "Accastillage Diffusion",
+      contactId: null,
+      categoryId: null,
+      engineHours: [],
+      lineItems: [],
+      notes: null,
+      confidence: "high",
+      warnings: ["local"],
+    },
+  },
+  {
+    ...base,
+    id: "00000000-0000-4000-8000-000000009007",
+    source: "email",
+    status: "ready",
+    receivedAt: "2026-09-03T08:05:00.000Z",
+    senderEmail: "capitainerie@port-laciotat.fr",
+    senderName: "Port de La Ciotat",
+    subject: "Facture place de port — septembre",
+    fileName: "place-de-port-septembre.pdf",
+    mimeType: "application/pdf",
+    sizeBytes: 98_304,
+    suggestion: {
+      documentType: "invoice",
+      kind: "purchase",
+      purchaseKind: "service",
+      title: "Place de port — septembre 2026",
+      date: "2026-09-01",
+      amount: 412,
+      currency: "EUR",
+      supplierName: "Port de La Ciotat",
+      contactId: null,
+      categoryId: null,
+      engineHours: [],
+      lineItems: [],
+      notes: null,
+      confidence: "high",
+      warnings: ["local"],
+    },
   },
   {
     ...base,

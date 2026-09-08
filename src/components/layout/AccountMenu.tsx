@@ -16,6 +16,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { InstallDialog } from "@/components/pwa/InstallDialog";
+import { signOutQueryCache } from "@/components/providers/QueryProvider";
 import { useInstallPrompt } from "@/components/pwa/use-install-prompt";
 import { Avatar, AvatarFallback, initials } from "@/components/ui/avatar";
 import {
@@ -117,7 +118,20 @@ export function AccountMenu({
 
   // One form for both placements; each trigger submits it.
   const formRef = React.useRef<HTMLFormElement>(null);
-  const submitSignOut = () => formRef.current?.requestSubmit();
+  /**
+   * Leaving takes the read cache with it (rule 2). The iPad is shared: on this very device the
+   * next person to sign in is somebody else, and TanStack Query keeps a week of dehydrated
+   * answers in IndexedDB — the checklist, the journal, the members of a boat they may have
+   * nothing to do with. The session cookie goes on the server; this is the half that lives here.
+   *
+   * The in-memory client is emptied by the provider, which owns it, through an event rather than
+   * `useQueryClient()`: this menu also renders in the design gallery, outside any provider, and a
+   * hook that throws there would take the whole screen down. Nothing must stop the sign-out
+   * itself, so the form is submitted whatever happens.
+   */
+  const submitSignOut = () => {
+    void signOutQueryCache().finally(() => formRef.current?.requestSubmit());
+  };
 
   return (
     <div className={cn("contents", className)}>

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Field } from "@/components/forms/Field";
+import { useKeyboardOffset } from "@/components/forms/use-keyboard-offset";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NumericField } from "@/components/ui/numeric-field";
@@ -66,6 +67,7 @@ export function StartupWizard({
   const tu = useTranslations("units");
   const errorMessage = useErrorMessage();
   const router = useRouter();
+  const keyboard = useKeyboardOffset();
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<1 | 2 | 3>(initialStep ?? (engines.length > 0 ? 1 : 2));
   const [readingIds] = useState(
@@ -280,7 +282,15 @@ export function StartupWizard({
         </div>
       ) : null}
 
-      <div className="sticky bottom-[var(--bottom-nav-height,0px)] z-20 -mx-4 flex items-center justify-between gap-3 border-t border-border bg-surface px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6">
+      {/* Step 1 is a screen of counters and step 2 eighty rows: the bar has to climb above the
+          iPad keyboard like every other form bar (`useKeyboardOffset`). */}
+      <div
+        className="sticky z-20 bleed-gutters flex items-center justify-between gap-3 border-t border-border bg-surface py-2"
+        style={{
+          bottom: `calc(var(--bottom-nav-height, 0px) + ${keyboard}px)`,
+          paddingBottom: keyboard > 0 ? undefined : "max(0.5rem, env(safe-area-inset-bottom))",
+        }}
+      >
         {step === 1 || (step === 2 && engines.length === 0) ? (
           <Button asChild variant="ghost">
             <Link href={checklistPath(boatId) as Route}>{t("later")}</Link>

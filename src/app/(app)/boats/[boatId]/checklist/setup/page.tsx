@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { StartupWizard, type WizardCategory } from "@/components/checklist/StartupWizard";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ChecklistSetupPage({
@@ -18,7 +19,7 @@ export default async function ChecklistSetupPage({
     { data: categories },
     { data: items },
   ] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("engines")
       .select("id, label")

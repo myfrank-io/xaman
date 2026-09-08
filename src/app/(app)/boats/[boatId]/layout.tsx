@@ -18,6 +18,7 @@ import { can, type BoatRole } from "@/lib/permissions";
 import { loadBoatAttention } from "@/lib/queries/attention";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { pendingInboxCount } from "@/lib/queries/inbox";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const NAV_KEYS: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
@@ -46,21 +47,28 @@ export default async function BoatLayout({
   if (!/^[0-9a-f-]{36}$/i.test(boatId)) notFound();
 
   const supabase = await createClient();
-  const [{ data: boat }, { data: role }, { data: auth }] = await Promise.all([
-    supabase.from("boats").select("*").eq("id", boatId).maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
-    supabase.auth.getUser(),
-  ]);
+  // Une seule vague pour tout ce qui ne dépend que du `boatId` : le bateau, le rôle, la session
+  // et les deux compteurs de la navigation. Les compteurs attendaient la réponse du bateau sans
+  // rien en tirer — c'était une seconde vague pour rien, payée à chaque écran.
+  const [{ data: boat }, { data: role }, { data: auth }, attention, inboxPending] =
+    await Promise.all([
+      readBoatRow(boatId),
+      readBoatRole(boatId),
+      supabase.auth.getUser(),
+      loadBoatAttention(supabase, boatId),
+      pendingInboxCount(supabase, boatId),
+    ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
 
-  const [attention, inboxPending, { data: profile }] = await Promise.all([
-    loadBoatAttention(supabase, boatId),
-    pendingInboxCount(supabase, boatId),
-    auth.user
-      ? supabase.from("profiles").select("full_name, email").eq("id", auth.user.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+  // Le nom affiché au menu compte : la seule lecture qui a besoin de l'identité de la session.
+  const { data: profile } = auth.user
+    ? await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", auth.user.id)
+        .maybeSingle()
+    : { data: null };
 
   // Le point rouge ne compte que ce qui est à faire aujourd'hui (D88) : l'onglet Journal
   // portait le total des interventions ouvertes, donc une intervention prévue dans trois

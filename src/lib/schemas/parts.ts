@@ -4,7 +4,6 @@ import { decimal, expectedUpdatedAt, nullableText, requiredText, uuid } from "@/
 
 /** Units offered as chips (E5-4); a stored value outside the list stays selectable. */
 export const PART_UNITS = ["pc", "m", "l", "kg", "jeu"] as const;
-export type PartUnit = (typeof PART_UNITS)[number];
 
 export const PART_QUANTITY_MAX = 999_999;
 
@@ -30,8 +29,6 @@ export const upsertPartSchema = z.object({
   supplierContactId: optionalUuid,
   notes: nullableText(2000),
 });
-export type UpsertPartInput = z.input<typeof upsertPartSchema>;
-export type UpsertPartValues = z.output<typeof upsertPartSchema>;
 
 /** One tap on + or − (E5-4): the database applies the delta atomically. */
 export const adjustPartQuantitySchema = z.object({
@@ -44,5 +41,5 @@ export const adjustPartQuantitySchema = z.object({
     .refine((value) => value !== 0, { message: "invalid" }),
 });
 
-/** Move a part to the trash, or bring it back from « Annuler » (D40). */
+/** Move a part to the trash (D40); bringing it back is `entityRefSchema` + `restorePart`. */
 export const trashPartSchema = z.object({ boatId: uuid, partId: uuid });

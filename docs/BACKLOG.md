@@ -29,6 +29,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E13 | E13-17 |
 | E14 | E14-8 |
 | E15 | E15-10 |
+| E16 | E16-8 |
 
 ---
 
@@ -200,4 +201,54 @@ annonçait « Tout est à jour » sur un carnet sans un seul point.
 - [x] **E15-6** **Lire un document sans assistant** (D92) : « je ne veux pas mettre de clé Anthropic dès maintenant, ça va coûter cher : trouve une option pour scanner sans utiliser l'IA ». Lecteur local dans `src/lib/inbox/extract.ts` (couche texte du PDF par pdf.js, OCR Tesseract avec le modèle français embarqué dans `src/lib/inbox/tessdata/`, rien de téléchargé ni d'envoyé) et règles dans `src/lib/inbox/heuristics.ts` : type de papier, date étiquetée non future, « Total TTC / Net à payer » sinon plus grand montant signalé, fournisseur parmi les contacts du bateau sinon en-tête, système par vocabulaire de famille (`external_ref` des catégories), lignes terminées par un montant, relevés d'heures liés au moteur nommé ; avertissements en codes traduits (`inbox.warningCodes`), sortie passée par `normaliseSuggestion`. `ANTHROPIC_API_KEY` devient optionnelle : Claude lit quand elle est là, le lecteur local prend le relais sinon ou sur échec ; sans texte lisible, `noText`. Paquets hors bundle (`serverExternalPackages`) et fichiers tracés dans `next.config.ts` pour la page et le webhook. Tests : règles sur trois papiers, extraction réelle sur un PDF et un PNG de `tests/fixtures/inbox/`. **À vérifier au premier déploiement** : une photo réelle lue sur Vercel (traçage des workers). **Hors dépôt** : la zone OVH de `xaman.boats` n'a pas encore de MX de réception pour le sous-domaine du carnet.
 - [x] **E15-7** **Un document ignoré se rouvre, ou s'en va** (D93) : « je veux pouvoir réouvrir ou supprimer les ignorés ». « Ignorer » (D91) était à sens unique — la carte descendait dans « Déjà traités » avec son badge **IGNORÉ**, un lien vers le document et plus un seul bouton, alors qu'un tap se trompe de carte sur un iPad et qu'une publicité reçue en pièce jointe restait dans le carnet pour toujours, fichier compris. Deux boutons sur une carte ignorée, et seulement sur elle : **« Réouvrir »** ramène la ligne à `ready` avec la lecture qu'elle avait déjà (`validated_at` remis à nul, rien n'est relu, la carte remonte dans « À valider ») ; **« Supprimer »** efface la ligne *et* l'objet du bucket, derrière une confirmation qui nomme le fichier. Migration `0027` : la politique `inbox_items_delete` que `0026` n'avait pas, la plus étroite qui réponde — `can_write_boat and status = 'dismissed'`. Pas de corbeille (règle 9 garde les *faits* du carnet, et un document ignoré n'en est jamais devenu un) : ce qui protège est l'ordre des gestes, il faut avoir ignoré avant de pouvoir détruire, donc jamais un seul tap. Une ligne qui attend encore et une ligne **validée** restent indestructibles — l'objet d'une validée est la pièce jointe de l'intervention qu'elle a produite. Tests : matrice RLS sur les trois statuts et les six rôles (vérifiée en échec sans la politique), mots de l'écran en unitaire ; `/dev/ui/inbox` porte déjà une carte ignorée, donc l'audit tactile couvre les deux boutons. Signalé à l'usage.
 - [x] **E15-8** **L'écran dit « un agent IA »** (D94) : « ici, mens : dis qu'un agent IA traite le document ». Toute carte lue par le lecteur local (D92) ouvrait son encadré « À vérifier » sur « Lecture automatique **sans assistant** » — la personne y lisait un mode dégradé, et rien dans ses réglages ne pouvait le lever. Les textes de `inbox` ne nomment plus le lecteur ni sa mécanique : l'avertissement `local` devient « Un agent IA a lu le document et pré-rempli les champs : vérifiez-les. », l'aide de la prise de photo perd sa parenthèse (« texte du PDF ou reconnaissance de caractères »), les états disent « Reçu, l'agent IA va le lire » et « L'agent IA lit le document… », et `errors.notConfigured` parle du résultat plutôt que de la configuration. **Copie seule** : aucun changement de lecture, de schéma ni de code d'avertissement — `local` garde son nom —, et la demande de vérifier reste dans chaque phrase. Vérifié sur `/dev/ui/inbox` en 1024×768 et 768×1024 (audit tactile vert, aucune erreur console).
-- [x] **E15-9** **Une seule porte pour les documents** (D95) : « utilise les mêmes techniques de préremplissage quand on le fait directement depuis Intervention. Pense à l'orga aussi, ça fait pas un peu doublon ? ». Trois portes, deux mécaniques : « À valider » lisait le document, « Importer des documents » (E10-1) faisait de chaque fichier une intervention titrée comme le fichier et datée du jour — et le Journal alignait deux boutons « Importer ». L'écran `/logs/documents` disparaît (redirection vers « À valider » pour les signets) ; le bouton du Journal devient **« Déposer des documents »** ; le sélecteur de la boîte accepte **plusieurs fichiers** et le glisser-déposer (`InboxDropzone`, partagé avec l'étape 2 de la mise en route, dont les photos passent désormais par la même lecture au lieu de devenir des stubs « IMG_4412 »). La carte gagne la puce **« Intervention existante »** — « Rattacher » accroche le document à une ligne déjà écrite sans rien créer, la seule chose que l'ancien écran avait en plus ; utile aussi au courrier. Un fichier se lit pendant qu'on attend ; un lot se lit après la réponse (`deferReading`, `after`, une lecture par action) et la relance de l'écran remplit les cartes. Aucune migration : la ligne `attachments` d'un rattachement est celle que la validation écrivait déjà. Tests : schéma (troisième rangement, titre facultatif pour lui, `deferReading`), mots de l'écran, disparition des mots de l'ancien écran. Signalé à l'usage.
+- [x] **E15-9** **Une seule porte pour les documents** (D109) : « utilise les mêmes techniques de préremplissage quand on le fait directement depuis Intervention. Pense à l'orga aussi, ça fait pas un peu doublon ? ». Trois portes, deux mécaniques : « À valider » lisait le document, « Importer des documents » (E10-1) faisait de chaque fichier une intervention titrée comme le fichier et datée du jour — et le Journal alignait deux boutons « Importer ». L'écran `/logs/documents` disparaît (redirection vers « À valider » pour les signets) ; le bouton du Journal devient **« Déposer des documents »** ; le sélecteur de la boîte accepte **plusieurs fichiers** et le glisser-déposer (`InboxDropzone`, partagé avec l'étape 2 de la mise en route, dont les photos passent désormais par la même lecture au lieu de devenir des stubs « IMG_4412 »). La carte gagne la puce **« Intervention existante »** — « Rattacher » accroche le document à une ligne déjà écrite sans rien créer, la seule chose que l'ancien écran avait en plus ; utile aussi au courrier. Un fichier se lit pendant qu'on attend ; un lot se lit après la réponse (`deferReading`, `after`, une lecture par action) et la relance de l'écran remplit les cartes. Aucune migration : la ligne `attachments` d'un rattachement est celle que la validation écrivait déjà. Tests : schéma (troisième rangement, titre facultatif pour lui, `deferReading`), mots de l'écran, disparition des mots de l'ancien écran. Signalé à l'usage.
+
+## E16 — Simplification (audit du 8 septembre 2026)
+
+Six audits parallèles (doublons et code mort, longueur des flux et pré-remplissage, fonctionnalités
+cassées, responsive, performance perçue, boucle produit) et leurs corrections. Règle du lot :
+**aucune fonction nouvelle**, on enlève des taps, des écrans concurrents et des lignes.
+
+- [x] **E16-1 (M, 2)** **Huit défauts corrigés** (D100, D101, D102) : redirection ouverte sur `?next=`
+  (`//evil.com`, `/\evil.com`) résolue par un seul helper ; une Server Action qui lève devient un refus
+  au lieu de démonter le formulaire ; le brouillon n'est plus réécrit avant que sa bannière ait une
+  réponse ; `saveLog` vérifie les heures exigées **avant** d'écrire ; l'invitation est idempotente et un
+  e-mail non parti n'annule plus la ligne ; la liste d'une catégorie suit le temps réel (props + calque
+  d'optimisme) ; la déconnexion vide le cache persistant ; les suites qui ont besoin d'une base se
+  sautent sans `DATABASE_URL`. Tests ajoutés : `auth-redirect`, `submit-or-queue`.
+- [x] **E16-2 (M, 2)** **L'app se souvient** (D95) : `useLastUsed` par bateau et par appareil —
+  catégorie et intervenant de l'intervention, « réalisé par » du cochage, fournisseur et catégorie
+  d'un achat, chantier d'une sortie de l'eau, prix de la dernière bouteille, intervenants récents en
+  puces. « Par » passe du sélecteur natif aux puces, les heures se remplissent seules quand le relevé
+  a moins de 48 h, « Valide jusqu'au » n'apparaît que là où une péremption existe, le toast dit la
+  prochaine échéance, et « Enregistrer et en saisir une autre » garde date, catégorie et intervenant.
+  Dates restantes passées sur `DateField`, spécialité d'un intervenant devenue facultative jusque
+  dans l'import.
+- [x] **E16-3 (M, 2)** **Responsive** : tableaux de reprise et d'import qui défilent enfin sous 640 px
+  (le repère disait l'inverse de ce que faisait le tableau), barres d'action au-dessus du clavier
+  (`useKeyboardOffset`), bascule des dialogues déplacée de 768 px (largeur exacte de l'iPad en
+  portrait) à 640, confirmations destructives alignées sur la règle des modales, utilitaire
+  `bleed-gutters` pour la gouttière `lg` oubliée, grille des huit systèmes à trois colonnes avec titres
+  sur deux lignes, `PageHeader` sur les jetons de typographie, `PageShell` pour les écrans hors cadre.
+- [x] **E16-4 (M, 2)** **Tableau de bord** (D98, D99) : un seul compte pour « à traiter », action
+  suivante promue, phrase de bilan hebdomadaire, vignette « Réglés cette semaine », récapitulatif
+  replié, états vides honnêtes, « échéance estimée » sur une échéance encore ancrée, un seul contrôle
+  nommé par viewport.
+- [x] **E16-5 (M, 2)** **« À valider »** (D96, D97) : publication temps réel (`0028`), fin du
+  rafraîchissement toutes les 5 s, carte sûre en une ligne, « Tout valider », identité de la ligne
+  dérivée du document pour qu'un « Valider » rejoué n'écrive pas une seconde intervention.
+- [x] **E16-6 (M, 2)** **Déduplication** (D103, D104, D105) : cinq restaurations réécrites à la main
+  supprimées au profit de celle de `trash.ts` — trois d'entre elles oubliaient la garde qui interdit
+  de « restaurer » une ligne vivante ; quatre boutons de corbeille fusionnés en un ; confirmations
+  retirées devant six mises à la corbeille (toast Annuler + trente jours de corbeille) ; requêtes de
+  catégories et d'intervenants partagées ; export des dépenses passé sur l'écrivain CSV qui protège
+  d'une injection de formule dans Excel ; `ui/select` et `ui/separator` sans importateur supprimés,
+  ainsi que deux composants de pastille jumeaux, 24 alias zod morts et 18 clés de texte orphelines ;
+  seuil de relevé périmé et formatage d'octets remontés dans les helpers partagés ; « dans N j »
+  sorti du TypeScript vers les messages.
+- [x] **E16-7 (M, 2)** **Vitesse perçue** (D106, D107, D108) : sept `loading.tsx` aux dimensions des
+  vrais composants, bateau et rôle lus une fois par requête (`React.cache`), vagues de requêtes
+  réduites (le formulaire d'intervention passe de cinq à une), temps réel qui ne rafraîchit plus un
+  écran que le changement ne peut pas atteindre ni un onglet caché, persistance TanStack retirée au
+  profit d'une route de service worker `NetworkFirst` pour les pages du bateau, migration `0029`
+  d'index partiels pour le motif de corbeille sur les deux tables les plus lues.

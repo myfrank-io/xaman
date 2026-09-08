@@ -9,6 +9,7 @@ import { ReportPrintButton } from "@/components/settings/ReportPrintButton";
 import { Button } from "@/components/ui/button";
 import { toDateString } from "@/lib/format";
 import { reportPath } from "@/lib/queries/boat-routes";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const DUE_LIMIT = 60;
@@ -45,8 +46,8 @@ export default async function ReportPage({
     { count: logsCount },
     { count: completionsCount },
   ] = await Promise.all([
-    supabase.from("boats").select("*").eq("id", boatId).maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRow(boatId),
+    readBoatRole(boatId),
     supabase
       .from("engines")
       .select("id, label, brand, model, position, propulsion")

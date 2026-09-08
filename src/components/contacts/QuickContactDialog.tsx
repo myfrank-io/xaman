@@ -140,12 +140,7 @@ function QuickContactForm({
           aria-invalid={errors.name ? true : undefined}
         />
       </Field>
-      <Field
-        id="quick-contact-specialty"
-        label={t("fields.specialty")}
-        required
-        error={errors.specialty}
-      >
+      <Field id="quick-contact-specialty" label={t("fields.specialty")} error={errors.specialty}>
         <NativeSelect
           id="quick-contact-specialty"
           value={choice}
@@ -160,7 +155,7 @@ function QuickContactForm({
         </NativeSelect>
       </Field>
       {choice === otherKey ? (
-        <Field id="quick-contact-other" label={t("fields.specialtyOther")} required>
+        <Field id="quick-contact-other" label={t("fields.specialtyOther")}>
           <Input
             id="quick-contact-other"
             value={other}

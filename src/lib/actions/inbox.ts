@@ -13,6 +13,7 @@ import { boatPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
 import { ATTACHMENT_BUCKET } from "@/lib/schemas/attachments";
 import {
   createInboxUploadSchema,
+  inboxEntityId,
   inboxItemRefSchema,
   validateInboxItemSchema,
 } from "@/lib/schemas/inbox";
@@ -38,9 +39,9 @@ function revalidateInbox(boatId: string) {
  * with the person's client (RLS: contribute), then read at once: the person is waiting on the
  * screen, and thirty seconds with a progress bar beat a card that says « en cours » forever.
  *
- * A pile dropped at once asks for `deferReading` (D95): the row is written, the response goes
+ * A pile dropped at once asks for `deferReading` (D109): the row is written, the response goes
  * back, and the reading runs behind it — one reading per action, each within its own budget —
- * while the screen's polling fills the cards in as they come out `ready`.
+ * while the screen's realtime subscription fills the cards in as they come out.
  */
 export async function createInboxUpload(
   input: unknown,
@@ -109,11 +110,13 @@ export async function reanalyseInboxItem(input: unknown): Promise<ActionResult<A
 /**
  * « Valider » — the tap that writes the carnet. The intervention or the purchase is created by
  * the form's own action, the document becomes its attachment (same object, new row), and the
- * inbox row remembers what it became. Idempotent: a second tap on a validated row is refused
- * with a conflict, never a second line.
+ * inbox row remembers what it became. Idempotent twice over: a second tap on a validated row is
+ * refused with a conflict, and a tap that *retries* a failed one writes the same line again
+ * rather than a second one — the id comes from the document (`inboxEntityId`), and the
+ * attachment is read back by its path instead of being guessed.
  *
- * The third filing, `attach` (D95), creates nothing: the document joins the attachments of an
- * intervention that already exists, and the row remembers which one.
+ * The third filing, `attach` (D109), creates nothing: the document joins the attachments of an
+ * intervention that already exists, and brings that line's own id rather than a derived one.
  */
 export async function validateInboxItem(input: unknown): Promise<
   ActionResult<{
@@ -141,15 +144,21 @@ export async function validateInboxItem(input: unknown): Promise<
   if (!item) return fail("errors.forbidden");
   if (item.status === "validated" || item.status === "dismissed") return fail("errors.conflict");
 
-  // The ids are drawn here rather than by the form: the row is the memory of the tap, and an
-  // action that fails after the line is written finds it again below (`log_id` / `purchase_id`).
-  // An attachment brings its own: the intervention the person picked.
+  // The id of the line is derived from the document itself (`inboxEntityId`), not drawn at
+  // random: a « Valider » that writes the intervention and then fails further down — a lost
+  // connection, a refused attachment — used to leave the person with a card still saying « À
+  // valider », and the second tap wrote a *second* intervention. Now the second tap re-derives
+  // the same id, so `saveLog` / `upsertPurchase` update the line they already wrote (rule 11).
+  // A row that already remembers what it became keeps that id, whatever it was drawn with.
+  // An attachment brings its own id — the intervention the person picked — so nothing is derived
+  // and nothing is created; the rest of this function is unchanged for it.
+  const remembered = values.kind === "purchase" ? item.purchase_id : item.log_id;
   const entityId =
     values.kind === "attach"
       ? (values.logId ?? "")
-      : (item.log_id ?? item.purchase_id ?? crypto.randomUUID());
+      : (remembered ?? inboxEntityId(values.itemId, values.kind));
   const notes = values.notes;
-  // What the line is called once written — the intervention's own title for an attachment.
+  // What the line is called once written — the intervention's own, for an attachment.
   let title = values.title;
   let date = values.date;
   let amount = values.amount;
@@ -204,12 +213,10 @@ export async function validateInboxItem(input: unknown): Promise<
     if (!created.ok) return created;
   }
 
-  // The document, hung on the line it produced — or joined. Same object in the bucket, one
-  // more row.
-  const attachmentId = crypto.randomUUID();
+  // The document, hung on the line it produced. Same object in the bucket, one more row.
   const { error: attachmentError } = await supabase.from("attachments").upsert(
     {
-      id: attachmentId,
+      id: crypto.randomUUID(),
       boat_id: values.boatId,
       entity_type: values.kind === "purchase" ? "purchase" : "maintenance_log",
       entity_id: entityId,
@@ -225,6 +232,18 @@ export async function validateInboxItem(input: unknown): Promise<
   );
   if (attachmentError) return fail(dbErrorKey(attachmentError));
 
+  // Which row the object actually belongs to, asked rather than assumed. The upsert above is a
+  // « do nothing » on conflict, so on a second attempt it writes nothing and the id drawn a line
+  // earlier names no row at all: writing *that* id on `inbox_items.attachment_id` was refused by
+  // its foreign key, and the retry could never get past this point. The object's path is unique
+  // in `attachments`, so reading it back gives the one row that exists, first tap or fifth.
+  const { data: attachment } = await supabase
+    .from("attachments")
+    .select("id")
+    .eq("boat_id", values.boatId)
+    .eq("storage_path", item.storage_path)
+    .maybeSingle();
+
   const { error: updateError, count } = await supabase
     .from("inbox_items")
     .update(
@@ -232,7 +251,7 @@ export async function validateInboxItem(input: unknown): Promise<
         status: "validated",
         log_id: values.kind === "purchase" ? null : entityId,
         purchase_id: values.kind === "purchase" ? entityId : null,
-        attachment_id: attachmentId,
+        attachment_id: attachment?.id ?? null,
         validated_by: userId,
         validated_at: new Date().toISOString(),
         updated_by: userId,

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  confidentItems,
+  documentWarnings,
+  draftFrom,
+  isConfidentItem,
+  toValidateInput,
+} from "@/components/inbox/inbox-draft";
 import { contextText, normaliseSuggestion, type InboxContext } from "@/lib/inbox/prompt";
+import type { InboxItem } from "@/lib/queries/inbox";
 import {
   inboundExternalRef,
   inboundFromEvent,
@@ -17,6 +25,7 @@ import {
   INBOX_STATUSES,
   createInboxUploadSchema,
   inboxAddress,
+  inboxEntityId,
   inboxStoragePath,
   inboxTokenFromAddress,
   parseSuggestion,
@@ -255,7 +264,7 @@ describe("validating a card", () => {
     expect(parsed.logId).toBeNull();
   });
 
-  it("hangs a document on an existing intervention with nothing but its id (D95)", () => {
+  it("hangs a document on an existing intervention with nothing but its id (D109)", () => {
     const LOG = "00000000-0000-4000-8000-0000000000f1";
     // The title, the system, the amount are the intervention's already: none is asked for.
     const attach = { ...base, kind: "attach", title: "", categoryId: "", logId: LOG };
@@ -280,7 +289,7 @@ describe("dropping a pile", () => {
     sizeBytes: 120_000,
   };
 
-  it("reads a single photo on the spot, and a pile after the response (D95)", () => {
+  it("reads a single photo on the spot, and a pile after the response (D109)", () => {
     expect(createInboxUploadSchema.parse(upload).deferReading).toBe(false);
     expect(createInboxUploadSchema.parse({ ...upload, deferReading: true }).deferReading).toBe(
       true,
@@ -304,7 +313,7 @@ describe("the inbox's words", () => {
     for (const key of keys) expect(words[key]?.trim(), `${section}.${key}`).toBeTruthy();
   });
 
-  it("names the one door and the third filing (D95)", () => {
+  it("names the one door and the third filing (D109)", () => {
     for (const key of [
       "entry",
       "drop",
@@ -330,5 +339,146 @@ describe("the inbox's words", () => {
       expect(confirm[key]?.trim(), `deleteConfirm.${key}`).toBeTruthy();
     // The dialog names the file it is about to destroy (ux-flows §5.6).
     expect(confirm.description).toContain("{fileName}");
+  });
+});
+
+/**
+ * The id of the line a document becomes. It used to be drawn at random when the row did not yet
+ * remember one — but the row only remembers *after* everything succeeded, so a « Valider » that
+ * wrote the intervention and then failed left the card up, and the next tap wrote a second
+ * intervention for the same invoice. Derived from the document, the second tap writes the first
+ * line again (`saveLog` upserts on the id) and there is nothing to clean up.
+ */
+describe("the id a document becomes", () => {
+  it("is the same one every time, for the same document and the same list", () => {
+    expect(inboxEntityId(ITEM, "log")).toBe(inboxEntityId(ITEM, "log"));
+    expect(inboxEntityId(ITEM, "purchase")).toBe(inboxEntityId(ITEM, "purchase"));
+  });
+
+  it("is a uuid, and not the document's own id", () => {
+    const id = inboxEntityId(ITEM, "log");
+    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(id).not.toBe(ITEM);
+  });
+
+  it("never files the same document twice in the same place", () => {
+    // An intervention and a purchase are two tables, but a card that changed its mind between
+    // two taps must not hand the second list the id of the line it left in the first.
+    expect(inboxEntityId(ITEM, "log")).not.toBe(inboxEntityId(ITEM, "purchase"));
+    expect(inboxEntityId(ITEM, "log")).not.toBe(inboxEntityId(BOAT, "log"));
+  });
+
+  it("refuses anything that is not a document id", () => {
+    expect(() => inboxEntityId("not-a-uuid", "log")).toThrow();
+  });
+});
+
+/**
+ * What decides whether a card costs one tap or a scroll through eight fields. « Un agent IA a lu
+ * le document » is posted on every card (D94) and says nothing about *this* document; a guessed
+ * total or an unlabelled date does, and that is what earns the second look (D92).
+ */
+describe("a card that opens on one line", () => {
+  const suggestion = {
+    documentType: "receipt" as const,
+    kind: "purchase" as const,
+    purchaseKind: "part" as const,
+    title: "Manilles inox 8 mm",
+    date: "2026-09-04",
+    amount: 24.9,
+    currency: "EUR",
+    supplierName: "Accastillage Diffusion",
+    contactId: null,
+    categoryId: null,
+    engineHours: [],
+    lineItems: [],
+    notes: null,
+    confidence: "high" as const,
+    warnings: ["local"],
+  };
+
+  const item = (over: Partial<InboxItem> = {}): InboxItem => ({
+    id: ITEM,
+    source: "upload",
+    status: "ready",
+    receivedAt: "2026-09-04T11:40:00.000Z",
+    senderEmail: null,
+    senderName: null,
+    subject: null,
+    fileName: "ticket.jpg",
+    mimeType: "image/jpeg",
+    sizeBytes: 1000,
+    storagePath: `boats/${BOAT}/inbox/${ITEM}.jpeg`,
+    url: null,
+    suggestion,
+    error: null,
+    logId: null,
+    purchaseId: null,
+    validatedAt: null,
+    updatedAt: "2026-09-04T11:40:00.000Z",
+    ...over,
+  });
+  const options = { boatId: BOAT, engineIds: [ENGINE] };
+
+  it("does not count the sentence every card carries as something to check", () => {
+    expect(documentWarnings(item())).toEqual([]);
+    expect(
+      documentWarnings(item({ suggestion: { ...suggestion, warnings: ["local", "noDate"] } })),
+    ).toEqual(["noDate"]);
+  });
+
+  it("opens on one line when the reading flagged nothing", () => {
+    expect(isConfidentItem(item(), options)).toBe(true);
+    expect(confidentItems([item(), item({ id: BOAT })], options)).toHaveLength(2);
+  });
+
+  it("opens on the form as soon as anything asks for a second look", () => {
+    const warned = item({ suggestion: { ...suggestion, warnings: ["local", "amountGuessed"] } });
+    expect(isConfidentItem(warned, options)).toBe(false);
+    expect(isConfidentItem(item({ error: "noText" }), options)).toBe(false);
+    expect(isConfidentItem(item({ suggestion: null }), options)).toBe(false);
+    expect(
+      isConfidentItem(item({ suggestion: { ...suggestion, confidence: "low" } }), options),
+    ).toBe(false);
+    expect(isConfidentItem(item({ status: "analysing" }), options)).toBe(false);
+    expect(isConfidentItem(item({ status: "validated" }), options)).toBe(false);
+  });
+
+  /** An intervention with no system would be refused by the schema: never a one-tap card. */
+  it("opens on the form when what it proposes is not yet a line", () => {
+    const asLog = item({ suggestion: { ...suggestion, kind: "log", categoryId: null } });
+    expect(isConfidentItem(asLog, options)).toBe(false);
+    const filed = item({ suggestion: { ...suggestion, kind: "log", categoryId: CATEGORY } });
+    expect(isConfidentItem(filed, options)).toBe(true);
+  });
+
+  it("hands « Valider » exactly what the card holds", () => {
+    const input = toValidateInput(draftFrom(item(), suggestion), {
+      boatId: BOAT,
+      itemId: ITEM,
+      engineIds: [ENGINE],
+    });
+    const parsed = validateInboxItemSchema.parse(input);
+    expect(parsed.title).toBe("Manilles inox 8 mm");
+    expect(parsed.amount).toBe(24.9);
+    expect(parsed.kind).toBe("purchase");
+    expect(parsed.engineHours).toEqual([{ engineId: ENGINE, hours: null }]);
+  });
+});
+
+/** The words of the one-line card and of « Tout valider » (rule 7). */
+describe("the words of a document filed in one tap", () => {
+  // fr.inbox mixes flat strings and nested groups, so the two groups are read one by one rather
+  // than through a cast that would claim every key holds an object.
+  const summary: Record<string, string> = fr.inbox.summary;
+  const validateAll: Record<string, string> = fr.inbox.validateAll;
+  it("names the line, the way back to the form, and the batch", () => {
+    for (const key of ["hint", "edit"] as const)
+      expect(summary[key]?.trim(), `summary.${key}`).toBeTruthy();
+    for (const key of ["help", "action", "progress", "done", "result", "failed"] as const)
+      expect(validateAll[key]?.trim(), `validateAll.${key}`).toBeTruthy();
+    // Still « un agent IA », never the reader behind it (D94), and still « vérifiez ».
+    expect(summary.hint).toContain("agent IA");
+    expect(summary.hint).toContain("vérifiez");
   });
 });

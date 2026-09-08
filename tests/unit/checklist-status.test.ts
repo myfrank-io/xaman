@@ -28,8 +28,11 @@ const cases = JSON.parse(
   ),
 ) as Case[];
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+// The TypeScript mirror below needs nothing; the parity suite needs the SQL function, so it
+// needs a database. DATABASE_URL or it skips itself, rather than failing with ECONNREFUSED on a
+// machine with no local stack — CI sets the variable (ci.yml), where both suites run.
+const DATABASE_URL = process.env.DATABASE_URL;
+const describeWithDb = DATABASE_URL ? describe : describe.skip;
 const pool = new Pool({ connectionString: DATABASE_URL, max: 2 });
 
 afterAll(async () => {
@@ -73,7 +76,7 @@ const SQL = `
   ) s
 `;
 
-describe("checklist status — SQL function (parity with the fixture)", () => {
+describeWithDb("checklist status — SQL function (parity with the fixture)", () => {
   it.each(cases)("$name", async (c) => {
     const res = await pool.query(SQL, [
       c.anchorDate,

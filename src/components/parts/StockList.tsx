@@ -58,9 +58,9 @@ export function StockList({
   lowCount: number;
   totalCount: number;
 }) {
-  const t = useTranslations("equipment.stock");
+  const t = useTranslations("parts");
   const ti = useTranslations("import");
-  const tu = useTranslations("equipment.stock.units");
+  const tu = useTranslations("parts.units");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [, startTransition] = useTransition();

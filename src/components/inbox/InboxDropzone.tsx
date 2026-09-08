@@ -15,7 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { createInboxUpload } from "@/lib/actions/inbox";
-import { formatBytes, rejectionReason } from "@/lib/attachments/image";
+import { rejectionReason } from "@/lib/attachments/image";
+import { formatBytes } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { ATTACHMENT_ACCEPT } from "@/lib/schemas/attachments";
 import { inboxStoragePath } from "@/lib/schemas/inbox";
@@ -38,7 +39,7 @@ type Row = {
 };
 
 /**
- * The one door documents come in by (D95): the camera for a ticket, the picker or a drop for a
+ * The one door documents come in by (D109): the camera for a ticket, the picker or a drop for a
  * pile of invoices. Every file becomes a row of the inbox and is read by the agent; the cards
  * appear below, pre-filled, and « Valider » is what writes the carnet.
  *

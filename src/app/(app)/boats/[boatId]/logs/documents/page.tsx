@@ -5,7 +5,7 @@ import { inboxPath } from "@/lib/queries/boat-routes";
 
 /**
  * « Importer des documents » lived here (E10-1) until « À valider » became the one door for
- * documents (D95): the pile is dropped there, read by the agent, and validated card by card.
+ * documents (D109): the pile is dropped there, read by the agent, and validated card by card.
  * The address stays for the bookmarks and the mails that carry it.
  */
 export default async function ImportDocumentsPage({

@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { CheckIcon, ClipboardListIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { checklistPath, hourReadingPath, logsPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
@@ -101,11 +102,20 @@ export function BrandNewBlock({
   );
 
   return (
-    <div className="flex flex-col items-center rounded-xl border border-border bg-surface-2 px-6 py-8 text-center">
-      <div className="mb-4 flex size-14 items-center justify-center rounded-full border border-border bg-surface text-n-400 [&_svg]:size-7">
-        <ClipboardListIcon aria-hidden />
-      </div>
-      <h3 className="text-h2">{t("startTitle", { count })}</h3>
+    // `EmptyState` draws the frame, the icon disc and the heading: a carnet on its first day is
+    // an empty state that offers its three ways out. `h3` — the dashboard's own `h2` is above it.
+    // The intro keeps its `max-w-md`: it is longer than the single line an empty state states.
+    <EmptyState
+      className="py-8"
+      icon={<ClipboardListIcon aria-hidden />}
+      titleAs="h3"
+      title={t("startTitle", { count })}
+      action={
+        <Button type="button" variant="ghost" size="sm" onClick={dismiss}>
+          {t("startDismiss")}
+        </Button>
+      }
+    >
       <p className="mt-2 max-w-md text-body text-ink-2">{t("startIntro")}</p>
       <ol className="mt-5 flex w-full max-w-xl flex-col gap-2 text-left">
         {rows.map((row, index) => {
@@ -140,9 +150,6 @@ export function BrandNewBlock({
           );
         })}
       </ol>
-      <Button type="button" variant="ghost" size="sm" className="mt-4" onClick={dismiss}>
-        {t("startDismiss")}
-      </Button>
-    </div>
+    </EmptyState>
   );
 }

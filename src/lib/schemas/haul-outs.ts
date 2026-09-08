@@ -37,10 +37,7 @@ export const upsertHaulOutSchema = z
     message: "haul_out_end_before_start",
     path: ["endedAt"],
   });
-export type UpsertHaulOutInput = z.input<typeof upsertHaulOutSchema>;
-export type UpsertHaulOutValues = z.output<typeof upsertHaulOutSchema>;
 
 const haulOutRef = z.object({ boatId: uuid, haulOutId: uuid });
 
 export const trashHaulOutSchema = haulOutRef;
-export const restoreHaulOutSchema = haulOutRef;

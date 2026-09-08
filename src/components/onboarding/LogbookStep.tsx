@@ -102,7 +102,7 @@ export function LogbookStep({
       ) : null}
 
       {format === "paper" ? (
-        /* The same door as « À valider » (D95): the photos are read by the agent and wait
+        /* The same door as « À valider » (D109): the photos are read by the agent and wait
            there, pre-filled, rather than becoming interventions named after their file and
            dated today — the false carnet D67 set out to prevent. */
         <InboxDropzone

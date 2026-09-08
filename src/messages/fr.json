@@ -16,14 +16,12 @@
     "search": "Rechercher",
     "more": "Plus",
     "menu": "Menu",
-    "openMenu": "Ouvrir le menu",
     "confirm": "Confirmer",
     "retry": "Réessayer",
     "none": "—",
     "unknown": "Inconnu",
     "optional": "optionnel",
     "yes": "Oui",
-    "no": "Non",
     "today": "Aujourd'hui",
     "attention": "{count, plural, =0 {rien à faire aujourd'hui} one {# chose à faire aujourd'hui} other {# choses à faire aujourd'hui}}",
     "attentionDot": "À faire aujourd'hui",
@@ -46,7 +44,6 @@
     "actions": "Actions",
     "show": "Afficher",
     "hide": "Masquer",
-    "reload": "Recharger",
     "audit": {
       "created": "Créé par {name} le {date}",
       "updated": "modifié par {name} le {date}",
@@ -139,10 +136,11 @@
     "days": "{count, plural, one {# jour} other {# jours}}",
     "everyMonths": "Tous les {count} mois",
     "everyHours": "Toutes les {count} h",
-    "remainingDays": "{count, plural, =0 {Aujourd'hui} one {Dans # jour} other {Dans # jours}}",
-    "overdueDays": "{count, plural, one {# jour de retard} other {# jours de retard}}",
-    "remainingHours": "Dans {count} h",
-    "overdueHours": "{count} h de retard"
+    "remainingDays": "{count, plural, =0 {Aujourd'hui} one {dans # j} other {dans # j}}",
+    "overdueDays": "{count, plural, one {# j de retard} other {# j de retard}}",
+    "remainingHours": "dans {count} h",
+    "overdueHours": "{count} h de retard",
+    "daysShort": "{count, plural, one {# j} other {# j}}"
   },
   "dev": {
     "title": "Design system",
@@ -445,12 +443,7 @@
     "engine_hours_required": "Les heures moteur sont obligatoires pour ce point.",
     "template_not_found": "Modèle de checklist introuvable.",
     "log_not_found": "Intervention introuvable.",
-    "invitation_email": "L'invitation est enregistrée mais l'e-mail n'a pas pu être envoyé. Vérifiez l'adresse ou réessayez.",
     "loadFailed": "Impossible de charger",
-    "saveFailed": "L'enregistrement a échoué. Vos données sont conservées ici.",
-    "notSaved": "Non enregistré",
-    "fieldsToFix": "{count, plural, one {# champ à corriger} other {# champs à corriger}}",
-    "positiveNumber": "Saisissez un nombre positif.",
     "conflict": "Quelqu'un a modifié cet élément entre-temps. Rechargez la page et réessayez.",
     "boat_name_mismatch": "Le nom saisi ne correspond pas au nom du bateau.",
     "engine_in_use": "Ce moteur a des relevés ou des points de checklist : désactivez-le plutôt.",
@@ -515,7 +508,9 @@
       "copyLink": "Copier le lien",
       "linkCopied": "Lien copié.",
       "share": "Partager",
-      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman"
+      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman",
+      "emailFailedTitle": "E-mail non envoyé",
+      "emailFailed": "Aucun e-mail n’est parti vers {email}. L’invitation est bien créée : copiez le lien ci-dessous et transmettez-le vous-même."
     },
     "invitations": {
       "title": "Invitations en attente",
@@ -619,10 +614,7 @@
     "editor": "Éditeur",
     "pro": "Professionnel",
     "viewer": "Lecteur",
-    "renter": "Locataire",
-    "editorHelp": "Peut tout modifier : interventions, checklist, achats, fiche bateau. Ne gère pas les membres.",
-    "proHelp": "Voit tout le dossier. Enregistre ses propres interventions et cochages. Ne supprime rien, ne voit pas les membres.",
-    "viewerHelp": "Consultation seule. Pour un expert ou un acheteur."
+    "renter": "Locataire"
   },
   "create": {
     "title": "Qu'est-ce que vous notez ?",
@@ -657,7 +649,9 @@
       "openLogsHint": "{count, plural, =0 {aucune ouverte} one {dont # urgente} other {dont # urgentes}}",
       "openLogsDue": "{count, plural, one {dont # à faire aujourd'hui} other {dont # à faire aujourd'hui}}",
       "expenses": "Dépenses {year}",
-      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}"
+      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}",
+      "settled": "Réglés cette semaine",
+      "settledHint": "{items, plural, =0 {aucun point} one {# point} other {# points}} · {logs, plural, =0 {aucune intervention} one {# intervention} other {# interventions}}"
     },
     "engines": {
       "title": "Heures moteur",
@@ -684,7 +678,8 @@
       "startStep2Action": "Vérifier",
       "startStep3Action": "Ouvrir la checklist",
       "startDismiss": "Masquer",
-      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}"
+      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}",
+      "emptyNoDated": "Aucune échéance datée pour l'instant."
     },
     "categories": {
       "title": "État des 8 systèmes",
@@ -710,7 +705,8 @@
       "other": "Autres",
       "haulOutDetail": "Voir les sorties de l'eau",
       "stockDetail": "Voir le stock",
-      "stockOk": "Aucune pièce sous le seuil"
+      "stockOk": "Aucune pièce sous le seuil",
+      "title": "Récapitulatif"
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
@@ -726,22 +722,32 @@
       "soon": "{count, plural, one {# point à faire bientôt} other {# points à faire bientôt}}",
       "ok": "Tout est à jour",
       "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}",
-      "empty": "Carnet neuf : la checklist attend son plan d'entretien"
+      "empty": "Carnet neuf : la checklist attend son plan d'entretien",
+      "weekItems": "{count, plural, one {# point réglé} other {# points réglés}}",
+      "weekLogs": "{count, plural, one {# intervention notée} other {# interventions notées}}",
+      "week": "{activity} cette semaine",
+      "weekBy": "{activity} cette semaine par {names}",
+      "weekNone": "Rien de noté cette semaine",
+      "weekNamesMore": "{names} et {count, plural, one {# autre} other {# autres}}",
+      "newOverdue": "{count, plural, one {# nouveau point en retard} other {# nouveaux points en retard}}",
+      "noNewOverdue": "rien de nouveau en retard"
     },
     "banner": {
       "noReadings": "Aucun relevé d'heures pour {engines}.",
       "noReadingsAction": "Saisir",
       "unfinished": "Votre mise en route n'est pas terminée : sans plan d'entretien, la checklist reste vide.",
       "unfinishedAction": "Reprendre"
+    },
+    "next": {
+      "title": "À faire maintenant",
+      "open": "Ouvrir",
+      "estimated": "échéance estimée"
     }
   },
   "offline": {
     "banner": "Hors ligne — consultation seule.",
     "lastSync": "Données du {date} à {time}.",
     "actionUnavailable": "Hors ligne — cette action nécessite le réseau.",
-    "backOnline": "De nouveau en ligne",
-    "refresh": "Actualiser",
-    "pendingWrites": "{count, plural, one {# modification non enregistrée} other {# modifications non enregistrées}}",
     "retryLabel": "Hors ligne — réessayer",
     "savedOnDevice": "Enregistré sur l'iPad. À renvoyer quand le réseau revient.",
     "queueFull": "20 saisies attendent déjà sur l'iPad. Renvoyez-les avant d'en ajouter une autre.",
@@ -876,7 +882,8 @@
       "attachments": "Photos et documents",
       "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
       "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants.",
-      "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}"
+      "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}",
+      "saveAndNew": "Enregistrer et en saisir une autre"
     },
     "detail": {
       "fields": {
@@ -918,12 +925,10 @@
       },
       "trash": {
         "action": "Mettre à la corbeille",
-        "title": "Mettre cette intervention à la corbeille ?",
-        "description": "« {title} » restera 30 jours dans la corbeille. Les heures moteur qu'elle porte sont mises de côté et reviendront avec elle.",
-        "confirm": "Mettre à la corbeille",
         "done": "Intervention mise à la corbeille",
         "undo": "Annuler",
-        "restored": "Intervention restaurée"
+        "restored": "Intervention restaurée",
+        "kept": "« {title} » reste 30 jours dans la corbeille ; les heures moteur qu'elle porte reviendront avec elle."
       }
     },
     "attachments": "{count, plural, one {# document joint} other {# documents joints}}",
@@ -1007,7 +1012,6 @@
       "date": "Date",
       "by": "Réalisé par",
       "me": "Moi",
-      "someoneElse": "Quelqu'un d'autre…",
       "otherName": "Nom",
       "hours": "Heures {engine}",
       "hoursRequired": "Ce point se compte en heures moteur : saisissez le compteur.",
@@ -1026,7 +1030,13 @@
       "deleteTitle": "Supprimer cette réalisation ?",
       "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle. Cette suppression est définitive : elle ne passe pas par la corbeille.",
       "deleted": "Réalisation supprimée",
-      "addDetails": "+ Ajouter les détails"
+      "addDetails": "+ Ajouter les détails",
+      "otherChip": "Autre",
+      "addValidUntil": "+ Valide jusqu'au…",
+      "plusOneYear": "+ 1 an",
+      "plusTwoYears": "+ 2 ans",
+      "nextDue": "Prochaine : {next}",
+      "nextDueBoth": "{date} ou {hours}"
     },
     "form": {
       "new": "Nouveau point",
@@ -1103,12 +1113,9 @@
     "required": "Champ obligatoire.",
     "invalid": "Valeur invalide.",
     "invalidNumber": "Saisissez un nombre.",
-    "tooLong": "Texte trop long.",
     "tooBig": "Valeur trop grande.",
-    "tooSmall": "Valeur trop petite.",
     "date_in_future": "Cette date est dans le futur.",
     "same_category": "Choisissez une autre catégorie.",
-    "fieldsToFix": "{count, plural, one {# champ à corriger} other {# champs à corriger}}",
     "next_due_after": "La date de validité doit être après la date de réalisation.",
     "engine_required": "Choisissez le moteur concerné.",
     "date_in_future_done": "Une intervention terminée ne peut pas être datée dans le futur. Choisissez « Planifié » ou une autre date."
@@ -1307,74 +1314,17 @@
     "removed": "Équipement déposé",
     "trash": {
       "action": "Mettre à la corbeille",
-      "title": "Mettre cet équipement à la corbeille ?",
-      "description": "« {name} » restera 30 jours dans la corbeille. Sa fiche et son historique d'interventions restent consultables, et l'équipement pourra être restauré.",
-      "confirm": "Mettre à la corbeille",
       "done": "Équipement mis à la corbeille",
       "undo": "Annuler",
-      "restored": "Équipement restauré"
+      "restored": "Équipement restauré",
+      "kept": "« {name} » reste 30 jours dans la corbeille ; sa fiche et son historique restent consultables."
     },
     "saved": "Équipement enregistré",
     "installedOn": "installé le {date}",
     "quantityShort": "× {count}",
-    "stock": {
-      "title": "Stock",
-      "new": "Ajouter une pièce",
-      "edit": "Modifier la pièce",
-      "saved": "Pièce enregistrée.",
-      "emptyTitle": "Aucune pièce en stock",
-      "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
-      "emptyFiltered": "Aucune pièce sous le seuil",
-      "showAll": "Voir toutes les pièces",
-      "filters": {
-        "label": "Afficher",
-        "all": "Toutes ({count})",
-        "low": "Sous le seuil ({count})"
-      },
-      "low": "Sous le seuil",
-      "threshold": "seuil {min}",
-      "noThreshold": "sans seuil",
-      "checked": {
-        "never": "jamais vérifié",
-        "thisMonth": "vérifié ce mois-ci",
-        "monthsAgo": "vérifié il y a {count} mois"
-      },
-      "increment": "Ajouter 1 : {name}",
-      "decrement": "Retirer 1 : {name}",
-      "fields": {
-        "name": "Désignation",
-        "reference": "Référence",
-        "quantity": "Quantité",
-        "unit": "Unité",
-        "minQuantity": "Seuil d'alerte",
-        "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
-        "location": "Emplacement à bord",
-        "category": "Catégorie",
-        "noCategory": "Sans catégorie",
-        "supplier": "Fournisseur",
-        "noSupplier": "Aucun fournisseur",
-        "notes": "Notes"
-      },
-      "units": {
-        "pc": "pc",
-        "m": "m",
-        "l": "L",
-        "kg": "kg",
-        "jeu": "jeu"
-      },
-      "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
-      "delete": {
-        "action": "Mettre à la corbeille",
-        "title": "Mettre « {name} » à la corbeille ?",
-        "description": "La ligne quitte le stock et reste 30 jours dans la corbeille, où vous pouvez la restaurer. Les achats qui la mentionnent sont conservés.",
-        "done": "Pièce mise à la corbeille",
-        "restored": "Pièce restaurée"
-      }
-    },
     "stockSection": "Pièces détachées",
     "stockEmpty": "Aucune pièce de rechange listée.",
     "stockLow": "{count} sous le seuil",
-    "sectionEquipment": "Équipements à bord",
     "stockCount": "{count, plural, =0 {aucune pièce de rechange} one {# pièce de rechange} other {# pièces de rechange}}"
   },
   "restock": {
@@ -1536,7 +1486,8 @@
       "placeholder": "Choisir un intervenant",
       "add": "Nouvel intervenant",
       "quickTitle": "Nouvel intervenant",
-      "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire."
+      "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire.",
+      "recents": "Récents"
     },
     "references": {
       "logs": "Interventions",
@@ -1547,11 +1498,9 @@
     },
     "delete": {
       "action": "Mettre à la corbeille",
-      "title": "Mettre {name} à la corbeille ?",
-      "description": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} gardent leur historique et le lien vers cet intervenant. Il quitte l'annuaire et reste 30 jours dans la corbeille, où vous pouvez le restaurer.",
-      "confirm": "Mettre à la corbeille",
       "done": "Intervenant mis à la corbeille",
-      "restored": "Intervenant restauré"
+      "restored": "Intervenant restauré",
+      "kept": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} gardent leur historique et leur lien vers {name}."
     }
   },
   "report": {
@@ -1740,8 +1689,6 @@
       },
       "trash": {
         "action": "Mettre à la corbeille",
-        "title": "Mettre cet achat à la corbeille ?",
-        "description": "L'achat quitte les listes et les dépenses. Il reste 30 jours dans la corbeille.",
         "done": "Achat mis à la corbeille",
         "restored": "Achat restauré"
       },
@@ -1789,7 +1736,8 @@
         "next": "Prochaine estimée vers le {date} (estimé)",
         "noEstimate": "Estimation à partir de 3 intervalles",
         "total": "Total dépensé : {amount}"
-      }
+      },
+      "lastPrice": "Dernier prix : {amount}"
     }
   },
   "haulOuts": {
@@ -1835,8 +1783,6 @@
     },
     "trash": {
       "action": "Mettre à la corbeille",
-      "title": "Mettre cette sortie de l'eau à la corbeille ?",
-      "description": "Les interventions rattachées sont conservées. La sortie reste 30 jours dans la corbeille.",
       "done": "Sortie de l'eau mise à la corbeille",
       "restored": "Sortie de l'eau restaurée"
     }
@@ -1950,7 +1896,6 @@
       "empty": "Le tableau est vide.",
       "tooMany": "Le tableau dépasse {max} lignes. Importez-le en plusieurs fois.",
       "noName": "Nom manquant",
-      "noSpecialty": "Spécialité manquante",
       "badEmail": "Adresse e-mail invalide",
       "badDate": "Date illisible (attendu 12/03/2026)",
       "legacyExcel": "Ce fichier est un ancien Excel (.xls). Ouvrez-le, puis « Enregistrer sous » au format .xlsx — ou copiez les cellules et collez-les ci-dessous.",
@@ -2253,6 +2198,70 @@
     },
     "uploaded": "Document lu : vérifiez puis validez.",
     "uploadedNoRead": "Document reçu : remplissez les champs puis validez.",
-    "uploadedMany": "{count, plural, one {# document déposé} other {# documents déposés}} : l'agent IA les lit, les cartes se remplissent d'elles-mêmes."
+    "uploadedMany": "{count, plural, one {# document déposé} other {# documents déposés}} : l'agent IA les lit, les cartes se remplissent d'elles-mêmes.",
+    "summary": {
+      "hint": "Un agent IA a lu le document : vérifiez cette ligne, puis validez.",
+      "edit": "Modifier"
+    },
+    "validateAll": {
+      "help": "{count, plural, one {# document a été lu sans réserve : rangez-le d'un tap.} other {# documents ont été lus sans réserve : rangez-les d'un seul tap.}}",
+      "action": "Tout valider",
+      "progress": "{done} / {total}",
+      "done": "{count, plural, one {# document classé} other {# documents classés}}",
+      "result": "{filed, plural, =0 {Aucun document classé} one {# classé} other {# classés}}{refused, plural, =0 {} one { · # refusé} other { · # refusés}}",
+      "failed": "Restés à valider : {files}"
+    }
+  },
+  "parts": {
+    "title": "Stock",
+    "new": "Ajouter une pièce",
+    "edit": "Modifier la pièce",
+    "saved": "Pièce enregistrée.",
+    "emptyTitle": "Aucune pièce en stock",
+    "emptyDescription": "Listez les pièces de rechange à bord avec leur quantité et un seuil d'alerte : le tableau de bord signale celles à racheter.",
+    "emptyFiltered": "Aucune pièce sous le seuil",
+    "showAll": "Voir toutes les pièces",
+    "filters": {
+      "label": "Afficher",
+      "all": "Toutes ({count})",
+      "low": "Sous le seuil ({count})"
+    },
+    "low": "Sous le seuil",
+    "threshold": "seuil {min}",
+    "noThreshold": "sans seuil",
+    "checked": {
+      "never": "jamais vérifié",
+      "thisMonth": "vérifié ce mois-ci",
+      "monthsAgo": "vérifié il y a {count} mois"
+    },
+    "increment": "Ajouter 1 : {name}",
+    "decrement": "Retirer 1 : {name}",
+    "fields": {
+      "name": "Désignation",
+      "reference": "Référence",
+      "quantity": "Quantité",
+      "unit": "Unité",
+      "minQuantity": "Seuil d'alerte",
+      "minQuantityHelp": "0 = pas d'alerte. La pièce est signalée quand la quantité atteint le seuil.",
+      "location": "Emplacement à bord",
+      "category": "Catégorie",
+      "noCategory": "Sans catégorie",
+      "supplier": "Fournisseur",
+      "noSupplier": "Aucun fournisseur",
+      "notes": "Notes"
+    },
+    "units": {
+      "pc": "pc",
+      "m": "m",
+      "l": "L",
+      "kg": "kg",
+      "jeu": "jeu"
+    },
+    "checkedHelp": "Enregistrer la fiche compte comme une vérification de la quantité.",
+    "delete": {
+      "action": "Mettre à la corbeille",
+      "done": "Pièce mise à la corbeille",
+      "restored": "Pièce restaurée"
+    }
   }
 }

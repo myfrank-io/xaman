@@ -2,17 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { differenceInCalendarDays } from "date-fns";
 import { GaugeIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { HourReadingDialog, type ReadingEngine } from "@/components/engines/HourReadingDialog";
 import { Button } from "@/components/ui/button";
-import { formatDayMonth, formatHours, toDate } from "@/lib/format";
+import { isReadingStale } from "@/lib/engines";
+import { formatDayMonth, formatHours } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-// Without a recent reading every hour-based deadline is wrong: past this age the date turns amber.
-const STALE_DAYS = 60;
 
 function EngineChip({
   engine,
@@ -22,8 +19,7 @@ function EngineChip({
   onOpen?: (engineId: string) => void;
 }) {
   const t = useTranslations("dashboard.engines");
-  const lastDate = toDate(engine.lastDate);
-  const stale = lastDate ? differenceInCalendarDays(new Date(), lastDate) > STALE_DAYS : false;
+  const stale = isReadingStale(engine.lastDate);
   const content = (
     <>
       <GaugeIcon className="size-4 shrink-0 text-on-navy-3" aria-hidden />

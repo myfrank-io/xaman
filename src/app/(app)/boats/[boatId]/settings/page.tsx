@@ -12,6 +12,7 @@ import { TransferBoatCard, type OwnerInvitation } from "@/components/settings/Tr
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
 import { checklistSetupPath, logsReviewPath, reportPath } from "@/lib/queries/boat-routes";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 // Boat settings (E2-5): categories, the tools of the logbook, then the owner-only zone.
@@ -20,8 +21,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
   const supabase = await createClient();
   const [{ data: role }, { data: boat }, { data: categories }, { data: items }, { data: auth }] =
     await Promise.all([
-      supabase.rpc("boat_role", { p_boat_id: boatId }),
-      supabase.from("boats").select("id, name").eq("id", boatId).maybeSingle(),
+      readBoatRole(boatId),
+      readBoatRow(boatId),
       supabase
         .from("boat_categories")
         .select("id, name, color, icon, sort_order, is_active, updated_at")

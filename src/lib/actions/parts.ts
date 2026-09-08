@@ -115,26 +115,3 @@ export async function trashPart(input: unknown): Promise<ActionResult> {
   revalidateStockScreens(boatId);
   return ok(undefined);
 }
-
-/** « Annuler » of the toast: the same one-column write the other soft deletes use. */
-export async function untrashPart(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(trashPartSchema, input);
-  if (!parsed.ok) return parsed.result;
-  const { boatId, partId } = parsed.data;
-
-  const supabase = await createClient();
-  const userId = await currentUserId(supabase);
-  if (!userId) return fail("errors.forbidden");
-
-  const { error, count } = await supabase
-    .from("parts")
-    .update({ deleted_at: null, updated_by: userId }, { count: "exact" })
-    .eq("id", partId)
-    .eq("boat_id", boatId)
-    .not("deleted_at", "is", null);
-  if (error) return fail(dbErrorKey(error));
-  if (!count) return fail("errors.forbidden");
-
-  revalidateStockScreens(boatId);
-  return ok(undefined);
-}

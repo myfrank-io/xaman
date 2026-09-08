@@ -67,6 +67,12 @@ export async function submitOrQueue<T>({
     return { status: "refused", error: result.error };
   } catch (error) {
     if (isNetworkFailure(error)) return offline();
-    throw error;
+    // Anything else — a Server Action that threw, a deploy in the middle of the request — is a
+    // refusal, not an exception to rethrow. Thrown from inside the caller's `startTransition`,
+    // it reaches the error boundary, which unmounts the form and takes the whole intervention
+    // typed into it with it (rule 13: jamais de saisie perdue). Refused, the caller shows the
+    // sentence, keeps every field, and the person taps « Enregistrer » again.
+    console.error("submitOrQueue: unexpected failure", error);
+    return { status: "refused", error: "errors.unknown" };
   }
 }

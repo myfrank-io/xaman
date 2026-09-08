@@ -79,8 +79,8 @@ export function PartForm({
   categories: CategoryChoice[];
   contacts: ContactOption[];
 }) {
-  const t = useTranslations("equipment.stock");
-  const tu = useTranslations("equipment.stock.units");
+  const t = useTranslations("parts");
+  const tu = useTranslations("parts.units");
   const errorMessage = useErrorMessage();
   const to = useTranslations("offline");
   const fieldError = useFieldError();

@@ -51,7 +51,7 @@ export async function BoatsShell({
           {subtitle ? <p className="mt-2 text-body text-on-navy-2">{subtitle}</p> : null}
         </div>
       </header>
-      <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
+      <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 pt-8 safe-pb-8 sm:px-6">
         {children}
       </section>
     </main>

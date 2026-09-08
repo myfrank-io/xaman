@@ -27,6 +27,7 @@ import { can, type BoatRole } from "@/lib/permissions";
 import { isPurchaseKind, parsePurchaseLimit, PURCHASE_PAGE_SIZE } from "@/lib/purchases";
 import { importPath, stockPath, suppliesPath } from "@/lib/queries/boat-routes";
 import { purchaseKindLabelKey, type PurchaseKind } from "@/lib/schemas/purchases";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /** Category of the gas bottle in the ORC 50 seed, used when no gas line exists yet. */
@@ -78,23 +79,6 @@ export default async function SuppliesPage({
   }
 
   const supabase = await createClient();
-  const [{ data: role }, { data: categories }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
-    supabase
-      .from("boat_categories")
-      .select("id, name, color, icon, external_ref")
-      .eq("boat_id", boatId)
-      .eq("is_active", true)
-      .order("sort_order"),
-  ]);
-  if (!role) notFound();
-  const canWrite = can(role as BoatRole, "write");
-  const categoryList = (categories ?? []).map((category) => ({
-    id: category.id,
-    name: category.name,
-    color: category.color,
-    icon: category.icon,
-  }));
 
   // `?tab=gas` is the « + » sheet entry: the same list filtered on gas, dialog open.
   const gasEntry = query.tab === "gas";
@@ -122,36 +106,78 @@ export default async function SuppliesPage({
   if (categoryId === NO_CATEGORY) listQuery = listQuery.is("category_id", null);
   else if (categoryId) listQuery = listQuery.eq("category_id", categoryId);
 
-  const [{ data: rows }, { data: history }, { data: contacts }, { data: gasRows }] =
-    await Promise.all([
-      listQuery.order("date", { ascending: false }),
-      // Light query (two columns) feeding both the comparison and the running total.
-      supabase
-        .from("expenses_by_category")
-        .select("amount, date")
-        .eq("boat_id", boatId)
-        .in("source", sources)
-        .order("date", { ascending: true }),
-      supabase
-        .from("contacts")
-        .select("id, name, specialty, company, phone")
-        .eq("boat_id", boatId)
-        .is("deleted_at", null)
-        .order("name"),
-      kind === "gas" || gasEntry
-        ? supabase
-            .from("purchases")
-            .select(
-              "purchased_at, amount, bottle_type, supplier_contact_id, supplier_name, category_id",
-            )
-            .eq("boat_id", boatId)
-            .eq("kind", "gas")
-            .is("deleted_at", null)
-            .order("purchased_at", { ascending: false })
-        : Promise.resolve({ data: null }),
-    ]);
+  /**
+   * « Toute la période », sans système ni type : la liste ci-dessus **est** déjà l'historique
+   * complet de ces sources (la borne basse de la période est l'époque, 1900). La seconde
+   * lecture reposait alors la même question à la base pour en refaire la somme — sur l'écran
+   * d'arrivée, celui qu'on ouvre neuf fois sur dix, et sur un carnet papier repris ça fait
+   * deux fois toutes les lignes de dépense du bateau.
+   *
+   * Dès qu'un filtre restreint la liste, l'historique reste nécessaire : le cumul et la date de
+   * première dépense ne suivent aucun filtre, et la période précédente est hors de la fenêtre.
+   */
+  const derivedHistory = period === "all" && !categoryId && !kind;
 
-  const all = history ?? [];
+  // Une seule vague : les filtres viennent de l'URL, rien ici n'attend la réponse d'autre chose.
+  // Le rôle et les systèmes formaient une première vague à eux seuls, devant tout le reste.
+  const [
+    { data: role },
+    { data: categories },
+    { data: rows },
+    { data: history },
+    { data: contacts },
+    { data: gasRows },
+  ] = await Promise.all([
+    readBoatRole(boatId),
+    supabase
+      .from("boat_categories")
+      .select("id, name, color, icon, external_ref")
+      .eq("boat_id", boatId)
+      .eq("is_active", true)
+      .order("sort_order"),
+    listQuery.order("date", { ascending: false }),
+    // Light query (two columns) feeding both the comparison and the running total.
+    derivedHistory
+      ? Promise.resolve({ data: null })
+      : supabase
+          .from("expenses_by_category")
+          .select("amount, date")
+          .eq("boat_id", boatId)
+          .in("source", sources)
+          .order("date", { ascending: true }),
+    supabase
+      .from("contacts")
+      .select("id, name, specialty, company, phone")
+      .eq("boat_id", boatId)
+      .is("deleted_at", null)
+      .order("name"),
+    kind === "gas" || gasEntry
+      ? supabase
+          .from("purchases")
+          .select(
+            "purchased_at, amount, bottle_type, supplier_contact_id, supplier_name, category_id",
+          )
+          .eq("boat_id", boatId)
+          .eq("kind", "gas")
+          .is("deleted_at", null)
+          .order("purchased_at", { ascending: false })
+      : Promise.resolve({ data: null }),
+  ]);
+  if (!role) notFound();
+  const canWrite = can(role as BoatRole, "write");
+  const categoryList = (categories ?? []).map((category) => ({
+    id: category.id,
+    name: category.name,
+    color: category.color,
+    icon: category.icon,
+  }));
+
+  // `rows` descend par date ; l'historique montait. Le cumul ne lit que des montants et la
+  // première dépense n'est que le dernier élément d'une liste triée : l'ordre suffit à les dire.
+  const all: { amount: number | null; date: string | null }[] =
+    history ?? (rows ?? []).map((row) => ({ amount: row.amount, date: row.date }));
+  const cumulativeTotal = all.reduce((sum, row) => sum + (row.amount ?? 0), 0);
+  const firstDate = (history ? all[0] : all[all.length - 1])?.date ?? null;
   const previousTotal =
     period === "all"
       ? 0
@@ -287,8 +313,8 @@ export default async function SuppliesPage({
     rows: expenseRows,
     lines,
     previousTotal,
-    cumulativeTotal: all.reduce((sum, row) => sum + (row.amount ?? 0), 0),
-    firstDate: all[0]?.date ?? null,
+    cumulativeTotal,
+    firstDate,
     moreHref,
   };
 

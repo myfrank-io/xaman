@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  formatBytes,
   isTooLargeToStore,
   JPEG_QUALITY,
   MAX_EDGE,
@@ -15,6 +14,7 @@ import {
   planResize,
   rejectionReason,
 } from "@/lib/attachments/image";
+import { formatBytes } from "@/lib/format";
 import {
   ATTACHMENT_MAX_BYTES,
   attachmentExtension,

@@ -40,8 +40,11 @@ function DialogOverlay({
 }
 
 // Content scrolls inside itself (max 100dvh - margins) so the iPad keyboard never traps a form.
-// Below 768 px it docks to the bottom of the screen — a centred dialog with the
+// Below 640 px it docks to the bottom of the screen — a centred dialog with the
 // keyboard open on iPhone is unusable (ux-flows §1.2, item 24).
+// The switch is at `sm`, not `md`: 768 px is the width of the iPad in portrait, so at `md` the
+// dialog changed shape exactly on the device the app is built for — one of the two target
+// viewports got the phone sheet and the other the desktop card.
 function DialogContent({
   className,
   children,
@@ -59,10 +62,10 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed z-50 flex flex-col gap-4 overflow-y-auto border bg-surface p-6 shadow-xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
-          // < 768 px: bottom sheet
+          // < 640 px: bottom sheet
           "inset-x-0 bottom-0 max-h-[85dvh] w-full rounded-t-2xl pb-[max(1.5rem,env(safe-area-inset-bottom))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-          // >= 768 px: centred dialog
-          "md:inset-x-auto md:top-[50%] md:bottom-auto md:left-[50%] md:max-h-[calc(100dvh-2rem)] md:w-[min(560px,100vw-2rem)] md:max-w-[calc(100%-2rem)] md:translate-x-[-50%] md:translate-y-[-50%] md:rounded-2xl md:pb-6 md:data-[state=closed]:slide-out-to-bottom-0 md:data-[state=closed]:zoom-out-95 md:data-[state=open]:slide-in-from-bottom-0 md:data-[state=open]:zoom-in-95",
+          // >= 640 px: centred dialog
+          "sm:inset-x-auto sm:top-[50%] sm:bottom-auto sm:left-[50%] sm:max-h-[calc(100dvh-2rem)] sm:w-[min(560px,100vw-2rem)] sm:max-w-[calc(100%-2rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-2xl sm:pb-6 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95",
           className,
         )}
         {...props}
@@ -102,7 +105,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-6 mt-2 -mb-6 flex flex-col-reverse gap-2 border-t border-border bg-surface px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end md:-mb-6 md:pb-4",
+        "-mx-6 mt-2 -mb-6 flex flex-col-reverse gap-2 border-t border-border bg-surface px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:pb-4",
         className,
       )}
       {...props}
