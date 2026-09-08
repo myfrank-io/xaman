@@ -15,7 +15,8 @@ type TemplateItem = {
   description: string | null;
   interval_months: number | null;
   interval_hours: number | null;
-  engine_scope: "none" | "inboard" | "outboard" | "all";
+  engine_scope: string;
+  zone_scope?: string;
   source: string;
   actions: string[];
 };
@@ -46,15 +47,102 @@ describe("generic template migration", () => {
     expect(readFileSync(TARGET, "utf8")).toBe(buildTemplateMigration(source));
   });
 
-  it("ships the three models a boat can fall back on", () => {
+  it("ships the four models a boat can fall back on", () => {
     expect(source.templates.map((t) => t.template.external_ref)).toEqual([
       "generic-catamaran-v1",
       "generic-monohull-sail-v1",
       "generic-motor-v1",
+      "generic-rib-v1",
     ]);
     for (const entry of source.templates) {
       expect(entry.template.boat_type).toBeTruthy();
-      expect(entry.categories.length).toBeGreaterThanOrEqual(7);
+      expect(entry.categories.length).toBeGreaterThanOrEqual(6);
+    }
+  });
+
+  /**
+   * D90. The scopes are what 0024's `engine_scope_matches` and its check constraint accept; a
+   * typo here would be refused at apply time, on every row after it.
+   */
+  it("only uses the engine scopes and zone scopes the database knows", () => {
+    const scopes = [
+      "none",
+      "inboard",
+      "outboard",
+      "all",
+      "shaft",
+      "saildrive",
+      "sterndrive",
+      "jet",
+    ];
+    for (const entry of source.templates) {
+      for (const category of entry.categories) {
+        for (const item of category.items) {
+          expect(scopes, `${entry.template.external_ref}/${item.external_ref}`).toContain(
+            item.engine_scope,
+          );
+          if (item.zone_scope !== undefined) {
+            expect(["all", "offshore"]).toContain(item.zone_scope);
+          }
+        }
+      }
+    }
+  });
+
+  /**
+   * « La checklist d'un côtier c'est plus simple » (D90): every model has something to leave out
+   * for a coastal boat, and the liferaft is always among it — a coastal boat never carries one.
+   */
+  it("marks the offshore points on every model", () => {
+    for (const entry of source.templates) {
+      const offshore = entry.categories.flatMap((c) =>
+        c.items.filter((i) => i.zone_scope === "offshore").map((i) => i.external_ref),
+      );
+      expect(offshore, entry.template.external_ref).toContain("liferaft");
+      expect(offshore, entry.template.external_ref).toContain("epirb");
+    }
+  });
+
+  /**
+   * « Quand je mets semi-rigide, que ce soit que des trucs liés au bateau à moteur » (D90): the
+   * semi-rigide model never asks about a shaft line, a generator or a toilet, and every point that
+   * is about an engine says which drive it is for — so an outboard collects nothing from a Z-drive.
+   */
+  it("keeps the semi-rigide model to what a semi-rigide has", () => {
+    const rib = source.templates.find((t) => t.template.external_ref === "generic-rib-v1");
+    expect(rib).toBeDefined();
+    const refs = new Set(rib!.categories.flatMap((c) => c.items.map((i) => i.external_ref)));
+    for (const absent of [
+      "shaft-alignment",
+      "stern-gland",
+      "generator-service",
+      "toilets",
+      "air-conditioning",
+      "sails",
+    ]) {
+      expect(refs.has(absent), absent).toBe(false);
+    }
+    expect(rib!.categories.map((c) => c.external_ref)).toContain("trailer");
+    const engines = rib!.categories.find((c) => c.external_ref === "engines")!;
+    expect(
+      engines.items.filter((i) => i.engine_scope === "outboard").length,
+    ).toBeGreaterThanOrEqual(10);
+    expect(engines.items.some((i) => i.engine_scope === "jet")).toBe(true);
+    expect(engines.items.some((i) => i.engine_scope === "sterndrive")).toBe(true);
+  });
+
+  /** A drive-specific point on the motor model names its drive, never « inboard » in general. */
+  it("attaches the shaft-line and Z-drive points of the motor model to their drive", () => {
+    const motor = source.templates.find((t) => t.template.external_ref === "generic-motor-v1")!;
+    const byRef = new Map(motor.categories.flatMap((c) => c.items.map((i) => [i.external_ref, i])));
+    for (const ref of ["shaft-alignment", "stern-gland", "shaft-bearing", "propeller"]) {
+      expect(byRef.get(ref)?.engine_scope, ref).toBe("shaft");
+    }
+    for (const ref of ["sterndrive", "sterndrive-oil", "sterndrive-gimbal"]) {
+      expect(byRef.get(ref)?.engine_scope, ref).toBe("sterndrive");
+    }
+    for (const ref of ["jet-wear-ring", "jet-bearings", "jet-intake"]) {
+      expect(byRef.get(ref)?.engine_scope, ref).toBe("jet");
     }
   });
 

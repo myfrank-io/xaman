@@ -17,6 +17,7 @@ import {
 import { can, type BoatRole } from "@/lib/permissions";
 import { loadBoatAttention } from "@/lib/queries/attention";
 import { boatPath } from "@/lib/queries/boat-routes";
+import { pendingInboxCount } from "@/lib/queries/inbox";
 import { createClient } from "@/lib/supabase/server";
 
 const NAV_KEYS: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
@@ -53,8 +54,9 @@ export default async function BoatLayout({
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
 
-  const [attention, { data: profile }] = await Promise.all([
+  const [attention, inboxPending, { data: profile }] = await Promise.all([
     loadBoatAttention(supabase, boatId),
+    pendingInboxCount(supabase, boatId),
     auth.user
       ? supabase.from("profiles").select("full_name, email").eq("id", auth.user.id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -75,6 +77,8 @@ export default async function BoatLayout({
     label: tn(key),
     shortLabel: tn.has(`short.${key}`) ? tn(`short.${key}`) : undefined,
     badge: badges[key] || undefined,
+    // Not a red dot (D81 — nothing here is due today): a count beside « À valider » (D91).
+    hint: key === "inbox" && inboxPending > 0 ? String(inboxPending) : undefined,
   }));
 
   const account = {

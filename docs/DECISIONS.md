@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D90.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D92.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -1860,3 +1860,131 @@ qui allume le point rouge. Rien ne se déplace sous le doigt de qui a déjà cho
 saisie de quelqu'un d'autre, et « planifié aujourd'hui » est légitime. Écarté aussi : une
 troisième puce « Dans une semaine », qui ferait trois raccourcis là où le calendrier natif fait
 déjà le travail au-delà de demain.
+
+## 2026-09-08 — D90 : la checklist sait ce qui entraîne le moteur, et jusqu'où va le bateau
+
+**Question.** Premier retour d'un propriétaire de bateau à moteur (Andréa, 7 septembre) : « quand je
+mets semi-rigide par exemple, que ce soit que des trucs liés au bateau à moteur » ; « demander aussi
+si le bateau est côtier ou hauturier — la checklist d'un côtier c'est plus simple » ; « entre
+hors-bord, in-bord, jet, semi hors-bord… sur moteur t'as une tonne de trucs » ; et, en filigrane :
+« soit ils sont vieux, soit ils aiment pas se faire chier, donc faut simplifier au maximum ».
+
+**Le constat.** L'app connaissait un bit sur un moteur : sa position, et par elle « hors-bord ou
+pas » — `apply_checklist_template` appariait `engine_scope` sur `position`. Un semi-rigide recevait
+le plan du bateau à moteur, dont les points sans moteur (ligne d'arbre, presse-étoupe, groupe
+électrogène, climatisation, toilettes, chauffe-eau) n'ont rien à faire sur un bateau qu'on
+remorque ; et aucune question n'était posée sur la zone, si bien qu'un semi-rigide de plage
+héritait du radeau, de la balise et de l'AIS.
+
+**Décision.** Trois données, aucune table nouvelle, et pas un tap de plus dans le cas courant.
+
+1. **`engines.propulsion`** — hors-bord · in-bord (ligne d'arbre) · saildrive · semi hors-bord
+   (Z-drive) · jet. C'est ce que le modèle apparie désormais (`engine_scope_matches`, `0024`) ;
+   la position ne dit plus que « où ». `inboard` continue de vouloir dire « tout sauf un hors-bord »,
+   donc les modèles existants (ORC 50 compris) ne changent pas de comportement ; les quatre scopes
+   fins servent aux points propres à une transmission : soufflet de saildrive, presse-étoupe de
+   ligne d'arbre, soufflets et cardan de Z-drive, bague d'usure et grille d'un jet.
+   À l'étape 1, une rangée de puces **« Motorisation »**, dont les choix suivent la coque et dont la
+   première est pré-réglée (semi-rigide → hors-bord, multicoque → saildrive, monocoque → ligne
+   d'arbre, moteur → hors-bord) ; posée une fois pour tous les moteurs, un bateau mixte se corrige
+   ensuite moteur par moteur sur la fiche du moteur, où la puce existe aussi. Les moteurs existants
+   sont rétro-remplis à `0024` : position `outboard` → hors-bord, catamaran / trimaran → saildrive,
+   sinon ligne d'arbre.
+2. **`boats.navigation_zone`** — côtier · hauturier. Un point de modèle peut dire
+   `zone_scope = 'offshore'` (radeau, balise, AIS, radar, dessalinisateur, licence MMSI) et
+   `apply_checklist_template` le saute sur un bateau côtier. Pré-réglé **dans le sens qui coûte le
+   moins quand il est faux** : côtier pour un semi-rigide ou un bateau à moteur, hauturier pour un
+   voilier — un point de radeau en trop s'archive en un tap, un point de radeau manquant est un
+   radeau que personne ne révise. Les bateaux existants sont hauturiers : rien ne leur est retiré.
+   Modifiable sur la fiche du bateau ; **passer en hauturier réapplique le plan** (idempotent sur
+   `(boat_id, external_ref)`, donc exactement les points manquants arrivent), repasser en côtier ne
+   retire rien.
+3. **Un modèle « Semi-rigide — modèle générique »** (`0025`) : six systèmes — Moteurs, Coque &
+   Flotteurs, Électricité, Électronique / Nav, Sécurité, et **Remorque** (roulements, freins,
+   treuil, éclairage, rinçage) — et 62 points dont 46 visibles pour un semi-rigide côtier à
+   hors-bord, contre les 70-odd points du modèle moteur dont plus de la moitié ne le concernaient
+   pas. Le modèle moteur gagne les points hors-bord détaillés (huile d'embase, bougies, turbine,
+   anodes, hélice, relevage, câbles, distribution) au lieu d'une « révision du hors-bord » qui en
+   cachait la liste, et les points Z-drive et jet.
+
+**Coût pour la personne.** Deux rangées de puces de plus à l'étape 1, toutes deux pré-remplies par
+la coque : zéro tap dans le cas courant, un tap pour un semi-rigide à jet ou un voilier qui reste
+au port. C'est la réponse à « simplifier au maximum » : moins de points sur l'écran, pas plus de
+questions sur le chemin.
+
+**Ce qui ne bouge pas.** Aucune politique RLS ; aucune suppression nulle part — un point qui ne
+correspondrait plus reste sur les bateaux qui l'ont ; `0016` est figée et `0025` porte l'édition
+complète du registre en upsert ; la vue `checklist_item_status` est inchangée, donc la copie TS
+(`checklist-status.ts`) aussi.
+
+**Écarté.** Filtrer les points hauturiers dans la vue plutôt qu'à l'application (une case
+« côtier » qui fait disparaître des lignes existantes est un piège, et les autres lecteurs de
+`checklist_items` ne verraient pas la même chose) ; un déclencheur SQL sur le changement de zone
+(il aurait fait échouer une mise à jour faite sans session, seed ou admin — la Server Action fait
+le même geste en six lignes, là où il est lisible) ; une catégorie « Remorque » sur le modèle
+moteur (la plupart des bateaux à moteur du catalogue ne se remorquent pas). **Non fait, et à
+part** : « revoir le design », remarque générale du même échange, qui n'est pas une question de
+schéma.
+
+## 2026-09-08 — D91 : un document arrive tout seul, une personne le range d'un tap
+
+**Question.** « Je prends en photo mon ticket de caisse, ça l'analyse et ça crée automatiquement
+la facture adéquate » ; « chaque bateau a une adresse e-mail dédiée : quand un fichier est envoyé
+en pièce jointe, l'intervention est uploadée et pré-remplie, il faut juste vérifier les infos
+pour la valider ; le user reçoit un mail dès qu'une intervention est à valider, et quand elle
+est validée ». Annoncé à Andréa le 7 septembre comme « very soon ».
+
+**Le constat.** Le carnet savait déjà recevoir des documents (E10-1, « Importer des documents »),
+mais chaque document coûtait un titre, une date et un système à taper — sur un ticket qui porte
+déjà les trois — et rien n'arrivait sans que quelqu'un ouvre l'app avec le fichier à la main. Les
+factures existent pourtant : dans une boîte mail, celle du propriétaire ou de son comptable.
+
+**Décision. Une boîte de réception, deux portes, un tap.**
+
+1. **`inbox_items`** (`0026`) : une ligne par document arrivé, avec le fichier dans le bucket et
+   la lecture dans `suggestion`. Une ligne est une **proposition**. Rien n'est écrit dans le
+   journal ni dans les dépenses par une machine seule : « Valider » appelle les Server Actions des
+   formulaires (`saveLog`, `upsertPurchase`), donc une ligne validée obéit exactement aux règles
+   d'une ligne tapée — RLS, schémas zod partagés, upsert idempotent — et le document devient sa
+   pièce jointe (même objet, nouvelle ligne `attachments`).
+2. **La photo** : sur l'écran « À valider », « Photographier un ticket » ouvre l'appareil (`capture`),
+   la photo est réduite et envoyée comme une pièce jointe, puis lue **pendant que la personne
+   attend** (barre de progression, une trentaine de secondes) : une carte qui dirait « en cours »
+   pour toujours serait pire qu'une attente visible.
+3. **L'adresse** : `<slug>-<token>@INBOUND_EMAIL_DOMAIN`, où le slug n'est que le nom du bateau pour
+   le lecteur et le **token** (12 hexadécimaux, `boats.inbox_token`) la seule chose que le webhook
+   apparie : un bateau renommé garde son adresse, un nom deviné n'ouvre rien. L'événement
+   `email.received` de Resend arrive sur le webhook existant (D79) ; les pièces jointes sont
+   récupérées **avant** de répondre (une ligne sans objet serait une carte illisible), la lecture
+   tourne **après** la réponse (`after`), puis **un** e-mail part aux owners et editors, quel que
+   soit le nombre de pièces jointes. Aucune liste d'expéditeurs autorisés : la facture vient
+   souvent d'une adresse que le bateau ne connaît pas (le comptable), et une ligne n'est de toute
+   façon qu'une proposition ; l'expéditeur est affiché, jamais cru.
+4. **La lecture** : Claude Opus 5, sortie structurée, effort moyen — c'est une lecture, pas un
+   raisonnement. Le prompt stable (mis en cache) dit ce que sont les deux listes ; le tour du
+   document porte le vocabulaire **du bateau** : ses systèmes, ses moteurs, ses intervenants, avec
+   leurs identifiants, pour que la lecture atterrisse sur une puce existante et pas sur du texte à
+   re-ranger. La réponse est **rendue sûre** avant d'être stockée (`normaliseSuggestion`) : un id
+   que le bateau n'a pas est abandonné, une date qui n'en est pas une devient nulle, les textes
+   sont coupés à la taille des colonnes, et le tout repasse par le schéma. Sans clé, sans format
+   lisible (HEIC), ou sur un échec : la ligne sort quand même `ready`, avec la raison, et la carte
+   se remplit à la main. **Jamais une ligne coincée.**
+5. **Les e-mails** : « Un document est arrivé » aux owners et editors, seulement pour ce qui vient
+   par mail (qui vient de photographier un ticket est devant l'écran où il atterrit) ; « C'est dans
+   le carnet » aux autres owners et editors, jamais à celui qui a validé. Même coque que les six
+   e-mails d'authentification, générés par le même script, sans gabarit Supabase.
+
+**Où.** Un écran « À valider » (`/boats/[id]/inbox`) en tête de la feuille « Plus », avec le
+compte en indice — pas de point rouge, rien ici n'est dû aujourd'hui (D81) ; un bandeau sur le
+tableau de bord quand quelque chose attend, avant les lignes importées à vérifier ; l'adresse sur
+la fiche du bateau, avec « Copier ».
+
+**Ce qui n'a pas été fait.** La suggestion de points de checklist depuis le document (le
+formulaire d'intervention le fait déjà à l'édition) ; une adresse régénérable ; un corps de mail
+sans pièce jointe qui deviendrait une intervention. **Hors de ce dépôt** : le domaine de réception
+(Resend → Domains → « Receiving », enregistrement MX), le webhook abonné à `email.received`, et
+`ANTHROPIC_API_KEY` / `INBOUND_EMAIL_DOMAIN` sur Vercel — sans quoi l'adresse n'est pas affichée
+et les documents sont rangés à la main. Les chemins de l'API de réception de Resend
+(`/emails/receiving/{id}/attachments/{id}` → `download_url`) sont écrits d'après sa documentation,
+que le proxy de ce poste n'a pas pu ouvrir : à vérifier au moment du branchement, en un seul
+fichier (`src/lib/inbox/resend-inbound.ts`).

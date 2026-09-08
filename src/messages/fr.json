@@ -61,6 +61,7 @@
     "supplies": "Dépenses",
     "haulOuts": "Sorties de l'eau",
     "contacts": "Intervenants",
+    "inbox": "À valider",
     "boat": "Bateau",
     "members": "Membres",
     "settings": "Paramètres",
@@ -77,6 +78,7 @@
       "boat": "Bateau",
       "supplies": "Dépenses",
       "contacts": "Intervenants",
+      "inbox": "À valider",
       "trash": "Corbeille",
       "more": "Plus",
       "haulOuts": "Sorties",
@@ -118,6 +120,17 @@
     "starboard": "Tribord",
     "center": "Central",
     "outboard": "Hors-bord"
+  },
+  "enginePropulsion": {
+    "outboard": "Hors-bord",
+    "shaft": "In-bord (ligne d'arbre)",
+    "saildrive": "Saildrive",
+    "sterndrive": "Semi hors-bord (Z-drive)",
+    "jet": "Jet"
+  },
+  "navigationZone": {
+    "coastal": "Côtier",
+    "offshore": "Hauturier"
   },
   "units": {
     "hours": "{count, plural, one {# h} other {# h}}",
@@ -313,12 +326,16 @@
       "optional": "Facultatif",
       "engines": "Moteurs",
       "enginesHelp": "Les entretiens en heures s'y rattacheront. Vous les nommerez et relèverez les compteurs ensuite.",
+      "propulsion": "Motorisation",
+      "propulsionHelp": "Elle décide des points de chaque moteur : ligne d'arbre, embase, hors-bord… Un bateau mixte se corrige ensuite moteur par moteur.",
       "tender": "Annexe",
       "tenderHelp": "Son hors-bord a ses propres entretiens : il arrive dans le carnet comme un moteur du bord.",
       "tenderOption": {
         "none": "Aucune",
         "outboard": "Avec hors-bord"
       },
+      "zone": "Navigation",
+      "zoneHelp": "Un bateau côtier n'a ni radeau, ni balise, ni AIS dans sa liste. Modifiable ensuite depuis la fiche du bateau.",
       "submit": "Continuer",
       "invited": "Vous avez été invité sur un bateau ? Ouvrez le lien reçu par e-mail : il vous y ajoutera directement.",
       "suggestionsLabel": "Suggestions :",
@@ -698,6 +715,10 @@
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
       "action": "Vérifier"
+    },
+    "inbox": {
+      "banner": "{count, plural, one {# document attend votre validation} other {# documents attendent votre validation}}",
+      "action": "Valider"
     },
     "markDone": "Fait",
     "state": {
@@ -1112,6 +1133,12 @@
       "edit": "Modifier la fiche",
       "name": "Nom",
       "type": "Type",
+      "navigationZone": "Navigation",
+      "navigationZoneHelp": "Passer en hauturier ajoute au plan d'entretien les points hauturiers (radeau, balise, AIS…). Repasser en côtier ne retire rien.",
+      "inboxAddress": "Adresse du carnet",
+      "inboxAddressHelp": "Les pièces jointes envoyées à cette adresse arrivent dans « À valider », pré-remplies : facture, ticket, devis.",
+      "inboxCopy": "Copier l'adresse",
+      "inboxCopied": "Adresse copiée",
       "builder": "Constructeur",
       "model": "Modèle",
       "hullNumber": "N° de coque",
@@ -1160,6 +1187,8 @@
     "fields": {
       "label": "Nom",
       "position": "Position",
+      "propulsion": "Motorisation",
+      "propulsionHelp": "Décide des points de checklist de ce moteur : « Générer les points de ce moteur » les tire de la motorisation.",
       "brand": "Marque",
       "model": "Modèle",
       "serial": "N° de série",
@@ -1228,6 +1257,13 @@
       "starboardInner": "Moteur tribord intérieur",
       "starboardOuter": "Moteur tribord extérieur",
       "outboard": "Hors-bord",
+      "outboardPort": "Hors-bord bâbord",
+      "outboardStarboard": "Hors-bord tribord",
+      "outboardCenter": "Hors-bord central",
+      "outboardPortOuter": "Hors-bord bâbord extérieur",
+      "outboardPortInner": "Hors-bord bâbord intérieur",
+      "outboardStarboardInner": "Hors-bord tribord intérieur",
+      "outboardStarboardOuter": "Hors-bord tribord extérieur",
       "tender": "Hors-bord d'annexe"
     }
   },
@@ -2126,5 +2162,94 @@
       "attachAll": "{count, plural, one {Rattacher le document} other {Rattacher les # documents}}",
       "noCategories": "Ce bateau n'a encore aucun système : un document ne peut pas devenir une intervention sans en avoir un. Ajoutez-en depuis les paramètres du bateau."
     }
+  },
+  "inbox": {
+    "title": "À valider",
+    "subtitle": "Ce qui est arrivé par photo ou par e-mail, prêt à entrer dans le carnet.",
+    "capture": "Photographier un ticket",
+    "choose": "Choisir un document",
+    "captureHelp": "Une facture, un ticket de caisse, un devis : la lecture pré-remplit l'intervention, vous vérifiez, vous validez.",
+    "readOnly": "Seuls les membres qui écrivent dans le carnet peuvent valider un document.",
+    "address": {
+      "title": "Par e-mail",
+      "help": "Envoyez vos factures en pièce jointe à l'adresse du carnet — depuis votre boîte, ou depuis celle de votre comptable.",
+      "copy": "Copier l'adresse",
+      "copied": "Adresse copiée"
+    },
+    "empty": {
+      "title": "Rien à valider",
+      "description": "Photographiez un ticket, ou envoyez une facture à l'adresse du carnet : le document arrive ici, pré-rempli."
+    },
+    "pending": "{count, plural, =0 {Rien en attente} one {# document à valider} other {# documents à valider}}",
+    "history": "Déjà traités",
+    "source": {
+      "email": "Reçu par e-mail",
+      "upload": "Photographié dans l'app"
+    },
+    "from": "De {sender}",
+    "subjectLabel": "Objet : {subject}",
+    "status": {
+      "received": "Reçu, lecture à venir",
+      "analysing": "Lecture du document…",
+      "ready": "Prêt à valider",
+      "validated": "Validé",
+      "dismissed": "Ignoré"
+    },
+    "badge": {
+      "received": "Reçu",
+      "analysing": "Lecture…",
+      "ready": "À valider",
+      "validated": "Validé",
+      "dismissed": "Ignoré"
+    },
+    "kind": {
+      "log": "Intervention",
+      "purchase": "Achat"
+    },
+    "confidence": {
+      "high": "Lecture sûre",
+      "medium": "À vérifier",
+      "low": "Incertaine"
+    },
+    "warnings": "À vérifier",
+    "lineItems": "Lignes lues",
+    "errors": {
+      "notConfigured": "La lecture automatique n'est pas configurée : remplissez les champs à la main.",
+      "unsupportedFormat": "Ce format n'est pas lu automatiquement (photo HEIC ?) : remplissez à la main, ou renvoyez le document en JPEG ou en PDF.",
+      "download": "Le document n'a pas pu être récupéré auprès de la messagerie.",
+      "analysis": "La lecture a échoué. Relisez, ou remplissez les champs à la main.",
+      "refused": "Le document n'a pas pu être lu automatiquement : remplissez les champs à la main."
+    },
+    "fields": {
+      "kind": "Ranger comme",
+      "title": "Titre",
+      "designation": "Désignation",
+      "date": "Date",
+      "category": "Système",
+      "amount": "Montant TTC",
+      "contact": "Prestataire",
+      "noContact": "Sans prestataire",
+      "supplier": "Fournisseur",
+      "supplierPlaceholder": "Tel qu'écrit sur le document",
+      "purchaseKind": "Type d'achat",
+      "hours": "Heures moteur",
+      "notes": "Notes"
+    },
+    "categoryRequired": "Choisissez un système pour ranger une intervention.",
+    "validate": "Valider",
+    "dismiss": "Ignorer",
+    "reanalyse": "Relire le document",
+    "open": "Ouvrir le document",
+    "validated": "Validé : {title}",
+    "dismissed": "Document ignoré",
+    "went": {
+      "log": "Voir l'intervention",
+      "purchase": "Voir dans Dépenses"
+    },
+    "uploadStage": {
+      "analysing": "Lecture du document…"
+    },
+    "uploaded": "Document lu : vérifiez puis validez.",
+    "uploadedNoRead": "Document reçu : remplissez les champs puis validez."
   }
 }

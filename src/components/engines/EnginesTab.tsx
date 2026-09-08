@@ -10,6 +10,7 @@ import { ChevronRightIcon, GaugeIcon, TriangleAlertIcon } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { HourReadingDialog, type ReadingEngine } from "@/components/engines/HourReadingDialog";
+import { engineKind } from "@/components/engines/engine-kind";
 import {
   Accordion,
   AccordionContent,
@@ -21,13 +22,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate, formatHours, toDate } from "@/lib/format";
 import { boatTabPath, enginePath, importPath, newEnginePath } from "@/lib/queries/boat-routes";
-import type { EnginePosition } from "@/lib/schemas/engines";
+import type { EnginePosition, EnginePropulsion } from "@/lib/schemas/engines";
 import { cn } from "@/lib/utils";
 
 export type EngineSummary = {
   id: string;
   label: string;
   position: EnginePosition;
+  propulsion: EnginePropulsion;
   brand: string | null;
   model: string | null;
   installedAt: string | null;
@@ -145,6 +147,7 @@ function EngineCard({
 }) {
   const t = useTranslations("engines");
   const tp = useTranslations("enginePosition");
+  const tpr = useTranslations("enginePropulsion");
   const details = [engine.brand, engine.model].filter(Boolean).join(" ");
   // Only a figure rides the title line on a phone. « Sans compteur d'heures » is a sentence: put
   // it up there and it eats the engine's model rather than the empty half of a line.
@@ -170,7 +173,7 @@ function EngineCard({
           <div className="min-w-0">
             <h3 className="truncate text-h3">{engine.label}</h3>
             <p className="truncate text-caption text-ink-2">
-              {tp(engine.position)}
+              {engineKind(engine, tp, tpr)}
               {details ? ` · ${details}` : ""}
             </p>
           </div>

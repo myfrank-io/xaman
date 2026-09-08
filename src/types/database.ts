@@ -388,9 +388,11 @@ export type Database = {
           home_port: string | null
           hull_number: string | null
           id: string
+          inbox_token: string
           length_m: number | null
           model: string | null
           name: string
+          navigation_zone: Database["public"]["Enums"]["navigation_zone"]
           notes: string | null
           organization_id: string | null
           photo_path: string | null
@@ -413,9 +415,11 @@ export type Database = {
           home_port?: string | null
           hull_number?: string | null
           id?: string
+          inbox_token?: string
           length_m?: number | null
           model?: string | null
           name: string
+          navigation_zone?: Database["public"]["Enums"]["navigation_zone"]
           notes?: string | null
           organization_id?: string | null
           photo_path?: string | null
@@ -438,9 +442,11 @@ export type Database = {
           home_port?: string | null
           hull_number?: string | null
           id?: string
+          inbox_token?: string
           length_m?: number | null
           model?: string | null
           name?: string
+          navigation_zone?: Database["public"]["Enums"]["navigation_zone"]
           notes?: string | null
           organization_id?: string | null
           photo_path?: string | null
@@ -803,6 +809,7 @@ export type Database = {
           source: string | null
           template_category_id: string
           updated_at: string
+          zone_scope: string
         }
         Insert: {
           actions?: NonNullable<Json>
@@ -818,6 +825,7 @@ export type Database = {
           source?: string | null
           template_category_id: string
           updated_at?: string
+          zone_scope?: string
         }
         Update: {
           actions?: NonNullable<Json>
@@ -833,6 +841,7 @@ export type Database = {
           source?: string | null
           template_category_id?: string
           updated_at?: string
+          zone_scope?: string
         }
         Relationships: [
           {
@@ -1122,6 +1131,7 @@ export type Database = {
           model: string | null
           notes: string | null
           position: Database["public"]["Enums"]["engine_position"]
+          propulsion: Database["public"]["Enums"]["engine_propulsion"]
           serial: string | null
           sort_order: number
           tracks_hours: boolean
@@ -1143,6 +1153,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           position: Database["public"]["Enums"]["engine_position"]
+          propulsion: Database["public"]["Enums"]["engine_propulsion"]
           serial?: string | null
           sort_order?: number
           tracks_hours?: boolean
@@ -1164,6 +1175,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           position?: Database["public"]["Enums"]["engine_position"]
+          propulsion?: Database["public"]["Enums"]["engine_propulsion"]
           serial?: string | null
           sort_order?: number
           tracks_hours?: boolean
@@ -1399,6 +1411,116 @@ export type Database = {
             columns: ["yard_contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_items: {
+        Row: {
+          attachment_id: string | null
+          boat_id: string
+          created_at: string
+          created_by: string | null
+          error_key: string | null
+          external_ref: string | null
+          file_name: string
+          id: string
+          log_id: string | null
+          mime_type: string
+          purchase_id: string | null
+          received_at: string
+          sender_email: string | null
+          sender_name: string | null
+          size_bytes: number
+          source: Database["public"]["Enums"]["inbox_source"]
+          status: Database["public"]["Enums"]["inbox_status"]
+          storage_path: string
+          subject: string | null
+          suggestion: Json | null
+          updated_at: string
+          updated_by: string | null
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          attachment_id?: string | null
+          boat_id: string
+          created_at?: string
+          created_by?: string | null
+          error_key?: string | null
+          external_ref?: string | null
+          file_name: string
+          id?: string
+          log_id?: string | null
+          mime_type: string
+          purchase_id?: string | null
+          received_at?: string
+          sender_email?: string | null
+          sender_name?: string | null
+          size_bytes: number
+          source: Database["public"]["Enums"]["inbox_source"]
+          status?: Database["public"]["Enums"]["inbox_status"]
+          storage_path: string
+          subject?: string | null
+          suggestion?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          attachment_id?: string | null
+          boat_id?: string
+          created_at?: string
+          created_by?: string | null
+          error_key?: string | null
+          external_ref?: string | null
+          file_name?: string
+          id?: string
+          log_id?: string | null
+          mime_type?: string
+          purchase_id?: string | null
+          received_at?: string
+          sender_email?: string | null
+          sender_name?: string | null
+          size_bytes?: number
+          source?: Database["public"]["Enums"]["inbox_source"]
+          status?: Database["public"]["Enums"]["inbox_status"]
+          storage_path?: string
+          subject?: string | null
+          suggestion?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_items_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
             referencedColumns: ["id"]
           },
         ]
@@ -2438,9 +2560,17 @@ export type Database = {
           p_engines?: Json
           p_model?: string
           p_name: string
+          p_navigation_zone?: Database["public"]["Enums"]["navigation_zone"]
           p_type: Database["public"]["Enums"]["boat_type"]
         }
         Returns: string
+      }
+      engine_scope_matches: {
+        Args: {
+          p_propulsion: Database["public"]["Enums"]["engine_propulsion"]
+          p_scope: string
+        }
+        Returns: boolean
       }
       enqueue_weekly_digest: {
         Args: Record<PropertyKey, never>
@@ -2532,8 +2662,12 @@ export type Database = {
       checklist_item_source: "template" | "custom"
       checklist_state: "never" | "ok" | "soon" | "overdue"
       engine_position: "port" | "starboard" | "center" | "outboard"
+      engine_propulsion: "outboard" | "shaft" | "saildrive" | "sterndrive" | "jet"
       hour_reading_source: "manual" | "maintenance_log" | "checklist" | "import"
+      inbox_source: "email" | "upload"
+      inbox_status: "received" | "analysing" | "ready" | "validated" | "dismissed"
       log_status: "planned" | "in_progress" | "done" | "urgent"
+      navigation_zone: "coastal" | "offshore"
       organization_type:
         | "private"
         | "charter"
@@ -2689,8 +2823,12 @@ export const Constants = {
       checklist_item_source: ["template", "custom"],
       checklist_state: ["never", "ok", "soon", "overdue"],
       engine_position: ["port", "starboard", "center", "outboard"],
+      engine_propulsion: ["outboard", "shaft", "saildrive", "sterndrive", "jet"],
       hour_reading_source: ["manual", "maintenance_log", "checklist", "import"],
+      inbox_source: ["email", "upload"],
+      inbox_status: ["received", "analysing", "ready", "validated", "dismissed"],
       log_status: ["planned", "in_progress", "done", "urgent"],
+      navigation_zone: ["coastal", "offshore"],
       organization_type: [
         "private",
         "charter",

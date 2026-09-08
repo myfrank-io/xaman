@@ -125,6 +125,7 @@ export default async function EnginePage({
           id: engine.id,
           label: engine.label,
           position: engine.position,
+          propulsion: engine.propulsion,
           brand: engine.brand,
           model: engine.model,
           serial: engine.serial,

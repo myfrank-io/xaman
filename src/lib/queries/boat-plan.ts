@@ -54,8 +54,9 @@ export async function boatPlanChoice(
 }
 
 /**
- * Mirrors `generic_template_for_boat_type` (0017): a trimaran sails like a catamaran, a rigid
- * inflatable is a small motor boat. It is only a pre-selection — every model stays choosable.
+ * Mirrors `generic_template_for_boat_type` (0017, 0024): a trimaran sails like a catamaran, a
+ * semi-rigide has its own model and falls back to the motor boat's while it is missing. It is
+ * only a pre-selection — every model stays choosable.
  */
 export function suggestFor(
   templates: TemplateOption[],
@@ -63,12 +64,7 @@ export function suggestFor(
 ): string | null {
   const generic = templates.filter((t) => t.builder === null && t.model === null);
   const wanted: Database["public"]["Enums"]["boat_type"] =
-    boatType === "trimaran"
-      ? "catamaran"
-      : boatType === "rib"
-        ? "motor"
-        : boatType === "other"
-          ? "monohull_sail"
-          : boatType;
-  return generic.find((t) => t.boatType === wanted)?.id ?? generic[0]?.id ?? null;
+    boatType === "trimaran" ? "catamaran" : boatType === "other" ? "monohull_sail" : boatType;
+  const fallback = boatType === "rib" ? generic.find((t) => t.boatType === "motor") : undefined;
+  return generic.find((t) => t.boatType === wanted)?.id ?? fallback?.id ?? generic[0]?.id ?? null;
 }

@@ -49,7 +49,7 @@ export default async function ReportPage({
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase
       .from("engines")
-      .select("id, label, brand, model, position")
+      .select("id, label, brand, model, position, propulsion")
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),

@@ -7,6 +7,7 @@ const base = {
   boatId: "11111111-1111-4111-8111-111111111111",
   name: "Xaman",
   type: "catamaran" as const,
+  navigationZone: "offshore" as const,
   builder: null,
   model: null,
   hullNumber: null,

@@ -96,6 +96,7 @@ const BUSINESS_TABLES = [
   "parts",
   "purchases",
   "attachments",
+  "inbox_items",
 ] as const;
 
 const WRITE_ONLY_TABLES = [
@@ -369,6 +370,68 @@ describe("insert", () => {
 });
 
 /**
+ * The inbox (D91, migration 0026). Members read it, contributors add to it — a pro photographing
+ * the invoice of their own work — and only owner / editor validate or dismiss, because that is
+ * what writes the carnet. Nobody deletes: a dismissed document is a status.
+ */
+describe("inbox_items", () => {
+  const INBOX = "00000000-0000-0000-0000-000000009001";
+  const path = (id: string) => `boats/${BOAT}/inbox/${id}.jpg`;
+  const insert = (user: User, id: string, createdBy = user.id) =>
+    run(
+      user,
+      `insert into public.inbox_items (id, boat_id, source, status, file_name, mime_type, size_bytes, storage_path, created_by)
+       values ($1, $2, 'upload', 'received', 'ticket.jpg', 'image/jpeg', 1000, $3, $4)`,
+      [id, BOAT, path(id), createdBy],
+    );
+
+  it("a contributor adds a document of their own; a viewer and a stranger cannot", async () => {
+    expect((await insert(U.pro, "00000000-0000-0000-0000-000000009101")).ok).toBe(true);
+    expect((await insert(U.editor, "00000000-0000-0000-0000-000000009102")).ok).toBe(true);
+    expect((await insert(U.viewer, "00000000-0000-0000-0000-000000009103")).ok).toBe(false);
+    expect((await insert(U.stranger, "00000000-0000-0000-0000-000000009104")).ok).toBe(false);
+    // created_by must be oneself: a row signed with someone else's id is refused.
+    expect((await insert(U.pro, "00000000-0000-0000-0000-000000009105", U.owner.id)).ok).toBe(
+      false,
+    );
+  });
+
+  it("only owner and editor validate or dismiss; a pro and a viewer cannot", async () => {
+    const dismiss = (user: User) =>
+      run(user, "update public.inbox_items set status = 'dismissed' where id = $1", [INBOX]);
+    for (const role of ["owner", "editor", "admin"] as Role[]) {
+      const res = await dismiss(U[role]);
+      expect(res.ok && res.rowCount === 1, role).toBe(true);
+    }
+    for (const role of ["pro", "viewer", "stranger"] as Role[]) {
+      const res = await dismiss(U[role]);
+      expect(res.ok ? res.rowCount : 0, role).toBe(0);
+    }
+  });
+
+  it("nobody deletes a document, and the path must belong to the boat", async () => {
+    const del = await run(U.owner, "delete from public.inbox_items where id = $1", [INBOX]);
+    expect(del.ok ? del.rowCount : 0).toBe(0);
+    const wrongBoat = await run(
+      U.owner,
+      `insert into public.inbox_items (id, boat_id, source, file_name, mime_type, size_bytes, storage_path, created_by)
+       values ($1, $2, 'upload', 'x.jpg', 'image/jpeg', 1, $3, $4)`,
+      ["00000000-0000-0000-0000-000000009106", BOAT, `boats/${BOAT2}/inbox/x.jpg`, U.owner.id],
+    );
+    expect(wrongBoat.ok).toBe(false);
+  });
+
+  it("gives every boat an address token, unreadable by nobody but unguessable", async () => {
+    const out = await as(U.viewer, async (c) => {
+      const res = await c.query("select inbox_token from public.boats where id = $1", [BOAT]);
+      return (res.rows[0] as { inbox_token: string }).inbox_token;
+    });
+    expect(out).toMatch(/^[0-9a-f]{12}$/);
+    expect(await count(U.stranger, "boats", "inbox_token = $1", [out])).toBe(0);
+  });
+});
+
+/**
  * Opening a carnet (D65, migrations 0015 + 0017). `create_boat` is the only door an ordinary user
  * has to a boat of their own, so what it refuses matters as much as what it creates — and since
  * D65 what it deliberately does NOT create matters too.
@@ -493,8 +556,151 @@ describe("create_boat", () => {
     expect(Number(out.unlinked)).toBe(0);
     expect(out.renamed).toBe("Propulsion");
     expect(out.plan).not.toBeNull();
-    // 70 template points, 10 of them engine-scoped: 9 inboard × 2 engines, 1 outboard skipped.
+    // 71 template points, 11 of them engine-scoped: 8 inboard × 2 engines + 1 shaft × 2 (the
+    // engines said nothing about their drive, so they are shaft lines), the saildrive point and
+    // the outboard point skipped.
     expect(Number(out.items)).toBe(78);
+  });
+
+  /**
+   * D90. « Quand je mets semi-rigide, que ce soit que des trucs liés au bateau à moteur », and
+   * « la checklist d'un côtier c'est plus simple »: a coastal semi-rigide with one outboard gets
+   * the semi-rigide systems, the outboard's own points, and neither the liferaft nor a jet's.
+   */
+  it("gives a coastal semi-rigide its own systems and only the points it can use", async () => {
+    const RIB = "00000000-0000-0000-0000-00000000b0f6";
+    const out = await as(U.stranger, async (c) => {
+      await c.query(
+        "select public.create_boat($1::uuid, $2, 'rib'::public.boat_type, null, null, $3::jsonb, null, 'coastal'::public.navigation_zone)",
+        [
+          RIB,
+          "Zodiac",
+          JSON.stringify([{ label: "Hors-bord", position: "outboard", propulsion: "outboard" }]),
+        ],
+      );
+      const systems = await c.query(
+        "select external_ref from public.boat_categories where boat_id = $1 order by sort_order",
+        [RIB],
+      );
+      const template = await c.query(
+        "select id from public.checklist_templates where external_ref = 'generic-rib-v1'",
+      );
+      await c.query("select public.apply_checklist_template($1::uuid, $2::uuid)", [
+        RIB,
+        (template.rows[0] as { id: string }).id,
+      ]);
+      const refs = await c.query(
+        "select external_ref from public.checklist_items where boat_id = $1",
+        [RIB],
+      );
+      const zone = await c.query("select navigation_zone from public.boats where id = $1", [RIB]);
+      return {
+        systems: systems.rows.map((r) => (r as { external_ref: string }).external_ref),
+        refs: refs.rows.map((r) => (r as { external_ref: string }).external_ref),
+        zone: (zone.rows[0] as { navigation_zone: string }).navigation_zone,
+      };
+    });
+
+    expect(out.zone).toBe("coastal");
+    expect(out.systems).toContain("trailer");
+    expect(out.systems).not.toContain("sails_rigging");
+    // The outboard's points, once, for the one engine.
+    expect(out.refs.filter((r) => r.startsWith("out-gear-oil:"))).toHaveLength(1);
+    // Nothing for a drive the boat does not have, nothing offshore.
+    expect(out.refs.some((r) => r.startsWith("jet-") || r.startsWith("sterndrive"))).toBe(false);
+    expect(out.refs.some((r) => r.startsWith("eng-oil:"))).toBe(false);
+    expect(out.refs).not.toContain("liferaft");
+    expect(out.refs).not.toContain("epirb");
+    expect(out.refs).toContain("kill-switch");
+  });
+
+  /**
+   * D90. Going offshore later adds exactly the points the coastal list left out — re-applying is
+   * idempotent on (boat_id, external_ref) — and each engine collects the points of its own drive.
+   */
+  it("adds the offshore points when the boat goes offshore, and matches each engine's drive", async () => {
+    const BOAT = "00000000-0000-0000-0000-00000000b0f7";
+    const out = await as(U.stranger, async (c) => {
+      await c.query(
+        "select public.create_boat($1::uuid, $2, 'motor'::public.boat_type, null, null, $3::jsonb, null, 'coastal'::public.navigation_zone)",
+        [
+          BOAT,
+          "Trawler",
+          JSON.stringify([
+            { label: "Bâbord", position: "port", propulsion: "shaft" },
+            { label: "Tribord", position: "starboard", propulsion: "sterndrive" },
+          ]),
+        ],
+      );
+      const template = await c.query(
+        "select id from public.checklist_templates where external_ref = 'generic-motor-v1'",
+      );
+      const templateId = (template.rows[0] as { id: string }).id;
+      await c.query("select public.apply_checklist_template($1::uuid, $2::uuid)", [
+        BOAT,
+        templateId,
+      ]);
+      const coastal = await c.query(
+        "select count(*)::int as n from public.checklist_items where boat_id = $1",
+        [BOAT],
+      );
+      await c.query("update public.boats set navigation_zone = 'offshore' where id = $1", [BOAT]);
+      await c.query("select public.apply_checklist_template($1::uuid, $2::uuid)", [
+        BOAT,
+        templateId,
+      ]);
+      const offshore = await c.query(
+        "select count(*)::int as n from public.checklist_items where boat_id = $1",
+        [BOAT],
+      );
+      const perDrive = await c.query(
+        `select e.propulsion,
+                count(i.id) filter (where i.external_ref like 'stern-gland:%')::int as gland,
+                count(i.id) filter (where i.external_ref like 'sterndrive:%')::int as bellows,
+                count(i.id) filter (where i.external_ref like 'eng-oil:%')::int as oil
+           from public.engines e left join public.checklist_items i on i.engine_id = e.id
+          where e.boat_id = $1 group by e.propulsion order by e.propulsion`,
+        [BOAT],
+      );
+      return {
+        coastal: Number((coastal.rows[0] as { n: number }).n),
+        offshore: Number((offshore.rows[0] as { n: number }).n),
+        perDrive: perDrive.rows as {
+          propulsion: string;
+          gland: number;
+          bellows: number;
+          oil: number;
+        }[],
+      };
+    });
+
+    // liferaft, epirb, ais-test, radar-check, mmsi-registration
+    expect(out.offshore - out.coastal).toBe(5);
+    expect(out.perDrive).toEqual([
+      { propulsion: "shaft", gland: 1, bellows: 0, oil: 1 },
+      { propulsion: "sterndrive", gland: 0, bellows: 1, oil: 1 },
+    ]);
+  });
+
+  it("refuses an engine whose drive it does not know, and defaults the zone to offshore", async () => {
+    const bad = await run(
+      U.stranger,
+      "select public.create_boat($1::uuid, 'Mauvais', 'motor'::public.boat_type, null, null, $2::jsonb)",
+      [
+        "00000000-0000-0000-0000-00000000b0f8",
+        JSON.stringify([{ label: "X", position: "port", propulsion: "warp" }]),
+      ],
+    );
+    expect(bad.ok).toBe(false);
+
+    const zone = await as(U.stranger, async (c) => {
+      await c.query(call("00000000-0000-0000-0000-00000000b0f8", "Défaut", "monohull_sail"));
+      const res = await c.query("select navigation_zone from public.boats where id = $1", [
+        "00000000-0000-0000-0000-00000000b0f8",
+      ]);
+      return (res.rows[0] as { navigation_zone: string }).navigation_zone;
+    });
+    expect(zone).toBe("offshore");
   });
 
   /**
@@ -612,7 +818,8 @@ describe("create_boat", () => {
         );
         return Number((res.rows[0] as { n: number }).n);
       });
-      expect(categories, type).toBeGreaterThanOrEqual(7);
+      // Six for a semi-rigide (D90), eight for everything else.
+      expect(categories, type).toBeGreaterThanOrEqual(6);
     }
   });
 

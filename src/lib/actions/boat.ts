@@ -19,6 +19,17 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
   if (!userId) return fail("errors.forbidden");
+
+  // Read before write (D90): a boat that goes from côtier to hauturier gets the offshore points
+  // of its plan afterwards, and only that transition asks for anything.
+  const { data: before, error: readError } = await supabase
+    .from("boats")
+    .select("navigation_zone, checklist_template_id")
+    .eq("id", boatId)
+    .maybeSingle();
+  if (readError) return fail(dbErrorKey(readError));
+  if (!before) return fail("errors.forbidden");
+
   let query = supabase
     .from("boats")
     .update(
@@ -26,6 +37,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
         updated_by: userId,
         name: values.name,
         type: values.type,
+        navigation_zone: values.navigationZone,
         builder: values.builder,
         model: values.model,
         hull_number: values.hullNumber,
@@ -46,6 +58,23 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
   const { error, count } = await query;
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail(expectedUpdatedAt ? "errors.conflict" : "errors.forbidden");
+
+  // Going offshore adds the liferaft, the EPIRB, the AIS… `apply_checklist_template` is
+  // idempotent on (boat_id, external_ref), so re-applying the plan adds exactly the points the
+  // coastal list left out and touches nothing else. Going coastal removes nothing: a point that
+  // exists is the owner's to archive, never the app's to take away.
+  if (
+    before.checklist_template_id &&
+    before.navigation_zone === "coastal" &&
+    values.navigationZone === "offshore"
+  ) {
+    const { error: applyError } = await supabase.rpc("apply_checklist_template", {
+      p_boat_id: boatId,
+      p_template_id: before.checklist_template_id,
+    });
+    if (applyError) return fail(dbErrorKey(applyError));
+    revalidatePath(boatPath(boatId, "checklist"), "layout");
+  }
 
   revalidatePath(boatPath(boatId, "boat"));
   revalidatePath(boatPath(boatId, "dashboard"));
@@ -73,7 +102,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
 export async function createBoat(input: unknown): Promise<ActionResult<{ boatId: string }>> {
   const parsed = parseInput(createBoatSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { boatId, name, type, builder, model, engines, boatModelId } = parsed.data;
+  const { boatId, name, type, navigationZone, builder, model, engines, boatModelId } = parsed.data;
 
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
@@ -89,6 +118,7 @@ export async function createBoat(input: unknown): Promise<ActionResult<{ boatId:
     p_model: model ?? undefined,
     p_engines: engines,
     p_boat_model_id: boatModelId ?? undefined,
+    p_navigation_zone: navigationZone,
   });
   if (error) return fail(dbErrorKey(error));
 

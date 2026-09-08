@@ -1,5 +1,5 @@
-import type { BoatType } from "@/lib/schemas/boat";
-import type { EnginePosition } from "@/lib/schemas/engines";
+import type { BoatType, NavigationZone } from "@/lib/schemas/boat";
+import type { EnginePosition, EnginePropulsion } from "@/lib/schemas/engines";
 
 /**
  * Opening a carnet (D65): what the creation screen asks, and why it asks only that.
@@ -24,9 +24,17 @@ export const ENGINE_COUNT_CHOICES = [0, 1, 2, 3, 4] as const;
 export type EngineCount = (typeof ENGINE_COUNT_CHOICES)[number];
 export const ENGINE_COUNT_MAX = 4;
 
-export type NewBoatEngine = { label: string; position: EnginePosition };
+export type NewBoatEngine = {
+  label: string;
+  position: EnginePosition;
+  propulsion: EnginePropulsion;
+};
 
-/** The labels the caller reads from `fr.json` — never written in this file (rule 7). */
+/**
+ * The labels the caller reads from `fr.json` — never written in this file (rule 7). One set for
+ * an engine inside the hull (« Moteur bâbord »), one for an outboard on the transom (« Hors-bord
+ * bâbord »): the word people use is the word the app should use.
+ */
 export type EngineLabels = {
   single: string;
   port: string;
@@ -37,7 +45,35 @@ export type EngineLabels = {
   starboardInner: string;
   starboardOuter: string;
   outboard: string;
+  outboardPort: string;
+  outboardStarboard: string;
+  outboardCenter: string;
+  outboardPortOuter: string;
+  outboardPortInner: string;
+  outboardStarboardInner: string;
+  outboardStarboardOuter: string;
   tender: string;
+};
+
+type LayoutSlot =
+  | "single"
+  | "port"
+  | "starboard"
+  | "center"
+  | "portOuter"
+  | "portInner"
+  | "starboardInner"
+  | "starboardOuter";
+
+const OUTBOARD_LABEL: Record<LayoutSlot, keyof EngineLabels> = {
+  single: "outboard",
+  port: "outboardPort",
+  starboard: "outboardStarboard",
+  center: "outboardCenter",
+  portOuter: "outboardPortOuter",
+  portInner: "outboardPortInner",
+  starboardInner: "outboardStarboardInner",
+  starboardOuter: "outboardStarboardOuter",
 };
 
 /**
@@ -46,7 +82,7 @@ export type EngineLabels = {
  * transom counts them. The position is not decoration: `engine_scope` matches on it, so it says
  * inboard or outboard and nothing else names the point set an engine collects.
  */
-const ENGINE_LAYOUTS: Record<number, { label: keyof EngineLabels; position: EnginePosition }[]> = {
+const ENGINE_LAYOUTS: Record<number, { label: LayoutSlot; position: EnginePosition }[]> = {
   1: [{ label: "single", position: "center" }],
   2: [
     { label: "port", position: "port" },
@@ -95,9 +131,56 @@ export function defaultEngineCount(boatType: BoatType | null | undefined): Engin
 }
 
 /**
- * A rigid inflatable is the one hull that carries an outboard rather than an inboard, and the
- * distinction is not cosmetic: `engine_scope` matches on the position, so an outboard given
- * `center` would collect the inboard points (impeller, saildrive) and none of its own.
+ * What drives the engines (D90): « entre hors-bord, in-bord, jet, semi hors-bord… sur moteur t'as
+ * une tonne de trucs ». The propulsion is what a template point's `engine_scope` matches on, so
+ * it decides which points each engine collects — a Z-drive's bellows, a shaft line's stern gland,
+ * an outboard's gear oil — and it is asked here, once, for all the engines of the boat.
+ *
+ * The choices follow the hull and the first one is pre-selected, so the question costs no tap
+ * where the answer is obvious: a semi-rigide has an outboard, a production multihull a saildrive.
+ * A boat with two different drives (one shaft, one Z-drive) corrects the second engine on the
+ * Bateau screen, where each engine is named.
+ */
+const PROPULSION_CHOICES: Record<BoatType, readonly EnginePropulsion[]> = {
+  rib: ["outboard", "jet", "sterndrive"],
+  motor: ["outboard", "shaft", "sterndrive", "jet"],
+  catamaran: ["saildrive", "shaft", "outboard"],
+  trimaran: ["saildrive", "shaft", "outboard"],
+  monohull_sail: ["shaft", "saildrive", "outboard"],
+  other: ["shaft", "saildrive", "sterndrive", "jet", "outboard"],
+};
+
+export function propulsionChoices(boatType: BoatType | null | undefined): EnginePropulsion[] {
+  return [...(boatType ? PROPULSION_CHOICES[boatType] : PROPULSION_CHOICES.other)];
+}
+
+/** The first choice of the hull: what most boats of that kind carry. */
+export function defaultPropulsion(boatType: BoatType | null | undefined): EnginePropulsion {
+  return propulsionChoices(boatType)[0] ?? "shaft";
+}
+
+/**
+ * « Côtier ou hauturier » (D90). A coastal boat is not asked about the liferaft, the EPIRB or the
+ * AIS: `apply_checklist_template` leaves the offshore points out of its plan.
+ *
+ * Pre-set from the hull, in the direction that costs least when wrong. A motor boat or a
+ * semi-rigide is coastal far more often than not, and the owner who does go offshore sees the
+ * chips and taps once. A sailing boat is offshore by default because the mistake is not
+ * symmetrical: an unwanted liferaft point is archived in a tap, a missing one is a liferaft
+ * nobody checks. Either way the zone stays editable on the Bateau screen.
+ */
+export function defaultNavigationZone(boatType: BoatType | null | undefined): NavigationZone {
+  return boatType === "rib" || boatType === "motor" ? "coastal" : "offshore";
+}
+
+/**
+ * Builds the engines of a new boat from the count, the hull and the propulsion.
+ *
+ * The propulsion is not cosmetic: `apply_checklist_template` matches `engine_scope` on it, so an
+ * outboard filed as a shaft line would collect the inboard points (impeller, stern gland) and
+ * none of its own. The position, since D90, only says where the engine sits — except for the
+ * single outboard, which keeps the `outboard` position the app has always given it (there is no
+ * side to a lone engine on a transom, and « Hors-bord » is what its card should say).
  */
 export function newBoatEngines(
   count: number,
@@ -105,19 +188,21 @@ export function newBoatEngines(
   labels: EngineLabels,
   /** The annexe's outboard (D68), appended after the boat's own engines. */
   tender: TenderChoice = "none",
+  propulsion: EnginePropulsion = defaultPropulsion(boatType),
 ): NewBoatEngine[] {
-  const outboard = boatType === "rib";
+  const outboard = propulsion === "outboard";
   // A count out of range is clamped rather than refused: the toggle offers 0…4, and a wider
   // number arriving from anywhere else must still open a carnet.
   const layout = ENGINE_LAYOUTS[Math.min(Math.floor(count), ENGINE_COUNT_MAX)] ?? [];
   const engines: NewBoatEngine[] = layout.map((slot) => ({
-    // The one engine of a rigid inflatable is a « Hors-bord », not a « Moteur » in the middle.
-    label: outboard && slot.label === "single" ? labels.outboard : labels[slot.label],
-    position: outboard ? "outboard" : slot.position,
+    // « Hors-bord bâbord », not « Moteur bâbord »: the word people use for the thing.
+    label: outboard ? labels[OUTBOARD_LABEL[slot.label]] : labels[slot.label],
+    position: outboard && slot.label === "single" ? "outboard" : slot.position,
+    propulsion,
   }));
   // Last, so the boat's own engines keep positions 1 and 2 on every screen that lists them.
   if (tender === "outboard" && asksAboutTender(boatType)) {
-    engines.push({ label: labels.tender, position: "outboard" });
+    engines.push({ label: labels.tender, position: "outboard", propulsion: "outboard" });
   }
   return engines;
 }

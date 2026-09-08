@@ -57,6 +57,7 @@ export async function upsertEngine(input: unknown): Promise<ActionResult<{ engin
       boat_id: boatId,
       label: values.label,
       position: values.position,
+      propulsion: values.propulsion,
       brand: values.brand,
       model: values.model,
       serial: values.serial,

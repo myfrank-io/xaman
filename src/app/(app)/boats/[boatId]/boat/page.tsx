@@ -7,8 +7,10 @@ import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab"
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
 import { applyStockFilter, countLowStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
+import { inboundDomain } from "@/lib/inbox/receive";
 import { boatModels } from "@/lib/queries/boat-models";
 import { loadStockItems, toRestockList } from "@/lib/queries/stock";
+import { inboxAddress } from "@/lib/schemas/inbox";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -39,7 +41,9 @@ export default async function BoatPage({
     supabase.rpc("boat_role", { p_boat_id: boatId }),
     supabase
       .from("engines")
-      .select("id, label, position, brand, model, installed_at, is_active, tracks_hours")
+      .select(
+        "id, label, position, propulsion, brand, model, installed_at, is_active, tracks_hours",
+      )
       .eq("boat_id", boatId)
       .order("sort_order")
       .order("label"),
@@ -81,6 +85,9 @@ export default async function BoatPage({
         .maybeSingle()
     : { data: null };
 
+  // The boat's own address (D91), when a receiving domain is configured.
+  const domain = inboundDomain();
+
   const hoursByEngine = new Map(
     (currentHours ?? []).map((row) => [row.engine_id, { hours: row.hours, readAt: row.read_at }]),
   );
@@ -93,6 +100,7 @@ export default async function BoatPage({
     id: engine.id,
     label: engine.label,
     position: engine.position,
+    propulsion: engine.propulsion,
     brand: engine.brand,
     model: engine.model,
     installedAt: engine.installed_at,
@@ -127,6 +135,7 @@ export default async function BoatPage({
         canEdit={can(boatRole, "write")}
         templateName={template?.name ?? null}
         models={models}
+        inboxAddress={domain ? inboxAddress(boat.name, boat.inbox_token, domain) : null}
       />
       <BoatTabs
         boatId={boatId}

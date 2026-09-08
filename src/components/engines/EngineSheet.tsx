@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 import { StatusBadge, type LogStatus } from "@/components/common/StatusBadge";
 import { EditReadingDialog, type EditableReading } from "@/components/engines/EditReadingDialog";
+import { engineKind } from "@/components/engines/engine-kind";
 import { EngineCounter } from "@/components/engines/EnginesTab";
 import { HourReadingDialog } from "@/components/engines/HourReadingDialog";
 import { Badge } from "@/components/ui/badge";
@@ -38,12 +39,13 @@ import {
   logsPath,
   newLogPath,
 } from "@/lib/queries/boat-routes";
-import type { EnginePosition } from "@/lib/schemas/engines";
+import type { EnginePosition, EnginePropulsion } from "@/lib/schemas/engines";
 
 export type EngineDetail = {
   id: string;
   label: string;
   position: EnginePosition;
+  propulsion: EnginePropulsion;
   brand: string | null;
   model: string | null;
   serial: string | null;
@@ -117,6 +119,7 @@ export function EngineSheet({
   const t = useTranslations("engines");
   const tu = useTranslations("units");
   const tp = useTranslations("enginePosition");
+  const tpr = useTranslations("enginePropulsion");
   const tc = useTranslations("common");
   const tcr = useTranslations("create");
   const errorMessage = useErrorMessage();
@@ -128,7 +131,7 @@ export function EngineSheet({
   const [deactivating, setDeactivating] = useState(false);
 
   const subtitle = [
-    tp(engine.position),
+    engineKind(engine, tp, tpr),
     [engine.brand, engine.model].filter(Boolean).join(" "),
     engine.installedAt ? t("installedIn", { year: engine.installedAt.slice(0, 4) }) : null,
     engine.serial ? t("serialShort", { serial: engine.serial }) : null,

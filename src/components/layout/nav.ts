@@ -2,6 +2,7 @@ import {
   AnchorIcon,
   CircleUserIcon,
   ContactIcon,
+  InboxIcon,
   LayoutDashboardIcon,
   ListChecksIcon,
   NotebookPenIcon,
@@ -20,6 +21,7 @@ export type NavKey =
   | "supplies"
   | "haulOuts"
   | "contacts"
+  | "inbox"
   | "boat"
   | "trash"
   | "members"
@@ -51,6 +53,7 @@ export const NAV_ICONS: Record<NavKey, LucideIcon> = {
   supplies: PackageIcon,
   haulOuts: AnchorIcon,
   contacts: ContactIcon,
+  inbox: InboxIcon,
   boat: SailboatIcon,
   trash: Trash2Icon,
   members: UsersIcon,
@@ -64,7 +67,8 @@ export const PRIMARY_NAV_KEYS: NavKey[] = ["dashboard", "checklist", "logs", "bo
 
 // Management screens: top of the « Plus » sheet + sidebar group 2.
 // Haul-outs left the navigation: they become a tab of the log book.
-export const SECONDARY_NAV_KEYS: NavKey[] = ["supplies", "contacts", "trash"];
+// « À valider » (D91) opens the sheet: what arrived on its own is the first thing to look at.
+export const SECONDARY_NAV_KEYS: NavKey[] = ["inbox", "supplies", "contacts", "trash"];
 
 // Account menu: sidebar footer (≥ lg) and bottom of the « Plus » sheet.
 export const ACCOUNT_NAV_KEYS: NavKey[] = ["settings", "members", "profile"];

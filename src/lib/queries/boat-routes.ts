@@ -7,6 +7,7 @@ export const BOAT_ROUTES: Record<NavKey, string> = {
   supplies: "supplies",
   haulOuts: "haul-outs",
   contacts: "contacts",
+  inbox: "inbox",
   boat: "boat",
   trash: "trash",
   members: "members",
@@ -84,6 +85,11 @@ export function importDocumentsPath(
   query?: Record<string, string | number | undefined>,
 ): string {
   return withQuery(`${boatPath(boatId, "logs")}/documents`, query);
+}
+
+/** « À valider » (D91): the documents that arrived by mail or by photo, waiting to be filed. */
+export function inboxPath(boatId: string): string {
+  return boatPath(boatId, "inbox");
 }
 
 /** « Reprise du carnet » (E3-7): the guided review of the imported rows. */

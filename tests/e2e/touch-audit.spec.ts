@@ -28,6 +28,7 @@ const PAGES = [
   "/dev/ui/review",
   "/dev/ui/import",
   "/dev/ui/install",
+  "/dev/ui/inbox",
   // The six e-mails Supabase sends (D71). The frame around them is what is measured here — the
   // e-mail itself lives in a sandboxed iframe, and an inbox is nobody's viewport to audit.
   "/dev/ui/emails",
