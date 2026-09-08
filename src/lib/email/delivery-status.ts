@@ -67,6 +67,39 @@ export function isFinalDelivery(status: DeliveryStatus | null | undefined): bool
   return status === "delivered" || deliveryFailed(status);
 }
 
+/** A send is « fresh » for ten minutes: that is where the answer still changes. */
+export const FRESH_SEND_MS = 10 * 60_000;
+/** How soon the provider may be asked again about a fresh send, and about an older one. */
+const FRESH_INTERVAL_MS = 5_000;
+const SETTLED_INTERVAL_MS = 60_000;
+
+/**
+ * Is it worth asking the provider what became of this message?
+ *
+ * Two rhythms, because one was wrong. A single « once a minute » was blind exactly where it
+ * mattered: a hard bounce comes back in about three seconds, and the minute that follows an
+ * invitation is the one minute someone is actually looking at the screen they sent it from.
+ * Signalled in use — « tu n'arrives pas à faire la différence entre les deux ? », a bounced
+ * address and a delivered one both reading « envoi en cours ». They did differ; the app had just
+ * refused to look.
+ *
+ * So a send from the last ten minutes is asked about every five seconds, and anything older
+ * every minute — the provider is rate-limited, and an invitation from yesterday is not news.
+ * A final state (delivered, bounced, complained, failed) is never asked about again at all.
+ */
+export function shouldAskAgain(
+  message: { status: string | null; sentAt: string | null; askedAt: string | null },
+  now = Date.now(),
+): boolean {
+  if (isFinalDelivery(toDeliveryStatus(message.status))) return false;
+  const askedAt = message.askedAt ? Date.parse(message.askedAt) : Number.NaN;
+  // Never asked (or an unreadable timestamp): the answer is what is missing.
+  if (Number.isNaN(askedAt)) return true;
+  const sentAt = message.sentAt ? Date.parse(message.sentAt) : Number.NaN;
+  const fresh = !Number.isNaN(sentAt) && now - sentAt < FRESH_SEND_MS;
+  return now - askedAt >= (fresh ? FRESH_INTERVAL_MS : SETTLED_INTERVAL_MS);
+}
+
 const EVENT_STATUS: Record<string, DeliveryStatus> = {
   "email.sent": "sent",
   "email.delivered": "delivered",
