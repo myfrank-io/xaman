@@ -25,7 +25,9 @@ export const TESSDATA_DIR = path.join(process.cwd(), "src", "lib", "inbox", "tes
 export const OCR_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp"] as const;
 
 export function isExtractable(mimeType: string): boolean {
-  return mimeType === "application/pdf" || (OCR_IMAGE_TYPES as readonly string[]).includes(mimeType);
+  return (
+    mimeType === "application/pdf" || (OCR_IMAGE_TYPES as readonly string[]).includes(mimeType)
+  );
 }
 
 export async function extractText(bytes: Buffer, mimeType: string): Promise<ExtractedText> {
@@ -58,7 +60,10 @@ async function pdfText(bytes: Buffer): Promise<string> {
           lines.push(current);
           current = "";
         }
-        current += current && !current.endsWith(" ") && !item.str.startsWith(" ") ? ` ${item.str}` : item.str;
+        current +=
+          current && !current.endsWith(" ") && !item.str.startsWith(" ")
+            ? ` ${item.str}`
+            : item.str;
         lastY = y;
         if (item.hasEOL) {
           lines.push(current);

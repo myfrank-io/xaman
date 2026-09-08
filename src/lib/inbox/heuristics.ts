@@ -1,5 +1,9 @@
 import { normaliseSuggestion, type InboxContext, type InboxModelOutput } from "@/lib/inbox/prompt";
-import { INBOX_WARNING_CODES, type InboxSuggestion, type InboxWarningCode } from "@/lib/schemas/inbox";
+import {
+  INBOX_WARNING_CODES,
+  type InboxSuggestion,
+  type InboxWarningCode,
+} from "@/lib/schemas/inbox";
 import type { VisiblePurchaseKind } from "@/lib/schemas/purchases";
 
 /**
@@ -52,7 +56,12 @@ export function fold(value: string): string {
 function toLines(text: string): string[] {
   return text
     .split(/\r?\n/)
-    .map((line) => line.replace(/[ \t]+/g, " ").replace(/ {2,}/g, " ").trim())
+    .map((line) =>
+      line
+        .replace(/[ \t]+/g, " ")
+        .replace(/ {2,}/g, " ")
+        .trim(),
+    )
     .filter(Boolean);
 }
 
@@ -162,7 +171,11 @@ function findTotal(lines: string[]): TotalReading {
     const last = numbers[numbers.length - 1];
     if (!last) continue;
     const priority = strong ? 2 : 1;
-    if (!best || priority > best.priority || (priority === best.priority && last.amount > best.amount)) {
+    if (
+      !best ||
+      priority > best.priority ||
+      (priority === best.priority && last.amount > best.amount)
+    ) {
       best = { priority, amount: last.amount, currency: last.currency };
     }
   }
@@ -201,28 +214,65 @@ function documentCurrency(lines: string[]): string | null {
 // ---------------------------------------------------------------------------------------------
 
 const MONTHS: Record<string, number> = {
-  janvier: 1, janv: 1, jan: 1,
-  fevrier: 2, fev: 2, feb: 2,
-  mars: 3, mar: 3,
-  avril: 4, avr: 4, apr: 4,
-  mai: 5, may: 5,
-  juin: 6, jun: 6,
-  juillet: 7, juil: 7, jul: 7,
-  aout: 8, aug: 8,
-  septembre: 9, sept: 9, sep: 9,
-  octobre: 10, oct: 10,
-  novembre: 11, nov: 11,
-  decembre: 12, dec: 12,
+  janvier: 1,
+  janv: 1,
+  jan: 1,
+  fevrier: 2,
+  fev: 2,
+  feb: 2,
+  mars: 3,
+  mar: 3,
+  avril: 4,
+  avr: 4,
+  apr: 4,
+  mai: 5,
+  may: 5,
+  juin: 6,
+  jun: 6,
+  juillet: 7,
+  juil: 7,
+  jul: 7,
+  aout: 8,
+  aug: 8,
+  septembre: 9,
+  sept: 9,
+  sep: 9,
+  octobre: 10,
+  oct: 10,
+  novembre: 11,
+  nov: 11,
+  decembre: 12,
+  dec: 12,
 };
 
 const NUMERIC_DATE = /(?<![\d/.-])(\d{1,2})[/.-](\d{1,2})[/.-](\d{4}|\d{2})(?![\d/.-])/g;
 const ISO_DATE = /(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)/g;
 const WRITTEN_DATE = /(?<!\d)(\d{1,2})(?:er)?\s+([a-z]{3,9})\.?\s+(\d{4})(?!\d)/g;
 
-const DATE_LABEL = ["date", "le", "emis", "emise", "etabli", "etablie", "facture le", "edite", "edition", "du"];
+const DATE_LABEL = [
+  "date",
+  "le",
+  "emis",
+  "emise",
+  "etabli",
+  "etablie",
+  "facture le",
+  "edite",
+  "edition",
+  "du",
+];
 const DATE_REJECT = [
-  "echeance", "validite", "valable", "livraison", "naissance", "expir", "paiement", "reglement",
-  "limite", "avant le", "jusqu",
+  "echeance",
+  "validite",
+  "valable",
+  "livraison",
+  "naissance",
+  "expir",
+  "paiement",
+  "reglement",
+  "limite",
+  "avant le",
+  "jusqu",
 ];
 
 function isoDate(y: number, m: number, d: number): string | null {
@@ -278,33 +328,123 @@ export function findDate(lines: string[], today: string): DateReading {
 // ---------------------------------------------------------------------------------------------
 
 const LABOUR = [
-  "main d.?oeuvre", "m\\.o\\.", "mo", "forfait", "intervention", "reparation", "remplacement",
-  "vidange", "revision", "carenage", "pose", "depose", "montage", "demontage", "reglage",
-  "controle", "diagnostic", "hivernage", "entretien", "taux horaire", "heures? de travail",
-  "deplacement", "expertise", "grutage", "manutention", "sortie d.?eau", "mise a l.?eau",
-  "calage", "nettoyage", "installation", "mise en service",
+  "main d.?oeuvre",
+  "m\\.o\\.",
+  "mo",
+  "forfait",
+  "intervention",
+  "reparation",
+  "remplacement",
+  "vidange",
+  "revision",
+  "carenage",
+  "pose",
+  "depose",
+  "montage",
+  "demontage",
+  "reglage",
+  "controle",
+  "diagnostic",
+  "hivernage",
+  "entretien",
+  "taux horaire",
+  "heures? de travail",
+  "deplacement",
+  "expertise",
+  "grutage",
+  "manutention",
+  "sortie d.?eau",
+  "mise a l.?eau",
+  "calage",
+  "nettoyage",
+  "installation",
+  "mise en service",
 ];
 
 const GAS = [
-  "gasoil", "gazole", "diesel", "essence", "sp95", "sp98", "e10", "carburant", "gpl", "butane",
-  "propane", "bouteille de gaz", "litres?", "station", "fuel", "plein",
+  "gasoil",
+  "gazole",
+  "diesel",
+  "essence",
+  "sp95",
+  "sp98",
+  "e10",
+  "carburant",
+  "gpl",
+  "butane",
+  "propane",
+  "bouteille de gaz",
+  "litres?",
+  "station",
+  "fuel",
+  "plein",
 ];
 
 const PART = [
-  "filtre", "huile", "anode", "turbine", "impeller", "piece", "pieces", "ref\\.?", "kit",
-  "courroie", "pompe", "joint", "bougie", "batterie", "cable", "fusible", "ampoule", "cordage",
-  "drisse", "ecoute", "manille", "poulie", "vanne", "passe.coque", "helice", "roulement",
-  "thermostat", "injecteur", "capteur", "antifouling", "peinture", "mastic", "graisse",
-  "liquide", "vis", "boulon", "ecrou",
+  "filtre",
+  "huile",
+  "anode",
+  "turbine",
+  "impeller",
+  "piece",
+  "pieces",
+  "ref\\.?",
+  "kit",
+  "courroie",
+  "pompe",
+  "joint",
+  "bougie",
+  "batterie",
+  "cable",
+  "fusible",
+  "ampoule",
+  "cordage",
+  "drisse",
+  "ecoute",
+  "manille",
+  "poulie",
+  "vanne",
+  "passe.coque",
+  "helice",
+  "roulement",
+  "thermostat",
+  "injecteur",
+  "capteur",
+  "antifouling",
+  "peinture",
+  "mastic",
+  "graisse",
+  "liquide",
+  "vis",
+  "boulon",
+  "ecrou",
 ];
 
 const TYPE_INVOICE = ["facture", "invoice", "note d.?honoraires", "avoir"];
 const TYPE_QUOTE = ["devis", "quote", "quotation", "proposition commerciale", "estimation"];
 const TYPE_RECEIPT = [
-  "ticket", "recu", "reçu", "caisse", "carte bancaire", "cb", "sans contact", "contactless",
-  "merci de votre visite", "tva incluse", "especes", "monnaie", "rendu",
+  "ticket",
+  "recu",
+  "reçu",
+  "caisse",
+  "carte bancaire",
+  "cb",
+  "sans contact",
+  "contactless",
+  "merci de votre visite",
+  "tva incluse",
+  "especes",
+  "monnaie",
+  "rendu",
 ];
-const TYPE_REPORT = ["rapport", "compte.rendu", "expertise", "releve", "proces.verbal", "controle technique"];
+const TYPE_REPORT = [
+  "rapport",
+  "compte.rendu",
+  "expertise",
+  "releve",
+  "proces.verbal",
+  "controle technique",
+];
 
 /**
  * The boat's systems, by family: the words a document uses, and the template refs and names
@@ -319,91 +459,303 @@ const FAMILIES: {
     refs: ["engines"],
     names: ["moteur", "propulsion", "hors-bord", "hors bord"],
     words: [
-      "moteur", "moteurs", "vidange", "huile moteur", "filtre a huile", "filtre a gasoil",
-      "filtre gasoil", "turbine", "impeller", "injecteur", "injecteurs", "courroie",
-      "alternateur", "demarreur", "bougie", "bougies", "helice", "helices", "sail.?drive",
-      "saildrive", "embase", "inverseur", "arbre d.?helice", "presse.etoupe", "echappement",
-      "refroidissement", "thermostat", "yanmar", "volvo", "nanni", "mercury", "yamaha", "suzuki",
-      "honda", "tohatsu", "lombardini", "hors.bord", "compteur", "horametre", "heures moteur",
-      "soufflet", "anode d.?embase", "kit d.?entretien",
+      "moteur",
+      "moteurs",
+      "vidange",
+      "huile moteur",
+      "filtre a huile",
+      "filtre a gasoil",
+      "filtre gasoil",
+      "turbine",
+      "impeller",
+      "injecteur",
+      "injecteurs",
+      "courroie",
+      "alternateur",
+      "demarreur",
+      "bougie",
+      "bougies",
+      "helice",
+      "helices",
+      "sail.?drive",
+      "saildrive",
+      "embase",
+      "inverseur",
+      "arbre d.?helice",
+      "presse.etoupe",
+      "echappement",
+      "refroidissement",
+      "thermostat",
+      "yanmar",
+      "volvo",
+      "nanni",
+      "mercury",
+      "yamaha",
+      "suzuki",
+      "honda",
+      "tohatsu",
+      "lombardini",
+      "hors.bord",
+      "compteur",
+      "horametre",
+      "heures moteur",
+      "soufflet",
+      "anode d.?embase",
+      "kit d.?entretien",
     ],
   },
   {
     refs: ["sails_rigging"],
     names: ["voile", "greement", "mat"],
     words: [
-      "voile", "voiles", "grand.voile", "genois", "foc", "spi", "gennaker", "code 0", "drisse",
-      "drisses", "ecoute", "ecoutes", "hauban", "haubans", "etai", "pataras", "mat", "bome",
-      "enrouleur", "lazy.?bag", "lazy.?jack", "winch", "winchs", "winches", "ridoir", "ridoirs",
-      "voilerie", "voilier", "greement", "cadene", "cadenes", "bout.dehors", "tangon",
+      "voile",
+      "voiles",
+      "grand.voile",
+      "genois",
+      "foc",
+      "spi",
+      "gennaker",
+      "code 0",
+      "drisse",
+      "drisses",
+      "ecoute",
+      "ecoutes",
+      "hauban",
+      "haubans",
+      "etai",
+      "pataras",
+      "mat",
+      "bome",
+      "enrouleur",
+      "lazy.?bag",
+      "lazy.?jack",
+      "winch",
+      "winchs",
+      "winches",
+      "ridoir",
+      "ridoirs",
+      "voilerie",
+      "voilier",
+      "greement",
+      "cadene",
+      "cadenes",
+      "bout.dehors",
+      "tangon",
     ],
   },
   {
     refs: ["hull_deck"],
     names: ["coque", "pont", "flotteur", "carene"],
     words: [
-      "carenage", "antifouling", "gelcoat", "gel.coat", "osmose", "polish", "lustrage", "coque",
-      "coques", "pont", "hublot", "hublots", "passe.coque", "passe.coques", "vanne", "vannes",
-      "grutage", "sortie d.?eau", "mise a l.?eau", "manutention", "calage", "ber", "teck",
-      "accastillage", "taquet", "davier", "balcon", "chandelier", "chandeliers", "filiere",
-      "filieres", "nable", "capot", "anodes? de coque", "coppercoat", "peinture", "stratification",
-      "stratifie", "resine", "epoxy",
+      "carenage",
+      "antifouling",
+      "gelcoat",
+      "gel.coat",
+      "osmose",
+      "polish",
+      "lustrage",
+      "coque",
+      "coques",
+      "pont",
+      "hublot",
+      "hublots",
+      "passe.coque",
+      "passe.coques",
+      "vanne",
+      "vannes",
+      "grutage",
+      "sortie d.?eau",
+      "mise a l.?eau",
+      "manutention",
+      "calage",
+      "ber",
+      "teck",
+      "accastillage",
+      "taquet",
+      "davier",
+      "balcon",
+      "chandelier",
+      "chandeliers",
+      "filiere",
+      "filieres",
+      "nable",
+      "capot",
+      "anodes? de coque",
+      "coppercoat",
+      "peinture",
+      "stratification",
+      "stratifie",
+      "resine",
+      "epoxy",
     ],
   },
   {
     refs: ["electronics_nav"],
     names: ["electronique", "nav", "navigation", "instruments"],
     words: [
-      "gps", "vhf", "ais", "radar", "sondeur", "pilote", "pilote automatique", "traceur",
-      "antenne", "girouette", "anemometre", "loch", "speedo", "ecran", "afficheur", "nmea",
-      "electronique", "raymarine", "garmin", "b&g", "navico", "simrad", "furuno", "lowrance",
-      "compas", "centrale de navigation", "capteur de vent",
+      "gps",
+      "vhf",
+      "ais",
+      "radar",
+      "sondeur",
+      "pilote",
+      "pilote automatique",
+      "traceur",
+      "antenne",
+      "girouette",
+      "anemometre",
+      "loch",
+      "speedo",
+      "ecran",
+      "afficheur",
+      "nmea",
+      "electronique",
+      "raymarine",
+      "garmin",
+      "b&g",
+      "navico",
+      "simrad",
+      "furuno",
+      "lowrance",
+      "compas",
+      "centrale de navigation",
+      "capteur de vent",
     ],
   },
   {
     refs: ["energy"],
     names: ["energie", "electricite", "electrique"],
     words: [
-      "batterie", "batteries", "chargeur", "convertisseur", "onduleur", "panneau solaire",
-      "panneaux solaires", "solaire", "eolienne", "hydrogenerateur", "regulateur", "fusible",
-      "fusibles", "cablage", "cable", "cables", "tableau electrique", "electricite", "electrique",
-      "quai", "prise de quai", "groupe electrogene", "generateur", "alternateur", "shunt",
-      "victron", "mastervolt", "lithium", "agm",
+      "batterie",
+      "batteries",
+      "chargeur",
+      "convertisseur",
+      "onduleur",
+      "panneau solaire",
+      "panneaux solaires",
+      "solaire",
+      "eolienne",
+      "hydrogenerateur",
+      "regulateur",
+      "fusible",
+      "fusibles",
+      "cablage",
+      "cable",
+      "cables",
+      "tableau electrique",
+      "electricite",
+      "electrique",
+      "quai",
+      "prise de quai",
+      "groupe electrogene",
+      "generateur",
+      "alternateur",
+      "shunt",
+      "victron",
+      "mastervolt",
+      "lithium",
+      "agm",
     ],
   },
   {
     refs: ["plumbing_systems"],
     names: ["hydraulique", "circuit", "plomberie", "eau"],
     words: [
-      "pompe", "pompes", "pompe de cale", "dessalinisateur", "watermaker", "chauffe.eau",
-      "reservoir", "reservoirs", "wc", "toilettes", "tuyau", "tuyaux", "durite", "durites",
-      "circuit d.?eau", "eau douce", "eaux noires", "eaux grises", "hydraulique", "verin",
-      "verins", "plomberie", "robinet", "frigo", "refrigerateur", "climatisation", "chauffage",
-      "gaz", "rechaud", "detendeur",
+      "pompe",
+      "pompes",
+      "pompe de cale",
+      "dessalinisateur",
+      "watermaker",
+      "chauffe.eau",
+      "reservoir",
+      "reservoirs",
+      "wc",
+      "toilettes",
+      "tuyau",
+      "tuyaux",
+      "durite",
+      "durites",
+      "circuit d.?eau",
+      "eau douce",
+      "eaux noires",
+      "eaux grises",
+      "hydraulique",
+      "verin",
+      "verins",
+      "plomberie",
+      "robinet",
+      "frigo",
+      "refrigerateur",
+      "climatisation",
+      "chauffage",
+      "gaz",
+      "rechaud",
+      "detendeur",
     ],
   },
   {
     refs: ["safety"],
     names: ["securite"],
     words: [
-      "radeau", "survie", "gilet", "gilets", "extincteur", "extincteurs", "epirb", "plb",
-      "feux a main", "fusees", "fusee", "harnais", "longe", "bouee", "balise", "securite",
-      "trousse de secours", "pharmacie", "revision radeau", "detecteur", "alarme",
+      "radeau",
+      "survie",
+      "gilet",
+      "gilets",
+      "extincteur",
+      "extincteurs",
+      "epirb",
+      "plb",
+      "feux a main",
+      "fusees",
+      "fusee",
+      "harnais",
+      "longe",
+      "bouee",
+      "balise",
+      "securite",
+      "trousse de secours",
+      "pharmacie",
+      "revision radeau",
+      "detecteur",
+      "alarme",
     ],
   },
   {
     refs: ["daggerboards_rudders"],
     names: ["derive", "safran", "quille", "transmission", "barre"],
     words: [
-      "safran", "safrans", "derive", "derives", "quille", "meche", "barre", "barre a roue",
-      "barre franche", "gouvernail", "palier", "paliers", "jaumiere", "bague", "bagues",
-      "drosse", "drosses",
+      "safran",
+      "safrans",
+      "derive",
+      "derives",
+      "quille",
+      "meche",
+      "barre",
+      "barre a roue",
+      "barre franche",
+      "gouvernail",
+      "palier",
+      "paliers",
+      "jaumiere",
+      "bague",
+      "bagues",
+      "drosse",
+      "drosses",
     ],
   },
   {
     refs: ["trailer"],
     names: ["remorque"],
-    words: ["remorque", "treuil", "essieu", "feux de remorque", "attelage", "pneu", "pneus", "roulement"],
+    words: [
+      "remorque",
+      "treuil",
+      "essieu",
+      "feux de remorque",
+      "attelage",
+      "pneu",
+      "pneus",
+      "roulement",
+    ],
   },
 ];
 
@@ -430,9 +782,34 @@ function findCategory(folded: string, context: InboxContext): string | null {
 // ---------------------------------------------------------------------------------------------
 
 const HEADER_REJECT = [
-  "facture", "devis", "ticket", "recu", "invoice", "quote", "total", "tel", "telephone", "fax",
-  "siret", "siren", "tva", "www", "http", "page", "date", "client", "bateau", "n°", "numero",
-  "iban", "bic", "rcs", "capital", "sas", "sarl", "eurl",
+  "facture",
+  "devis",
+  "ticket",
+  "recu",
+  "invoice",
+  "quote",
+  "total",
+  "tel",
+  "telephone",
+  "fax",
+  "siret",
+  "siren",
+  "tva",
+  "www",
+  "http",
+  "page",
+  "date",
+  "client",
+  "bateau",
+  "n°",
+  "numero",
+  "iban",
+  "bic",
+  "rcs",
+  "capital",
+  "sas",
+  "sarl",
+  "eurl",
 ];
 
 type SupplierReading = {
@@ -477,7 +854,21 @@ function findSupplier(
   if (input.senderName) return { contactId: null, supplierName: input.senderName, strength: 1 };
   if (input.senderEmail) {
     const domain = input.senderEmail.split("@")[1]?.split(".")[0];
-    if (domain && !["gmail", "hotmail", "outlook", "yahoo", "icloud", "orange", "free", "sfr", "wanadoo", "laposte"].includes(domain)) {
+    if (
+      domain &&
+      ![
+        "gmail",
+        "hotmail",
+        "outlook",
+        "yahoo",
+        "icloud",
+        "orange",
+        "free",
+        "sfr",
+        "wanadoo",
+        "laposte",
+      ].includes(domain)
+    ) {
       return { contactId: null, supplierName: capitalise(domain), strength: 1 };
     }
   }
@@ -486,12 +877,18 @@ function findSupplier(
 
 const HOURS_CONTEXT = ["compteur", "horametre", "heures moteur", "hours", "hour meter", "releve"];
 const HOURS_NOT_A_READING = /(revision|service|entretien|toutes les|tous les|forfait|garantie)\s*$/;
-const HOURS = /(\d{1,3}(?:[\u00a0 ]\d{3})+|\d{2,5})(?:[.,](\d))?\s*(?:h|hrs?|heures?|hours?)(?![a-z])/gi;
+const HOURS =
+  /(\d{1,3}(?:[\u00a0 ]\d{3})+|\d{2,5})(?:[.,](\d))?\s*(?:h|hrs?|heures?|hours?)(?![a-z])/gi;
 
 /** Which engine a piece of text names, by its last side word: « bâbord 1 512 h, tribord 1 498 h ». */
 function engineSide(f: string): "port" | "starboard" | null {
   const port = Math.max(f.lastIndexOf("babord"), f.lastIndexOf(" port"), f.lastIndexOf(" bb"));
-  const starboard = Math.max(f.lastIndexOf("tribord"), f.lastIndexOf("starboard"), f.lastIndexOf(" tb"), f.lastIndexOf(" sb"));
+  const starboard = Math.max(
+    f.lastIndexOf("tribord"),
+    f.lastIndexOf("starboard"),
+    f.lastIndexOf(" tb"),
+    f.lastIndexOf(" sb"),
+  );
   if (port < 0 && starboard < 0) return null;
   return port > starboard ? "port" : "starboard";
 }
@@ -530,8 +927,24 @@ function findEngineHours(
 }
 
 const LINE_REJECT = [
-  "total", "sous.total", "tva", "ht", "ttc", "net a payer", "a payer", "montant", "remise",
-  "acompte", "reste", "solde", "reglement", "paiement", "cb", "carte", "especes", "rendu",
+  "total",
+  "sous.total",
+  "tva",
+  "ht",
+  "ttc",
+  "net a payer",
+  "a payer",
+  "montant",
+  "remise",
+  "acompte",
+  "reste",
+  "solde",
+  "reglement",
+  "paiement",
+  "cb",
+  "carte",
+  "especes",
+  "rendu",
 ];
 
 const BARE_DECIMAL_AT_END = /(\d{1,3}(?:[\u00a0 .]\d{3})+|\d+)[.,](\d{2})\s*$/;
@@ -564,7 +977,10 @@ function findLineItems(
       }
     }
     if (amount === null || cut === null) continue;
-    let designation = line.slice(0, cut).replace(/[\s:–—-]+$/g, "").trim();
+    let designation = line
+      .slice(0, cut)
+      .replace(/[\s:–—-]+$/g, "")
+      .trim();
     for (let i = 0; i < 2; i++) designation = designation.replace(TRAILING_QUANTITY, "").trim();
     const folded = fold(designation);
     if ((folded.match(/[a-z]/g) ?? []).length < 3) continue;

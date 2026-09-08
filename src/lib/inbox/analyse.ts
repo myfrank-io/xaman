@@ -58,7 +58,9 @@ export async function analyseInboxItem(itemId: string): Promise<AnalysisOutcome>
   const admin = createAdminClient();
   const { data: item, error: readError } = await admin
     .from("inbox_items")
-    .select("id, boat_id, status, file_name, mime_type, storage_path, subject, sender_name, sender_email")
+    .select(
+      "id, boat_id, status, file_name, mime_type, storage_path, subject, sender_name, sender_email",
+    )
     .eq("id", itemId)
     .maybeSingle();
   if (readError || !item) {

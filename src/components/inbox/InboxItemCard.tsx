@@ -38,7 +38,12 @@ import { parseDecimal } from "@/lib/numbers";
 import { logPath, suppliesPath } from "@/lib/queries/boat-routes";
 import type { InboxItem } from "@/lib/queries/inbox";
 import { isPdf } from "@/lib/schemas/attachments";
-import { validateInboxItemSchema, type InboxKind, type InboxSuggestion, isInboxWarningCode } from "@/lib/schemas/inbox";
+import {
+  validateInboxItemSchema,
+  type InboxKind,
+  type InboxSuggestion,
+  isInboxWarningCode,
+} from "@/lib/schemas/inbox";
 import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/purchases";
 import { cn } from "@/lib/utils";
 
