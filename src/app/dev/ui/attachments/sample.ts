@@ -73,17 +73,3 @@ export const DEV_ATTACHMENTS: AttachmentItem[] = [
 ];
 
 export const DEV_ATTACHMENT_OWNER = OWNER;
-
-export const DEV_DOCUMENT_LOGS = [
-  {
-    id: "00000000-0000-4000-8000-0000000000b1",
-    title: "Vidange moteur SB",
-    performedAt: "2026-03-06",
-  },
-  { id: "00000000-0000-4000-8000-0000000000b2", title: "Antifouling", performedAt: "2026-01-18" },
-  {
-    id: "00000000-0000-4000-8000-0000000000b3",
-    title: "Révision guindeau",
-    performedAt: "2025-11-02",
-  },
-];

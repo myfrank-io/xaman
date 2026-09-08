@@ -13,9 +13,8 @@ import { boatPlanChoice } from "@/lib/queries/boat-plan";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-
-/** How far back the picker of existing interventions goes; a fresh carnet rarely fills it. */
-const RECENT_LOGS = 200;
+/** Step 2 reads a single photo while the person waits (D95): the same budget as « À valider ». */
+export const maxDuration = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("boats.onboarding");
@@ -55,38 +54,10 @@ export default async function OnboardingStepPage({
   const t = await getTranslations("boats.onboarding");
 
   if (step === 2) {
-    const [{ data: categories }, { data: logs }] = await Promise.all([
-      // The systems copied at creation: a photographed invoice becomes an intervention, and an
-      // intervention is filed under one of them.
-      supabase
-        .from("boat_categories")
-        .select("id, name, color, icon")
-        .eq("boat_id", boatId)
-        .eq("is_active", true)
-        .order("sort_order"),
-      // Usually none — the carnet is minutes old. But someone who imported a spreadsheet and came
-      // back for the invoices must be able to file a photo onto the line it belongs to.
-      supabase
-        .from("maintenance_logs_view")
-        .select("id, title, performed_at")
-        .eq("boat_id", boatId)
-        .order("performed_at", { ascending: false })
-        .limit(RECENT_LOGS),
-    ]);
-
     return (
       <BoatsShell title={boat.name} subtitle={t("logbook.subtitle")}>
         <OnboardingSteps step={2} />
-        <LogbookStep
-          boatId={boatId}
-          categories={categories ?? []}
-          logs={(logs ?? []).map((log) => ({
-            id: log.id ?? "",
-            title: log.title ?? "",
-            performedAt: log.performed_at ?? "",
-          }))}
-          nextHref={onboardingPath(boatId, 3)}
-        />
+        <LogbookStep boatId={boatId} nextHref={onboardingPath(boatId, 3)} />
       </BoatsShell>
     );
   }

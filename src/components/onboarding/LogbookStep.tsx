@@ -6,9 +6,8 @@ import type { Route } from "next";
 import { ArrowRightIcon, CheckCircle2Icon, FileSpreadsheetIcon, ImagesIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { DocumentImport, type DocumentImportLog } from "@/components/attachments/DocumentImport";
-import type { CategoryChoice } from "@/components/common/CategoryChips";
 import { ImportWizard } from "@/components/import/ImportWizard";
+import { InboxDropzone } from "@/components/inbox/InboxDropzone";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -38,16 +37,10 @@ const ICONS: Partial<Record<ExistingLogFormat, typeof FileSpreadsheetIcon>> = {
  */
 export function LogbookStep({
   boatId,
-  categories,
-  logs = [],
   nextHref,
   initialFormat = "none",
 }: {
   boatId: string;
-  /** The boat's systems: a photographed invoice becomes an intervention, which needs one. */
-  categories: CategoryChoice[];
-  /** What the carnet already holds — empty on a fresh boat, filled after a spreadsheet import. */
-  logs?: DocumentImportLog[];
   nextHref: string;
   /** Forces a panel open, so the design gallery can put all three under the touch audit. */
   initialFormat?: ExistingLogFormat;
@@ -109,13 +102,14 @@ export function LogbookStep({
       ) : null}
 
       {format === "paper" ? (
-        <DocumentImport
+        /* The same door as « À valider » (D95): the photos are read by the agent and wait
+           there, pre-filled, rather than becoming interventions named after their file and
+           dated today — the false carnet D67 set out to prevent. */
+        <InboxDropzone
           boatId={boatId}
-          logs={logs}
-          categories={categories}
-          canWrite
-          headless
-          onAttached={(count) => setDocuments((current) => current + count)}
+          canContribute
+          embedded
+          onReceived={(count) => setDocuments((current) => current + count)}
         />
       ) : null}
 
