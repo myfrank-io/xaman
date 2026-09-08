@@ -537,7 +537,7 @@ conservé ; seules la finition et l'identité changent.
 | 2026-09-03 | Anneau de focus | Azur marin (`--ring #1b5e96`) au lieu du bleu framework `#1d4ed8` | Le bleu par défaut est un marqueur « non designé » ; l'azur appartient à la palette |
 | 2026-09-03 | Badges de statut/état (révision de la règle DA « le plein = action requise ») | **Un seul langage teinté** : tous les badges (y compris En retard, Bientôt, Urgent) passent en teinte + `-fg` + liseré + icône, plus aucun aplat rouge/orange | Le mur d'aplats lisait « tableau de bord en alarme » ; la teinte garde l'instrument calme et reste lisible au soleil (contrastes `-fg`/`-border` mesurés), l'icône et le libellé portent le sens sans la couleur seule. Idem pour les pastilles de comptage (`Badge variant="danger"` ajouté) |
 | 2026-09-03 | Signature d'en-tête | Filet laiton (`brass-rule`) au bas de tout bandeau navy + dégradé multi-arrêt plus profond | Le « trait doré » d'une couverture de carnet ; détail de marque discret, jamais une alerte (respecte « le laiton ne porte jamais de donnée ») |
-| 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D77** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
+| 2026-09-07 | Où jouer les parcours E2E de E9-3 (§6.1–§6.4) ? Ils demandent Auth + PostgREST et une session connectée : pile locale `supabase start`, ou bateau de test sur le projet de production ? | **D81** — pile locale uniquement, dans un job CI dédié (`journeys`) qui lance `supabase start` puis `supabase db reset` ; jamais le projet de production. Les parcours se sautent d'eux-mêmes quand `E2E_SUPABASE_URL` / `E2E_SUPABASE_SERVICE_ROLE_KEY` sont absents, donc `pnpm test:e2e` reste vert sans Docker (bac à sable distant, E0-2) | Ces parcours créent des interventions, cochent des points et acceptent une invitation : joués sur `xaman`, ils écriraient des données de test dans le carnet réel de Xavier, que rien ne distinguerait ensuite des vraies lignes. Le bateau de test de `supabase/seed.sql` existe déjà pour les tests RLS et porte les six rôles ; le réutiliser ne coûte rien |
 | 2026-09-07 | « Le mail de mot de passe oublié ne fonctionne pas » — deuxième fois (après D45) | **D78** — le mot de passe oublié passe par un **code saisi dans l'application**, comme la connexion (D76), et l'app envoie elle-même l'e-mail par Resend quand un expéditeur est configuré (comme l'invitation, D75) | Le lien de récupération et le code sont le même jeton à usage unique : les analyseurs anti-hameçonnage ouvrent chaque URL d'un message et le consomment avant son destinataire (mesuré en D76). Et l'e-mail partait encore de la boîte SMTP intégrée de Supabase, quelques messages par heure — le `429` que D45 avait lu dans les journaux |
 
 ## 2026-09-03 — D61 : la légende nomme les voies qui marchent, pas un drapeau expérimental
@@ -1404,6 +1404,34 @@ modifiables sur l'écran Bateau, où l'on est déjà pour tout le reste. Écart�
 numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le groupe passe à deux
 lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
 sans avoir à remonter au libellé du champ.
+
+
+## 2026-09-07 — D80 : l'e-mail de code ne contient aucun lien
+
+**Question.** « Quand il arrive il est expiré » : « code incorrect ou expiré » à chaque tentative,
+sur une adresse d'école. La décision existait et était déjà citée dans le code sous le numéro D76,
+mais elle n'avait jamais été écrite ici — et D76 était déjà pris par « l'étape 1 compte jusqu'à
+quatre moteurs », fusionné quelques minutes plus tôt le même jour. Deux sessions parallèles avaient
+lu le même numéro le plus haut avant que l'autre n'existe.
+
+**Le constat.** Les IP des journaux ont donné la réponse : toutes les vérifications réussies
+venaient d'adresses **Amazon et Azure**, trois secondes après la livraison. Ce sont les analyseurs
+anti-hameçonnage de la messagerie (une adresse d'école, donc Microsoft Defender) qui ouvrent chaque
+URL d'un message. Or dans GoTrue le lien magique et le code sont **le même jeton à usage unique** :
+le code était donc consommé avant que son destinataire le lise. Reproductible à chaque envoi.
+
+**Décision.** Le gabarit `magic_link` ne contient plus aucun lien, et le dit. `confirmation` garde
+le sien : le lien y **est** le parcours, il n'y a pas de code à protéger. `recovery` l'a perdu
+ensuite, quand D78 a fait passer le mot de passe oublié par un code — le même raisonnement, appliqué
+au deuxième e-mail dont le jeton est le parcours. L'aide sous le champ prévient de l'autre perte
+possible (« en redemander un annule le précédent »).
+
+**Numérotation.** Cette décision porte D80 et non D76 : D76 était déjà pris. Elle a d'abord visé
+D78, puis D79 — pris tous les deux, entre-temps, par des branches ouvertes en parallèle. C'est la
+démonstration du problème plutôt qu'un accident : le numéro se choisit **à l'écriture** et se
+vérifie contre une `main` qui bouge, donc deux branches simultanées prennent le même et le
+constatent à la fusion. Une clé `date + slug`, ou un numéro attribué à la fusion, supprimerait la
+course. D81 (parcours E2E) a été déplacé trois fois pour la même raison le même jour.
 
 ## 2026-09-07 — D77 : une part du total est une question, et la ligne qui la porte est la réponse
 

@@ -137,7 +137,7 @@ describe("auth e-mail templates", () => {
   });
 
   /**
-   * D76, extended to the recovery e-mail by D78. In GoTrue the link and the code are the same
+   * D80, extended to the recovery e-mail by D78. In GoTrue the link and the code are the same
    * one-time token, and a mailbox's anti-phishing scanner opens every URL in a message seconds
    * after it arrives — burning the token before its owner reads it. Measured here: three
    * `/verify 303` from Amazon and Azure addresses, then the human's own attempt refused. The two

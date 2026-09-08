@@ -81,7 +81,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
 
       # The journeys sign a real user in and write real rows, so they need Auth and PostgREST,
-      # not just Postgres: the whole stack, on this runner, never the production project (D77).
+      # not just Postgres: the whole stack, on this runner, never the production project (D81).
       - uses: supabase/setup-cli@v1
         with:
           version: 2.116.0
