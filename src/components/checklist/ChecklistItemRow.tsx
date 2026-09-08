@@ -11,7 +11,7 @@ import { ListRow } from "@/components/common/ListRow";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatHours } from "@/lib/format";
 
-export function useRowMeta() {
+function useRowMeta() {
   const t = useTranslations("checklist.item");
   const tu = useTranslations("units");
   return (row: ChecklistRow, withCategory: boolean): string => {

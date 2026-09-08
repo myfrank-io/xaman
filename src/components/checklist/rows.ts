@@ -84,7 +84,7 @@ export function isTodo(row: ChecklistRow): boolean {
 }
 
 /** En retard, ou à faire dans la journée : la seule chose qui allume un point rouge (D88). */
-export function needsAttention(row: ChecklistRow): boolean {
+function needsAttention(row: ChecklistRow): boolean {
   return itemNeedsAttention({ status: row.status, daysRemaining: row.daysRemaining });
 }
 

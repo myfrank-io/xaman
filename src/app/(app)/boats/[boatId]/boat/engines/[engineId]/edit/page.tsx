@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { EngineForm } from "@/components/engines/EngineForm";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditEnginePage({
@@ -12,7 +13,7 @@ export default async function EditEnginePage({
   const { boatId, engineId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: engine }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase.from("engines").select("*").eq("id", engineId).eq("boat_id", boatId).maybeSingle(),
   ]);
   if (!role || !can(role as BoatRole, "write") || !engine) notFound();

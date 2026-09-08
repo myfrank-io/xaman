@@ -221,7 +221,6 @@ export const createInboxUploadSchema = z.object({
   mimeType: inboxMime,
   sizeBytes: z.number().int().min(1).max(ATTACHMENT_MAX_BYTES),
 });
-export type CreateInboxUploadInput = z.input<typeof createInboxUploadSchema>;
 
 const emptyToNull = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? null : value;
@@ -255,7 +254,5 @@ export const validateInboxItemSchema = z
       ctx.addIssue({ code: "custom", path: ["categoryId"], message: "required" });
     }
   });
-export type ValidateInboxItemInput = z.input<typeof validateInboxItemSchema>;
-export type ValidateInboxItemValues = z.output<typeof validateInboxItemSchema>;
 
 export const inboxItemRefSchema = z.object({ boatId: uuid, itemId: uuid });

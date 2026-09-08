@@ -4,6 +4,8 @@ import type { CategoryChoice } from "@/components/common/CategoryChips";
 import type { ContactOption } from "@/components/contacts/specialties";
 import type { LogFormChoice, LogFormEngine } from "@/components/logs/log-form-values";
 import { formatDate } from "@/lib/format";
+import { activeCategories } from "@/lib/queries/categories";
+import { contactOptions } from "@/lib/queries/contacts";
 import type { Database } from "@/types/database";
 
 export type LogFormData = {
@@ -27,20 +29,15 @@ export async function logFormData(
   removedLabel: string,
 ): Promise<LogFormData> {
   const [
-    { data: categories },
+    categories,
     { data: engines },
     { data: readings },
     { data: engineItems },
-    { data: contacts },
+    contacts,
     { data: equipment },
     { data: haulOuts },
   ] = await Promise.all([
-    supabase
-      .from("boat_categories")
-      .select("id, name, color, icon, external_ref")
-      .eq("boat_id", boatId)
-      .eq("is_active", true)
-      .order("sort_order"),
+    activeCategories(supabase, boatId),
     // D73: no meter, no hour field on the intervention.
     supabase
       .from("engines")
@@ -57,12 +54,7 @@ export async function logFormData(
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .not("engine_id", "is", null),
-    supabase
-      .from("contacts")
-      .select("id, name, specialty, company, phone")
-      .eq("boat_id", boatId)
-      .is("deleted_at", null)
-      .order("name"),
+    contactOptions(supabase, boatId),
     supabase
       .from("equipment")
       .select("id, name, brand, removed_at")
@@ -80,12 +72,12 @@ export async function logFormData(
   const engineCategoryIds = new Set<string>(
     (engineItems ?? []).map((row) => row.category_id).filter((id): id is string => Boolean(id)),
   );
-  for (const category of categories ?? []) {
+  for (const category of categories) {
     if (category.external_ref === "engines") engineCategoryIds.add(category.id);
   }
 
   return {
-    categories: (categories ?? []).map((row) => ({
+    categories: categories.map((row) => ({
       id: row.id,
       name: row.name,
       color: row.color,
@@ -101,7 +93,7 @@ export async function logFormData(
       };
     }),
     engineCategoryIds: [...engineCategoryIds],
-    contacts: contacts ?? [],
+    contacts,
     equipment: (equipment ?? []).map((row) => ({
       id: row.id,
       label:

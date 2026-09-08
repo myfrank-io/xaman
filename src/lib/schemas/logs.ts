@@ -60,17 +60,10 @@ export const saveLogSchema = z
       ctx.addIssue({ code: "custom", path: ["performedAt"], message: "date_in_future_done" });
     }
   });
-export type SaveLogInput = z.input<typeof saveLogSchema>;
-export type SaveLogValues = z.output<typeof saveLogSchema>;
 
 export const trashLogSchema = z.object({
   boatId: uuid,
   logId: uuid,
-});
-
-export const restoreEntitySchema = z.object({
-  boatId: uuid,
-  id: uuid,
 });
 
 export const titleSuggestionsSchema = z.object({
@@ -111,7 +104,6 @@ export const recurringFromLogSchema = z
       ctx.addIssue({ code: "custom", path: ["engineId"], message: "engine_required" });
     }
   });
-export type RecurringFromLogInput = z.input<typeof recurringFromLogSchema>;
 
 // Guided review of the imported rows (E3-7, D24). One submission validates every line.
 const reviewLogEntry = z.object({
@@ -138,4 +130,3 @@ export const submitReviewSchema = z.object({
   logs: z.array(reviewLogEntry).max(200),
   purchases: z.array(reviewPurchaseEntry).max(200),
 });
-export type SubmitReviewInput = z.input<typeof submitReviewSchema>;

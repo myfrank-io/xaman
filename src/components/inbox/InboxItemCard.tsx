@@ -42,8 +42,7 @@ import {
   reopenInboxItem,
   validateInboxItem,
 } from "@/lib/actions/inbox";
-import { formatBytes } from "@/lib/attachments/image";
-import { formatDate } from "@/lib/format";
+import { formatBytes, formatDate } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { logPath, suppliesPath } from "@/lib/queries/boat-routes";
 import type { InboxItem } from "@/lib/queries/inbox";

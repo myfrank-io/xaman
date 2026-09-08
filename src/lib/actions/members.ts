@@ -3,6 +3,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
@@ -24,12 +25,9 @@ import {
   removeMemberSchema,
   revokeInvitationSchema,
 } from "@/lib/schemas/members";
+import { boatPath } from "@/lib/queries/boat-routes";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-function membersPath(boatId: string) {
-  return `/boats/${boatId}/members`;
-}
 
 const invitationIdSchema = z.uuid();
 
@@ -172,7 +170,7 @@ async function createInvitation(
     }
   }
 
-  revalidatePath(membersPath(boatId));
+  revalidatePath(boatPath(boatId, "members"));
   return ok({ invitationId, inviteUrl: redirectTo, validUntil, emailFailed });
 }
 
@@ -288,7 +286,7 @@ export async function extendMemberAccess(input: unknown): Promise<ActionResult> 
     .eq("user_id", parsed.data.userId);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
-  revalidatePath(membersPath(parsed.data.boatId));
+  revalidatePath(boatPath(parsed.data.boatId, "members"));
   return ok(undefined);
 }
 
@@ -303,7 +301,7 @@ export async function revokeInvitation(input: unknown): Promise<ActionResult> {
     .eq("boat_id", parsed.data.boatId);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
-  revalidatePath(membersPath(parsed.data.boatId));
+  revalidatePath(boatPath(parsed.data.boatId, "members"));
   return ok(undefined);
 }
 
@@ -318,7 +316,7 @@ export async function changeMemberRole(input: unknown): Promise<ActionResult> {
     .eq("user_id", parsed.data.userId);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
-  revalidatePath(membersPath(parsed.data.boatId));
+  revalidatePath(boatPath(parsed.data.boatId, "members"));
   return ok(undefined);
 }
 
@@ -333,7 +331,7 @@ export async function removeMember(input: unknown): Promise<ActionResult> {
     .eq("user_id", parsed.data.userId);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
-  revalidatePath(membersPath(parsed.data.boatId));
+  revalidatePath(boatPath(parsed.data.boatId, "members"));
   return ok(undefined);
 }
 
@@ -344,5 +342,7 @@ export async function acceptInvitation(input: unknown): Promise<ActionResult<{ b
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("accept_invitation", { p_token: parsed.data.token });
   if (error || !data) return fail(dbErrorKey(error ?? { message: "invitation_not_found" }));
-  redirect(`/boats/${data}/dashboard`);
+  // `boatPath` builds every route of the app (rule: never concatenated at the call site);
+  // `redirect` wants the generated `Route` type, which a helper returning `string` cannot carry.
+  redirect(boatPath(data, "dashboard") as Route);
 }

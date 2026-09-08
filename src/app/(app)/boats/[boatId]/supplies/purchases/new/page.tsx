@@ -4,6 +4,7 @@ import { PurchaseForm } from "@/components/supplies/PurchaseForm";
 import { can, type BoatRole } from "@/lib/permissions";
 import { purchaseFormContext } from "@/lib/queries/purchase-form";
 import { isPurchaseKind } from "@/lib/purchases";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 // New purchase (E5-2): a page, because the form has more than five fields and a textarea.
@@ -17,7 +18,7 @@ export default async function NewPurchasePage({
   const [{ boatId }, { kind }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const [{ data: role }, context] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     purchaseFormContext(supabase, boatId),
   ]);
   if (!role || !can(role as BoatRole, "write")) notFound();

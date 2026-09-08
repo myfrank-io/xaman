@@ -8,6 +8,7 @@ import { MembersList } from "@/components/members/MembersList";
 import { refreshInvitationDeliveries } from "@/lib/email/delivery";
 import { toDeliveryReason, toDeliveryStatus } from "@/lib/email/delivery-status";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const INVITATION_COLUMNS =
@@ -64,7 +65,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
   const { boatId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: userData }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase.auth.getUser(),
   ]);
   const boatRole = role as BoatRole | null;
@@ -80,7 +81,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       .eq("boat_id", boatId)
       .order("created_at"),
     isOwner ? loadInvitations(supabase, boatId) : Promise.resolve([] as InvitationSource[]),
-    supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
+    readBoatRow(boatId),
   ]);
 
   // D79: the invitations still waiting are the ones worth asking the mailer about. Costs nothing

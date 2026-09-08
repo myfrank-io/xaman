@@ -98,12 +98,10 @@ export const saveAttachmentsSchema = z.object({
     .min(1)
     .max(50),
 });
-export type SaveAttachmentsInput = z.input<typeof saveAttachmentsSchema>;
 
 const attachmentRef = z.object({ boatId: uuid, attachmentId: uuid });
 
 export const trashAttachmentSchema = attachmentRef;
-export const restoreAttachmentSchema = attachmentRef;
 
 export const updateAttachmentCaptionSchema = attachmentRef.extend({
   caption: nullableText(200),

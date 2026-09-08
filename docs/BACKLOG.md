@@ -29,7 +29,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E13 | E13-17 |
 | E14 | E14-8 |
 | E15 | E15-9 |
-| E16 | E16-6 |
+| E16 | E16-8 |
 
 ---
 
@@ -236,3 +236,18 @@ cassées, responsive, performance perçue, boucle produit) et leurs corrections.
 - [x] **E16-5 (M, 2)** **« À valider »** (D96, D97) : publication temps réel (`0028`), fin du
   rafraîchissement toutes les 5 s, carte sûre en une ligne, « Tout valider », identité de la ligne
   dérivée du document pour qu'un « Valider » rejoué n'écrive pas une seconde intervention.
+- [x] **E16-6 (M, 2)** **Déduplication** (D103, D104, D105) : cinq restaurations réécrites à la main
+  supprimées au profit de celle de `trash.ts` — trois d'entre elles oubliaient la garde qui interdit
+  de « restaurer » une ligne vivante ; quatre boutons de corbeille fusionnés en un ; confirmations
+  retirées devant six mises à la corbeille (toast Annuler + trente jours de corbeille) ; requêtes de
+  catégories et d'intervenants partagées ; export des dépenses passé sur l'écrivain CSV qui protège
+  d'une injection de formule dans Excel ; `ui/select` et `ui/separator` sans importateur supprimés,
+  ainsi que deux composants de pastille jumeaux, 24 alias zod morts et 18 clés de texte orphelines ;
+  seuil de relevé périmé et formatage d'octets remontés dans les helpers partagés ; « dans N j »
+  sorti du TypeScript vers les messages.
+- [x] **E16-7 (M, 2)** **Vitesse perçue** (D106, D107, D108) : sept `loading.tsx` aux dimensions des
+  vrais composants, bateau et rôle lus une fois par requête (`React.cache`), vagues de requêtes
+  réduites (le formulaire d'intervention passe de cinq à une), temps réel qui ne rafraîchit plus un
+  écran que le changement ne peut pas atteindre ni un onglet caché, persistance TanStack retirée au
+  profit d'une route de service worker `NetworkFirst` pour les pages du bateau, migration `0029`
+  d'index partiels pour le motif de corbeille sur les deux tables les plus lues.

@@ -8,6 +8,7 @@ import { can, type BoatRole } from "@/lib/permissions";
 import { listInboxItems } from "@/lib/queries/inbox";
 import { logFormData } from "@/lib/queries/log-form-data";
 import { inboxAddress } from "@/lib/schemas/inbox";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,18 +28,17 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function InboxPage({ params }: { params: Promise<{ boatId: string }> }) {
   const { boatId } = await params;
   const supabase = await createClient();
-  const [{ data: boat }, { data: role }, tl] = await Promise.all([
-    supabase.from("boats").select("id, name, inbox_token").eq("id", boatId).maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
-    getTranslations("logs.form"),
-  ]);
-  if (!boat || !role) notFound();
-  const boatRole = role as BoatRole;
-
-  const [items, form] = await Promise.all([
+  // Les traductions ne coûtent aucun aller-retour : les lire d'abord met tout le reste — le
+  // bateau, le rôle, la liste des documents et les listes du formulaire — dans une seule vague.
+  const tl = await getTranslations("logs.form");
+  const [{ data: boat }, { data: role }, items, form] = await Promise.all([
+    readBoatRow(boatId),
+    readBoatRole(boatId),
     listInboxItems(supabase, boatId),
     logFormData(supabase, boatId, tl("equipmentRemoved")),
   ]);
+  if (!boat || !role) notFound();
+  const boatRole = role as BoatRole;
   const domain = inboundDomain();
 
   return (

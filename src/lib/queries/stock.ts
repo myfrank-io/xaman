@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { StockItem } from "@/components/parts/StockList";
 import { isLowStock, sortStock } from "@/lib/parts";
+import { activeCategories } from "@/lib/queries/categories";
 import type { Database } from "@/types/database";
 
 /**
@@ -14,7 +15,7 @@ export async function loadStockItems(
   supabase: SupabaseClient<Database>,
   boatId: string,
 ): Promise<StockItem[]> {
-  const [{ data: parts }, { data: categories }, { data: contacts }] = await Promise.all([
+  const [{ data: parts }, categories, { data: contacts }] = await Promise.all([
     supabase
       .from("parts")
       .select(
@@ -23,15 +24,11 @@ export async function loadStockItems(
       .eq("boat_id", boatId)
       .is("deleted_at", null)
       .order("name"),
-    supabase
-      .from("boat_categories")
-      .select("id, name, color")
-      .eq("boat_id", boatId)
-      .eq("is_active", true),
+    activeCategories(supabase, boatId),
     supabase.from("contacts").select("id, name").eq("boat_id", boatId).is("deleted_at", null),
   ]);
 
-  const categoryById = new Map((categories ?? []).map((category) => [category.id, category]));
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
   const contactNames = new Map((contacts ?? []).map((contact) => [contact.id, contact.name]));
 
   return sortStock(

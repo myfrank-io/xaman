@@ -35,6 +35,7 @@ import {
 import { pendingInboxCount } from "@/lib/queries/inbox";
 import { Button } from "@/components/ui/button";
 import { completionContext } from "@/lib/queries/completion-context";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
@@ -105,6 +106,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
    * `boat_dashboard_stats` porte une sous-requête par colonne, et celles qu'on ne demande
    * plus (dépenses de l'année, moteurs sans relevé) ne sont plus calculées. La lecture des
    * lignes de dépenses sur douze mois a disparu tout court : la vue en donne déjà le total.
+   *
+   * La ligne du bateau fait exception : `readBoatRow` la lit entière, mais c'est **celle du
+   * layout** (`cache()` de React déduplique la requête). Nommer six colonnes ici rouvrait une
+   * seconde lecture de la même ligne pour en économiser douze champs — l'aller-retour coûte
+   * plus cher que les champs.
    */
   const [
     { data: boat },
@@ -119,12 +125,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     week,
     inboxCount,
   ] = await Promise.all([
-    supabase
-      .from("boats")
-      .select("name, builder, model, hull_number, type, checklist_template_id")
-      .eq("id", boatId)
-      .maybeSingle(),
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRow(boatId),
+    readBoatRole(boatId),
     supabase
       .from("boat_dashboard_stats")
       .select(

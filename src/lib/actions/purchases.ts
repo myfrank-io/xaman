@@ -6,7 +6,6 @@ import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actio
 import { boatPath, logPath } from "@/lib/queries/boat-routes";
 import {
   markPurchaseReviewedSchema,
-  restorePurchaseSchema,
   trashPurchaseSchema,
   upsertPurchaseSchema,
 } from "@/lib/schemas/purchases";
@@ -93,28 +92,6 @@ export async function trashPurchase(input: unknown): Promise<ActionResult> {
     .eq("id", purchaseId)
     .eq("boat_id", boatId)
     .is("deleted_at", null)
-    .select("id, maintenance_log_id");
-  if (error) return fail(dbErrorKey(error));
-  if (!data || data.length === 0) return fail("errors.forbidden");
-
-  revalidatePurchaseScreens(boatId, data[0]?.maintenance_log_id);
-  return ok(undefined);
-}
-
-/** Undo of the toast and « Restaurer » of the trash: the same one-column write. */
-export async function restorePurchase(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(restorePurchaseSchema, input);
-  if (!parsed.ok) return parsed.result;
-  const { boatId, purchaseId } = parsed.data;
-
-  const supabase = await createClient();
-  const userId = await currentUserId(supabase);
-  if (!userId) return fail("errors.forbidden");
-  const { data, error } = await supabase
-    .from("purchases")
-    .update({ deleted_at: null, updated_by: userId })
-    .eq("id", purchaseId)
-    .eq("boat_id", boatId)
     .select("id, maintenance_log_id");
   if (error) return fail(dbErrorKey(error));
   if (!data || data.length === 0) return fail("errors.forbidden");

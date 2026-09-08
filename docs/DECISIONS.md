@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D103.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D109.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2222,3 +2222,68 @@ d'optimisme indexé par identifiant de réalisation, effacé dès que les props 
 veine : se déconnecter vide le cache de lecture persistant (l'iPad est partagé), et les suites de
 tests qui ont besoin d'une base se sautent sans `DATABASE_URL`, pour que `pnpm test` soit
 exécutable sans Docker.
+
+## 2026-09-08 — D103 : aucune confirmation devant une mise à la corbeille
+
+**Question.** Mettre à la corbeille une intervention, un achat, une pièce, un intervenant, une
+sortie de l'eau ou un équipement ouvrait un dialogue de confirmation — alors que le geste est
+réversible **deux fois** : un toast « Annuler » de 8 secondes, puis trente jours dans `/trash`
+(règle 9). La règle 13 dit déjà de préférer l'annulation à la confirmation ; six chemins disaient
+le contraire.
+
+**Décision.** Le dialogue disparaît sur ces six chemins. Ce qu'il expliquait passe en deuxième
+ligne du toast : le nombre de lignes qui citent un intervenant, le nom d'une pièce, ce qu'un
+équipement ou une intervention emporte avec eux. La confirmation reste **là où rien ne rattrape** :
+purge définitive, suppression du bateau, transfert, et suppression d'un document de « À valider ».
+
+**Raison.** Un ralentisseur devant un geste annulable ne protège personne : il ajoute un tap à
+chaque fois pour éviter un tap une fois sur cent.
+
+## 2026-09-08 — D104 : un seul chemin de restauration
+
+**Question.** Cinq modules réécrivaient à la main l'écriture que `actions/trash.ts` fait déjà
+(`deleted_at = null`), avec deux symboles `restorePurchase` et deux `restoreHaulOut` dans l'arbre —
+et **trois** d'entre eux (achats, sorties de l'eau, pièces jointes) oubliaient la garde
+`.not("deleted_at", "is", null)`, donc une ligne vivante pouvait être « restaurée ».
+
+**Décision.** `actions/trash.ts` porte toute restauration, sur une seule forme
+(`entityRefSchema`, `{boatId, id}`) ; les modules d'entité ne gardent que le sens « vers la
+corbeille ». Un seul bouton (`TrashEntityButton`) sert les quatre écrans qui en avaient un chacun.
+
+## 2026-09-08 — D105 : le stock porte son propre vocabulaire
+
+Les composants des pièces détachées lisaient leurs textes dans `equipment.stock.*`. L'écran vit
+dans l'onglet Équipements (D34), mais ses mots ne sont pas ceux de l'équipement : ils passent dans
+un espace `parts`.
+
+## 2026-09-08 — D106 : chaque onglet peint son squelette avant ses données
+
+**Question.** Aucun `loading.tsx` n'existait et le groupe `(app)` est en rendu dynamique : chaque
+tap d'onglet bloquait sur une douzaine à une vingtaine d'allers-retours, écran figé, sans un signe.
+
+**Décision.** Sept `loading.tsx` (les cinq onglets, la racine du bateau, le formulaire
+d'intervention) qui reprennent **les dimensions réelles** des composants — hauteur de ligne,
+hauteur de vignette, grille des systèmes — pour que rien ne saute à l'arrivée des données. Jamais
+un écran de rotation seule.
+
+## 2026-09-08 — D107 : le bateau et le rôle se lisent une fois par requête
+
+Trente-neuf pages sur quarante et une rejouaient `boat_role` que la mise en page venait de lire,
+et sept relisaient la ligne du bateau. Les deux lectures passent par `React.cache()`
+(`src/lib/queries/boat-context.ts`) ; une page ne nomme plus les colonnes de `boats`, puisque
+réutiliser la ligne déjà lue coûte zéro aller-retour.
+
+Dans la même veine : le pont temps réel ne rafraîchit plus le serveur pour un changement qui ne
+peut pas atteindre l'écran affiché, ni pendant que l'onglet est caché (il rejoue au retour).
+
+## 2026-09-08 — D108 : la lecture hors ligne est le travail du service worker
+
+**Question.** Le cache TanStack Query était persisté dans IndexedDB pour une semaine — pour **une
+seule** `useQuery` dans toute l'application, que `shouldDehydrateQuery` excluait par son nom. Le
+persisteur sérialisait donc un cache vide, à chaque seconde, dans le paquet de tout le monde.
+
+**Décision.** Persistance retirée (`@tanstack/react-query-persist-client` et
+`@tanstack/query-async-storage-persister` quittent le dépôt). Les pages du bateau reçoivent une
+route de service worker `NetworkFirst` avec un délai réseau de 5 secondes et leur propre cache,
+vidé à la déconnexion — D102 étendue au service worker. `idb-keyval` reste : c'est lui qui purge
+le cache déjà installé sur les iPad d'aujourd'hui.

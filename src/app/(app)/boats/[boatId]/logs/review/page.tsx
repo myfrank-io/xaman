@@ -11,6 +11,7 @@ import type { ReviewHourContext, ReviewLog, ReviewPurchase } from "@/components/
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath } from "@/lib/queries/boat-routes";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 type Search = Record<string, string | string[] | undefined>;
@@ -42,38 +43,43 @@ export default async function ReviewPage({
   const onlyLog = firstParam(search.log);
 
   const supabase = await createClient();
-  const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  // Rien ici n'attend le rôle : il voyage avec le reste plutôt que devant.
+  const [
+    { data: role },
+    { data: rows },
+    { data: engines },
+    { data: readings },
+    { data: purchases },
+  ] = await Promise.all([
+    readBoatRole(boatId),
+    supabase
+      .from("maintenance_logs_view")
+      .select(
+        "id, title, performed_at, category_name, category_color, contact_name, notes, pending_engine_hours",
+      )
+      .eq("boat_id", boatId)
+      .eq("needs_review", true)
+      .order("performed_at", { ascending: true }),
+    supabase
+      .from("engines")
+      .select("id, label, sort_order")
+      .eq("boat_id", boatId)
+      .order("sort_order"),
+    supabase
+      .from("engine_hour_readings")
+      .select("engine_id, hours, read_at")
+      .eq("boat_id", boatId)
+      .order("read_at", { ascending: true }),
+    supabase
+      .from("purchases")
+      .select("id, purchased_at, designation, amount")
+      .eq("boat_id", boatId)
+      .eq("needs_review", true)
+      .is("deleted_at", null)
+      .order("purchased_at", { ascending: true }),
+  ]);
   if (!role) notFound();
   if (!can(role as BoatRole, "write")) notFound();
-
-  const [{ data: rows }, { data: engines }, { data: readings }, { data: purchases }] =
-    await Promise.all([
-      supabase
-        .from("maintenance_logs_view")
-        .select(
-          "id, title, performed_at, category_name, category_color, contact_name, notes, pending_engine_hours",
-        )
-        .eq("boat_id", boatId)
-        .eq("needs_review", true)
-        .order("performed_at", { ascending: true }),
-      supabase
-        .from("engines")
-        .select("id, label, sort_order")
-        .eq("boat_id", boatId)
-        .order("sort_order"),
-      supabase
-        .from("engine_hour_readings")
-        .select("engine_id, hours, read_at")
-        .eq("boat_id", boatId)
-        .order("read_at", { ascending: true }),
-      supabase
-        .from("purchases")
-        .select("id, purchased_at, designation, amount")
-        .eq("boat_id", boatId)
-        .eq("needs_review", true)
-        .is("deleted_at", null)
-        .order("purchased_at", { ascending: true }),
-    ]);
 
   const engineLabel = new Map((engines ?? []).map((engine) => [engine.id, engine.label]));
   const engineOrder = new Map((engines ?? []).map((engine, index) => [engine.id, index]));

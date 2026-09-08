@@ -12,6 +12,7 @@ import { daysAshore } from "@/lib/haul-outs";
 import { can, type BoatRole } from "@/lib/permissions";
 import { loadLogAttention } from "@/lib/queries/attention";
 import { newHaulOutPath } from "@/lib/queries/boat-routes";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -28,7 +29,7 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
 
   const [{ data: role }, { data: haulOuts }, { data: contacts }, { data: logs }, attentionCount] =
     await Promise.all([
-      supabase.rpc("boat_role", { p_boat_id: boatId }),
+      readBoatRole(boatId),
       supabase
         .from("haul_outs")
         .select("id, started_at, ended_at, yard_contact_id, yard_name, cost")

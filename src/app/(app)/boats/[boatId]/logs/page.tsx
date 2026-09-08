@@ -18,6 +18,7 @@ import { can, type BoatRole } from "@/lib/permissions";
 import { loadLogAttention } from "@/lib/queries/attention";
 import { importPath, logsPath, logsReviewPath, newLogPath } from "@/lib/queries/boat-routes";
 import { LOG_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const PAGE_SIZE = 20;
@@ -54,9 +55,6 @@ export default async function LogsPage({
   if (firstParam(search.review)) redirect(logsReviewPath(boatId) as Route);
 
   const supabase = await createClient();
-  const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
-  if (!role) notFound();
-  const boatRole = role as BoatRole;
 
   const tab = firstParam(search.tab) === "planned" ? "planned" : "history";
   const filters: LogsFilters = {
@@ -104,13 +102,17 @@ export default async function LogsPage({
   if (query) rowsQuery = rowsQuery.or(`title.ilike.%${query}%,notes.ilike.%${query}%`);
 
   const today = todayString();
+  // Le rôle voyage avec la liste : il ne dit rien à la requête, il ne décide que de ce que la
+  // barre du haut propose. Il ouvrait une vague à lui tout seul, devant les cinq autres.
   const [
+    { data: role },
     { data: rows, count },
     { count: reviewCount },
     { data: categories },
     { data: contact },
     attentionCount,
   ] = await Promise.all([
+    readBoatRole(boatId),
     tab === "history"
       ? rowsQuery
           .order("performed_at", { ascending: false })
@@ -136,6 +138,9 @@ export default async function LogsPage({
     // nombre que la navigation, sinon suivre le point mènerait à une liste sans point (D88).
     loadLogAttention(supabase, boatId, today),
   ]);
+
+  if (!role) notFound();
+  const boatRole = role as BoatRole;
 
   const list = (rows ?? []).map(toLogRow);
   // « Prévu »: what is urgent comes first, then the closest date (the view cannot order on an

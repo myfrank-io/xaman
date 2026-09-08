@@ -39,9 +39,8 @@ export const upsertContactSchema = z.object({
   address: nullableText(300),
   notes: nullableText(2000),
 });
-export type UpsertContactInput = z.input<typeof upsertContactSchema>;
 
-/** Move a provider to the trash, or bring them back from « Annuler » (D41). */
+/** Move a provider to the trash (D41); bringing them back is `entityRefSchema` + `restoreContact`. */
 export const trashContactSchema = z.object({
   boatId: uuid,
   contactId: uuid,

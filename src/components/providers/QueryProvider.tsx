@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { defaultShouldDehydrateQuery, QueryClient } from "@tanstack/react-query";
-import { PersistQueryClientProvider, type Persister } from "@tanstack/react-query-persist-client";
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { del, get, set } from "idb-keyval";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { del } from "idb-keyval";
 
-const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
-
-/** Where the persisted read cache lives in IndexedDB. Also what sign-out has to remove. */
+/** Where the persisted read cache used to live in IndexedDB. Also what sign-out has to remove. */
 export const QUERY_CACHE_KEY = "xaman-query-cache";
 
 /** Fired by the sign-out control; the provider hears it and empties the client it owns. */
@@ -19,19 +15,26 @@ const SIGN_OUT_EVENT = "xaman:sign-out";
  * screen rendered outside the provider, where it simply clears the stored copy.
  */
 export async function signOutQueryCache(): Promise<void> {
-  if (typeof window !== "undefined") window.dispatchEvent(new Event(SIGN_OUT_EVENT));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SIGN_OUT_EVENT));
+    // Le service worker garde une copie des écrans du bateau pour les lire hors ligne
+    // (`src/app/sw.ts`) : sur un iPad partagé elle part avec la personne qui s'en va.
+    navigator.serviceWorker?.controller?.postMessage({ type: SIGN_OUT_EVENT });
+  }
   await clearPersistedQueryCache();
 }
 
 /**
- * Drops the persisted cache from this device (E9-1, rule 2 in spirit).
+ * Drops the persisted cache from this device (E9-1, D102, rule 2 in spirit).
  *
- * The iPad is shared: Xav signs out, Emmanuel signs in, and a week-old dehydrated cache of the
- * previous member's boat is still sitting in IndexedDB waiting to be rehydrated — every list
- * they were entitled to read, and Emmanuel may not be. Clearing the in-memory client is not
- * enough, because the persisted copy is what a reload restores from.
+ * The iPad is shared: Xav signs out, Emmanuel signs in, and a dehydrated cache of the previous
+ * member's boat is still sitting in IndexedDB waiting to be rehydrated — every list they were
+ * entitled to read, and Emmanuel may not be. Clearing the in-memory client is not enough,
+ * because a persisted copy is what a reload would restore from.
  *
- * Called on the way out (`AccountMenu`); a signed-in user's offline cache is untouched.
+ * The app no longer WRITES that copy (see below), but an iPad installed before this change is
+ * still holding one: the deletion stays, and it is what empties those. Called on the way out
+ * (`AccountMenu`); a signed-in user's cache is untouched.
  */
 export async function clearPersistedQueryCache(): Promise<void> {
   if (typeof indexedDB === "undefined") return;
@@ -47,8 +50,9 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 30_000,
-        gcTime: ONE_WEEK, // must be >= persist maxAge so restored queries are kept
-        networkMode: "offlineFirst", // serve the persisted cache when offline (read-only mode, E9-1)
+        // Serve what is already in memory rather than fail outright when the iPad drops the
+        // network: a query that has an answer keeps showing it (read-only mode, E9-1).
+        networkMode: "offlineFirst",
         retry: 1,
         refetchOnWindowFocus: true,
       },
@@ -59,29 +63,26 @@ function makeQueryClient() {
   });
 }
 
-const noopPersister: Persister = {
-  persistClient: async () => undefined,
-  restoreClient: async () => undefined,
-  removeClient: async () => undefined,
-};
-
-function makePersister(): Persister {
-  if (typeof window === "undefined" || typeof indexedDB === "undefined") return noopPersister;
-  return createAsyncStoragePersister({
-    key: QUERY_CACHE_KEY,
-    throttleTime: 1_000,
-    storage: {
-      getItem: (key) => get<string>(key).then((v) => v ?? null),
-      setItem: (key, value) => set(key, value),
-      removeItem: (key) => del(key),
-    },
-  });
-}
-
-// TanStack Query with the read cache persisted in IndexedDB: the last data stays readable offline.
+/**
+ * TanStack Query, sans persistance.
+ *
+ * L'app avait un cache dehydraté dans IndexedDB (une semaine de `gcTime`, trois dépendances
+ * `@tanstack/*-persist` + `idb-keyval`) et **rien à y mettre** : toutes les lectures d'écran
+ * sont faites sur le serveur, il ne reste qu'un seul `useQuery` dans tout le code — celui des
+ * pièces jointes — et `shouldDehydrateQuery` l'excluait nommément, parce que ses URL signées ne
+ * doivent pas survivre à la session. Le persister sérialisait donc un cache vide toutes les
+ * secondes, restaurait un cache vide au démarrage, et faisait payer sa taille à chaque bundle.
+ *
+ * Ce qui rend l'app lisible hors ligne, c'est le service worker (`src/app/sw.ts`), pas ceci.
+ *
+ * Le jour où une liste passera en `useQuery` — la seule façon d'en tirer quelque chose serait
+ * de déplacer les listes lues côté serveur (journal, checklist, dépenses) vers des hooks
+ * `src/lib/queries/use-*.ts`, avec `initialData` venue du rendu serveur —, remettre le
+ * `PersistQueryClientProvider` sera un import et six lignes. Tant qu'il n'y en a pas, c'est du
+ * poids mort (règle 10).
+ */
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(makeQueryClient);
-  const [persister] = useState(makePersister);
 
   // Someone signed out on this device: the answers they were entitled to read leave with them.
   useEffect(() => {
@@ -90,23 +91,5 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(SIGN_OUT_EVENT, forget);
   }, [queryClient]);
 
-  return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister,
-        maxAge: ONE_WEEK,
-        buster: "v1",
-        dehydrateOptions: {
-          // Attachment queries carry private, capability-bearing signed URLs: they expire in ~1h
-          // and must never outlive the session nor cross users on a shared iPad. Keep them out of
-          // the persisted IndexedDB cache (everything else may still persist for offline reads).
-          shouldDehydrateQuery: (query) =>
-            defaultShouldDehydrateQuery(query) && !query.queryKey.includes("attachments"),
-        },
-      }}
-    >
-      {children}
-    </PersistQueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

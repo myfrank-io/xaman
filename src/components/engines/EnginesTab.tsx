@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { differenceInCalendarDays } from "date-fns";
 import { ChevronRightIcon, GaugeIcon, TriangleAlertIcon } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -20,7 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { formatDate, formatHours, toDate } from "@/lib/format";
+import { isReadingStale } from "@/lib/engines";
+import { formatDate, formatHours } from "@/lib/format";
 import { boatTabPath, enginePath, importPath, newEnginePath } from "@/lib/queries/boat-routes";
 import type { EnginePosition, EnginePropulsion } from "@/lib/schemas/engines";
 import { cn } from "@/lib/utils";
@@ -39,9 +39,6 @@ export type EngineSummary = {
   readAt: string | null;
   linkedItems: number;
 };
-
-// A counter older than this is flagged « à mettre à jour » (ux-flows §2.2).
-const STALE_DAYS = 60;
 
 /** Figure sizes, and the size of the phrase that stands in when there is no figure to show. */
 const FIGURE_SIZE = {
@@ -96,8 +93,7 @@ function EngineReadDate({
   className?: string;
 }) {
   const t = useTranslations("engines");
-  const date = toDate(readAt);
-  const stale = date ? differenceInCalendarDays(new Date(), date) > STALE_DAYS : false;
+  const stale = isReadingStale(readAt);
   // An engine without a meter never turns amber for a reading that will never come (D73).
   if (!readAt || !tracksHours) return null;
   return (

@@ -12,7 +12,7 @@ import { publicEnv } from "@/lib/env";
  * Supabase still checks the result against the project's redirect allow-list, so this widens
  * nothing: an origin that is not on the list is refused there, as it should be.
  */
-export function appOrigin(): string {
+function appOrigin(): string {
   if (typeof window !== "undefined" && window.location?.origin) return window.location.origin;
   return publicEnv.appUrl;
 }

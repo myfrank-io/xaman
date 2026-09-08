@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { EquipmentForm } from "@/components/equipment/EquipmentForm";
 import { can, type BoatRole } from "@/lib/permissions";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditEquipmentPage({
@@ -12,7 +13,7 @@ export default async function EditEquipmentPage({
   const { boatId, equipmentId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: item }, { data: categories }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("equipment")
       .select("*")

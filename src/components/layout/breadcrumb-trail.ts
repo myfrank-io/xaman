@@ -12,7 +12,7 @@ import {
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Segments that are a step of a flow rather than a section of the app. */
-export const CRUMB_STEPS = [
+const CRUMB_STEPS = [
   "new",
   "edit",
   "review",
@@ -24,7 +24,7 @@ export const CRUMB_STEPS = [
   "report",
   "profile",
 ] as const;
-export type CrumbStep = (typeof CRUMB_STEPS)[number];
+type CrumbStep = (typeof CRUMB_STEPS)[number];
 
 export type Crumb = {
   /** Translation key: a nav key for the section, `crumbs.<step>` for a step. */

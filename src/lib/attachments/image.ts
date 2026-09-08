@@ -119,13 +119,6 @@ export async function prepareForUpload(file: File): Promise<PreparedFile> {
   }
 }
 
-/** « 2,4 Mo », « 812 ko » — the weight shown next to a document chip. */
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} ko`;
-  return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} Mo`;
-}
-
 /**
  * A photograph is re-encoded before it is weighed, so the picked file may be far heavier than
  * the 10 Mo the bucket accepts. Past this ceiling an iPad decodes it at the risk of the tab:

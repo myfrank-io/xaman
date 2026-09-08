@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { boatPath, logPath } from "@/lib/queries/boat-routes";
 import {
-  restoreAttachmentSchema,
   saveAttachmentSchema,
   saveAttachmentsSchema,
   trashAttachmentSchema,
@@ -192,30 +191,6 @@ export async function trashAttachment(input: unknown): Promise<ActionResult> {
     .eq("id", attachmentId)
     .eq("boat_id", boatId)
     .is("deleted_at", null)
-    .select("entity_type, entity_id");
-  if (error) return fail(dbErrorKey(error));
-  const row = data?.[0];
-  if (!row) return fail("errors.forbidden");
-
-  revalidateOwner(boatId, row.entity_type as AttachmentOwnerType, row.entity_id);
-  return ok(undefined);
-}
-
-/** Undo of the toast: the same one-column write the other soft deletes use. */
-export async function restoreAttachment(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(restoreAttachmentSchema, input);
-  if (!parsed.ok) return parsed.result;
-  const { boatId, attachmentId } = parsed.data;
-
-  const supabase = await createClient();
-  const userId = await currentUserId(supabase);
-  if (!userId) return fail("errors.forbidden");
-
-  const { data, error } = await supabase
-    .from("attachments")
-    .update({ deleted_at: null, updated_by: userId })
-    .eq("id", attachmentId)
-    .eq("boat_id", boatId)
     .select("entity_type, entity_id");
   if (error) return fail(dbErrorKey(error));
   const row = data?.[0];

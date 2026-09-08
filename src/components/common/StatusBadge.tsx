@@ -20,21 +20,12 @@ const statusClasses: Record<LogStatus, string> = {
   urgent: "border-status-urgent-border bg-status-urgent-tint text-status-urgent-fg",
 };
 
-const statusDotClasses: Record<LogStatus, string> = {
-  planned: "bg-status-planned",
-  in_progress: "bg-status-in-progress",
-  done: "bg-status-done",
-  urgent: "bg-status-urgent",
-};
-
 const statusIcons = {
   planned: CalendarClockIcon,
   in_progress: TimerIcon,
   done: CircleCheckIcon,
   urgent: TriangleAlertIcon,
 } as const;
-
-export { statusDotClasses };
 
 export function StatusBadge({
   status,
@@ -53,18 +44,5 @@ export function StatusBadge({
       <Icon aria-hidden />
       {t(status)}
     </Badge>
-  );
-}
-
-export function StatusDot({ status, className }: { status: LogStatus; className?: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-block size-2.5 shrink-0 rounded-full",
-        statusDotClasses[status],
-        className,
-      )}
-      aria-hidden
-    />
   );
 }

@@ -1,33 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useOnline } from "@/components/common/use-online";
+import { useKeyboardOffset } from "@/components/forms/use-keyboard-offset";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-
-// Keyboard height on iPad: the layout viewport does not shrink, the visual one does.
-function useKeyboardOffset(): number {
-  const [offset, setOffset] = useState(0);
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const update = () => {
-      setOffset(Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop));
-    };
-    update();
-    viewport.addEventListener("resize", update);
-    viewport.addEventListener("scroll", update);
-    return () => {
-      viewport.removeEventListener("resize", update);
-      viewport.removeEventListener("scroll", update);
-    };
-  }, []);
-  return offset;
-}
 
 /**
  * Sticky « Annuler / Enregistrer » bar (ux-flows §4.8): 56 px, opaque, safe-area aware,
@@ -77,7 +57,7 @@ export function FormActionBar({
         // flex-wrap, because « Enregistrer et en saisir une autre » is 33 characters: on a 320 px
         // phone the two submits take their own line under « Annuler » instead of running past
         // the right edge (the audit measures exactly that).
-        "sticky z-20 -mx-4 mt-8 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border bg-surface px-4 py-2 sm:-mx-6 sm:px-6",
+        "sticky z-20 bleed-gutters mt-8 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border bg-surface py-2",
         className,
       )}
       style={{

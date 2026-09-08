@@ -66,3 +66,10 @@ export function nullableInteger(min: number, max: number) {
 
 // Optimistic concurrency (D27): the row's updated_at seen by the form, compared on update.
 export const expectedUpdatedAt = z.string().datetime({ offset: true }).optional();
+
+/**
+ * The whole payload a trash action needs: which boat, which row. Every restore and every purge
+ * takes this shape, whatever the table — the entity-specific `{boatId, xId}` twins collapsed
+ * into it when the hand-written restores were replaced by the generic one.
+ */
+export const entityRefSchema = z.object({ boatId: uuid, id: uuid });

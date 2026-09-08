@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { CategoryChoice } from "@/components/common/CategoryChips";
 import type { ContactOption } from "@/components/contacts/specialties";
+import { activeCategories } from "@/lib/queries/categories";
+import { contactOptions } from "@/lib/queries/contacts";
 import type { Database } from "@/types/database";
 
 export type PartFormContext = {
@@ -14,19 +16,9 @@ export async function partFormContext(
   supabase: SupabaseClient<Database>,
   boatId: string,
 ): Promise<PartFormContext> {
-  const [{ data: categories }, { data: contacts }] = await Promise.all([
-    supabase
-      .from("boat_categories")
-      .select("id, name, color, icon")
-      .eq("boat_id", boatId)
-      .eq("is_active", true)
-      .order("sort_order"),
-    supabase
-      .from("contacts")
-      .select("id, name, specialty, company, phone")
-      .eq("boat_id", boatId)
-      .is("deleted_at", null)
-      .order("name"),
+  const [categories, contacts] = await Promise.all([
+    activeCategories(supabase, boatId),
+    contactOptions(supabase, boatId),
   ]);
-  return { categories: categories ?? [], contacts: contacts ?? [] };
+  return { categories, contacts };
 }

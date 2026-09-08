@@ -27,6 +27,7 @@ import {
 import { boatPlanChoice } from "@/lib/queries/boat-plan";
 import { completionContext } from "@/lib/queries/completion-context";
 import { loadStockItems, toRestockList } from "@/lib/queries/stock";
+import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const FILTERS: TodoFilter[] = ["all", "overdue", "soon", "never"];
@@ -41,15 +42,25 @@ export default async function ChecklistPage({
 }) {
   const [{ boatId }, { view, filter }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
+  // Les deux vues et leur filtre se lisent dans l'URL : ce qui n'en dépend que peut partir tout
+  // de suite, y compris le contexte de cochage — il attendait la grille sans rien lui devoir.
+  const activeView = view === "todo" ? "todo" : "grid";
+  const activeFilter: TodoFilter = FILTERS.includes(filter as TodoFilter)
+    ? (filter as TodoFilter)
+    : "all";
   const [
     { data: role },
+    { data: boat },
     { data: progress },
     { data: status },
     { data: engines },
     { data: readings },
     stockItems,
+    context,
   ] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
+    // Déjà lu par le layout : gratuit ici, et c'est lui qui dit si le plan reste à choisir.
+    readBoatRow(boatId),
     supabase
       .from("checklist_category_progress")
       .select("*")
@@ -66,13 +77,23 @@ export default async function ChecklistPage({
     // low lines also feed the « À racheter » checklist above the grid (D63) — one read, one
     // source of truth, so the card and the list can never disagree.
     loadStockItems(supabase, boatId),
+    activeView === "todo"
+      ? completionContext(supabase, boatId)
+      : Promise.resolve({ members: [], currentUserId: "", currentUserName: "" }),
   ]);
   if (!role) notFound();
   const boatRole = role as BoatRole;
 
   // D65: creation gives a boat its systems but no maintenance plan, and `checklist_template_id`
   // stays null until one is chosen. That null is what puts the choice on this screen.
-  const plan = can(boatRole, "write") ? await boatPlanChoice(supabase, boatId) : null;
+  //
+  // Le null se lit sur la ligne que le layout a déjà chargée : sur un bateau dont le plan est
+  // choisi — c'est-à-dire tous, passé le premier jour — l'écran ne pose plus la question à la
+  // base pour s'entendre répondre « non ».
+  const plan =
+    can(boatRole, "write") && boat?.checklist_template_id === null
+      ? await boatPlanChoice(supabase, boatId)
+      : null;
 
   const categories = (progress ?? []).map(toCategoryProgress);
   const byCategory = new Map(categories.map((category) => [category.id, category]));
@@ -121,18 +142,11 @@ export default async function ChecklistPage({
   const neverRecorded = categories.reduce((sum, category) => sum + category.neverRecorded, 0);
   const brandNew = totalInterval > 0 && neverRecorded === totalInterval;
 
-  const activeView = view === "todo" ? "todo" : "grid";
-  const activeFilter: TodoFilter = FILTERS.includes(filter as TodoFilter)
-    ? (filter as TodoFilter)
-    : "all";
-  const context =
-    activeView === "todo"
-      ? await completionContext(supabase, boatId)
-      : { members: [], currentUserId: "", currentUserName: "" };
-
-  const t = await getTranslations("checklist");
-  const ti = await getTranslations("import");
-  const tr = await getTranslations("restock");
+  const [t, ti, tr] = await Promise.all([
+    getTranslations("checklist"),
+    getTranslations("import"),
+    getTranslations("restock"),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">

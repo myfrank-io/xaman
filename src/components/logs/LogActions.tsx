@@ -8,7 +8,6 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CopyIcon, PencilIcon, RepeatIcon, Trash2Icon } from "lucide-react";
 
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { undoToast } from "@/components/common/UndoToast";
 import { RecurringItemDialog } from "@/components/logs/RecurringItemDialog";
 import type { LogEngineHours } from "@/components/logs/rows";
@@ -44,7 +43,6 @@ export function LogActions({
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [confirming, setConfirming] = useState(false);
   const [recurring, setRecurring] = useState(false);
 
   const redoHref = newLogPath(boatId, {
@@ -62,9 +60,10 @@ export function LogActions({
         toast.error(errorMessage(result.error));
         return;
       }
-      setConfirming(false);
       undoToast({
         message: t("trash.done"),
+        // What the confirmation used to say, on the line the toast keeps for it (rule 13).
+        description: t("trash.kept", { title: log.title }),
         undoLabel: t("trash.undo"),
         onUndo: () => {
           void restoreLog({ boatId, id: log.id }).then((undo) => {
@@ -102,19 +101,16 @@ export function LogActions({
             <RepeatIcon />
             {t("recurring.action")}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => setConfirming(true)}>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={pending}
+            aria-busy={pending}
+            onClick={trash}
+          >
             <Trash2Icon />
             {t("trash.action")}
           </Button>
-          <ConfirmDialog
-            open={confirming}
-            onOpenChange={setConfirming}
-            title={t("trash.title")}
-            description={t("trash.description", { title: log.title })}
-            confirmLabel={t("trash.confirm")}
-            pending={pending}
-            onConfirm={trash}
-          />
           <RecurringItemDialog
             boatId={boatId}
             logId={log.id}

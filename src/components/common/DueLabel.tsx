@@ -4,8 +4,6 @@ import { useTranslations } from "next-intl";
 import type { ChecklistState } from "@/components/common/ChecklistStateBadge";
 import { cn } from "@/lib/utils";
 
-const numberFr = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
-
 /**
  * Reads a `checklist_item_status` row: « 126 j de retard », « dans 9 j »,
  * « dans 40 h », « compteur inconnu ». The number is always written, never
@@ -31,6 +29,7 @@ export function DueLabel({
   className?: string;
 }) {
   const t = useTranslations("common");
+  const tu = useTranslations("units");
 
   const days = daysRemaining ?? null;
   const hours = hasCounter ? (hoursRemaining ?? null) : null;
@@ -54,14 +53,23 @@ export function DueLabel({
   // Une échéance du jour se dit « aujourd'hui », jamais « dans 0 j » : c'est la ligne que le
   // point rouge de l'onglet annonce, elle doit se lire comme telle (D88).
   const today = !overdue && Math.round(value) === 0 && unit === "j";
-  const amount = numberFr.format(Math.abs(Math.round(value)));
+  // Every phrase comes from `units.*` (rule 7): the count is an ICU argument, so the plural and
+  // the thousands separator are the locale's business, not this component's.
+  const count = Math.abs(Math.round(value));
   const text = overdue
     ? compact
-      ? `${amount} ${unit}`
-      : `${amount} ${unit} de retard`
+      ? // The badge beside the row already says « en retard »; here the figure stands alone.
+        useHours
+        ? tu("hours", { count })
+        : tu("daysShort", { count })
+      : useHours
+        ? tu("overdueHours", { count })
+        : tu("overdueDays", { count })
     : today
       ? t("today").toLocaleLowerCase("fr-FR")
-      : `dans ${amount} ${unit}`;
+      : useHours
+        ? tu("remainingHours", { count })
+        : tu("remainingDays", { count });
 
   return (
     <span

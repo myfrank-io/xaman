@@ -73,7 +73,7 @@ export const SECONDARY_NAV_KEYS: NavKey[] = ["inbox", "supplies", "contacts", "t
 // Account menu: sidebar footer (≥ lg) and bottom of the « Plus » sheet.
 export const ACCOUNT_NAV_KEYS: NavKey[] = ["settings", "members", "profile"];
 
-export function navItem(items: NavItem[], key: NavKey): NavItem | undefined {
+function navItem(items: NavItem[], key: NavKey): NavItem | undefined {
   const item = items.find((i) => i.key === key);
   return item && !item.hidden ? item : undefined;
 }

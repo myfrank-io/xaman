@@ -7,7 +7,7 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BoatsShell } from "@/components/boats/BoatsShell";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
-import { NEW_BOAT_PATH } from "@/lib/queries/boat-routes";
+import { boatPath, NEW_BOAT_PATH } from "@/lib/queries/boat-routes";
 
 export type PickableBoat = {
   id: string;
@@ -40,7 +40,7 @@ export async function BoatPicker({ boats }: { boats: PickableBoat[] }) {
             // the longest yard name and the card runs off the screen.
             <li key={boat.id} className="min-w-0">
               <Link
-                href={`/boats/${boat.id}/dashboard` as Route}
+                href={boatPath(boat.id, "dashboard") as Route}
                 className="flex min-h-20 items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent sm:gap-4"
               >
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-header-gradient text-white">

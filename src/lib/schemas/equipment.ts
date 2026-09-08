@@ -13,7 +13,6 @@ export const equipmentSpecSchema = z.object({
   key: requiredText(60),
   value: z.string().trim().max(200),
 });
-export type EquipmentSpec = z.infer<typeof equipmentSpecSchema>;
 
 export const upsertEquipmentSchema = z.object({
   id: uuid,
@@ -29,7 +28,6 @@ export const upsertEquipmentSchema = z.object({
   specs: z.array(equipmentSpecSchema).max(40).default([]),
   notes: nullableText(4000),
 });
-export type UpsertEquipmentInput = z.input<typeof upsertEquipmentSchema>;
 
 // Equipment is never deleted: it is marked as removed on a date (E2-3).
 export const removeEquipmentSchema = z.object({

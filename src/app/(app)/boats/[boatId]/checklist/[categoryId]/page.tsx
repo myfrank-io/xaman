@@ -5,6 +5,7 @@ import type { EngineReadDates } from "@/components/checklist/completable";
 import { toChecklistRow } from "@/components/checklist/rows";
 import { can, type BoatRole } from "@/lib/permissions";
 import { completionContext } from "@/lib/queries/completion-context";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function CategoryPage({
@@ -26,7 +27,7 @@ export default async function CategoryPage({
     { data: readings },
     context,
   ] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("boat_categories")
       .select("id, name, color, icon, is_active")

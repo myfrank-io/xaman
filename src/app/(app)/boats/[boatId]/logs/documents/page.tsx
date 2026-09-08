@@ -8,6 +8,7 @@ import { DocumentImport } from "@/components/attachments/DocumentImport";
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath } from "@/lib/queries/boat-routes";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 /** How far back the picker of existing interventions goes: a season of paperwork, not a decade. */
@@ -25,7 +26,7 @@ export default async function ImportDocumentsPage({
   const { boatId } = await params;
   const supabase = await createClient();
   const [{ data: role }, { data: logs }, { data: categories }] = await Promise.all([
-    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    readBoatRole(boatId),
     supabase
       .from("maintenance_logs_view")
       .select("id, title, performed_at")

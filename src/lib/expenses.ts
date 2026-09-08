@@ -1,5 +1,6 @@
 import { subDays, subMonths, subYears } from "date-fns";
 
+import { toCsv } from "@/lib/export/csv";
 import { toDate, toDateString } from "@/lib/format";
 import { daysAshore } from "@/lib/haul-outs";
 import type { Database } from "@/types/database";
@@ -89,7 +90,7 @@ export function isExpensePeriod(value: string | undefined): value is ExpensePeri
   return EXPENSE_PERIODS.includes(value as ExpensePeriod);
 }
 
-export function isExpenseSource(value: string): value is ExpenseSource {
+function isExpenseSource(value: string): value is ExpenseSource {
   return EXPENSE_SOURCES.includes(value as ExpenseSource);
 }
 
@@ -185,12 +186,6 @@ export function variation(current: number, previous: number): number | null {
   return (current - previous) / previous;
 }
 
-function csvCell(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) return "";
-  const text = String(value);
-  return /[";\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
 export type CsvLabels = {
   headers: [string, string, string, string, string];
   source: Record<ExpenseSource, string>;
@@ -198,30 +193,37 @@ export type CsvLabels = {
 };
 
 /**
- * `;` separator and a BOM: that is what Excel FR opens without a dialog. Amounts keep the
+ * `;` separator, a BOM and CRLF: that is what Excel FR opens without a dialog. Written by the
+ * app's one CSV writer (`toCsv`), so this export gets the formula-injection guard it used to
+ * miss — and it is the file a person is most likely to open in a spreadsheet. Amounts keep the
  * French comma so a French spreadsheet reads them as numbers.
  */
 export function buildExpensesCsv(rows: readonly ExpenseRow[], labels: CsvLabels): string {
-  const lines = [labels.headers.map(csvCell).join(";")];
-  for (const row of rows) {
-    const source = isExpenseSource(row.source ?? "")
-      ? labels.source[row.source as ExpenseSource]
-      : (row.source ?? "");
-    lines.push(
-      [
-        csvCell(row.date),
-        csvCell(source),
-        csvCell(row.label),
-        csvCell(row.categoryName ?? labels.uncategorized),
-        csvCell(
+  const [date, source, label, category, amount] = labels.headers;
+  return toCsv<ExpenseRow>(
+    [...rows],
+    [
+      { header: date, value: (row) => row.date },
+      {
+        header: source,
+        value: (row) =>
+          isExpenseSource(row.source ?? "")
+            ? labels.source[row.source as ExpenseSource]
+            : (row.source ?? ""),
+      },
+      { header: label, value: (row) => row.label },
+      { header: category, value: (row) => row.categoryName ?? labels.uncategorized },
+      {
+        header: amount,
+        // Pre-formatted rather than handed to `csvField` as a number: the export always shows
+        // two decimals, and an unknown amount stays empty instead of becoming a 0.
+        value: (row) =>
           row.amount === null || row.amount === undefined
             ? ""
             : row.amount.toFixed(2).replace(".", ","),
-        ),
-      ].join(";"),
-    );
-  }
-  return `﻿${lines.join("\r\n")}\r\n`;
+      },
+    ],
+  );
 }
 
 /**
