@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { defaultShouldDehydrateQuery, QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider, type Persister } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
@@ -10,6 +10,18 @@ const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 
 /** Where the persisted read cache lives in IndexedDB. Also what sign-out has to remove. */
 export const QUERY_CACHE_KEY = "xaman-query-cache";
+
+/** Fired by the sign-out control; the provider hears it and empties the client it owns. */
+const SIGN_OUT_EVENT = "xaman:sign-out";
+
+/**
+ * Asks this device to forget what it read, on the way out. Callable from anywhere — including a
+ * screen rendered outside the provider, where it simply clears the stored copy.
+ */
+export async function signOutQueryCache(): Promise<void> {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(SIGN_OUT_EVENT));
+  await clearPersistedQueryCache();
+}
 
 /**
  * Drops the persisted cache from this device (E9-1, rule 2 in spirit).
@@ -70,6 +82,13 @@ function makePersister(): Persister {
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(makeQueryClient);
   const [persister] = useState(makePersister);
+
+  // Someone signed out on this device: the answers they were entitled to read leave with them.
+  useEffect(() => {
+    const forget = () => queryClient.clear();
+    window.addEventListener(SIGN_OUT_EVENT, forget);
+    return () => window.removeEventListener(SIGN_OUT_EVENT, forget);
+  }, [queryClient]);
 
   return (
     <PersistQueryClientProvider

@@ -14,10 +14,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { InstallDialog } from "@/components/pwa/InstallDialog";
-import { clearPersistedQueryCache } from "@/components/providers/QueryProvider";
+import { signOutQueryCache } from "@/components/providers/QueryProvider";
 import { useInstallPrompt } from "@/components/pwa/use-install-prompt";
 import { Avatar, AvatarFallback, initials } from "@/components/ui/avatar";
 import {
@@ -119,17 +118,19 @@ export function AccountMenu({
 
   // One form for both placements; each trigger submits it.
   const formRef = React.useRef<HTMLFormElement>(null);
-  const queryClient = useQueryClient();
   /**
    * Leaving takes the read cache with it (rule 2). The iPad is shared: on this very device the
    * next person to sign in is somebody else, and TanStack Query keeps a week of dehydrated
    * answers in IndexedDB — the checklist, the journal, the members of a boat they may have
    * nothing to do with. The session cookie goes on the server; this is the half that lives here.
-   * Nothing must stop the sign-out itself, so the form is submitted whatever happens.
+   *
+   * The in-memory client is emptied by the provider, which owns it, through an event rather than
+   * `useQueryClient()`: this menu also renders in the design gallery, outside any provider, and a
+   * hook that throws there would take the whole screen down. Nothing must stop the sign-out
+   * itself, so the form is submitted whatever happens.
    */
   const submitSignOut = () => {
-    queryClient.clear();
-    void clearPersistedQueryCache().finally(() => formRef.current?.requestSubmit());
+    void signOutQueryCache().finally(() => formRef.current?.requestSubmit());
   };
 
   return (

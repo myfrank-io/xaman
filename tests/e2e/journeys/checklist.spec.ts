@@ -45,7 +45,7 @@ test.describe("§6.3 spring check", () => {
       .fill("700");
 
     // 2 — confirm.
-    await taps.tap(dialog.getByRole("button", { name: fr.common.save }));
+    await taps.tap(dialog.getByRole("button", { name: fr.common.save, exact: true }));
     await expect(dialog).toBeHidden({ timeout: 15_000 });
 
     taps.expectWithin(3, "§6.3 cochage");
@@ -63,7 +63,7 @@ test.describe("§6.3 spring check", () => {
     // A point belongs to a category, and the form opened from the checklist itself carries
     // none: the chips are how one is chosen (rule 13).
     await page.getByRole("radio", { name: SEED.category }).first().tap();
-    await page.getByRole("button", { name: fr.common.save }).tap();
+    await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
 
     // §6.3 ends on the point being there for the next person to see.
     await expect(page.getByText(label).first()).toBeVisible({ timeout: 15_000 });

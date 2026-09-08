@@ -34,7 +34,7 @@ test.describe("§6.2 oil change at the dock", () => {
     await taps.tap(page.getByRole("radio", { name: SEED.category }).first());
 
     // 3 — save. Date, status and engine hours are already carrying their defaults.
-    await taps.tap(page.getByRole("button", { name: fr.common.save }));
+    await taps.tap(page.getByRole("button", { name: fr.common.save, exact: true }));
 
     // The intervention is at the head of the log, which is where §6.2 ends.
     await expect(page.getByText("Vidange moteur SB").first()).toBeVisible({ timeout: 15_000 });
