@@ -5,7 +5,7 @@ Carnet d'entretien numérique et partagé pour bateaux. PWA iPad-first. Premier 
 ## Documents de référence (à lire avant toute tâche)
 - `docs/SPEC.md` — cahier des charges : vision, rôles, périmètre MoSCoW, parcours, exigences, architecture, design.
 - `docs/DATA-MODEL.md` — schéma Postgres, RLS, vues, triggers. **Source de vérité du schéma.**
-- `docs/BACKLOG.md` — épics et tickets ordonnés avec DoD. Mettre à jour les cases `[ ] / [~] / [x]` au fil de l'eau.
+- `docs/BACKLOG.md` — épics et tickets ordonnés avec DoD. Mettre à jour les cases `[ ] / [~] / [x]` au fil de l'eau. Un ticket neuf prend son numéro dans le tableau « Prochain numéro, par épique » en tête du fichier, dont on incrémente la ligne dans le même commit (D87).
 - `docs/AUDIT.md` — audit consolidé du 2 septembre 2026 et décisions D-xx (modèle de suivi, navigation, DA) ; **prime sur SPEC/DATA-MODEL pour les points qu'il tranche**.
 - `docs/DECISIONS.md` — journal des décisions produit ; y ajouter une ligne à chaque arbitrage. Le numéro se prend sur la ligne « Prochain numéro » en tête du fichier, qu'on incrémente dans le même commit (D85).
 - `seed/` — données Xaman (bateau, checklist ORC 50, historique du carnet papier).

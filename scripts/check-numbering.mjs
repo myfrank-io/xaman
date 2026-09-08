@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Guards the numbering of docs/DECISIONS.md.
+ * Guards the hand-assigned numbers of docs/DECISIONS.md and docs/BACKLOG.md.
  *
  * Why this exists: three decisions had to be renumbered in one day, and D43, D73 and D74 each
  * ended up naming two different decisions on `main`. The cause was structural — the number was
@@ -36,8 +36,16 @@
  * could have caught boat-onboarding.ts quoting « D74 » for a sentence that belongs to D76 — that
  * number was defined, it just meant something else. Only reading catches that.
  *
- * Usage: node scripts/check-decisions.mjs   (exit 1 and a report on failure)
- * `tests/unit/decisions.test.ts` runs the same functions.
+ * Ticket numbers in BACKLOG.md have the same disease and get the same cure, with one difference:
+ * they are numbered per epic, so the counter is a table with one row per epic rather than a single
+ * line. Two branches adding a ticket to the same epic write the same row and collide; two branches
+ * working different epics do not, which is right — they were never going to collide. Two rules
+ * there, and rule 1 is complete on its own because a ticket has exactly one notation: the
+ * `- [x] **E13-10** …` list item. There is no legacy notation to be ambiguous about, so no third
+ * rule is needed.
+ *
+ * Usage: node scripts/check-numbering.mjs   (exit 1 and a report on failure)
+ * `tests/unit/numbering.test.ts` runs the same functions.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -48,6 +56,7 @@ export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 
 export const DECISIONS = path.join("docs", "DECISIONS.md");
 export const AUDIT = path.join("docs", "AUDIT.md");
+export const BACKLOG = path.join("docs", "BACKLOG.md");
 
 /** The counter, as written at the top of DECISIONS.md. */
 const COUNTER = /\*\*Prochain numéro : D(\d+)\.\*\*/g;
@@ -180,13 +189,97 @@ export function counterFailures(next, written) {
     );
 }
 
-/** All three rules against the working tree. One sentence per failure, so a report lists them all. */
+/**
+ * `- [x] **E13-10** Moteur sans compteur…` — the one and only way BACKLOG.md opens a ticket. The
+ * « Retirés » list writes `- E4-8 …` without a checkbox, and the milestone table names lots, not
+ * tickets; neither is a definition and neither matches this.
+ */
+const TICKET = /^- \[[ x~]\] \*\*(E(\d+)-\d+[a-z]?)(?:\s*\([^)]*\))?\*{0,2}\s*(.{0,60})/gm;
+
+/** `| E13 | E13-17 |` — one row per epic, so only branches touching the same epic collide. */
+const TICKET_COUNTER = /^\| (E\d+) \| (E\d+-\d+) \|$/gm;
+
+/** Every ticket the backlog defines, with the epic it belongs to. */
+export function tickets(root = ROOT) {
+  const text = readFileSync(path.join(root, BACKLOG), "utf8");
+  return matches(TICKET, text).map(([, id, epic, title]) => ({
+    id,
+    epic: `E${epic}`,
+    number: Number(id.split("-")[1].replace(/[a-z]$/, "")),
+    title: title.replace(/\*+/g, "").trim(),
+  }));
+}
+
+/** The per-epic counter table, as a map of epic → the number the next ticket must take. */
+export function ticketCounters(root = ROOT) {
+  const text = readFileSync(path.join(root, BACKLOG), "utf8");
+  const rows = new Map();
+  for (const [, epic, next] of matches(TICKET_COUNTER, text)) {
+    if (rows.has(epic)) {
+      throw new Error(`${BACKLOG} porte deux lignes de compteur pour ${epic}.`);
+    }
+    rows.set(epic, Number(next.split("-")[1]));
+  }
+  if (rows.size === 0) {
+    throw new Error(`${BACKLOG} ne porte aucune ligne « | Exx | Exx-n | » de compteur.`);
+  }
+  return rows;
+}
+
+/** Ticket rule 1: an identifier opens one ticket, never two. */
+export function ticketDuplicateFailures(all) {
+  const byId = new Map();
+  for (const ticket of all) {
+    if (!byId.has(ticket.id)) byId.set(ticket.id, []);
+    byId.get(ticket.id).push(ticket);
+  }
+  return [...byId]
+    .filter(([, found]) => found.length > 1)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([id, found]) => {
+      const list = found.map((t) => `« ${t.title}… »`).join(" et ");
+      return `${id} nomme ${found.length} tickets dans ${BACKLOG} : ${list}.`;
+    });
+}
+
+/**
+ * Ticket rule 2: every epic that has tickets has a counter row, and that row leads it. The first
+ * half is what keeps the table complete — open a new epic and the check asks for its row, which is
+ * exactly the moment to think about it.
+ */
+export function ticketCounterFailures(all, counters) {
+  const highest = new Map();
+  for (const ticket of all) {
+    if (!(highest.get(ticket.epic) >= ticket.number)) highest.set(ticket.epic, ticket.number);
+  }
+  const failures = [];
+  for (const [epic, max] of [...highest].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const next = counters.get(epic);
+    if (next === undefined) {
+      failures.push(
+        `L'épique ${epic} a des tickets mais aucune ligne « | ${epic} | ${epic}-${max + 1} | » ` +
+          `dans le tableau des prochains numéros de ${BACKLOG}.`,
+      );
+    } else if (next <= max) {
+      failures.push(
+        `${epic} annonce ${epic}-${next} comme prochain numéro alors que ${epic}-${max} est déjà ` +
+          `pris : prendre un numéro, c'est aussi incrémenter sa ligne.`,
+      );
+    }
+  }
+  return failures;
+}
+
+/** Every rule against the working tree. One sentence per failure, so a report lists them all. */
 export function check(root = ROOT) {
   const entries = definitions(root);
+  const all = tickets(root);
   return [
     ...duplicateFailures(entries),
     ...reuseFailures(entries),
     ...counterFailures(counter(root), mentions(root)),
+    ...ticketDuplicateFailures(all),
+    ...ticketCounterFailures(all, ticketCounters(root)),
   ];
 }
 
@@ -197,5 +290,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     for (const failure of failures) console.error(`  - ${failure}`);
     process.exit(1);
   }
-  console.log(`Numérotation des décisions : rien à signaler (prochain numéro D${counter()}).`);
+  const epics = ticketCounters().size;
+  console.log(
+    `Numérotation : rien à signaler (prochaine décision D${counter()}, ${epics} épiques suivies).`,
+  );
 }

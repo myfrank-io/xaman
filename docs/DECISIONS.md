@@ -2,11 +2,11 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D87.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D88.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
-`tests/unit/decisions.test.ts` refuse un numéro déjà pris et un compteur oublié.
+`tests/unit/numbering.test.ts` refuse un numéro déjà pris et un compteur oublié.
 
 | Date | Question | Décision | Raison |
 |---|---|---|---|
@@ -1629,7 +1629,7 @@ deux D43 venant d'un même commit, c'est la seconde ligne du tableau — la cart
 **D84** ; et le récapitulatif d'une ligne de dépense, arrivé second sur D80, devient **D86**.
 Leurs citations suivent, et `boat-onboarding.ts` cite enfin D76.
 
-**Le garde-fou.** `scripts/check-decisions.mjs`, joué par `tests/unit/decisions.test.ts` donc par
+**Le garde-fou.** `scripts/check-numbering.mjs`, joué par `tests/unit/numbering.test.ts` donc par
 `pnpm test` et par la CI, tient trois règles : aucun numéro n'ouvre deux entrées ; le compteur
 reste au-dessus de **tout** `Dxx` écrit dans le dépôt ; et rien de daté du jour où le compteur est
 apparu ne porte un numéro inférieur à celui où il a commencé. La deuxième ne lit aucune notation —
@@ -1648,10 +1648,11 @@ disputé mais **repris**.
 attraper le « D74 » de `boat-onboarding.ts` — ce numéro existait, il voulait simplement dire autre
 chose. Seule la lecture attrape cela.
 
-**Limite connue.** Les numéros de **tickets** ont la même maladie : dans `BACKLOG.md`, `E13-10` et
-`E13-13` nomment chacun deux tickets. Ils se citent dans les noms de branches, les
-titres de PR et les messages de commit — hors du dépôt, donc hors de portée d'un compteur. Non
-traité ici.
+**Les tickets ont la même maladie** — dans `BACKLOG.md`, `E13-10` et `E13-13` nommaient chacun
+deux tickets. Traité juste après, en **D87** : même compteur, mais une ligne par épique, puisqu'un
+numéro de ticket est relatif à la sienne. Reste hors de portée ce qu'aucun compteur ne rattrape :
+un numéro cité dans un nom de branche, un titre de PR ou un message de commit.
+
 ## 2026-09-08 — D86 : une ligne de dépense se déroule sur place, l'intervention reste à un geste
 
 **Question.** Deux signalements sur le même écran, Dépenses. Sur la liste : « quand je clique sur
@@ -1697,3 +1698,45 @@ scroll — et il fallait deux gestes pour revenir vérifier la ligne suivante.
 sous le bloc filtré, qui affichait les mêmes lignes deux fois à un écran d'intervalle. Écarté
 enfin : rendre le bloc « Par catégorie » dépliable **sans** filtrer — les totaux, la comparaison
 et l'export ne suivraient plus ce qui est affiché, ce que D77 avait justement corrigé.
+
+## 2026-09-08 — D87 : un numéro de ticket se prend sur une ligne aussi, mais par épique
+
+**Question.** D85 nommait les tickets comme sa limite connue : `E13-10` et `E13-13` désignaient
+chacun deux tickets dans `BACKLOG.md`. Même maladie, même jour, même épique — celle des reprises
+signalées à l'usage, la seule où l'on ajoute un ticket au fil de l'eau.
+
+**Le constat.** Exactement la cause de D85, avec un détail qui aggrave : le numéro n'est pas
+seulement choisi contre un `main` qui bouge, il n'est **pas revérifié après la fusion**. Les deux
+`E13-10` sont séparés par une ligne vide dans le fichier — la seconde branche a fusionné `main`,
+puis a posé son ticket à la suite, avec le numéro qu'elle avait choisi avant. Git n'avait rien à
+signaler : deux insertions à des endroits différents d'une liste se fusionnent sans un mot.
+
+**Décision.** Le compteur de D85, mais **une ligne par épique** — un tableau en tête de
+`BACKLOG.md`. Deux branches qui ajoutent un ticket à la **même** épique écrivent la même ligne, et
+la seconde fusion s'arrête sur un conflit git. Deux branches qui travaillent des épiques
+différentes ne se gênent pas : elles n'allaient de toute façon pas entrer en collision. Une ligne
+unique, comme pour les décisions, les aurait fait échouer l'une contre l'autre sans raison.
+
+**Deux règles, pas trois.** Un ticket n'a qu'une seule notation — l'élément de liste
+`- [x] **E13-10** …`. Il n'y a donc aucune notation ancienne dont on ne saurait dire si elle
+définit ou si elle cite, et la règle « aucun identifiant n'ouvre deux tickets » suffit là où les
+décisions demandaient une troisième règle datée. La seconde règle exige en plus qu'une épique qui
+porte des tickets porte une ligne de compteur : ouvrir une épique neuve fait échouer la
+vérification jusqu'à ce que sa ligne existe, ce qui est le bon moment pour y penser.
+
+**Qui cède.** La même règle mécanique qu'en D85, et ici l'ordre d'écriture et l'ordre de fusion
+disent la même chose : le second change. `E13-10` reste au moteur sans compteur d'heures (13 h 32)
+et les rôles à l'invitation deviennent **E13-15** (15 h 27) ; `E13-13` reste aux quatre moteurs de
+l'étape 1 (16 h 25) et l'e-mail de code devient **E13-16** (16 h 36). Une seule citation hors du
+backlog les nomme, dans ce fichier, et elle vise un numéro conservé.
+
+**Ce qui reste hors de portée, et le restera.** Un numéro de ticket vit aussi dans des noms de
+branches, des titres de PR et des messages de commit — de l'histoire, qu'aucun compteur ne peut
+corriger. `claude/…` et « E13-10 / D73 » dans un message de commit continueront de désigner ce
+qu'ils désignaient. C'est le prix d'un renumérotage, il est payé une fois, et il est plus petit que
+deux tickets qui répondent au même nom.
+
+**Un seul garde-fou pour les deux.** `scripts/check-decisions.mjs` devient
+`scripts/check-numbering.mjs` et tient les cinq règles ; `tests/unit/decisions.test.ts` devient
+`tests/unit/numbering.test.ts`. Deux fichiers presque identiques auraient divergé au premier
+correctif (règle 10 : pas de poids sans raison).

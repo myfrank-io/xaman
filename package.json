@@ -29,7 +29,7 @@
     "gen:templates": "node scripts/gen-template-migration.mjs",
     "gen:boat-models": "node scripts/gen-boat-models-migration.mjs",
     "gen:emails": "node scripts/gen-email-templates.mjs",
-    "check:decisions": "node scripts/check-decisions.mjs",
+    "check:numbering": "node scripts/check-numbering.mjs",
     "emails:push": "node scripts/push-email-templates.mjs",
     "build:sw": "serwist build serwist.config.mts",
     "test:e2e": "playwright test",

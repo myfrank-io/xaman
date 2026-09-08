@@ -9,7 +9,11 @@ import {
   duplicateFailures,
   mentions,
   reuseFailures,
-} from "../../scripts/check-decisions.mjs";
+  ticketCounterFailures,
+  ticketCounters,
+  ticketDuplicateFailures,
+  tickets,
+} from "../../scripts/check-numbering.mjs";
 
 type Entry = { number: number; date: string; where: string; title: string };
 const start = SERIES_START as { date: string; number: number };
@@ -110,5 +114,81 @@ describe("numérotation des décisions", () => {
 
   it("ne relève rien sur le dépôt", () => {
     expect(check()).toEqual([]);
+  });
+});
+
+type Ticket = { id: string; epic: string; number: number; title: string };
+
+/**
+ * The numbering of docs/BACKLOG.md (D87).
+ *
+ * Same disease as the decisions, one epic apart: `E13-10` and `E13-13` each named two tickets. The
+ * two `E13-10` are separated by a blank line in the file — the second branch merged main and then
+ * appended its ticket with the number it had chosen beforehand. Git had nothing to say: two
+ * insertions at different points of a list merge silently.
+ *
+ * Two rules suffice here where the decisions needed three, because a ticket has exactly one
+ * notation — the `- [x] **E13-10** …` list item — so nothing is ambiguous between defining a
+ * number and citing one.
+ */
+describe("numérotation des tickets", () => {
+  it("ne nomme jamais deux tickets du même identifiant", () => {
+    expect(ticketDuplicateFailures(tickets() as Ticket[])).toEqual([]);
+  });
+
+  it("garde chaque épique sous son compteur", () => {
+    expect(
+      ticketCounterFailures(tickets() as Ticket[], ticketCounters() as Map<string, number>),
+    ).toEqual([]);
+  });
+
+  it("lit le backlog et son tableau", () => {
+    const all = tickets() as Ticket[];
+    const counters = ticketCounters() as Map<string, number>;
+    // A parser matching nothing would pass every other case here.
+    expect(all.length).toBeGreaterThan(60);
+    expect(counters.size).toBeGreaterThan(10);
+    // The « Retirés » list writes `- E4-8 …` without a checkbox: a mention, not a definition.
+    expect(all.some((t) => t.id === "E4-8")).toBe(false);
+    // Sub-tickets are their own identifier, not a duplicate of the one they hang off.
+    expect(all.some((t) => t.id === "E1-6b")).toBe(true);
+  });
+
+  it("signale un identifiant qui ouvre deux tickets", () => {
+    const failures = ticketDuplicateFailures([
+      { id: "E13-10", epic: "E13", number: 10, title: "Moteur sans compteur d'heures" },
+      { id: "E13-10", epic: "E13", number: 10, title: "Tous les rôles dès l'invitation" },
+      { id: "E13-11", epic: "E13", number: 11, title: "Le code d'e-mail accepte 6 à 10 chiffres" },
+    ] as Ticket[]);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("E13-10 nomme 2 tickets");
+    expect(failures[0]).toContain("Tous les rôles");
+  });
+
+  it("signale un numéro pris sans incrémenter la ligne de son épique", () => {
+    const failures = ticketCounterFailures(
+      [{ id: "E13-17", epic: "E13", number: 17, title: "un ticket de plus" }] as Ticket[],
+      new Map([["E13", 17]]),
+    );
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("E13 annonce E13-17");
+  });
+
+  it("réclame une ligne pour une épique qui n'en a pas", () => {
+    const failures = ticketCounterFailures(
+      [{ id: "E16-1", epic: "E16", number: 1, title: "une épique toute neuve" }] as Ticket[],
+      new Map([["E13", 17]]),
+    );
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("| E16 | E16-2 |");
+  });
+
+  it("laisse passer une épique sous son compteur", () => {
+    expect(
+      ticketCounterFailures(
+        [{ id: "E13-16", epic: "E13", number: 16, title: "l'e-mail de code" }] as Ticket[],
+        new Map([["E13", 17]]),
+      ),
+    ).toEqual([]);
   });
 });
