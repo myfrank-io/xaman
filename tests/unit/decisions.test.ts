@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  SERIES_START,
   check,
   counter,
   counterFailures,
   definitions,
   duplicateFailures,
   mentions,
+  reuseFailures,
 } from "../../scripts/check-decisions.mjs";
 
-type Entry = { number: number; where: string; title: string };
+type Entry = { number: number; date: string; where: string; title: string };
+const start = SERIES_START as { date: string; number: number };
 
 /**
  * The numbering of docs/DECISIONS.md.
@@ -58,6 +61,36 @@ describe("numérotation des décisions", () => {
     expect(failures).toHaveLength(1);
     expect(failures[0]).toContain("D73 nomme 2 décisions");
     expect(failures[0]).toContain("tous les rôles");
+  });
+
+  it("ne réutilise aucun numéro depuis que le compteur existe", () => {
+    expect(reuseFailures(definitions() as Entry[])).toEqual([]);
+  });
+
+  it("signale un numéro repris par une entrée postérieure au compteur", () => {
+    // Verbatim from a branch opened before the counter existed: it took D81 for a new heading
+    // while D81 already named a row of the table above. Neither of the other two rules sees it —
+    // the number is not defined twice by a heading, and it sits below the counter.
+    const failures = reuseFailures(
+      [
+        {
+          number: 81,
+          date: "2026-09-08",
+          where: "docs/DECISIONS.md — 2026-09-08",
+          title: "le point rouge ne dit qu'une chose",
+        },
+        {
+          number: 79,
+          date: "2026-09-07",
+          where: "docs/DECISIONS.md — 2026-09-07",
+          title: "un e-mail qui n'arrive pas le dit dans l'app",
+        },
+      ] as Entry[],
+      start,
+    );
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("D81 ouvre");
+    expect(failures[0]).toContain("le point rouge");
   });
 
   it("signale un numéro pris sans incrémenter le compteur", () => {

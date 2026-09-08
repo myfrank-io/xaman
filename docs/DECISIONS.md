@@ -1630,10 +1630,19 @@ deux D43 venant d'un même commit, c'est la seconde ligne du tableau — la cart
 Leurs citations suivent, et `boat-onboarding.ts` cite enfin D76.
 
 **Le garde-fou.** `scripts/check-decisions.mjs`, joué par `tests/unit/decisions.test.ts` donc par
-`pnpm test` et par la CI, tient deux règles : aucun numéro n'ouvre deux entrées, et le compteur
-reste au-dessus de **tout** `Dxx` écrit dans le dépôt. La seconde ne lit aucune notation — un
-numéro pris sans toucher la ligne échoue, qu'il ait été écrit dans un titre, dans une cellule de
-tableau ou au milieu d'une phrase, ce que le journal fait aussi.
+`pnpm test` et par la CI, tient trois règles : aucun numéro n'ouvre deux entrées ; le compteur
+reste au-dessus de **tout** `Dxx` écrit dans le dépôt ; et rien de daté du jour où le compteur est
+apparu ne porte un numéro inférieur à celui où il a commencé. La deuxième ne lit aucune notation —
+un numéro pris sans toucher la ligne échoue, qu'il ait été écrit dans un titre, dans une cellule
+de tableau ou au milieu d'une phrase, ce que le journal fait aussi.
+
+**La troisième existe pour la transition,** et elle n'est pas théorique. Une branche ouverte avant
+le compteur ne peut pas le suivre : la ligne est un ajout d'un seul côté, donc git la fusionne
+sans un mot. #56 a ainsi pris **D81** pour un nouveau titre alors que D81 nomme déjà une ligne du
+tableau ci-dessus — et ni la première règle (le numéro n'ouvre pas deux titres) ni la deuxième (81
+est sous le compteur) ne le voient. La date le voit : une entrée du 2026-09-08 qui porte moins de
+D85 n'a pas lu la ligne. C'est le bas de la série que celle-ci garde, là où un numéro n'est pas
+disputé mais **repris**.
 
 **Ce qu'il ne vérifie pas** : qu'un numéro cité désigne la bonne décision. Rien n'aurait pu
 attraper le « D74 » de `boat-onboarding.ts` — ce numéro existait, il voulait simplement dire autre

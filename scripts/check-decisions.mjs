@@ -13,16 +13,24 @@
  * same number both rewrite it and the second merge stops on a git conflict. This file is what
  * makes the line trustworthy — a counter nobody checks drifts on the first commit that forgets it.
  *
- * Two rules, and deliberately no more:
+ * Three rules, and deliberately no more:
  *
  *   1. No number is defined twice. A definition is a `## <date> — D<n> : <title>` heading in
  *      DECISIONS.md or a `| D<n> |` leading cell in AUDIT.md, the two notations that open an
  *      entry. (Some older decisions are numbered mid-sentence inside a table row; those cannot be
- *      told apart from a citation, which is exactly why rule 2 does not read notation at all.)
+ *      told apart from a citation, which is exactly why rules 2 and 3 read no notation at all.)
  *
  *   2. The counter leads the whole series: every `D<n>` written anywhere in the repository is
  *      below it. This is what catches a number taken without bumping the line, whatever notation
  *      it was written in — the new number has to appear *somewhere* to be worth anything.
+ *
+ *   3. Nothing dated on or after the day the counter appeared carries a number below the value it
+ *      started at. Rule 2 guards the top of the series; this guards the bottom, where a number is
+ *      not raced for but *re-taken*. That is not hypothetical: a branch opened before the counter
+ *      existed took D81 for a new heading while D81 already named a table row, and neither of the
+ *      first two rules sees it — the counter line is an addition on one side only, so git merges
+ *      it without a word. A branch that predates the rule cannot follow it; this is what makes it
+ *      answer for it anyway.
  *
  * What it deliberately does not check: that a cited number resolves to a decision. Nothing here
  * could have caught boat-onboarding.ts quoting « D74 » for a sentence that belongs to D76 — that
@@ -93,11 +101,15 @@ export function definitions(root = ROOT) {
   return [
     ...matches(HEADING, decisions).map(([, date, n, title]) => ({
       number: Number(n),
+      date,
       where: `${DECISIONS} — ${date}`,
       title,
     })),
+    // AUDIT.md rows are the 2 September consolidation and carry no date of their own. An empty
+    // one sorts below every real date, so rule 3 never looks at them.
     ...matches(AUDIT_ROW, audit).map(([, n, title]) => ({
       number: Number(n),
+      date: "",
       where: AUDIT,
       title: title.trim(),
     })),
@@ -136,6 +148,26 @@ export function duplicateFailures(entries) {
     });
 }
 
+/**
+ * The day the counter line appeared, and the value it started at. Every decision written from
+ * that day on takes its number from the line, and the line only ever grows — so a lower number on
+ * a later entry means the line was not read.
+ */
+export const SERIES_START = { date: "2026-09-08", number: 85 };
+
+/** Rule 3, over the entries alone. */
+export function reuseFailures(entries, start = SERIES_START) {
+  return entries
+    .filter((entry) => entry.date >= start.date && entry.number < start.number)
+    .sort((a, b) => a.number - b.number)
+    .map(
+      (entry) =>
+        `D${entry.number} ouvre « ${entry.title} », datée du ${entry.date}, alors que la série est ` +
+        `passée au compteur le ${start.date} à D${start.number} : ce numéro appartient déjà à une ` +
+        `entrée plus ancienne. Prendre celui qu'annonce la ligne « Prochain numéro ».`,
+    );
+}
+
 /** Rule 2, over the mentions alone. */
 export function counterFailures(next, written) {
   return [...written.keys()]
@@ -148,10 +180,12 @@ export function counterFailures(next, written) {
     );
 }
 
-/** Both rules against the working tree. One sentence per failure, so a report lists them all. */
+/** All three rules against the working tree. One sentence per failure, so a report lists them all. */
 export function check(root = ROOT) {
+  const entries = definitions(root);
   return [
-    ...duplicateFailures(definitions(root)),
+    ...duplicateFailures(entries),
+    ...reuseFailures(entries),
     ...counterFailures(counter(root), mentions(root)),
   ];
 }
