@@ -218,9 +218,20 @@ export default function DevInboxPage() {
         contacts={[
           { id: CONTACT, name: "Chantier Naval de la Ciotat", specialty: "Chantier carénage" },
         ]}
+        logs={[
+          {
+            id: "00000000-0000-4000-8000-000000002001",
+            title: "Vidange des deux moteurs",
+            performedAt: "2026-08-12",
+          },
+          {
+            id: "00000000-0000-4000-8000-000000002002",
+            title: "Antifouling et anodes",
+            performedAt: "2026-05-03",
+          },
+        ]}
         canContribute
         canWrite
-        analysisEnabled
         inboxAddress="xaman-3f9a1c2b7d4e@carnet.xaman.boats"
       />
     </DevShell>

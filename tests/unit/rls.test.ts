@@ -183,7 +183,7 @@ describeWithDb("read access (select)", () => {
     );
     expect(delivery.ok).toBe(true);
 
-    // D109 (0030): the reminders are read on the Membres screen — « relancée 3 fois » is what
+    // D110 (0030): the reminders are read on the Membres screen — « relancée 3 fois » is what
     // ends the waiting — and written by the Server Action alone, with the service key.
     const reminders = await run(
       U.owner,
@@ -1022,7 +1022,7 @@ describeWithDb("update", () => {
       ),
     ).toEqual({ ok: true, rowCount: 0 });
 
-    // D109 (0030): a reminder is a Server Action, never a browser writing a date on a row.
+    // D110 (0030): a reminder is a Server Action, never a browser writing a date on a row.
     // `revoked_at` stays the single column `authenticated` may update on this table.
     for (const column of ["reminded_at = now()", "reminder_count = 5", "expires_at = now()"]) {
       const written = await run(
@@ -1787,7 +1787,7 @@ describeWithDb("secondary views", () => {
     );
     expect(columns).not.toContain("email_id");
     expect(columns).not.toContain("delivery_detail");
-    // D109: the reminders are read from the same place as the rest of an invitation.
+    // D110: the reminders are read from the same place as the rest of an invitation.
     expect(columns).toEqual(expect.arrayContaining(["reminded_at", "reminder_count"]));
     // A recreated view comes back granted to everyone by Supabase's default privileges; 0030
     // restates what 0004 wanted, and this is what would have caught the drift 0023 left.

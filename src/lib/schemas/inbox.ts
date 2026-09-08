@@ -58,6 +58,17 @@ export const inboxKindSchema = z.enum(INBOX_KINDS);
 export type InboxKind = z.infer<typeof inboxKindSchema>;
 
 /**
+ * What « Valider » can do with a card (D109). The two kinds above create a line; `attach` hangs
+ * the document on an intervention the carnet already has — an invoice mailed in for last week's
+ * work, a photo of a page already noted. It is deliberately *not* an `InboxKind`: a kind is what
+ * a document becomes, and `inboxEntityId` derives an id from it (D97), whereas an attachment
+ * brings the id of the line the person picked. The reading never proposes it.
+ */
+export const INBOX_FILINGS = ["log", "purchase", "attach"] as const;
+export const inboxFilingSchema = z.enum(INBOX_FILINGS);
+export type InboxFiling = z.infer<typeof inboxFilingSchema>;
+
+/**
  * The id of the line a document is about to become — derived from the document, not drawn at
  * random, so that a second « Valider » on the same card writes the same line again instead of a
  * second one.
@@ -220,6 +231,12 @@ export const createInboxUploadSchema = z.object({
   fileName: requiredText(255),
   mimeType: inboxMime,
   sizeBytes: z.number().int().min(1).max(ATTACHMENT_MAX_BYTES),
+  /**
+   * Read after the response rather than while the person waits (D109). One photo is read on the
+   * spot — a bar is a better wait than a card that says « lecture… ». A pile is not: the screen
+   * would freeze for the whole batch, and one action would carry every reading past its budget.
+   */
+  deferReading: z.boolean().default(false),
 });
 
 const emptyToNull = (value: unknown) =>
@@ -231,15 +248,16 @@ const engineHoursEntry = z.object({
 });
 
 /**
- * « Valider » — what the card holds once the person has corrected it. One schema for both kinds:
- * the intervention needs a system, the purchase needs a chip, and the rest is shared.
+ * « Valider » — what the card holds once the person has corrected it. One schema for the three
+ * filings: the intervention needs a system, the purchase needs a chip, the attachment needs the
+ * intervention it goes on (D109) and nothing else — its fields are the intervention's already.
  */
 export const validateInboxItemSchema = z
   .object({
     boatId: uuid,
     itemId: uuid,
-    kind: inboxKindSchema,
-    title: requiredText(160),
+    kind: inboxFilingSchema,
+    title: z.string().trim().max(160),
     date: isoDate,
     categoryId: z.preprocess(emptyToNull, uuid.nullable()),
     amount: nullableDecimal({ scale: 2, max: COST_MAX }),
@@ -248,10 +266,21 @@ export const validateInboxItemSchema = z
     purchaseKind: z.enum(VISIBLE_PURCHASE_KINDS).default("service"),
     notes: nullableText(4000),
     engineHours: z.array(engineHoursEntry).max(20).default([]),
+    /** The intervention an `attach` goes on; ignored by the other two filings. */
+    logId: z.preprocess(
+      (value) => (value === undefined ? null : emptyToNull(value)),
+      uuid.nullable(),
+    ),
   })
   .superRefine((value, ctx) => {
+    if (value.kind !== "attach" && value.title === "") {
+      ctx.addIssue({ code: "custom", path: ["title"], message: "required" });
+    }
     if (value.kind === "log" && !value.categoryId) {
       ctx.addIssue({ code: "custom", path: ["categoryId"], message: "required" });
+    }
+    if (value.kind === "attach" && !value.logId) {
+      ctx.addIssue({ code: "custom", path: ["logId"], message: "required" });
     }
   });
 

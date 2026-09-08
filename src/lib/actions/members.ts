@@ -63,7 +63,7 @@ type InvitationMail = {
  * back the provider's id when there is one to follow afterwards (D79).
  *
  * One function because there are two callers now — the first send and the manual reminder
- * (D109) — and « the reminder is the same message » has to be true in the code, not only in the
+ * (D110) — and « the reminder is the same message » has to be true in the code, not only in the
  * intention. With a mailer configured the app sends it itself, from the HTML generated out of
  * `supabase/templates/invite.html`; without one, Supabase Auth does, with the `invite` template
  * for an address it does not know and a sign-in code for one it does. Neither of those two
@@ -352,7 +352,7 @@ function invitationStatus(row: {
 }
 
 /**
- * Sends the same invitation again, to the same address (D109).
+ * Sends the same invitation again, to the same address (D110).
  *
  * The screen had two ways out of an invitation nobody answered, and neither was this one:
  * « Annuler », which throws it away, and « Réinviter » — the bounce path of D79 — which writes a

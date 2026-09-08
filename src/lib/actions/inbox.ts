@@ -38,10 +38,14 @@ function revalidateInbox(boatId: string) {
  * A photo taken in the app, after the browser put the object in the bucket. The row is written
  * with the person's client (RLS: contribute), then read at once: the person is waiting on the
  * screen, and thirty seconds with a progress bar beat a card that says « en cours » forever.
+ *
+ * A pile dropped at once asks for `deferReading` (D109): the row is written, the response goes
+ * back, and the reading runs behind it — one reading per action, each within its own budget —
+ * while the screen's realtime subscription fills the cards in as they come out.
  */
 export async function createInboxUpload(
   input: unknown,
-): Promise<ActionResult<{ itemId: string } & AnalysisOutcome>> {
+): Promise<ActionResult<{ itemId: string; deferred: boolean } & AnalysisOutcome>> {
   const parsed = parseInput(createInboxUploadSchema, input);
   if (!parsed.ok) return parsed.result;
   const values = parsed.data;
@@ -67,9 +71,15 @@ export async function createInboxUpload(
   );
   if (error) return fail(dbErrorKey(error));
 
+  if (values.deferReading) {
+    after(() => analyseInboxItem(values.id));
+    revalidateInbox(values.boatId);
+    return ok({ itemId: values.id, deferred: true, suggestion: null, error: null });
+  }
+
   const outcome = await analyseInboxItem(values.id);
   revalidateInbox(values.boatId);
-  return ok({ itemId: values.id, ...outcome });
+  return ok({ itemId: values.id, deferred: false, ...outcome });
 }
 
 /** « Relire » — the analysis again, for a document that failed or that arrived unconfigured. */
@@ -104,10 +114,18 @@ export async function reanalyseInboxItem(input: unknown): Promise<ActionResult<A
  * refused with a conflict, and a tap that *retries* a failed one writes the same line again
  * rather than a second one — the id comes from the document (`inboxEntityId`), and the
  * attachment is read back by its path instead of being guessed.
+ *
+ * The third filing, `attach` (D109), creates nothing: the document joins the attachments of an
+ * intervention that already exists, and brings that line's own id rather than a derived one.
  */
-export async function validateInboxItem(
-  input: unknown,
-): Promise<ActionResult<{ kind: "log" | "purchase"; entityId: string; href: string }>> {
+export async function validateInboxItem(input: unknown): Promise<
+  ActionResult<{
+    kind: "log" | "purchase" | "attach";
+    entityId: string;
+    title: string;
+    href: string;
+  }>
+> {
   const parsed = parseInput(validateInboxItemSchema, input);
   if (!parsed.ok) return parsed.result;
   const values = parsed.data;
@@ -132,11 +150,34 @@ export async function validateInboxItem(
   // valider », and the second tap wrote a *second* intervention. Now the second tap re-derives
   // the same id, so `saveLog` / `upsertPurchase` update the line they already wrote (rule 11).
   // A row that already remembers what it became keeps that id, whatever it was drawn with.
-  const remembered = values.kind === "log" ? item.log_id : item.purchase_id;
-  const entityId = remembered ?? inboxEntityId(values.itemId, values.kind);
+  // An attachment brings its own id — the intervention the person picked — so nothing is derived
+  // and nothing is created; the rest of this function is unchanged for it.
+  const remembered = values.kind === "purchase" ? item.purchase_id : item.log_id;
+  const entityId =
+    values.kind === "attach"
+      ? (values.logId ?? "")
+      : (remembered ?? inboxEntityId(values.itemId, values.kind));
   const notes = values.notes;
+  // What the line is called once written — the intervention's own, for an attachment.
+  let title = values.title;
+  let date = values.date;
+  let amount = values.amount;
 
-  if (values.kind === "log") {
+  if (values.kind === "attach") {
+    // RLS scopes the read; a trashed intervention is not one a document should land on.
+    const { data: log, error: logError } = await supabase
+      .from("maintenance_logs")
+      .select("id, title, performed_at")
+      .eq("id", entityId)
+      .eq("boat_id", values.boatId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (logError) return fail(dbErrorKey(logError));
+    if (!log) return fail("errors.log_not_found");
+    title = log.title;
+    date = log.performed_at;
+    amount = null;
+  } else if (values.kind === "log") {
     const created = await saveLog({
       id: entityId,
       boatId: values.boatId,
@@ -177,7 +218,7 @@ export async function validateInboxItem(
     {
       id: crypto.randomUUID(),
       boat_id: values.boatId,
-      entity_type: values.kind === "log" ? "maintenance_log" : "purchase",
+      entity_type: values.kind === "purchase" ? "purchase" : "maintenance_log",
       entity_id: entityId,
       storage_path: item.storage_path,
       file_name: item.file_name,
@@ -208,7 +249,7 @@ export async function validateInboxItem(
     .update(
       {
         status: "validated",
-        log_id: values.kind === "log" ? entityId : null,
+        log_id: values.kind === "purchase" ? null : entityId,
         purchase_id: values.kind === "purchase" ? entityId : null,
         attachment_id: attachment?.id ?? null,
         validated_by: userId,
@@ -227,31 +268,32 @@ export async function validateInboxItem(
     getTranslations("inbox"),
     supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
   ]);
-  const kindLabel = t(`kind.${values.kind}`);
+  // An attachment is « in the carnet » on the intervention's own terms: its title, its date.
+  const kind = values.kind === "purchase" ? "purchase" : "log";
+  const kindLabel = t(`kind.${kind}`);
   const validatorName = profile?.full_name ?? profile?.email ?? "";
   after(() =>
     notifyInboxValidated({
       boatId: values.boatId,
       validatorId: userId,
       validatorName,
-      kind: values.kind,
+      kind,
       entityId,
-      title: values.title,
-      date: values.date,
-      amount: values.amount,
+      title,
+      date,
+      amount,
       kindLabel,
     }),
   );
 
   revalidateInbox(values.boatId);
-  revalidatePath(boatPath(values.boatId, values.kind === "log" ? "logs" : "supplies"));
+  revalidatePath(boatPath(values.boatId, kind === "log" ? "logs" : "supplies"));
+  if (kind === "log") revalidatePath(logPath(values.boatId, entityId));
   return ok({
     kind: values.kind,
     entityId,
-    href:
-      values.kind === "log"
-        ? logPath(values.boatId, entityId)
-        : boatPath(values.boatId, "supplies"),
+    title,
+    href: kind === "log" ? logPath(values.boatId, entityId) : boatPath(values.boatId, "supplies"),
   });
 }
 

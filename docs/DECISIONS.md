@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D110.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D111.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2288,7 +2288,58 @@ route de service worker `NetworkFirst` avec un délai réseau de 5 secondes et l
 vidé à la déconnexion — D102 étendue au service worker. `idb-keyval` reste : c'est lui qui purge
 le cache déjà installé sur les iPad d'aujourd'hui.
 
-## 2026-09-08 — D109 : une invitation se relance, elle ne se recrée pas
+## 2026-09-08 — D109 : une seule porte pour les documents
+
+**Question.** « Utilise les mêmes techniques de préremplissage quand on le fait directement depuis
+Intervention. Pense à l'orga aussi, ça fait pas un peu doublon ? » — sur une capture du Journal
+qui montre « Importer » en tête et « Importer des documents » dans la barre de filtres.
+
+**Le constat.** Trois portes pour un document, deux mécaniques. « À valider » (D91) lit le
+document — date, montant, fournisseur, système, heures moteur, lignes — et propose une carte
+pré-remplie. « Importer des documents » (E10-1), sur le Journal, ne lisait rien : chaque fichier
+devenait une intervention **titrée comme le fichier et datée d'aujourd'hui**, ou rejoignait une
+intervention choisie dans une liste. Deux écrans qui prennent le même objet et produisent la même
+chose, dont un seul sait lire. Et sur le Journal, deux boutons « Importer » côte à côte, pour un
+tableau et pour des documents, sans que le mot le dise.
+
+**Décision. Une porte, une mécanique, et ce que l'ancienne avait en plus rejoint la carte.**
+
+1. **« Importer des documents » n'est plus un écran.** Le bouton du Journal devient
+   « **Déposer des documents** » et mène à « À valider » ; `/logs/documents` redirige là pour
+   les signets. Le sélecteur de « À valider » accepte **plusieurs fichiers** (et le glisser-déposer
+   sur un ordinateur) : chaque document devient une ligne de la boîte, l'agent le lit, la carte se
+   pré-remplit — la même lecture qu'une photo ou qu'un mail, par construction et non par copie.
+   Un même bloc (`InboxDropzone`) sert l'écran et l'étape 2 de la mise en route.
+2. **La carte gagne « Intervention existante ».** C'était la seule chose que l'ancien écran
+   savait faire et que la boîte ignorait : rattacher le document à une ligne déjà écrite. La puce
+   n'apparaît que si le bateau a des interventions ; « Rattacher » accroche le document à celle
+   choisie et n'écrit rien d'autre. Elle sert aussi au courrier — la facture d'un chantier qui
+   arrive quinze jours après l'intervention notée sur le pont.
+3. **Un fichier se lit pendant qu'on attend, un lot se lit derrière.** La barre reste le bon
+   temps d'attente pour une photo (D91). Pour dix factures, elle gèlerait l'écran pendant tout le
+   lot et ferait tenir dix lectures dans le budget d'une seule action : `deferReading` renvoie la
+   réponse dès la ligne écrite et lit après (`after`), une lecture par action, chacune dans son
+   budget ; la relance périodique de l'écran (déjà là pour le courrier) remplit les cartes à mesure.
+4. **L'étape 2 « Papier ou photos » passe par la même porte.** Les photos sont lues et attendent
+   dans « À valider », que le bandeau du tableau de bord annonce dès la fin de la mise en route.
+   Avant, elles devenaient des interventions « IMG_4412 » datées du jour — exactement le carnet
+   faux que D67 avait entrepris d'empêcher.
+
+**Le Journal, après.** Deux verbes pour deux objets : « **Importer** » (un tableau, comme sur
+chaque liste) et « **Déposer des documents** ». Le nombre de taps ne bouge pas : l'ancien écran
+demandait lui aussi d'ouvrir un sélecteur une fois arrivé.
+
+**Ce qui est perdu, et assumé.** « Tout rattacher » — un tap pour dix stubs. Une carte lue mérite
+un regard avant d'entrer dans le carnet : c'est le contrat de D91, et le prix d'un carnet juste.
+Dix stubs d'aujourd'hui coûtaient dix corrections après coup ; dix cartes pré-remplies coûtent dix
+validations, avec la date et le montant déjà lus.
+
+**Ce qui n'a pas été fait.** Rattacher à un achat existant ; une lecture qui proposerait d'elle-même
+l'intervention existante à rejoindre (par date et par titre) ; pré-remplir le formulaire
+d'intervention depuis une photo prise dans le formulaire — ce serait une troisième mécanique de
+lecture, l'inverse de cette décision : le document qui doit être lu passe par « À valider ».
+
+## 2026-09-08 — D110 : une invitation se relance, elle ne se recrée pas
 
 **Question.** Capture de l'écran Membres : deux invitations, « En attente » toutes les deux,
 « expire le 21/09/2026 ». Les personnes n'ont simplement jamais ouvert le message. « Code des

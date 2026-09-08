@@ -33,7 +33,7 @@ export type InvitationRow = {
   validUntil: string | null;
   invitedByName: string | null;
   delivery: InvitationDelivery | null;
-  /** D109: when the invitation was last resent by hand, and how many times in all. */
+  /** D110: when the invitation was last resent by hand, and how many times in all. */
   remindedAt: string | null;
   reminderCount: number;
 };
@@ -62,7 +62,7 @@ export function InvitationsList({
   if (visible.length === 0) return null;
 
   /**
-   * D109: the same invitation, sent again to the same address. The server owns the rules — an
+   * D110: the same invitation, sent again to the same address. The server owns the rules — an
    * hour between two reminders, nothing to an address that bounced — and answers with the
    * sentence to show; here there is only the message that it left.
    */
@@ -132,7 +132,7 @@ export function InvitationsList({
                     ? t(`invitations.delivery.badge.${failure}`)
                     : t(`invitations.status.${i.status}`)}
                 </Badge>
-                {/* D109: waiting is not an action. « Relancer » is the one an owner has for
+                {/* D110: waiting is not an action. « Relancer » is the one an owner has for
                     somebody who never opened the message — the same link, fourteen days more.
                     It disappears for an address that bounced or pressed « spam »: nothing more
                     will reach it, and the red panel below offers the only real way out. */}

@@ -491,7 +491,7 @@ Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, u
 |---|---|---|---|
 | id | uuid | PK | tiré côté client pour une photo (règle 11) ; par le webhook pour un e-mail |
 | boat_id | uuid | FK boats on delete cascade | |
-| source | inbox_source | not null | `email` / `upload` |
+| source | inbox_source | not null | `email` / `upload` — `upload` couvre la photo, le sélecteur multiple et le glisser-déposer de « À valider », et l'étape 2 de la mise en route (D95) |
 | status | inbox_status | not null default 'received' | `received` → `analysing` → `ready` (avec ou sans `suggestion`) → `validated` / `dismissed` ; `dismissed` → `ready` par « Réouvrir » (D93), `validated` ne revient jamais |
 | received_at | timestamptz | not null default now() | |
 | sender_email / sender_name / subject | text | | l'expéditeur, affiché sur la carte, jamais utilisé pour décider quoi que ce soit |
@@ -499,7 +499,7 @@ Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, u
 | storage_path | text | not null unique, check `boat_id_from_storage_path(storage_path) is not distinct from boat_id` | `boats/{boat_id}/inbox/{item_id}.{ext}` dans `boat-files` ; le document garde ce chemin après validation, la ligne `attachments` créée pointe dessus |
 | suggestion | jsonb | null | la lecture du document par Claude (`inboxSuggestionSchema`), revalidée à la lecture |
 | error_key | text | null | pourquoi il n'y a pas de suggestion : `notConfigured`, `unsupportedFormat`, `download`, `analysis`, `refused` |
-| log_id / purchase_id / attachment_id | uuid | FK on delete set null | ce que la validation a produit |
+| log_id / purchase_id / attachment_id | uuid | FK on delete set null | ce que la validation a produit — ou, pour un rattachement à une intervention existante (D95), la ligne rejointe : `log_id` + `attachment_id`, rien de créé |
 | validated_by / validated_at | | | |
 | external_ref | text | unique `(boat_id, external_ref)` | idempotence du webhook : `resend:{email_id}:{attachment_id}` |
 | created_by / updated_by / created_at / updated_at | | | `created_by` null pour un e-mail (écrit par la clé service) |

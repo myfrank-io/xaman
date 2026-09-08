@@ -77,17 +77,9 @@ export function logsPath(
 }
 
 /**
- * « Importer des documents » (E10-1): a batch of invoices and photos dropped at once, each
- * attached to an intervention or turned into one.
+ * « À valider » (D91, D109): the documents that arrived by mail, by photo or by the pile dropped
+ * from the journal, waiting to be filed. The one door for documents.
  */
-export function importDocumentsPath(
-  boatId: string,
-  query?: Record<string, string | number | undefined>,
-): string {
-  return withQuery(`${boatPath(boatId, "logs")}/documents`, query);
-}
-
-/** « À valider » (D91): the documents that arrived by mail or by photo, waiting to be filed. */
 export function inboxPath(boatId: string): string {
   return boatPath(boatId, "inbox");
 }

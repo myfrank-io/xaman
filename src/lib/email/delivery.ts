@@ -153,7 +153,7 @@ export async function refreshInvitationDeliveries(
         shouldAskAgain(
           {
             status: row.delivery_status,
-            // The last message this invitation sent, which a reminder replaces (D109): the ten
+            // The last message this invitation sent, which a reminder replaces (D110): the ten
             // minutes worth watching closely follow the send, not the invitation's birthday.
             sentAt: row.reminded_at ?? row.created_at,
             askedAt: row.delivery_updated_at,

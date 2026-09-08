@@ -12,7 +12,7 @@ import {
 } from "@/lib/invitations";
 
 /**
- * The rules of a manual reminder (D109). They live in one pure module because two callers read
+ * The rules of a manual reminder (D110). They live in one pure module because two callers read
  * them — the Server Action, which decides, and the Membres screen, which shows the button — and
  * a button offered for an action the server refuses is worse than no button at all.
  */
