@@ -51,18 +51,27 @@ export function DueLabel({
   if (value === null || !Number.isFinite(value)) return null;
 
   const overdue = status === "overdue" || value < 0;
+  // Une échéance du jour se dit « aujourd'hui », jamais « dans 0 j » : c'est la ligne que le
+  // point rouge de l'onglet annonce, elle doit se lire comme telle (D81).
+  const today = !overdue && Math.round(value) === 0 && unit === "j";
   const amount = numberFr.format(Math.abs(Math.round(value)));
   const text = overdue
     ? compact
       ? `${amount} ${unit}`
       : `${amount} ${unit} de retard`
-    : `dans ${amount} ${unit}`;
+    : today
+      ? t("today").toLocaleLowerCase("fr-FR")
+      : `dans ${amount} ${unit}`;
 
   return (
     <span
       className={cn(
         "num text-num-sm font-semibold whitespace-nowrap",
-        overdue ? "text-state-overdue-fg" : status === "soon" ? "text-state-soon-fg" : "text-ink-2",
+        overdue || today
+          ? "text-state-overdue-fg"
+          : status === "soon"
+            ? "text-state-soon-fg"
+            : "text-ink-2",
         className,
       )}
     >

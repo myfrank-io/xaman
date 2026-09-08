@@ -25,6 +25,8 @@
     "yes": "Oui",
     "no": "Non",
     "today": "Aujourd'hui",
+    "attention": "{count, plural, =0 {rien à faire aujourd'hui} one {# chose à faire aujourd'hui} other {# choses à faire aujourd'hui}}",
+    "attentionDot": "À faire aujourd'hui",
     "empty": "Rien à afficher pour le moment.",
     "seeAll": "Tout afficher",
     "viewAll": "Voir tout",
@@ -107,7 +109,8 @@
     "never": "À faire",
     "ok": "OK",
     "soon": "Bientôt",
-    "overdue": "En retard"
+    "overdue": "En retard",
+    "today": "Aujourd'hui"
   },
   "enginePosition": {
     "port": "Bâbord",
@@ -634,6 +637,7 @@
       "soonHint": "sous 30 jours ou 25 h",
       "openLogs": "Interventions",
       "openLogsHint": "{count, plural, =0 {aucune ouverte} one {dont # urgente} other {dont # urgentes}}",
+      "openLogsDue": "{count, plural, one {dont # à faire aujourd'hui} other {dont # à faire aujourd'hui}}",
       "expenses": "Dépenses {year}",
       "expensesHint": "{count, plural, one {# ligne} other {# lignes}}"
     },
@@ -900,7 +904,11 @@
       }
     },
     "attachments": "{count, plural, one {# document joint} other {# documents joints}}",
-    "subtitle": "Ce qui a été fait à bord. Une intervention peut valider des points de la checklist."
+    "subtitle": "Ce qui a été fait à bord. Une intervention peut valider des points de la checklist.",
+    "due": {
+      "today": "Aujourd'hui",
+      "late": "{count, plural, one {# j de retard} other {# j de retard}}"
+    }
   },
   "checklist": {
     "title": "Checklist",
@@ -925,6 +933,8 @@
     "card": {
       "points": "{count, plural, one {# point} other {# points}}",
       "overdue": "{count, plural, one {# en retard} other {# en retard}}",
+      "attention": "{count, plural, one {# à faire} other {# à faire}}",
+      "dueToday": "{count, plural, one {# aujourd'hui} other {# aujourd'hui}}",
       "neverDone": "jamais fait",
       "upToDate": "à jour",
       "punctual": "{count, plural, one {# contrôle ponctuel} other {# contrôles ponctuels}}",

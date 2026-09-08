@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
-import { isPunctual } from "@/components/checklist/rows";
+import { isDueToday, isPunctual } from "@/components/checklist/rows";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ChecklistStateBadge } from "@/components/common/ChecklistStateBadge";
 import { DueLabel } from "@/components/common/DueLabel";
@@ -63,7 +63,16 @@ export function ChecklistItemRow({
   const punctual = isPunctual(row);
   return (
     <ListRow
-      lead={<ChecklistStateBadge state={row.status} className="w-24 justify-center" />}
+      lead={
+        <ChecklistStateBadge
+          state={row.status}
+          dueToday={isDueToday(row)}
+          // 112 px et non 96 : « AUJOURD'HUI » est le plus long des états, et à 96 px il
+          // passait par-dessus le titre. La colonne du bandeau en fait 104, le reste tient
+          // dans sa gouttière — les titres, eux, ne bougent pas d'un pixel.
+          className="w-28 justify-center"
+        />
+      }
       title={row.label}
       meta={
         <>

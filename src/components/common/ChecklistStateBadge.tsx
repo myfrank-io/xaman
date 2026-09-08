@@ -31,22 +31,38 @@ const stateIcons = {
   overdue: TriangleAlertIcon,
 } as const;
 
+/**
+ * `dueToday` : ce qui tombe dans la journée porte son propre mot et la teinte rouge (D81).
+ * « Bientôt » couvre trente jours ; l'écrire sur ce qui est à faire avant ce soir est
+ * exactement ce qui empêchait de trouver la ligne que le point rouge de l'onglet annonce.
+ */
 export function ChecklistStateBadge({
   state,
+  dueToday = false,
   size = "md",
   className,
 }: {
   state: ChecklistState;
+  dueToday?: boolean;
   size?: "sm" | "md" | "default";
   className?: string;
 }) {
   const t = useTranslations("checklistState");
+  const today = dueToday && state !== "overdue";
   const Icon = stateIcons[state];
 
   return (
-    <Badge variant="outline" size={size} className={cn(stateClasses[state], className)}>
-      <Icon aria-hidden />
-      {t(state)}
+    <Badge
+      variant="outline"
+      size={size}
+      className={cn(today ? stateClasses.overdue : stateClasses[state], className)}
+    >
+      {/* « AUJOURD'HUI » est le plus long des libellés : avec une icône il ne tient pas dans la
+          colonne d'état, et compter sur le rétrécissement du SVG dépendrait du moteur — sur
+          Safari il déborderait sur le titre. Le mot porte seul, la couleur ne travaille donc
+          jamais seule pour autant (règle DA). */}
+      {today ? null : <Icon aria-hidden />}
+      {today ? t("today") : t(state)}
     </Badge>
   );
 }

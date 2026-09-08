@@ -12,8 +12,10 @@ import { LogsToolbar, type LogsFilters } from "@/components/logs/LogsToolbar";
 import { firstParam } from "@/components/logs/log-form-values";
 import { toLogRow } from "@/components/logs/rows";
 import { Button } from "@/components/ui/button";
+import { todayString } from "@/lib/format";
 import { NO_MATCH_ID, STOCK_FILTER } from "@/lib/logs-filters";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadLogAttention } from "@/lib/queries/attention";
 import { importPath, logsPath, logsReviewPath, newLogPath } from "@/lib/queries/boat-routes";
 import { LOG_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
 import { createClient } from "@/lib/supabase/server";
@@ -101,29 +103,39 @@ export default async function LogsPage({
   if (filters.contact) rowsQuery = rowsQuery.eq("contact_id", filters.contact);
   if (query) rowsQuery = rowsQuery.or(`title.ilike.%${query}%,notes.ilike.%${query}%`);
 
-  const [{ data: rows, count }, { count: reviewCount }, { data: categories }, { data: contact }] =
-    await Promise.all([
-      tab === "history"
-        ? rowsQuery
-            .order("performed_at", { ascending: false })
-            .order("created_at", { ascending: false })
-            .limit(limit)
-        : rowsQuery.order("performed_at", { ascending: true }).limit(limit),
-      supabase
-        .from("maintenance_logs_view")
-        .select("id", { count: "exact", head: true })
-        .eq("boat_id", boatId)
-        .eq("needs_review", true),
-      supabase
-        .from("boat_categories")
-        .select("id, name, color, icon")
-        .eq("boat_id", boatId)
-        .eq("is_active", true)
-        .order("sort_order"),
-      filters.contact
-        ? supabase.from("contacts").select("name").eq("id", filters.contact).maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+  const today = todayString();
+  const [
+    { data: rows, count },
+    { count: reviewCount },
+    { data: categories },
+    { data: contact },
+    attentionCount,
+  ] = await Promise.all([
+    tab === "history"
+      ? rowsQuery
+          .order("performed_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(limit)
+      : rowsQuery.order("performed_at", { ascending: true }).limit(limit),
+    supabase
+      .from("maintenance_logs_view")
+      .select("id", { count: "exact", head: true })
+      .eq("boat_id", boatId)
+      .eq("needs_review", true),
+    supabase
+      .from("boat_categories")
+      .select("id, name, color, icon")
+      .eq("boat_id", boatId)
+      .eq("is_active", true)
+      .order("sort_order"),
+    filters.contact
+      ? supabase.from("contacts").select("name").eq("id", filters.contact).maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Le point rouge de l'onglet Journal, rejoué sur l'onglet « Prévu » : il compte les
+    // interventions du jour, pas celles que la liste affiche (filtres compris) — le même
+    // nombre que la navigation, sinon suivre le point mènerait à une liste sans point (D81).
+    loadLogAttention(supabase, boatId, today),
+  ]);
 
   const list = (rows ?? []).map(toLogRow);
   // « Prévu »: what is urgent comes first, then the closest date (the view cannot order on an
@@ -183,7 +195,7 @@ export default async function LogsPage({
         }
       />
 
-      <LogsTabs boatId={boatId} active={tab} />
+      <LogsTabs boatId={boatId} active={tab} attentionCount={attentionCount} />
 
       <LogsToolbar
         boatId={boatId}
@@ -233,7 +245,7 @@ export default async function LogsPage({
         )
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-          <LogsList boatId={boatId} rows={list} />
+          <LogsList boatId={boatId} rows={list} today={today} />
         </div>
       )}
 

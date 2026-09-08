@@ -11,6 +11,7 @@ import { LogDetail } from "@/components/logs/LogDetail";
 import { LogForm } from "@/components/logs/LogForm";
 import { LogsList } from "@/components/logs/LogsList";
 import { LogsToolbar } from "@/components/logs/LogsToolbar";
+import { todayString } from "@/lib/format";
 
 import { DEV_ATTACHMENTS } from "../attachments/sample";
 import { DevShell, DEV_BOAT_ID } from "../DevShell";
@@ -102,7 +103,7 @@ export default async function DevLogsPage() {
             canContribute
           />
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-            <LogsList boatId={DEV_BOAT_ID} rows={DEV_LOG_ROWS} />
+            <LogsList boatId={DEV_BOAT_ID} rows={DEV_LOG_ROWS} today={todayString()} />
           </div>
         </Section>
 
