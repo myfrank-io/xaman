@@ -6,7 +6,7 @@ import { COST_MAX } from "@/lib/schemas/logs";
 import { PURCHASE_AMOUNT_MAX, VISIBLE_PURCHASE_KINDS } from "@/lib/schemas/purchases";
 
 /**
- * The inbox (D84): documents that arrive on their own — mailed to the boat's address, or
+ * The inbox (D91): documents that arrive on their own — mailed to the boat's address, or
  * photographed in the app — and wait for someone to turn them into an intervention or a purchase.
  */
 export const INBOX_SOURCES = ["email", "upload"] as const;

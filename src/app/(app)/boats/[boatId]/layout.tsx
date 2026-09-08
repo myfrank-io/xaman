@@ -77,7 +77,7 @@ export default async function BoatLayout({
     label: tn(key),
     shortLabel: tn.has(`short.${key}`) ? tn(`short.${key}`) : undefined,
     badge: badges[key] || undefined,
-    // Not a red dot (D81 — nothing here is due today): a count beside « À valider » (D84).
+    // Not a red dot (D81 — nothing here is due today): a count beside « À valider » (D91).
     hint: key === "inbox" && inboxPending > 0 ? String(inboxPending) : undefined,
   }));
 

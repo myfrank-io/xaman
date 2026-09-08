@@ -71,7 +71,7 @@ export async function uploadAttachmentFile({
 
 /**
  * The same journey for an object whose path is not an attachment's — a document of the inbox
- * (D84) lives under `boats/{boatId}/inbox/`. The path is decided once the file is prepared,
+ * (D91) lives under `boats/{boatId}/inbox/`. The path is decided once the file is prepared,
  * because the extension follows the re-encoding (« facture.HEIC » is stored as a JPEG).
  */
 export async function uploadFileTo({

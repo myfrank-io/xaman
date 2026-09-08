@@ -1,5 +1,5 @@
 -- 0026_inbox.sql — documents that arrive on their own, and become interventions once someone
--- has looked at them (D84).
+-- has looked at them (D91).
 --
 -- « Je prends en photo mon ticket de caisse, ça l'analyse et ça crée automatiquement la facture
 -- adéquate » ; « chaque bateau a une adresse e-mail dédiée : un fichier envoyé en pièce jointe
@@ -32,7 +32,7 @@ alter table public.boats
 create unique index if not exists boats_inbox_token_key on public.boats (inbox_token);
 
 comment on column public.boats.inbox_token is
-  'The random part of the boat''s inbound address (D84): <slug>-<token>@<INBOUND_EMAIL_DOMAIN>. '
+  'The random part of the boat''s inbound address (D91): <slug>-<token>@<INBOUND_EMAIL_DOMAIN>. '
   'The app matches an incoming mail on this token alone.';
 
 -- ---------------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ create table if not exists public.inbox_items (
 );
 
 comment on table public.inbox_items is
-  'Documents received by mail or photographed in the app, with the intervention or purchase the analysis proposes (D84). A row is a proposal until an owner or editor validates it.';
+  'Documents received by mail or photographed in the app, with the intervention or purchase the analysis proposes (D91). A row is a proposal until an owner or editor validates it.';
 
 create index if not exists inbox_items_boat_status_idx on public.inbox_items (boat_id, status, received_at desc);
 

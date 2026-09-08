@@ -1,7 +1,7 @@
 -- 0024_propulsion_and_navigation_zone.sql — a checklist that knows what kind of engine it has,
 -- and how far the boat goes.
 --
--- Two remarks from the first owner of a motor boat to look at the app (D83):
+-- Two remarks from the first owner of a motor boat to look at the app (D90):
 --
 --   « quand je mets semi-rigide par exemple, que ce soit que des trucs liés au bateau à moteur »
 --   « demander aussi si le bateau est côtier ou hauturier — la checklist d'un côtier c'est plus
@@ -62,7 +62,7 @@ update public.engines e
  where b.id = e.boat_id;
 
 comment on column public.engines.propulsion is
-  'outboard | shaft | saildrive | sterndrive | jet (D83). What apply_checklist_template matches '
+  'outboard | shaft | saildrive | sterndrive | jet (D90). What apply_checklist_template matches '
   'engine_scope on; position only says where the engine sits.';
 
 -- ---------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ alter table public.boats
   add column if not exists navigation_zone public.navigation_zone not null default 'offshore';
 
 comment on column public.boats.navigation_zone is
-  'coastal | offshore (D83). A template point with zone_scope = ''offshore'' is not applied to a '
+  'coastal | offshore (D90). A template point with zone_scope = ''offshore'' is not applied to a '
   'coastal boat. Default offshore: an existing boat loses nothing.';
 
 -- ---------------------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ comment on column public.checklist_template_items.engine_scope is
   'duplicates the item per matching active engine (engine_scope_matches on engines.propulsion). '
   'inboard = any propulsion but outboard.';
 comment on column public.checklist_template_items.zone_scope is
-  'all | offshore — an offshore point is skipped on a coastal boat (boats.navigation_zone, D83).';
+  'all | offshore — an offshore point is skipped on a coastal boat (boats.navigation_zone, D90).';
 
 -- The one place the matching is written.
 create or replace function public.engine_scope_matches(
@@ -122,7 +122,7 @@ as $$
 $$;
 
 comment on function public.engine_scope_matches(text, public.engine_propulsion) is
-  'Whether a template point of this engine_scope applies to an engine of this propulsion (D83). '
+  'Whether a template point of this engine_scope applies to an engine of this propulsion (D90). '
   'all → every engine; none → no engine; inboard → anything but an outboard; outboard → an outboard; '
   'shaft / saildrive / sterndrive / jet → that propulsion exactly.';
 
@@ -175,7 +175,7 @@ begin
     for v_item in
       select * from public.checklist_template_items ti where ti.template_category_id = v_cat.id order by ti.sort_order
     loop
-      -- A coastal boat does not carry the offshore points (D83). The category is still created
+      -- A coastal boat does not carry the offshore points (D90). The category is still created
       -- above: a system exists even when this plan has nothing to put in it yet.
       if v_item.zone_scope = 'offshore' and v_zone = 'coastal' then
         continue;
@@ -210,7 +210,7 @@ end;
 $$;
 
 comment on function public.apply_checklist_template(uuid, uuid, uuid) is
-  'Instantiates a template on a boat: categories upserted on (boat_id, external_ref), points inserted once (do nothing on conflict), engine-scoped points duplicated per active engine whose propulsion matches (engine_scope_matches), offshore points skipped on a coastal boat (D83), anchor_date stamped (D1). p_engine_id restricts to one engine (« Générer les points de ce moteur »).';
+  'Instantiates a template on a boat: categories upserted on (boat_id, external_ref), points inserted once (do nothing on conflict), engine-scoped points duplicated per active engine whose propulsion matches (engine_scope_matches), offshore points skipped on a coastal boat (D90), anchor_date stamped (D1). p_engine_id restricts to one engine (« Générer les points de ce moteur »).';
 
 -- ---------------------------------------------------------------------------------------------
 -- 5. create_boat — the zone, and the propulsion of each engine
@@ -345,7 +345,7 @@ $$;
 drop function if exists public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid);
 
 comment on function public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid, public.navigation_zone) is
-  'Onboarding (D65, D69, D83): creates a boat from its own identity — name, hull type, free-text builder and model, navigation zone — makes the caller its owner, creates its engines ([{label, position, propulsion?}], 6 max) and copies the systems of the matching generic model. p_boat_model_id, when it names an active catalogue row, contributes the dimensions and nothing else. No maintenance plan: checklist_template_id stays null until one is chosen in the app. Idempotent on p_boat_id for the caller.';
+  'Onboarding (D65, D69, D90): creates a boat from its own identity — name, hull type, free-text builder and model, navigation zone — makes the caller its owner, creates its engines ([{label, position, propulsion?}], 6 max) and copies the systems of the matching generic model. p_boat_model_id, when it names an active catalogue row, contributes the dimensions and nothing else. No maintenance plan: checklist_template_id stays null until one is chosen in the app. Idempotent on p_boat_id for the caller.';
 
 revoke all on function public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid, public.navigation_zone) from public, anon;
 grant execute on function public.create_boat(uuid, text, public.boat_type, text, text, jsonb, uuid, public.navigation_zone) to authenticated, service_role;
@@ -377,4 +377,4 @@ as $$
 $$;
 
 comment on function public.generic_template_for_boat_type(public.boat_type) is
-  'The generic model whose systems describe a given hull (D65, D83). A trimaran maps to the catamaran model, a semi-rigide to its own (falling back to the motor one), « autre » to the sailing monohull.';
+  'The generic model whose systems describe a given hull (D65, D90). A trimaran maps to the catamaran model, a semi-rigide to its own (falling back to the motor one), « autre » to the sailing monohull.';

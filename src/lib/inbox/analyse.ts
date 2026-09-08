@@ -18,7 +18,7 @@ import type { InboxErrorKey, InboxSuggestion } from "@/lib/schemas/inbox";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Reads one document of the inbox and writes what it proposes (D84).
+ * Reads one document of the inbox and writes what it proposes (D91).
  *
  * Runs with the service key, because it runs where there is no session: after the webhook has
  * answered the mailer, or behind a Server Action on behalf of the person who took the photo. The

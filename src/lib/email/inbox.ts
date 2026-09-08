@@ -7,7 +7,7 @@ import {
 import { renderTemplate } from "@/lib/email/render";
 
 /**
- * The two e-mails of the inbox (D84): « un document est arrivé, il attend votre validation », and
+ * The two e-mails of the inbox (D91): « un document est arrivé, il attend votre validation », and
  * « c'est validé ». Same shell as every other e-mail of the app, generated from one source; the
  * placeholders are resolved here.
  */

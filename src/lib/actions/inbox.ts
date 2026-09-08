@@ -19,7 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
 
 /**
- * The inbox (D84): what turns a document into a line of the carnet, and only on a person's tap.
+ * The inbox (D91): what turns a document into a line of the carnet, and only on a person's tap.
  *
  * Reading a document runs with the service key (`analyseInboxItem`): it is the same reading for
  * a photo and for a mail, and neither has a session where it runs. Everything that writes the

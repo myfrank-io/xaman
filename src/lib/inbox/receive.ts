@@ -15,7 +15,7 @@ import { inboxStoragePath, inboxTokenFromAddress } from "@/lib/schemas/inbox";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * The boat's own address (D84): `<slug>-<token>@<INBOUND_EMAIL_DOMAIN>`. Without the domain the
+ * The boat's own address (D91): `<slug>-<token>@<INBOUND_EMAIL_DOMAIN>`. Without the domain the
  * feature is simply absent — no address on the Bateau screen, and an inbound event is ignored.
  */
 export function inboundDomain(): string | null {
@@ -32,7 +32,7 @@ export type ReceivedMail = {
 };
 
 /**
- * A message reached a boat's address: its attachments become rows of the inbox (D84).
+ * A message reached a boat's address: its attachments become rows of the inbox (D91).
  *
  * Service key throughout — a webhook has no session. The boat is found by the token of the
  * address, never by its name; an address that names no boat is answered « ignored », not an

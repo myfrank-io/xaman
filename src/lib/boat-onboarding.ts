@@ -131,7 +131,7 @@ export function defaultEngineCount(boatType: BoatType | null | undefined): Engin
 }
 
 /**
- * What drives the engines (D83): « entre hors-bord, in-bord, jet, semi hors-bord… sur moteur t'as
+ * What drives the engines (D90): « entre hors-bord, in-bord, jet, semi hors-bord… sur moteur t'as
  * une tonne de trucs ». The propulsion is what a template point's `engine_scope` matches on, so
  * it decides which points each engine collects — a Z-drive's bellows, a shaft line's stern gland,
  * an outboard's gear oil — and it is asked here, once, for all the engines of the boat.
@@ -160,7 +160,7 @@ export function defaultPropulsion(boatType: BoatType | null | undefined): Engine
 }
 
 /**
- * « Côtier ou hauturier » (D83). A coastal boat is not asked about the liferaft, the EPIRB or the
+ * « Côtier ou hauturier » (D90). A coastal boat is not asked about the liferaft, the EPIRB or the
  * AIS: `apply_checklist_template` leaves the offshore points out of its plan.
  *
  * Pre-set from the hull, in the direction that costs least when wrong. A motor boat or a
@@ -178,7 +178,7 @@ export function defaultNavigationZone(boatType: BoatType | null | undefined): Na
  *
  * The propulsion is not cosmetic: `apply_checklist_template` matches `engine_scope` on it, so an
  * outboard filed as a shaft line would collect the inboard points (impeller, stern gland) and
- * none of its own. The position, since D83, only says where the engine sits — except for the
+ * none of its own. The position, since D90, only says where the engine sits — except for the
  * single outboard, which keeps the `outboard` position the app has always given it (there is no
  * side to a lone engine on a transom, and « Hors-bord » is what its card should say).
  */

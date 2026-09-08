@@ -52,7 +52,7 @@ const templateFile = z.object({
           engine_scope: z
             .enum(["none", "inboard", "outboard", "all", "shaft", "saildrive", "sterndrive", "jet"])
             .optional(),
-          /** `offshore` on a point a coastal boat does not carry (D83); absent = all. */
+          /** `offshore` on a point a coastal boat does not carry (D90); absent = all. */
           zone_scope: z.enum(["all", "offshore"]).optional(),
           source: z.enum(["briefing", "proposal", "builder"]).optional(),
           actions: z.array(z.string()).optional(),
@@ -93,7 +93,7 @@ const boatFile = z.object({
       external_ref: z.string(),
       label: z.string(),
       position: z.enum(["port", "starboard", "center", "outboard"]),
-      /** What drives it (D83); an outboard position means an outboard, anything else a shaft. */
+      /** What drives it (D90); an outboard position means an outboard, anything else a shaft. */
       propulsion: z.enum(["outboard", "shaft", "saildrive", "sterndrive", "jet"]).optional(),
       brand: nullableText,
       model: nullableText,

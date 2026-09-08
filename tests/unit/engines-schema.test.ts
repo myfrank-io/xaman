@@ -39,8 +39,8 @@ describe("upsertEngineSchema — tracksHours (D73)", () => {
   });
 });
 
-// D83: what drives the engine is what the plan matches its points on, so it is never guessed.
-describe("upsertEngineSchema — propulsion (D83)", () => {
+// D90: what drives the engine is what the plan matches its points on, so it is never guessed.
+describe("upsertEngineSchema — propulsion (D90)", () => {
   it("accepts the five drives", () => {
     for (const propulsion of ["outboard", "shaft", "saildrive", "sterndrive", "jet"]) {
       expect(upsertEngineSchema.parse(engine({ propulsion })).propulsion).toBe(propulsion);

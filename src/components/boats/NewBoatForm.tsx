@@ -53,12 +53,12 @@ type NewBoatFormState = {
   boatId: string;
   name: string;
   type: string;
-  /** Côtier ou hauturier (D83): what the plan leaves out. */
+  /** Côtier ou hauturier (D90): what the plan leaves out. */
   navigationZone: string;
   builder: string;
   model: string;
   engineCount: string;
-  /** What drives the engines (D83): what each of them collects from the plan. */
+  /** What drives the engines (D90): what each of them collects from the plan. */
   propulsion: EnginePropulsion;
   /** The annexe's outboard (D68) — an engine like any other, appended after the boat's own. */
   tender: TenderChoice;
@@ -329,7 +329,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
 
       {/* Asked once for all the engines, and only when there is one to ask about. The chips
           follow the hull — a semi-rigide is not offered a saildrive — and the first is pre-set,
-          so the common case costs no tap (D83). */}
+          so the common case costs no tap (D90). */}
       {engineCount > 0 ? (
         <Field
           id={`boat-propulsion-${propulsions[0] ?? "shaft"}`}
@@ -383,7 +383,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
         </Field>
       ) : null}
 
-      {/* « Côtier ou hauturier » (D83): the one question that makes a coastal list shorter. Pre-set
+      {/* « Côtier ou hauturier » (D90): the one question that makes a coastal list shorter. Pre-set
           from the hull, editable later on the Bateau screen. */}
       <Field id="boat-zone-coastal" label={t("zone")} help={t("zoneHelp")}>
         <Controller

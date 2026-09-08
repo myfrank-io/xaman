@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * What the mailer posts when a message reaches the boat's address (D84).
+ * What the mailer posts when a message reaches the boat's address (D91).
  *
  * Resend delivers an `email.received` event for every inbound message on a receiving domain, in
  * the same signed envelope as the delivery events of D79 (Svix headers, `type`, `created_at`,

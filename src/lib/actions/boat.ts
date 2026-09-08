@@ -20,7 +20,7 @@ export async function updateBoat(input: unknown): Promise<ActionResult> {
   const userId = await currentUserId(supabase);
   if (!userId) return fail("errors.forbidden");
 
-  // Read before write (D83): a boat that goes from côtier to hauturier gets the offshore points
+  // Read before write (D90): a boat that goes from côtier to hauturier gets the offshore points
   // of its plan afterwards, and only that transition asks for anything.
   const { data: before, error: readError } = await supabase
     .from("boats")

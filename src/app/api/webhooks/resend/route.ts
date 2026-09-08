@@ -20,7 +20,7 @@ import { inboundFromEvent } from "@/lib/inbox/resend-inbound";
  * accepted. Nothing else in the app depends on it — without the webhook the screen still catches
  * up by asking (`refreshInvitationDeliveries`), only a minute later rather than at once.
  *
- * Since D84 the same endpoint receives `email.received`: a message sent to a boat's own address.
+ * Since D91 the same endpoint receives `email.received`: a message sent to a boat's own address.
  * Its attachments become rows of the inbox before the mailer gets its answer — the bytes have to
  * be fetched while the event is fresh — and the reading of each document, which takes as long as
  * a Claude call, runs after the response (`after`), then one e-mail tells the crew.
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
-  // A message for a boat (D84). « Ignored » for an address that is nobody's: retrying would not
+  // A message for a boat (D91). « Ignored » for an address that is nobody's: retrying would not
   // make it somebody's.
   const inbound = inboundFromEvent(payload);
   if (inbound) {

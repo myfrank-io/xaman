@@ -128,7 +128,7 @@ export function BoatIdentity({
   templateName: string | null;
   /** The catalogue (D69) — suggestions here, and the dimensions of a model that is tapped. */
   models: BoatModelOption[];
-  /** Where to mail the invoices (D84); null while no receiving domain is configured. */
+  /** Where to mail the invoices (D91); null while no receiving domain is configured. */
   inboxAddress?: string | null;
 }) {
   const t = useTranslations("boat.identity");
@@ -384,7 +384,7 @@ export function BoatIdentity({
                 ))}
               </NativeSelect>
             </Field>
-            {/* Côtier ou hauturier (D83). Going offshore re-applies the plan and adds its offshore
+            {/* Côtier ou hauturier (D90). Going offshore re-applies the plan and adds its offshore
                 points; going coastal takes nothing away — the help says both. */}
             <Field
               id="boat-zone"

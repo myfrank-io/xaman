@@ -86,7 +86,7 @@ function draftFrom(item: InboxItem, suggestion: InboxSuggestion | null): Draft {
 }
 
 /**
- * One document of the inbox (D84): the file on the left, what the reading proposes on the right,
+ * One document of the inbox (D91): the file on the left, what the reading proposes on the right,
  * every field editable, and two buttons. « Valider » is the tap that writes the carnet; nothing
  * is written before it, and the person sees exactly what will be.
  */

@@ -85,7 +85,7 @@ export default async function BoatPage({
         .maybeSingle()
     : { data: null };
 
-  // The boat's own address (D84), when a receiving domain is configured.
+  // The boat's own address (D91), when a receiving domain is configured.
   const domain = inboundDomain();
 
   const hoursByEngine = new Map(

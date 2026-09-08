@@ -34,7 +34,7 @@ const CAPTURE_PROGRESS: Record<CaptureStage, number> = {
 };
 
 /**
- * « À valider » (D84).
+ * « À valider » (D91).
  *
  * Two ways in at the top — the camera, and the boat's own address to copy — then the documents
  * waiting for a decision, newest first, then the last ones filed. A document that arrived by mail

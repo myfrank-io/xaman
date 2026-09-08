@@ -28,7 +28,7 @@ const CONTACT = "00000000-0000-4000-8000-0000000000d1";
 const ENGINE = "00000000-0000-4000-8000-0000000000e1";
 
 /**
- * D84 — « chaque bateau a une adresse e-mail dédiée » and « je prends en photo mon ticket, ça
+ * D91 — « chaque bateau a une adresse e-mail dédiée » and « je prends en photo mon ticket, ça
  * l'analyse ». What follows is the pure half of that: the address, the event the mailer posts,
  * and the reading made safe before it reaches a card.
  */

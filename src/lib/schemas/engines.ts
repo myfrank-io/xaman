@@ -14,7 +14,7 @@ export const enginePositionSchema = z.enum(["port", "starboard", "center", "outb
 export type EnginePosition = z.infer<typeof enginePositionSchema>;
 
 /**
- * What drives the engine (D83): an outboard, an in-bord on a shaft line, a saildrive, a Z-drive
+ * What drives the engine (D90): an outboard, an in-bord on a shaft line, a saildrive, a Z-drive
  * (« semi hors-bord ») or a jet. It is what a template point's `engine_scope` is matched on —
  * the position only says where the engine sits.
  */

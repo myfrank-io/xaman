@@ -104,7 +104,7 @@ values
   ('00000000-0000-0000-0000-000000008002', '00000000-0000-0000-0000-00000000b001', 'maintenance_log', '00000000-0000-0000-0000-000000002002', 'boats/00000000-0000-0000-0000-00000000b001/maintenance_log/00000000-0000-0000-0000-000000002002/facture.pdf', 'facture.pdf', 'application/pdf', 4321, 'Facture pro', '00000000-0000-0000-0000-000000000013')
 on conflict (id) do nothing;
 
--- inbox (D84): one document mailed to the boat, read and waiting for a decision
+-- inbox (D91): one document mailed to the boat, read and waiting for a decision
 insert into public.inbox_items (id, boat_id, source, status, sender_email, subject, file_name, mime_type, size_bytes, storage_path, suggestion, external_ref)
 values ('00000000-0000-0000-0000-000000009001', '00000000-0000-0000-0000-00000000b001', 'email', 'ready', 'compta@chantier.test', 'Facture 118', 'facture-118.pdf', 'application/pdf', 12345,
   'boats/00000000-0000-0000-0000-00000000b001/inbox/00000000-0000-0000-0000-000000009001.pdf',

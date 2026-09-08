@@ -370,7 +370,7 @@ describe("insert", () => {
 });
 
 /**
- * The inbox (D84, migration 0026). Members read it, contributors add to it — a pro photographing
+ * The inbox (D91, migration 0026). Members read it, contributors add to it — a pro photographing
  * the invoice of their own work — and only owner / editor validate or dismiss, because that is
  * what writes the carnet. Nobody deletes: a dismissed document is a status.
  */
@@ -563,7 +563,7 @@ describe("create_boat", () => {
   });
 
   /**
-   * D83. « Quand je mets semi-rigide, que ce soit que des trucs liés au bateau à moteur », and
+   * D90. « Quand je mets semi-rigide, que ce soit que des trucs liés au bateau à moteur », and
    * « la checklist d'un côtier c'est plus simple »: a coastal semi-rigide with one outboard gets
    * the semi-rigide systems, the outboard's own points, and neither the liferaft nor a jet's.
    */
@@ -615,7 +615,7 @@ describe("create_boat", () => {
   });
 
   /**
-   * D83. Going offshore later adds exactly the points the coastal list left out — re-applying is
+   * D90. Going offshore later adds exactly the points the coastal list left out — re-applying is
    * idempotent on (boat_id, external_ref) — and each engine collects the points of its own drive.
    */
   it("adds the offshore points when the boat goes offshore, and matches each engine's drive", async () => {
@@ -818,7 +818,7 @@ describe("create_boat", () => {
         );
         return Number((res.rows[0] as { n: number }).n);
       });
-      // Six for a semi-rigide (D83), eight for everything else.
+      // Six for a semi-rigide (D90), eight for everything else.
       expect(categories, type).toBeGreaterThanOrEqual(6);
     }
   });

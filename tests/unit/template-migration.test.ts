@@ -61,7 +61,7 @@ describe("generic template migration", () => {
   });
 
   /**
-   * D83. The scopes are what 0024's `engine_scope_matches` and its check constraint accept; a
+   * D90. The scopes are what 0024's `engine_scope_matches` and its check constraint accept; a
    * typo here would be refused at apply time, on every row after it.
    */
   it("only uses the engine scopes and zone scopes the database knows", () => {
@@ -90,7 +90,7 @@ describe("generic template migration", () => {
   });
 
   /**
-   * « La checklist d'un côtier c'est plus simple » (D83): every model has something to leave out
+   * « La checklist d'un côtier c'est plus simple » (D90): every model has something to leave out
    * for a coastal boat, and the liferaft is always among it — a coastal boat never carries one.
    */
   it("marks the offshore points on every model", () => {
@@ -104,7 +104,7 @@ describe("generic template migration", () => {
   });
 
   /**
-   * « Quand je mets semi-rigide, que ce soit que des trucs liés au bateau à moteur » (D83): the
+   * « Quand je mets semi-rigide, que ce soit que des trucs liés au bateau à moteur » (D90): the
    * semi-rigide model never asks about a shaft line, a generator or a toilet, and every point that
    * is about an engine says which drive it is for — so an outboard collects nothing from a Z-drive.
    */

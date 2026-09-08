@@ -23,7 +23,7 @@ export async function DashboardBanner({
   unfinished = false,
 }: {
   boatId: string;
-  /** Documents that arrived by mail or photo and wait for a decision (D84). */
+  /** Documents that arrived by mail or photo and wait for a decision (D91). */
   inboxCount?: number;
   reviewCount: number;
   noReadingEngines: string[];

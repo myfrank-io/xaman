@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * « À valider » (D84). What arrived on its own — a photo taken here, an attachment mailed to the
+ * « À valider » (D91). What arrived on its own — a photo taken here, an attachment mailed to the
  * boat's address — read by the analysis and waiting for the tap that writes it into the carnet.
  * Every member sees the list; contributors add to it; owners and editors validate.
  */

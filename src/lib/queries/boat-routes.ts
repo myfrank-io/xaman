@@ -87,7 +87,7 @@ export function importDocumentsPath(
   return withQuery(`${boatPath(boatId, "logs")}/documents`, query);
 }
 
-/** « À valider » (D84): the documents that arrived by mail or by photo, waiting to be filed. */
+/** « À valider » (D91): the documents that arrived by mail or by photo, waiting to be filed. */
 export function inboxPath(boatId: string): string {
   return boatPath(boatId, "inbox");
 }

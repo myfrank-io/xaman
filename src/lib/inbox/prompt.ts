@@ -10,7 +10,7 @@ import {
 import { VISIBLE_PURCHASE_KINDS } from "@/lib/schemas/purchases";
 
 /**
- * What the document is read against (D84): the boat's own vocabulary, so the reading lands on
+ * What the document is read against (D91): the boat's own vocabulary, so the reading lands on
  * the boat's systems, its engines and its contacts rather than on free text a person would then
  * have to re-file.
  */

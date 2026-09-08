@@ -1,4 +1,4 @@
--- 0025_generic_templates_v2.sql — the model registry, second edition (D83).
+-- 0025_generic_templates_v2.sql — the model registry, second edition (D90).
 --
 -- Generated from seed/generic-checklists.json by scripts/gen-template-migration.mjs.
 -- Do not edit by hand: edit the JSON and re-run the script (tests/unit/template-migration.test.ts
@@ -25,7 +25,7 @@ do $migration$
 declare
   v_payload jsonb := $json$
 {
-  "$schema_note": "Modèles de checklist génériques proposés à la création d'un bateau : catamaran à voile, voilier monocoque, bateau à moteur, semi-rigide. Les catégories reprennent les external_ref, couleurs et icônes du modèle ORC 50. `engine_scope` : none | inboard | outboard | all | shaft | saildrive | sterndrive | jet — `inboard` vaut pour tout moteur qui n'est pas un hors-bord, les quatre derniers pour cette propulsion exactement (`engines.propulsion`, D83) ; `interval_hours` n'est renseigné que si `engine_scope` n'est pas `none`. `zone_scope` : `offshore` sur un point qu'un bateau côtier ne porte pas (radeau, balise, AIS…), absent sinon (= `all`). Intervalles indicatifs, à ajuster au carnet du constructeur. `source: proposal` = proposition standard, que le propriétaire adapte à son bateau.",
+  "$schema_note": "Modèles de checklist génériques proposés à la création d'un bateau : catamaran à voile, voilier monocoque, bateau à moteur, semi-rigide. Les catégories reprennent les external_ref, couleurs et icônes du modèle ORC 50. `engine_scope` : none | inboard | outboard | all | shaft | saildrive | sterndrive | jet — `inboard` vaut pour tout moteur qui n'est pas un hors-bord, les quatre derniers pour cette propulsion exactement (`engines.propulsion`, D90) ; `interval_hours` n'est renseigné que si `engine_scope` n'est pas `none`. `zone_scope` : `offshore` sur un point qu'un bateau côtier ne porte pas (radeau, balise, AIS…), absent sinon (= `all`). Intervalles indicatifs, à ajuster au carnet du constructeur. `source: proposal` = proposition standard, que le propriétaire adapte à son bateau.",
   "templates": [
     {
       "template": {

@@ -49,16 +49,16 @@ create type engine_position as enum ('port', 'starboard', 'center', 'outboard');
 -- 'port' = bâbord (BB), 'starboard' = tribord (SB). Le libellé FR est calculé côté UI.
 
 create type engine_propulsion as enum ('outboard', 'shaft', 'saildrive', 'sterndrive', 'jet');
--- Ce qui entraîne le moteur (D83, `0024`) : hors-bord, in-bord ligne d'arbre, saildrive, semi hors-bord
+-- Ce qui entraîne le moteur (D90, `0024`) : hors-bord, in-bord ligne d'arbre, saildrive, semi hors-bord
 -- (Z-drive), jet. C'est sur cette valeur que `apply_checklist_template` apparie `engine_scope`.
 
 create type navigation_zone as enum ('coastal', 'offshore');
--- Côtier / hauturier (D83, `0024`) : un point de modèle `zone_scope = 'offshore'` n'est pas appliqué
+-- Côtier / hauturier (D90, `0024`) : un point de modèle `zone_scope = 'offshore'` n'est pas appliqué
 -- à un bateau côtier.
 
 create type inbox_source as enum ('email', 'upload');
 create type inbox_status as enum ('received', 'analysing', 'ready', 'validated', 'dismissed');
--- La boîte de réception (D84, `0026`) : d'où vient un document, et où il en est.
+-- La boîte de réception (D91, `0026`) : d'où vient un document, et où il en est.
 
 create type log_status as enum ('planned', 'in_progress', 'done', 'urgent');
 create type log_priority as enum ('low', 'normal', 'high');
@@ -120,8 +120,8 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | registration | text | | immatriculation délivrée par les affaires maritimes (D69, `0018`). Texte libre : aucune liste de référence, aucun registre consultable. Distincte de `hull_number` et de `sail_number` |
 | year | int | | |
 | type | boat_type | not null default 'monohull_sail' | |
-| inbox_token | text | not null unique, default 12 hex aléatoires | la partie aléatoire de l'adresse e-mail du bateau `<slug>-<token>@INBOUND_EMAIL_DOMAIN` (D84, `0026`). Le webhook apparie un message sur le seul token ; le nom devant n'est que lisibilité. Lisible par les membres (ils doivent pouvoir l'envoyer), jamais par `anon` |
-| navigation_zone | navigation_zone | not null default 'offshore' | côtier / hauturier (D83, `0024`). Lu par `apply_checklist_template`, qui saute les points `zone_scope = 'offshore'` d'un bateau côtier. Passer de côtier à hauturier fait réappliquer le plan par la Server Action (les points hauturiers arrivent) ; l'inverse ne retire rien |
+| inbox_token | text | not null unique, default 12 hex aléatoires | la partie aléatoire de l'adresse e-mail du bateau `<slug>-<token>@INBOUND_EMAIL_DOMAIN` (D91, `0026`). Le webhook apparie un message sur le seul token ; le nom devant n'est que lisibilité. Lisible par les membres (ils doivent pouvoir l'envoyer), jamais par `anon` |
+| navigation_zone | navigation_zone | not null default 'offshore' | côtier / hauturier (D90, `0024`). Lu par `apply_checklist_template`, qui saute les points `zone_scope = 'offshore'` d'un bateau côtier. Passer de côtier à hauturier fait réappliquer le plan par la Server Action (les points hauturiers arrivent) ; l'inverse ne retire rien |
 | flag | text | | pavillon |
 | home_port | text | | |
 | sail_number | text | | |
@@ -199,7 +199,7 @@ Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la 
 | boat_id | uuid | FK boats on delete cascade | |
 | label | text | not null | « Moteur SB », « Moteur BB », « Annexe » |
 | position | engine_position | not null | où il est : bâbord, tribord, central, hors-bord (un hors-bord seul garde la position `outboard`) |
-| propulsion | engine_propulsion | not null default 'shaft' | ce qui l'entraîne (D83, `0024`) ; c'est la valeur appariée par `engine_scope` — la position ne décide plus rien. Rétro-rempli à `0024` : position `outboard` → `outboard`, coque catamaran / trimaran → `saildrive`, sinon `shaft` |
+| propulsion | engine_propulsion | not null default 'shaft' | ce qui l'entraîne (D90, `0024`) ; c'est la valeur appariée par `engine_scope` — la position ne décide plus rien. Rétro-rempli à `0024` : position `outboard` → `outboard`, coque catamaran / trimaran → `saildrive`, sinon `shaft` |
 | brand / model / serial | text | | |
 | installed_at | date | | |
 | is_active | boolean | not null default true | |
@@ -343,8 +343,8 @@ Modèles globaux, lisibles par tout utilisateur connecté, modifiables par l'adm
 | description | text | |
 | interval_months | int | null |
 | interval_hours | int | null (heures moteur) |
-| engine_scope | text | `'none'` (défaut) / `'inboard'` / `'outboard'` / `'all'` / `'shaft'` / `'saildrive'` / `'sterndrive'` / `'jet'` — `apply_checklist_template` duplique le point pour chaque moteur actif du bateau dont la `propulsion` correspond (`engine_scope_matches`, D83 : `inboard` = tout sauf `outboard` ; `outboard` = `outboard` ; les quatre derniers = cette propulsion exactement) en suffixant le libellé « — {engine.label} » et en renseignant `engine_id` |
-| zone_scope | text | `'all'` (défaut) / `'offshore'` — un point hauturier (radeau, balise, AIS, radar, dessalinisateur, licence MMSI) n'est pas appliqué à un bateau `navigation_zone = 'coastal'` (D83, `0024`) |
+| engine_scope | text | `'none'` (défaut) / `'inboard'` / `'outboard'` / `'all'` / `'shaft'` / `'saildrive'` / `'sterndrive'` / `'jet'` — `apply_checklist_template` duplique le point pour chaque moteur actif du bateau dont la `propulsion` correspond (`engine_scope_matches`, D90 : `inboard` = tout sauf `outboard` ; `outboard` = `outboard` ; les quatre derniers = cette propulsion exactement) en suffixant le libellé « — {engine.label} » et en renseignant `engine_id` |
+| zone_scope | text | `'all'` (défaut) / `'offshore'` — un point hauturier (radeau, balise, AIS, radar, dessalinisateur, licence MMSI) n'est pas appliqué à un bateau `navigation_zone = 'coastal'` (D90, `0024`) |
 | actions | jsonb | tableau de chaînes : étapes pas à pas, `[]` par défaut |
 | source | text | 'briefing' / 'proposal' / 'builder' — informatif |
 | sort_order | int | |
@@ -483,7 +483,7 @@ Index : `attachments_entity_idx (boat_id, entity_type, entity_id)`, `attachments
 
 La contrainte `attachments_path_boat` est écrite avec `is not distinct from` et non `=` : un chemin malformé renvoie `null`, et un `check` accepte `null` — un `photo.jpg` sans préfixe serait passé.
 
-### 3.20 `inbox_items` (documents à valider — D84, `0026`)
+### 3.20 `inbox_items` (documents à valider — D91, `0026`)
 
 Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, une photo prise dans l'app — et attend qu'une personne le range. Une ligne est une **proposition** : rien n'est écrit dans `maintenance_logs` ni `purchases` avant le tap « Valider », qui passe par les Server Actions des formulaires (`saveLog`, `upsertPurchase`).
 
@@ -545,9 +545,9 @@ create function accept_invitation(p_token text) returns uuid ...;
 -- Instanciation d'un modèle de checklist (security definer, réservé owner/editor/admin). Idempotente :
 --  * upsert des catégories dans boat_categories (clé (boat_id, external_ref) = external_ref de la catégorie du modèle) ;
 --  * upsert des points dans checklist_items : engine_scope = 'none' → un point (external_ref = item.external_ref) ;
---    tout autre scope → un point par moteur actif dont la propulsion correspond (`engine_scope_matches`, D83)
+--    tout autre scope → un point par moteur actif dont la propulsion correspond (`engine_scope_matches`, D90)
 --    (external_ref = item_ref || ':' || engine.external_ref, libellé suffixé « — {engine.label} », engine_id renseigné) ;
---  * saute les points zone_scope = 'offshore' d'un bateau navigation_zone = 'coastal' (D83) ;
+--  * saute les points zone_scope = 'offshore' d'un bateau navigation_zone = 'coastal' (D90) ;
 --  * renseigne boats.checklist_template_id ;
 --  * p_engine_id non null → ne (re)génère que les points de ce moteur (action « Générer les points de ce moteur »).
 create function apply_checklist_template(p_boat_id uuid, p_template_id uuid, p_engine_id uuid default null) returns void ...;
@@ -566,13 +566,13 @@ create function apply_checklist_template(p_boat_id uuid, p_template_id uuid, p_e
 --    (double tap = un seul carnet) ; tout autre id existant lève `forbidden` ;
 --  * p_engines = [{label, position, propulsion?}] (6 max) créés à la création, sans quoi un plan choisi plus
 --    tard n'aurait aucun point à intervalle en heures (tous `engine_scope <> 'none'`) ; propulsion absente →
---    `outboard` si la position est `outboard`, `shaft` sinon (D83) ;
+--    `outboard` si la position est `outboard`, `shaft` sinon (D90) ;
 --  * p_boat_model_id (D69, `0021`) : les dimensions du modèle du catalogue, et rien d'autre ;
---  * p_navigation_zone (D83, `0024`) : côtier / hauturier, `offshore` par défaut ;
+--  * p_navigation_zone (D90, `0024`) : côtier / hauturier, `offshore` par défaut ;
 --  * plafond de 20 bateaux possédés (`boat_limit`), garde-fou que « seul l'admin crée » assurait.
 create function create_boat(p_boat_id uuid, p_name text, p_type boat_type, p_builder text default null, p_model text default null, p_engines jsonb default '[]', p_boat_model_id uuid default null, p_navigation_zone navigation_zone default 'offshore') returns uuid ...;
 
--- Un point de modèle de ce scope s'applique-t-il à un moteur de cette propulsion (D83, `0024`) ? Immutable,
+-- Un point de modèle de ce scope s'applique-t-il à un moteur de cette propulsion (D90, `0024`) ? Immutable,
 -- le seul endroit où l'appariement est écrit : le plan de l'étape 3 et « Générer les points de ce moteur »
 -- ne peuvent pas diverger.
 create function engine_scope_matches(p_scope text, p_propulsion engine_propulsion) returns boolean ...;
@@ -582,7 +582,7 @@ create function engine_scope_matches(p_scope text, p_propulsion engine_propulsio
 -- lieu de les dupliquer, et un renommage fait entre-temps survit.
 create function apply_template_categories(p_boat_id uuid, p_template_id uuid) returns int ...;
 
--- Le modèle générique décrivant une coque (D65, D83) : trimaran → catamaran, semi-rigide → son propre modèle
+-- Le modèle générique décrivant une coque (D65, D90) : trimaran → catamaran, semi-rigide → son propre modèle
 -- (`generic-rib-v1`, repli sur le modèle moteur tant que `0025` n'est pas passée), autre → monocoque voile.
 create function generic_template_for_boat_type(p_type boat_type) returns uuid ...;
 
@@ -791,9 +791,9 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0010** : `parts.checked_at` (date de la dernière vérification) et `adjust_part_quantity(p_part_id, p_delta)` : +/− atomique depuis la liste (`quantity = greatest(0, quantity + delta)`, `checked_at = current_date`), `security invoker` donc soumis à la politique `parts_update` (owner / editor) ; delta nul refusé (`invalid_delta`), ligne inaccessible → `part_not_found`. ~~Les pièces n'ont pas de corbeille~~ — renversé par `0012` (D40).
 - **0012** : la corbeille couvre tout ce qui porte l'historique ou l'inventaire du bateau (D40 / D41). Ajoute `parts.deleted_at` et `contacts.deleted_at`, remplace leurs `unique (boat_id, external_ref)` par des index uniques **partiels** `where deleted_at is null` (sans quoi un réimport après mise à la corbeille levait `23505` contre une ligne invisible), ajoute les index « vivants » et « corbeille » des deux tables, fait refuser une ligne à la corbeille par `adjust_part_quantity()`, retire les pièces à la corbeille de `boat_dashboard_stats.low_stock_parts`, et étend `purge_trash()` à `parts`, `contacts` **et `attachments`** (qui portaient `deleted_at` depuis `0011` sans qu'aucune purge ne les nomme). Aucune politique RLS nouvelle : `parts` et `contacts` sont des tables owner / editor dont l'`update` est déjà `can_write_boat` des deux côtés.
 
-- **0024** (D83) : `engines.propulsion`, `boats.navigation_zone`, `checklist_template_items.zone_scope`, contrainte `engine_scope` élargie aux quatre propulsions, `engine_scope_matches()`, `apply_checklist_template` réécrite (appariement sur la propulsion, points hauturiers sautés sur un bateau côtier), `create_boat` avec `p_navigation_zone` et `propulsion` par moteur (signature `0021` supprimée), `generic_template_for_boat_type` : semi-rigide → `generic-rib-v1`. Aucune table nouvelle, aucune politique modifiée ; rien n'est supprimé sur les bateaux existants (`navigation_zone` par défaut `offshore`, propulsion rétro-remplie).
-- **0026** (D84) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (Claude, `src/lib/inbox/analyse.ts`) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
-- **0025** (D83) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
+- **0024** (D90) : `engines.propulsion`, `boats.navigation_zone`, `checklist_template_items.zone_scope`, contrainte `engine_scope` élargie aux quatre propulsions, `engine_scope_matches()`, `apply_checklist_template` réécrite (appariement sur la propulsion, points hauturiers sautés sur un bateau côtier), `create_boat` avec `p_navigation_zone` et `propulsion` par moteur (signature `0021` supprimée), `generic_template_for_boat_type` : semi-rigide → `generic-rib-v1`. Aucune table nouvelle, aucune politique modifiée ; rien n'est supprimé sur les bateaux existants (`navigation_zone` par défaut `offshore`, propulsion rétro-remplie).
+- **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (Claude, `src/lib/inbox/analyse.ts`) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
+- **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés
 

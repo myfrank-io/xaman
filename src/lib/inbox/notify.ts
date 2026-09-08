@@ -8,7 +8,7 @@ import { editPurchasePath, inboxPath, logPath } from "@/lib/queries/boat-routes"
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Who hears about the inbox (D84): the people who can validate — owners and editors — read from
+ * Who hears about the inbox (D91): the people who can validate — owners and editors — read from
  * the membership with the service key, because this runs after a webhook or after a response.
  *
  * Nothing here throws: an e-mail that does not go out is a line in the server log, never a

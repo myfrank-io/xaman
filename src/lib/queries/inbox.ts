@@ -12,7 +12,7 @@ import {
 import { SIGNED_URL_TTL_SECONDS } from "@/lib/queries/attachments";
 import type { Database } from "@/types/database";
 
-/** One document of the inbox as the screen shows it (D84). */
+/** One document of the inbox as the screen shows it (D91). */
 export type InboxItem = {
   id: string;
   source: InboxSource;

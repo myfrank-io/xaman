@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D90.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D92.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -1861,7 +1861,7 @@ saisie de quelqu'un d'autre, et « planifié aujourd'hui » est légitime. Écar
 troisième puce « Dans une semaine », qui ferait trois raccourcis là où le calendrier natif fait
 déjà le travail au-delà de demain.
 
-## 2026-09-08 — D83 : la checklist sait ce qui entraîne le moteur, et jusqu'où va le bateau
+## 2026-09-08 — D90 : la checklist sait ce qui entraîne le moteur, et jusqu'où va le bateau
 
 **Question.** Premier retour d'un propriétaire de bateau à moteur (Andréa, 7 septembre) : « quand je
 mets semi-rigide par exemple, que ce soit que des trucs liés au bateau à moteur » ; « demander aussi
@@ -1926,7 +1926,7 @@ moteur (la plupart des bateaux à moteur du catalogue ne se remorquent pas). **N
 part** : « revoir le design », remarque générale du même échange, qui n'est pas une question de
 schéma.
 
-## 2026-09-08 — D84 : un document arrive tout seul, une personne le range d'un tap
+## 2026-09-08 — D91 : un document arrive tout seul, une personne le range d'un tap
 
 **Question.** « Je prends en photo mon ticket de caisse, ça l'analyse et ça crée automatiquement
 la facture adéquate » ; « chaque bateau a une adresse e-mail dédiée : quand un fichier est envoyé

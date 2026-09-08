@@ -8,7 +8,7 @@ import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 
 /**
- * « À valider » (D84) under the touch audit: a document being read, one read and waiting, one
+ * « À valider » (D91) under the touch audit: a document being read, one read and waiting, one
  * the reading could not handle, and two already filed — every state of a card on one screen.
  */
 const NOW = "2026-09-08T10:00:00.000Z";

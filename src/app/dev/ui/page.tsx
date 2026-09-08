@@ -84,7 +84,7 @@ const PREVIEWS: { href: string; label: string }[] = [
   { href: "/dev/ui/review", label: "Relecture" },
   { href: "/dev/ui/boats", label: "Choix du bateau" },
   { href: "/dev/ui/boats/new", label: "Mise en route · 1 le bateau" },
-  { href: "/dev/ui/inbox", label: "À valider (D84)" },
+  { href: "/dev/ui/inbox", label: "À valider (D91)" },
   { href: "/dev/ui/onboarding", label: "Mise en route · 2 le carnet, 3 la prise en main" },
   { href: "/dev/ui/checklist-plan", label: "Checklist · choisir un plan" },
   { href: "/dev/ui/profile", label: "Mon compte" },

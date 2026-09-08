@@ -88,7 +88,7 @@ describe("defaultEngineCount", () => {
 });
 
 /**
- * D83: what drives the engines is asked once, per hull, and pre-set on what most boats of that
+ * D90: what drives the engines is asked once, per hull, and pre-set on what most boats of that
  * kind carry. The choices are what the chips show, so they must all be drives the schema knows.
  */
 describe("propulsionChoices / defaultPropulsion", () => {
@@ -122,7 +122,7 @@ describe("propulsionChoices / defaultPropulsion", () => {
 });
 
 /**
- * « Côtier ou hauturier » (D83): pre-set in the direction that costs least when wrong — a motor
+ * « Côtier ou hauturier » (D90): pre-set in the direction that costs least when wrong — a motor
  * boat is coastal more often than not, and a sailing boat is offshore because a missing liferaft
  * point is worse than an unwanted one.
  */
@@ -215,7 +215,7 @@ describe("newBoatEngines", () => {
     }
   });
 
-  /** The annexe's outboard is an outboard, whatever drives the boat itself (D68, D83). */
+  /** The annexe's outboard is an outboard, whatever drives the boat itself (D68, D90). */
   it("gives the annexe an outboard behind saildrives", () => {
     const engines = newBoatEngines(2, "catamaran", LABELS, "outboard");
     expect(engines).toHaveLength(3);
@@ -275,7 +275,7 @@ describe("the engine names of step 1", () => {
     }
   });
 
-  /** The chips of D83 are labelled from the enums, so every value needs its word. */
+  /** The chips of D90 are labelled from the enums, so every value needs its word. */
   it("names every propulsion and every navigation zone", () => {
     const propulsion: Record<string, string> = fr.enginePropulsion;
     for (const key of enginePropulsionSchema.options) {
@@ -359,7 +359,7 @@ describe("the annexe", () => {
     ]);
   });
 
-  /** `engine_scope` matches on the propulsion (D83): an annexe filed as a saildrive would collect the saildrive
+  /** `engine_scope` matches on the propulsion (D90): an annexe filed as a saildrive would collect the saildrive
    * points and none of its own. */
   it("is always an outboard, whatever the hull carries", () => {
     for (const type of ["catamaran", "monohull_sail", "motor", "other"] as const) {

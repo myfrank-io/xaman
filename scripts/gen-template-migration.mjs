@@ -27,7 +27,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const SOURCE = path.join(root, "seed", "generic-checklists.json");
 export const TARGET = path.join(root, "supabase", "migrations", "0025_generic_templates_v2.sql");
 
-const HEADER = `-- 0025_generic_templates_v2.sql — the model registry, second edition (D83).
+const HEADER = `-- 0025_generic_templates_v2.sql — the model registry, second edition (D90).
 --
 -- Generated from seed/generic-checklists.json by scripts/gen-template-migration.mjs.
 -- Do not edit by hand: edit the JSON and re-run the script (tests/unit/template-migration.test.ts

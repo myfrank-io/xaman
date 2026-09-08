@@ -195,7 +195,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const openLogs = (stats?.planned_logs ?? 0) + (stats?.in_progress_logs ?? 0) + urgent;
   const todoCount = overdue + soon + neverRecorded;
   const reviewCount = (stats?.review_pending_logs ?? 0) + (stats?.review_pending_purchases ?? 0);
-  // Documents waiting on « À valider » (D84): a narrow count, read here rather than in the view.
+  // Documents waiting on « À valider » (D91): a narrow count, read here rather than in the view.
   const inboxCount = await pendingInboxCount(supabase, boatId);
   const lowStock = stats?.low_stock_parts ?? 0;
 

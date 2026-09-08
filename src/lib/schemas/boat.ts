@@ -22,7 +22,7 @@ export const boatTypeSchema = z.enum([
 export type BoatType = z.infer<typeof boatTypeSchema>;
 
 /**
- * How far the boat goes (D83): « côtier ou hauturier ». A coastal boat is not asked about the
+ * How far the boat goes (D90): « côtier ou hauturier ». A coastal boat is not asked about the
  * liferaft, the EPIRB, the AIS — `apply_checklist_template` leaves the offshore points out.
  */
 export const navigationZoneSchema = z.enum(["coastal", "offshore"]);
@@ -93,7 +93,7 @@ export const createBoatSchema = z.object({
   boatId: uuid,
   name: requiredText(80),
   type: boatTypeSchema,
-  /** Côtier ou hauturier (D83). Pre-set from the hull; the default is the complete list. */
+  /** Côtier ou hauturier (D90). Pre-set from the hull; the default is the complete list. */
   navigationZone: navigationZoneSchema.default("offshore"),
   builder: nullableText(80),
   model: nullableText(80),

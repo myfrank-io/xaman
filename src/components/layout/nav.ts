@@ -67,7 +67,7 @@ export const PRIMARY_NAV_KEYS: NavKey[] = ["dashboard", "checklist", "logs", "bo
 
 // Management screens: top of the « Plus » sheet + sidebar group 2.
 // Haul-outs left the navigation: they become a tab of the log book.
-// « À valider » (D84) opens the sheet: what arrived on its own is the first thing to look at.
+// « À valider » (D91) opens the sheet: what arrived on its own is the first thing to look at.
 export const SECONDARY_NAV_KEYS: NavKey[] = ["inbox", "supplies", "contacts", "trash"];
 
 // Account menu: sidebar footer (≥ lg) and bottom of the « Plus » sheet.
