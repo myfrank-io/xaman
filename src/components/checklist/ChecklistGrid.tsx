@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronRightIcon, PackageIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { AttentionDot } from "@/components/common/AttentionDot";
 import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ export type CategoryProgress = {
   icon: string | null;
   total: number;
   overdue: number;
+  /** Points dus dans la journée, pas encore en retard : ils allument le point rouge (D81). */
+  dueToday: number;
   neverRecorded: number;
   punctual: number;
   progress: number | null;
@@ -27,7 +30,12 @@ export type CategoryProgress = {
 
 export type CategoryProgressRow = Database["public"]["Views"]["checklist_category_progress"]["Row"];
 
-export function toCategoryProgress(row: CategoryProgressRow): CategoryProgress {
+/**
+ * `dueToday` ne vient pas de la vue : `checklist_category_progress` compte les états, et
+ * « dû aujourd'hui » est une date, pas un état. Les écrans qui chargent déjà les lignes le
+ * déduisent d'elles (`countAttention`) et le passent ici.
+ */
+export function toCategoryProgress(row: CategoryProgressRow, dueToday = 0): CategoryProgress {
   return {
     id: row.category_id ?? "",
     name: row.name ?? "",
@@ -35,6 +43,7 @@ export function toCategoryProgress(row: CategoryProgressRow): CategoryProgress {
     icon: row.icon,
     total: row.total ?? 0,
     overdue: row.overdue_count ?? 0,
+    dueToday,
     neverRecorded: row.never_recorded_count ?? 0,
     punctual: row.punctual_count ?? 0,
     progress: row.progress,
@@ -117,11 +126,25 @@ export async function ChecklistGrid({
       {categories.map((category) => {
         const neverDone = category.total > 0 && category.neverRecorded === category.total;
         const ratio = neverDone || category.total === 0 ? null : category.progress;
+        // Le point rouge de l'onglet Checklist se rejoue ici, sur le système qui le porte :
+        // c'est la deuxième marche du flux, celle qui dit où taper (D81).
+        const attention = category.overdue + category.dueToday;
         return (
           <Tile
             key={category.id}
             href={categoryPath(boatId, category.id)}
-            icon={<CategoryIcon color={category.color} icon={category.icon} />}
+            icon={
+              <span className="relative inline-flex">
+                <CategoryIcon color={category.color} icon={category.icon} />
+                {attention > 0 ? (
+                  <AttentionDot
+                    bare
+                    label={t("attention", { count: attention })}
+                    className="absolute -top-0.5 -right-0.5"
+                  />
+                ) : null}
+              </span>
+            }
             title={category.name}
             // The bar is not drawn on a phone, so its number joins the count line: the
             // progress is the point of the screen and must not be the thing that is dropped.
@@ -133,9 +156,11 @@ export async function ChecklistGrid({
               .filter(Boolean)
               .join(" · ")}
             badge={
-              category.overdue > 0 ? (
+              attention > 0 ? (
                 <Badge variant="danger" size="sm">
-                  {t("overdue", { count: category.overdue })}
+                  {category.dueToday > 0
+                    ? t("attention", { count: attention })
+                    : t("overdue", { count: category.overdue })}
                 </Badge>
               ) : undefined
             }
@@ -143,7 +168,7 @@ export async function ChecklistGrid({
               <span className="text-caption text-ink-2">
                 {neverDone
                   ? t("neverDone")
-                  : category.overdue === 0 && category.total > 0
+                  : attention === 0 && category.total > 0
                     ? t("upToDate")
                     : ""}
               </span>

@@ -1,4 +1,5 @@
 import type { ChecklistState } from "@/components/common/ChecklistStateBadge";
+import { isDueToday as ruleIsDueToday, itemNeedsAttention } from "@/lib/attention";
 import { computeChecklistStatus } from "@/lib/checklist-status";
 import type { Database } from "@/types/database";
 
@@ -80,6 +81,20 @@ export function isPunctual(row: ChecklistRow): boolean {
 
 export function isTodo(row: ChecklistRow): boolean {
   return row.status === "overdue" || row.status === "soon" || row.status === "never";
+}
+
+/** En retard, ou à faire dans la journée : la seule chose qui allume un point rouge (D81). */
+export function needsAttention(row: ChecklistRow): boolean {
+  return itemNeedsAttention({ status: row.status, daysRemaining: row.daysRemaining });
+}
+
+/** À faire dans la journée, pas encore en retard : « Bientôt » sous-vend cette ligne. */
+export function isDueToday(row: ChecklistRow): boolean {
+  return ruleIsDueToday({ status: row.status, daysRemaining: row.daysRemaining });
+}
+
+export function countAttention(rows: readonly ChecklistRow[]): number {
+  return rows.filter(needsAttention).length;
 }
 
 const STATE_RANK: Record<ChecklistState, number> = { overdue: 0, soon: 1, never: 2, ok: 3 };

@@ -27,7 +27,7 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, todayString } from "@/lib/format";
 
 import { SAMPLE_CATEGORIES } from "../sample-data";
 import { devUiEnabled } from "@/lib/dev-ui";
@@ -181,7 +181,7 @@ export default async function DevDashboardPage() {
   const tcreate = await getTranslations("create");
 
   const keys: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
-  const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2, trash: 4 };
+  const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2 };
   const nav: NavItem[] = keys.map((key) => ({
     key,
     href: key === "dashboard" ? "/dev/ui/dashboard" : `/boats/${DEV_BOAT_ID}/${key}`,
@@ -291,6 +291,7 @@ export default async function DevDashboardPage() {
             currentUserId="u-xav"
             currentUserName="Xavier Marin"
             canContribute
+            today={todayString()}
             todoCount={23}
             openLogs={2}
           />

@@ -17,6 +17,7 @@ import { applyCompletion, isTodo, type ChecklistRow } from "@/components/checkli
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { LogDueLabel } from "@/components/logs/LogDueLabel";
 import { formatDate } from "@/lib/format";
 import { categoryPath, checklistPath, logPath, logsPath } from "@/lib/queries/boat-routes";
 import type { Database } from "@/types/database";
@@ -53,6 +54,7 @@ export function UpcomingList({
   canContribute,
   todoCount,
   openLogs,
+  today,
 }: {
   boatId: string;
   entries: UpcomingEntry[];
@@ -62,6 +64,8 @@ export function UpcomingList({
   canContribute: boolean;
   todoCount: number;
   openLogs: number;
+  /** Le jour tel que le serveur l'a lu, pour la puce « aujourd'hui / N j de retard ». */
+  today: string;
 }) {
   const t = useTranslations("dashboard.upcoming");
   const [entries, setEntries] = useState(initialEntries);
@@ -134,12 +138,13 @@ export function UpcomingList({
         ) : (
           <ListRow
             key={entryKey(entry)}
-            lead={<StatusBadge status={entry.status} className="w-24 justify-center" />}
+            lead={<StatusBadge status={entry.status} className="w-28 justify-center" />}
             title={entry.title}
             meta={
               <>
                 <CategoryDot color={entry.categoryColor} />
                 <span className="truncate">{entry.categoryName}</span>
+                <LogDueLabel status={entry.status} performedAt={entry.dueAt} today={today} />
               </>
             }
             trailing={

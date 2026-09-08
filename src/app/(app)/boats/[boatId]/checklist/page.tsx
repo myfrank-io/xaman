@@ -7,7 +7,7 @@ import { ChecklistGrid, toCategoryProgress } from "@/components/checklist/Checkl
 import { ChecklistViewTabs } from "@/components/checklist/ChecklistViewTabs";
 import { ChoosePlanBlock } from "@/components/checklist/ChoosePlanBlock";
 import { TodoList, type TodoFilter } from "@/components/checklist/TodoList";
-import { toChecklistRow } from "@/components/checklist/rows";
+import { countAttention, isDueToday, toChecklistRow } from "@/components/checklist/rows";
 import { PlusIcon } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -79,9 +79,25 @@ export default async function ChecklistPage({
         row.engine_id ? (engineLabels.get(row.engine_id) ?? null) : null,
       );
     });
-  const todoCount = rows.filter(
+  // Un contrôle ponctuel entre dans « À traiter » quand il porte une vraie échéance — une date
+  // de validité dépassée ou proche (D11) ; « jamais fait » reste de l'information. La liste et
+  // son compteur lisent le même filtre : un point rouge doit mener à une ligne, pas à un vide.
+  const todoRows = rows.filter(
     (row) => row.intervalMonths !== null || row.intervalHours !== null || row.status !== "never",
-  ).length;
+  );
+  const todoCount = todoRows.length;
+  // Le point rouge, du haut de l'écran jusqu'à la tuile du système : en retard, ou dû dans la
+  // journée (D81). Le compte gris de l'onglet « À traiter » continue de dire les trente jours.
+  const attentionCount = countAttention(rows);
+  const dueTodayByCategory = new Map<string, number>();
+  for (const row of rows) {
+    if (!isDueToday(row)) continue;
+    dueTodayByCategory.set(row.categoryId, (dueTodayByCategory.get(row.categoryId) ?? 0) + 1);
+  }
+  const gridCategories = categories.map((category) => ({
+    ...category,
+    dueToday: dueTodayByCategory.get(category.id) ?? 0,
+  }));
 
   // Always shown, empty stock included: the card is also the way in. Hiding it on a boat with
   // no part yet left « pièces détachées » nowhere to be found from here — reported at the
@@ -148,7 +164,12 @@ export default async function ChecklistPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <ChecklistViewTabs boatId={boatId} view={activeView} todoCount={todoCount} />
+      <ChecklistViewTabs
+        boatId={boatId}
+        view={activeView}
+        todoCount={todoCount}
+        attentionCount={attentionCount}
+      />
       {activeView === "grid" ? (
         <>
           {/* « À racheter » before the systems (D63): the spare parts to buy back sit where
@@ -180,12 +201,12 @@ export default async function ChecklistPage({
               )}
             </SectionCard>
           ) : null}
-          <ChecklistGrid boatId={boatId} categories={categories} stock={stock} />
+          <ChecklistGrid boatId={boatId} categories={gridCategories} stock={stock} />
         </>
       ) : (
         <TodoList
           boatId={boatId}
-          rows={rows.filter((row) => row.intervalMonths !== null || row.intervalHours !== null)}
+          rows={todoRows}
           filter={activeFilter}
           members={context.members}
           currentUserId={context.currentUserId}

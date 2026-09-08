@@ -17,12 +17,14 @@ import {
 } from "@/components/checklist/CompleteItemDialog";
 import {
   applyCompletion,
+  countAttention,
   isPunctual,
   isTodo,
   sortRows,
   type ChecklistRow,
 } from "@/components/checklist/rows";
 import { StepsChecklist, clearSteps } from "@/components/checklist/StepsChecklist";
+import { AttentionDot } from "@/components/common/AttentionDot";
 import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -108,10 +110,17 @@ export function CategoryItems({
 
   const interval = rows.filter((row) => !isPunctual(row));
   const punctual = rows.filter(isPunctual);
-  const todoCount = interval.filter(isTodo).length;
+  // Un contrôle ponctuel est « à traiter » quand sa date de validité est dépassée ou proche
+  // (D11) ; « jamais fait » reste de l'information. Il était exclu du filtre alors qu'il
+  // comptait dans les pastilles : le point rouge menait à une liste où il n'était pas.
+  const punctualTodo = punctual.filter((row) => isTodo(row) && row.status !== "never");
+  const todoCount = interval.filter(isTodo).length + punctualTodo.length;
   const overdueCount = rows.filter((row) => row.status === "overdue").length;
+  // Dernière marche du flux : le point rouge de l'onglet, puis de la tuile, arrive ici — sur
+  // le filtre, puis sur la ligne elle-même, dont le badge dit « Aujourd'hui » (D81).
+  const attentionCount = countAttention(rows);
   const visible = sortRows(filter === "todo" ? interval.filter(isTodo) : interval);
-  const visiblePunctual = filter === "todo" ? [] : sortRows(punctual);
+  const visiblePunctual = sortRows(filter === "todo" ? punctualTodo : punctual);
 
   function toCompletable(row: ChecklistRow): CompletableItem {
     return {
@@ -330,6 +339,9 @@ export function CategoryItems({
             t("card.points", { count: interval.length }),
             formatPercent(progress),
             overdueCount > 0 ? t("card.overdue", { count: overdueCount }) : null,
+            attentionCount > overdueCount
+              ? t("card.dueToday", { count: attentionCount - overdueCount })
+              : null,
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -349,6 +361,7 @@ export function CategoryItems({
               </ToggleGroupItem>
               <ToggleGroupItem value="todo" className="min-h-11 gap-2">
                 {t("filters.todo")}
+                <AttentionDot count={attentionCount} size="sm" />
                 <span className="num text-caption text-ink-3">{todoCount}</span>
               </ToggleGroupItem>
             </ToggleGroup>

@@ -7,6 +7,7 @@ import { ArrowUpIcon, PaperclipIcon } from "lucide-react";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { LogDueLabel } from "@/components/logs/LogDueLabel";
 import { shortEngineLabel, type LogRow } from "@/components/logs/rows";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,16 @@ const SCROLLED_PX = 120;
  * behind a « 1 nouvelle intervention · Afficher » pill instead of shifting the content under
  * the finger.
  */
-export function LogsList({ boatId, rows }: { boatId: string; rows: LogRow[] }) {
+export function LogsList({
+  boatId,
+  rows,
+  today,
+}: {
+  boatId: string;
+  rows: LogRow[];
+  /** Le jour tel que le serveur l'a lu : la puce de retard ne doit pas dépendre de l'iPad. */
+  today: string;
+}) {
   const t = useTranslations("logs");
   const tc = useTranslations("common");
   const [held, setHeld] = useState<string[]>([]);
@@ -92,6 +102,7 @@ export function LogsList({ boatId, rows }: { boatId: string; rows: LogRow[] }) {
               {row.categoryColor ? <CategoryDot color={row.categoryColor} /> : null}
               <span className="truncate">{row.categoryName ?? ""}</span>
               <StatusBadge status={row.status} size="sm" />
+              <LogDueLabel status={row.status} performedAt={row.performedAt} today={today} />
               <span className="truncate">{row.contactName ?? t("byCrew")}</span>
               {row.attachmentsCount > 0 ? (
                 /* No colour of its own (rule 12): the paperclip says « il y a la facture ». */

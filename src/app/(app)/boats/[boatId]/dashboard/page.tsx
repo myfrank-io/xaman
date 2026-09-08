@@ -20,6 +20,7 @@ import { UpcomingList, type UpcomingEntry } from "@/components/dashboard/Upcomin
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, toDateString, todayString } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadBoatAttention } from "@/lib/queries/attention";
 import {
   boatPath,
   checklistPath,
@@ -66,6 +67,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     { data: progress },
     { data: recent },
     { data: expenses },
+    attention,
   ] = await Promise.all([
     supabase
       .from("boats")
@@ -103,6 +105,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       .select("category_id, category_name, category_color, amount, date")
       .eq("boat_id", boatId)
       .gte("date", since),
+    // Ce qui est à faire aujourd'hui : le même compte que les points rouges de la navigation,
+    // pour que la tuile, la grille et l'onglet racontent la même chose (D81).
+    loadBoatAttention(supabase, boatId, today),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -170,7 +175,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   }
 
   // Systems and the « brand new » state
-  const categories = (progress ?? []).map(toCategoryProgress);
+  const categories = (progress ?? []).map((row) =>
+    toCategoryProgress(row, attention.dueTodayByCategory.get(row.category_id ?? "") ?? 0),
+  );
   const totalInterval = categories.reduce((sum, category) => sum + category.total, 0);
   const neverRecorded = categories.reduce((sum, category) => sum + category.neverRecorded, 0);
   const brandNew = totalInterval > 0 && neverRecorded === totalInterval;
@@ -292,13 +299,19 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
             tone={soon > 0 ? "warning" : "default"}
             href={checklistPath(boatId, { view: "todo", filter: "soon" })}
           />
+          {/* Le rouge de la tuile suit ce qui est à faire aujourd'hui, pas le total ouvert :
+              une intervention prévue dans trois semaines n'est pas une alerte (D81). */}
           <StatCard
             variant="dark"
             label={t("stats.openLogs")}
             value={openLogs}
-            hint={t("stats.openLogsHint", { count: urgent })}
-            tone={urgent > 0 ? "danger" : "default"}
-            href={logsPath(boatId)}
+            hint={
+              attention.logs > 0
+                ? t("stats.openLogsDue", { count: attention.logs })
+                : t("stats.openLogsHint", { count: urgent })
+            }
+            tone={attention.logs > 0 ? "danger" : "default"}
+            href={logsPath(boatId, { tab: "planned" })}
           />
           <StatCard
             variant="dark"
@@ -374,6 +387,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
                 canContribute={canContribute}
                 todoCount={todoCount}
                 openLogs={openLogs}
+                today={today}
               />
             </div>
           ) : brandNew ? null : (

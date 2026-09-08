@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import { XamanMark } from "@/components/brand/XamanMark";
+import { AttentionDot } from "@/components/common/AttentionDot";
 import { NavLink } from "@/components/layout/NavLink";
 import {
   NAV_ICONS,
@@ -23,11 +24,8 @@ function NavRow({ item }: { item: NavItem }) {
       >
         <Icon className="size-5 shrink-0" />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
-        {item.badge ? (
-          <span className="inline-flex min-w-6 shrink-0 items-center justify-center rounded-full bg-status-urgent px-1.5 num text-caption font-bold text-white">
-            {item.badge}
-          </span>
-        ) : null}
+        {/* Ce qui est à faire aujourd'hui, jamais un total de section (D81). */}
+        <AttentionDot count={item.badge} />
       </NavLink>
     </li>
   );
