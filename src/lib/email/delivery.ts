@@ -105,7 +105,7 @@ const MESSAGE_COLUMNS = "id, email_id, delivery_status, delivery_updated_at, cre
  * The invitations that carry a message, with when that message last went out.
  *
  * The second select is the deploy order (rule 3): the schema is pushed by hand, so a build can
- * reach production before `0030` does and `reminded_at` may not exist yet. A read path degrades
+ * reach production before `0031` does and `reminded_at` may not exist yet. A read path degrades
  * rather than stops — without it a resent invitation is simply asked about once a minute instead
  * of every five seconds, which is a slower screen, not a wrong one.
  */
@@ -153,7 +153,7 @@ export async function refreshInvitationDeliveries(
         shouldAskAgain(
           {
             status: row.delivery_status,
-            // The last message this invitation sent, which a reminder replaces (D110): the ten
+            // The last message this invitation sent, which a reminder replaces (D112): the ten
             // minutes worth watching closely follow the send, not the invitation's birthday.
             sentAt: row.reminded_at ?? row.created_at,
             askedAt: row.delivery_updated_at,

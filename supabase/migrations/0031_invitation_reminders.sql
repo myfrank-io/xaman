@@ -1,5 +1,5 @@
--- 0030_invitation_reminders.sql — une invitation se relance à la main, sans en créer une seconde
--- (D110).
+-- 0031_invitation_reminders.sql — une invitation se relance à la main, sans en créer une seconde
+-- (D112).
 --
 -- Signalled in use: two invitations sitting on the Membres screen, « En attente », for people who
 -- simply never opened the message. The screen had exactly two ways out — « Annuler », which
@@ -34,10 +34,10 @@ alter table public.boat_invitations
   add constraint boat_invitations_reminder_count_check check (reminder_count >= 0);
 
 comment on column public.boat_invitations.reminded_at is
-  'When the invitation was last resent by hand (D110). Null when it never was. Written by the '
+  'When the invitation was last resent by hand (D112). Null when it never was. Written by the '
   'service key only; the cooldown between two reminders is read from it.';
 comment on column public.boat_invitations.reminder_count is
-  'How many manual reminders went out for this invitation (D110). Shown on the Membres screen: '
+  'How many manual reminders went out for this invitation (D112). Shown on the Membres screen: '
   'an invitation relaunched three times is a person to telephone, not an address to re-type.';
 
 -- ---------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ left join public.profiles p on p.id = i.invited_by;
 
 comment on view public.boat_invitations_safe is
   'Invitations without the token, with the computed status, the inviter name, what became of the '
-  'e-mail (D79) and the manual reminders sent since (D110).';
+  'e-mail (D79) and the manual reminders sent since (D112).';
 
 -- 0004 granted this view to `authenticated` and took it away from `anon`; a dropped view takes
 -- both with it, and Supabase's default privileges hand the fresh one back to all three roles.

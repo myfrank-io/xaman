@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D111.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D113.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2339,7 +2339,50 @@ l'intervention existante à rejoindre (par date et par titre) ; pré-remplir le 
 d'intervention depuis une photo prise dans le formulaire — ce serait une troisième mécanique de
 lecture, l'inverse de cette décision : le document qui doit être lu passe par « À valider ».
 
-## 2026-09-08 — D110 : une invitation se relance, elle ne se recrée pas
+## 2026-09-08 — D110 : chaque écran ne reçoit que les mots qu'il lit
+
+**Question.** `NextIntlClientProvider`, posé à la racine sans `messages`, hérite de tout
+`fr.json` et le sérialise dans la charge utile de **chaque** page : 88 Ko de JSON, à chaque
+navigation, sur un iPad au mouillage. L'écran de connexion emportait le vocabulaire de l'import
+et de la checklist ; la page d'accueil publique aussi.
+
+**Décision. Une tranche par surface, déclarée dans `src/i18n/slices.ts` et vérifiée par un
+test.** Le provider imbriqué **remplace** les messages (`use-intl` prend le `messages` le plus
+proche et ignore ceux au-dessus), donc chaque tranche se suffit à elle-même : la racine ne porte
+rien, `(auth)` porte trois groupes, la mise en route les siens, le cadre du bateau porte le
+vocabulaire de la navigation, et **treize `layout.tsx` de section** portent celui de leurs
+écrans. La section — et non la page — est l'unité : treize fichiers de quatre lignes au lieu de
+quarante et un, pour une charge à quelques kilo-octets de ce que le découpage par page donnerait.
+
+**Raison.** Mesuré : `/login` passe de 123 Ko à 34 Ko, la page d'accueil de 146 Ko à 50 Ko, et
+le pire écran du bateau de 88 Ko à 44 Ko de messages. Surtout, l'erreur possible est
+asymétrique : un groupe oublié ne casse pas le build, il lève `MISSING_MESSAGE` sur un écran
+ouvert au large. `scripts/i18n-usage.mjs` parcourt donc le graphe d'imports, franchit la
+frontière client et `tests/unit/i18n-slices.test.ts` échoue en nommant la tranche à élargir —
+la déclaration n'est jamais crue sur parole.
+
+## 2026-09-08 — D111 : les totaux des dépenses sont comptés par la base
+
+**Question.** L'écran Dépenses lisait **toutes** les lignes du bateau pour n'en afficher que
+vingt : la pagination était un `slice(0, 20)` en TypeScript derrière une requête sans `limit`,
+et une seconde lecture, tout aussi complète, alimentait le cumul. Sur un carnet papier repris,
+cela fait des centaines de kilo-octets par ouverture, deux fois.
+
+**Décision. Une fonction `boat_expense_totals` (migration `0030`) rend en une lecture les six
+chiffres de l'écran** — total et nombre de lignes de la sélection, répartition par système,
+cumul et date de première dépense sur les sources retenues, total de la période précédente — et
+la liste ne demande plus que sa page (`limit + 1`, la ligne de trop ne servant qu'à dire qu'il y
+en a d'autres). `security invoker` sur une vue déjà `security_invoker` : la RLS s'applique
+exactement comme sur la lecture qu'elle remplace (règle 2), et `tests/unit/rls.test.ts` le
+vérifie, y compris qu'un étranger lit des zéros et non l'argent d'un autre bateau.
+
+**Raison.** Poser un `limit` seul aurait été pire que le mal : les totaux se seraient mis à
+compter la page au lieu de la sélection, sans que rien à l'écran ne le dise. « 1 850 € » serait
+devenu « 1 850 € des vingt dernières lignes ». Un chiffre faux coûte plus cher qu'un chiffre
+lent, et c'est la seule raison pour laquelle la somme descend en base plutôt que de rester où
+elle était.
+
+## 2026-09-08 — D112 : une invitation se relance, elle ne se recrée pas
 
 **Question.** Capture de l'écran Membres : deux invitations, « En attente » toutes les deux,
 « expire le 21/09/2026 ». Les personnes n'ont simplement jamais ouvert le message. « Code des
@@ -2385,4 +2428,3 @@ l'owner, écrits par la seule clé de service — `revoked_at` reste la seule co
 écrit sur cette table. L'écran le dit en fin de ligne : « relancée 3 fois, la dernière le
 06/09/2026 ». C'est le fait qui met fin à l'attente : l'adresse est bonne, le message n'est lu par
 personne, il faut téléphoner.
-

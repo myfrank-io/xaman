@@ -47,7 +47,7 @@ export const revokeInvitationSchema = z.object({
   invitationId: z.string().uuid(),
 });
 
-// D110: the same invitation, sent again to the same address. Nothing to choose — the row already
+// D112: the same invitation, sent again to the same address. Nothing to choose — the row already
 // carries the role, the duration and the link — so the input is only which row.
 export const resendInvitationSchema = revokeInvitationSchema;
 

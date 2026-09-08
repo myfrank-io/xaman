@@ -97,6 +97,31 @@ type Offender = {
   repeated?: number;
 };
 
+/**
+ * Waits for whatever is still moving to stop, so the audit measures a settled layout.
+ *
+ * A dialog opens with `zoom-in-95` over 200 ms, and `networkidle` can land inside that window:
+ * the 44 px close button then measures **41.8 px**, which is 44 × 0.95 and not a touch target
+ * that anyone shipped. It cost a red CI on `/dev/ui/dialogs?d=edit-reading`, and it would have
+ * gone on costing one at random on whichever surface animates on the runner of the day.
+ *
+ * Infinite animations are left out — a spinner never finishes, and waiting for one would hang
+ * the audit rather than fail it — and the whole wait is capped: this is about geometry, not
+ * patience.
+ */
+async function settle(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const running = document
+      .getAnimations()
+      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+      .map((animation) => animation.finished.catch(() => undefined));
+    await Promise.race([
+      Promise.all(running),
+      new Promise((resolve) => setTimeout(resolve, 1_000)),
+    ]);
+  });
+}
+
 async function audit(page: Page): Promise<{
   controls: Offender[];
   fields: Offender[];
@@ -105,6 +130,7 @@ async function audit(page: Page): Promise<{
   wider: Offender[];
   tall: Offender[];
 }> {
+  await settle(page);
   return page.evaluate(
     ({ minTarget, minFont, minRow }) => {
       const visible = (el: Element) => {

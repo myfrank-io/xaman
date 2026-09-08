@@ -1159,7 +1159,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           position: Database["public"]["Enums"]["engine_position"]
-          propulsion: Database["public"]["Enums"]["engine_propulsion"]
+          propulsion?: Database["public"]["Enums"]["engine_propulsion"]
           serial?: string | null
           sort_order?: number
           tracks_hours?: boolean
@@ -1512,7 +1512,21 @@ export type Database = {
             foreignKeyName: "inbox_items_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "inbox_items_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1523,10 +1537,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inbox_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_trash_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inbox_items_purchase_id_fkey"
             columns: ["purchase_id"]
             isOneToOne: false
             referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_items_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2519,6 +2561,27 @@ export type Database = {
         Args: { p_boat_id: string; p_template_id: string }
         Returns: number
       }
+      boat_expense_totals: {
+        Args: {
+          p_boat_id: string
+          p_category?: string
+          p_from: string
+          p_kind?: Database["public"]["Enums"]["purchase_kind"]
+          p_previous_from?: string
+          p_previous_to?: string
+          p_sources: string[]
+          p_to: string
+          p_uncategorized?: boolean
+        }
+        Returns: {
+          by_category: Json
+          cumulative_total: number
+          first_date: string
+          line_count: number
+          previous_total: number
+          total: number
+        }[]
+      }
       boat_id_from_storage_path: { Args: { p_name: string }; Returns: string }
       boat_role: {
         Args: { p_boat_id: string }
@@ -2670,10 +2733,20 @@ export type Database = {
       checklist_item_source: "template" | "custom"
       checklist_state: "never" | "ok" | "soon" | "overdue"
       engine_position: "port" | "starboard" | "center" | "outboard"
-      engine_propulsion: "outboard" | "shaft" | "saildrive" | "sterndrive" | "jet"
+      engine_propulsion:
+        | "outboard"
+        | "shaft"
+        | "saildrive"
+        | "sterndrive"
+        | "jet"
       hour_reading_source: "manual" | "maintenance_log" | "checklist" | "import"
       inbox_source: "email" | "upload"
-      inbox_status: "received" | "analysing" | "ready" | "validated" | "dismissed"
+      inbox_status:
+        | "received"
+        | "analysing"
+        | "ready"
+        | "validated"
+        | "dismissed"
       log_status: "planned" | "in_progress" | "done" | "urgent"
       navigation_zone: "coastal" | "offshore"
       organization_type:
@@ -2831,10 +2904,22 @@ export const Constants = {
       checklist_item_source: ["template", "custom"],
       checklist_state: ["never", "ok", "soon", "overdue"],
       engine_position: ["port", "starboard", "center", "outboard"],
-      engine_propulsion: ["outboard", "shaft", "saildrive", "sterndrive", "jet"],
+      engine_propulsion: [
+        "outboard",
+        "shaft",
+        "saildrive",
+        "sterndrive",
+        "jet",
+      ],
       hour_reading_source: ["manual", "maintenance_log", "checklist", "import"],
       inbox_source: ["email", "upload"],
-      inbox_status: ["received", "analysing", "ready", "validated", "dismissed"],
+      inbox_status: [
+        "received",
+        "analysing",
+        "ready",
+        "validated",
+        "dismissed",
+      ],
       log_status: ["planned", "in_progress", "done", "urgent"],
       navigation_zone: ["coastal", "offshore"],
       organization_type: [

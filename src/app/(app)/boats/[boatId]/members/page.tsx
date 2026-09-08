@@ -42,7 +42,7 @@ type InvitationSource = {
  *
  * So a refused select falls back to the columns that have always existed: the list comes back,
  * the delivery reads as unknown, and the server log names the column that is missing. The
- * reminders of D110 (`0030`) join the same select, and the same fallback: an invitation nobody
+ * reminders of D112 (`0031`) join the same select, and the same fallback: an invitation nobody
  * has relaunched yet is what the screen shows in the meantime.
  */
 async function loadInvitations(

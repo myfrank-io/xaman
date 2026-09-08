@@ -13,6 +13,7 @@ import { countLowStock } from "@/lib/parts";
 
 import { DEV_BOAT_ID, DevShell } from "../DevShell";
 import {
+  EXPENSE_ROWS,
   SAMPLE_CONTACTS,
   SAMPLE_DESIGNATIONS,
   SAMPLE_EXPENSES,
@@ -22,6 +23,7 @@ import {
   SAMPLE_LOGS,
   SAMPLE_PARTS,
   SAMPLE_SUPPLY_CATEGORIES,
+  sampleExpenses,
 } from "./sample";
 
 /**
@@ -42,16 +44,8 @@ export default async function DevSuppliesPage({
   const categoryId = category ?? null;
   const keep = (id: string | null | undefined) =>
     categoryId === null || (categoryId === NO_CATEGORY ? !id : id === categoryId);
-  const rows = SAMPLE_EXPENSES.rows.filter((row) => keep(row.categoryId));
-  const data = categoryId
-    ? {
-        ...SAMPLE_EXPENSES,
-        rows,
-        lines: SAMPLE_EXPENSES.lines.filter((line) =>
-          rows.some((row) => row.entityId === line.entityId),
-        ),
-      }
-    : SAMPLE_EXPENSES;
+  const rows = EXPENSE_ROWS.filter((row) => keep(row.categoryId));
+  const data = categoryId ? sampleExpenses(rows) : SAMPLE_EXPENSES;
   const facts = gasFacts(SAMPLE_GAS_DATES);
   const gasTotal = SAMPLE_GAS_PURCHASES.reduce((sum, purchase) => sum + (purchase.amount ?? 0), 0);
 

@@ -63,7 +63,7 @@ type InvitationMail = {
  * back the provider's id when there is one to follow afterwards (D79).
  *
  * One function because there are two callers now — the first send and the manual reminder
- * (D110) — and « the reminder is the same message » has to be true in the code, not only in the
+ * (D112) — and « the reminder is the same message » has to be true in the code, not only in the
  * intention. With a mailer configured the app sends it itself, from the HTML generated out of
  * `supabase/templates/invite.html`; without one, Supabase Auth does, with the `invite` template
  * for an address it does not know and a sign-in code for one it does. Neither of those two
@@ -338,7 +338,7 @@ export async function revokeInvitation(input: unknown): Promise<ActionResult> {
 
 /**
  * The four states of an invitation, computed exactly as `boat_invitations_safe` computes them
- * (0023, 0030). The view is what every screen reads; this is for the one caller that reads the
+ * (0023, 0031). The view is what every screen reads; this is for the one caller that reads the
  * table itself, with the service key, because it also needs the token.
  */
 function invitationStatus(row: {
@@ -352,7 +352,7 @@ function invitationStatus(row: {
 }
 
 /**
- * Sends the same invitation again, to the same address (D110).
+ * Sends the same invitation again, to the same address (D112).
  *
  * The screen had two ways out of an invitation nobody answered, and neither was this one:
  * « Annuler », which throws it away, and « Réinviter » — the bounce path of D79 — which writes a
@@ -373,7 +373,7 @@ function invitationStatus(row: {
  * costs neither the cooldown nor a counter. The reverse order would make a mailer's bad minute
  * look like a reminder that went out.
  *
- * **The migration is the guard.** Read paths degrade when `0030` has not been applied yet (the
+ * **The migration is the guard.** Read paths degrade when `0031` has not been applied yet (the
  * Membres screen falls back to the columns that have always existed); this one refuses instead,
  * on the select. Sending a message the row cannot record is how an address gets three copies of
  * the same invitation.

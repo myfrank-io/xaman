@@ -4,7 +4,13 @@ import type { GasDefaults } from "@/components/supplies/GasBottleDialog";
 import type { ExpensesData } from "@/components/supplies/ExpensesTab";
 import type { ExpenseLine } from "@/components/supplies/ExpenseLines";
 import type { LogOption } from "@/components/supplies/PurchaseForm";
-import type { ExpenseDetail, ExpenseRow } from "@/lib/expenses";
+import {
+  groupByCategory,
+  NO_CATEGORY_COLOR,
+  totalAmount,
+  type ExpenseDetail,
+  type ExpenseRow,
+} from "@/lib/expenses";
 
 import { SAMPLE_CATEGORIES } from "../sample-data";
 
@@ -30,7 +36,7 @@ function row(
   };
 }
 
-const EXPENSE_ROWS: ExpenseRow[] = [
+export const EXPENSE_ROWS: ExpenseRow[] = [
   row(ENGINES, {
     source: "log",
     entityId: "l1",
@@ -214,14 +220,24 @@ const EXPENSE_LINES: ExpenseLine[] = EXPENSE_ROWS.map((row) => ({
   detail: EXPENSE_DETAILS[row.entityId ?? ""] ?? null,
 }));
 
-export const SAMPLE_EXPENSES: ExpensesData = {
-  rows: EXPENSE_ROWS,
-  lines: EXPENSE_LINES,
-  previousTotal: 2617,
-  cumulativeTotal: 12480.6,
-  firstDate: "2023-06-14",
-  moreHref: null,
-};
+/**
+ * The gallery stands in for the database: the screen now receives its totals already counted
+ * (D111), so the sample counts them over the sample rows exactly as `boat_expense_totals` does.
+ */
+export function sampleExpenses(rows: ExpenseRow[] = EXPENSE_ROWS): ExpensesData {
+  return {
+    lines: EXPENSE_LINES.filter((line) => rows.some((row) => row.entityId === line.entityId)),
+    total: totalAmount(rows),
+    lineCount: rows.length,
+    categoryTotals: groupByCategory(rows, "Sans catégorie", NO_CATEGORY_COLOR),
+    previousTotal: 2617,
+    cumulativeTotal: 12480.6,
+    firstDate: "2023-06-14",
+    moreHref: null,
+  };
+}
+
+export const SAMPLE_EXPENSES: ExpensesData = sampleExpenses();
 
 export const SAMPLE_GAS_PURCHASES = EXPENSE_LINES.filter((line) => line.kindLabel === "Gaz");
 

@@ -183,7 +183,7 @@ describeWithDb("read access (select)", () => {
     );
     expect(delivery.ok).toBe(true);
 
-    // D110 (0030): the reminders are read on the Membres screen — « relancée 3 fois » is what
+    // D112 (0031): the reminders are read on the Membres screen — « relancée 3 fois » is what
     // ends the waiting — and written by the Server Action alone, with the service key.
     const reminders = await run(
       U.owner,
@@ -1022,7 +1022,7 @@ describeWithDb("update", () => {
       ),
     ).toEqual({ ok: true, rowCount: 0 });
 
-    // D110 (0030): a reminder is a Server Action, never a browser writing a date on a row.
+    // D112 (0031): a reminder is a Server Action, never a browser writing a date on a row.
     // `revoked_at` stays the single column `authenticated` may update on this table.
     for (const column of ["reminded_at = now()", "reminder_count = 5", "expires_at = now()"]) {
       const written = await run(
@@ -1787,9 +1787,9 @@ describeWithDb("secondary views", () => {
     );
     expect(columns).not.toContain("email_id");
     expect(columns).not.toContain("delivery_detail");
-    // D110: the reminders are read from the same place as the rest of an invitation.
+    // D112: the reminders are read from the same place as the rest of an invitation.
     expect(columns).toEqual(expect.arrayContaining(["reminded_at", "reminder_count"]));
-    // A recreated view comes back granted to everyone by Supabase's default privileges; 0030
+    // A recreated view comes back granted to everyone by Supabase's default privileges; 0031
     // restates what 0004 wanted, and this is what would have caught the drift 0023 left.
     expect(await count(null, "boat_invitations_safe")).toBe(-1);
   });
@@ -1812,6 +1812,48 @@ describeWithDb("secondary views", () => {
     expect(await seen(U.editor)).toBe(1);
     expect(await seen(U.stranger)).toBe(0);
     expect(await count(null, "maintenance_logs_trash_view")).toBe(-1);
+  });
+});
+
+describeWithDb("boat_expense_totals (0030)", () => {
+  const totals = (u: User | null) =>
+    as(u, async (c) => {
+      try {
+        const res = await c.query(
+          `select total::float8, line_count::int, cumulative_total::float8, by_category
+             from public.boat_expense_totals($1::uuid, '1900-01-01', '2999-12-31',
+                                             array['log','purchase','haul_out'])`,
+          [BOAT],
+        );
+        return res.rows[0] as {
+          total: number;
+          line_count: number;
+          cumulative_total: number;
+          by_category: unknown[];
+        };
+      } catch {
+        return null; // permission denied (anon)
+      }
+    });
+
+  it("every member gets the boat's totals", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const row = await totals(U[role]);
+      expect(row?.total, role).toBeGreaterThan(0);
+      expect(row?.line_count, role).toBeGreaterThan(0);
+      expect(row?.by_category.length, role).toBeGreaterThan(0);
+    }
+  });
+
+  // The function is `security invoker` over a `security_invoker` view: an outsider naming
+  // someone else's boat reads zero rows, so the answer is zeros — never another boat's money.
+  it("an outsider reads zeros, and anon is denied", async () => {
+    const row = await totals(U.stranger);
+    expect(row?.total).toBe(0);
+    expect(row?.line_count).toBe(0);
+    expect(row?.cumulative_total).toBe(0);
+    expect(row?.by_category).toEqual([]);
+    expect(await totals(null)).toBeNull();
   });
 });
 

@@ -1,7 +1,7 @@
 import type { DeliveryStatus } from "@/lib/email/delivery-status";
 
 /**
- * What an invitation is, and when it may be sent again (D110).
+ * What an invitation is, and when it may be sent again (D112).
  *
  * Pure rules, no I/O, one file: the Server Action decides with them (it is the authority) and
  * the Membres screen shows the button with them (a confort, per rule 2 of CLAUDE.md). Written
