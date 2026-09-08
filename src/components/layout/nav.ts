@@ -36,7 +36,7 @@ export type NavItem = {
   /** Tab label (< 1024 px): « Bord », « Journal »… falls back to `label`. */
   shortLabel?: string;
   /**
-   * The red dot: what is to be done TODAY on that screen — late, or due within the day (D81).
+   * The red dot: what is to be done TODAY on that screen — late, or due within the day (D88).
    * Never a section total; nothing is rendered when it is 0 or undefined.
    */
   badge?: number;

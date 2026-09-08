@@ -3,7 +3,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 /**
- * Le point rouge, un seul objet, du premier onglet jusqu'à la ligne (D81).
+ * Le point rouge, un seul objet, du premier onglet jusqu'à la ligne (D88).
  *
  * Il ne dit qu'une chose — « il y a quelque chose à faire aujourd'hui » — et il la dit de la
  * même façon partout : onglet de navigation, feuille « Plus », tuile d'un système, onglet

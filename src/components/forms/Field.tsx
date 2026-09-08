@@ -7,6 +7,12 @@ import { cn } from "@/lib/utils";
  * Form field anatomy (ux-flows §4.1): label 14 px/600, control, then ONE line under it —
  * error (red + icon), warning (amber, non-blocking) or help. `*` marks required fields;
  * optional ones say nothing.
+ *
+ * `group` is for a control that is not a single element — a radiogroup of chips. A `<label for>`
+ * would then name the *first chip* rather than the group, because a `<button>` is a labelable
+ * element and an associated label outranks the button's own text: the chip would announce
+ * itself as the question. So the caption becomes a `<span>` carrying `<id>-label`, and the
+ * group names itself with `aria-labelledby` pointing at it.
  */
 export function Field({
   id,
@@ -17,6 +23,7 @@ export function Field({
   error,
   children,
   className,
+  group,
 }: {
   id: string;
   label: React.ReactNode;
@@ -26,17 +33,29 @@ export function Field({
   error?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** The control is a group (radiogroup of chips), not one labelable element. */
+  group?: boolean;
 }) {
+  const caption = (
+    <>
+      {label}
+      {required ? (
+        <span aria-hidden className="text-ink-3">
+          {" *"}
+        </span>
+      ) : null}
+    </>
+  );
+
   return (
     <div className={cn("grid gap-2", className)}>
-      <Label htmlFor={id}>
-        {label}
-        {required ? (
-          <span aria-hidden className="text-ink-3">
-            {" *"}
-          </span>
-        ) : null}
-      </Label>
+      {group ? (
+        <Label asChild>
+          <span id={`${id}-label`}>{caption}</span>
+        </Label>
+      ) : (
+        <Label htmlFor={id}>{caption}</Label>
+      )}
       {children}
       {error ? (
         <p

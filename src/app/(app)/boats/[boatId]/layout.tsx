@@ -62,7 +62,7 @@ export default async function BoatLayout({
       : Promise.resolve({ data: null }),
   ]);
 
-  // Le point rouge ne compte que ce qui est à faire aujourd'hui (D81) : l'onglet Journal
+  // Le point rouge ne compte que ce qui est à faire aujourd'hui (D88) : l'onglet Journal
   // portait le total des interventions ouvertes, donc une intervention prévue dans trois
   // semaines l'allumait autant qu'une panne du jour, et le point ne guidait plus personne.
   const badges: Partial<Record<NavKey, number>> = {

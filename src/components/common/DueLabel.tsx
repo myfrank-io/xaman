@@ -52,7 +52,7 @@ export function DueLabel({
 
   const overdue = status === "overdue" || value < 0;
   // Une échéance du jour se dit « aujourd'hui », jamais « dans 0 j » : c'est la ligne que le
-  // point rouge de l'onglet annonce, elle doit se lire comme telle (D81).
+  // point rouge de l'onglet annonce, elle doit se lire comme telle (D88).
   const today = !overdue && Math.round(value) === 0 && unit === "j";
   const amount = numberFr.format(Math.abs(Math.round(value)));
   const text = overdue

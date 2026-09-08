@@ -16,7 +16,7 @@ import type { EnginePosition, EnginePropulsion } from "@/lib/schemas/engines";
 
 /**
  * Up to four, signalled in use (« donne la possibilité de rajouter d'autres moteurs direct »,
- * D74): two was a floor a triple or a quad hit on the first screen. Four covers the boats that
+ * D76): two was a floor a triple or a quad hit on the first screen. Four covers the boats that
  * exist — a triple, a quad on a transom — and leaves room under the six the database accepts for
  * the annexe that may follow. A fifth is added from the Bateau screen, where it is named.
  */

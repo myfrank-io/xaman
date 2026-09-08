@@ -173,7 +173,7 @@ export default async function SuppliesPage({
 
   // The view carries neither the supplier nor the imported-line flag, and it says nothing of
   // what a line actually paid for. One read per source, keyed by the ids of the **page** only,
-  // fills both the merged list and the recap each line unrolls (D80).
+  // fills both the merged list and the recap each line unrolls (D86).
   const page = expenseRows.slice(0, limit);
   const idsOf = (source: string) =>
     page

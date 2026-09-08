@@ -128,7 +128,7 @@ export default async function DevUiPage() {
   const tch = await getTranslations("checklist");
 
   const keys: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
-  // Le point rouge ne dit que « à faire aujourd'hui » (D81) : jamais un total de corbeille.
+  // Le point rouge ne dit que « à faire aujourd'hui » (D88) : jamais un total de corbeille.
   const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2 };
   const hints: Partial<Record<NavKey, string>> = { contacts: "6 fiches", supplies: "4 321 €" };
   const nav: NavItem[] = keys.map((key) => ({
@@ -357,7 +357,7 @@ export default async function DevUiPage() {
               Personnalisé
             </Badge>
             <Badge size="sm">4</Badge>
-            {/* Le point rouge : compté dans la navigation, nu sur une icône (D81). */}
+            {/* Le point rouge : compté dans la navigation, nu sur une icône (D88). */}
             <AttentionDot count={3} />
             <AttentionDot count={3} size="sm" />
             <AttentionDot bare />

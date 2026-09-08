@@ -279,7 +279,13 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
       {/* After the model, not before it: tapping « Lagoon 42 » answers this question, so what is
           left here is a confirmation. Asking first would have made the tap look like it overrode
           something the person had just chosen. */}
-      <Field id="boat-type" label={t("type")} help={t("typeHelp")} error={fieldError(errors.type)}>
+      <Field
+        id="boat-type"
+        group
+        label={t("type")}
+        help={t("typeHelp")}
+        error={fieldError(errors.type)}
+      >
         <Controller
           control={form.control}
           name="type"
@@ -287,7 +293,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
             <ToggleGroup
               type="single"
               value={field.value}
-              aria-label={t("type")}
+              aria-labelledby="boat-type-label"
               onValueChange={(next) => next && setType(next)}
             >
               {boatTypeSchema.options.map((option) => (
@@ -300,7 +306,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
         />
       </Field>
 
-      <Field id="boat-engines-1" label={t("engines")} help={t("enginesHelp")}>
+      <Field id="boat-engines" group label={t("engines")} help={t("enginesHelp")}>
         <Controller
           control={form.control}
           name="engineCount"
@@ -308,7 +314,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
             <ToggleGroup
               type="single"
               value={field.value}
-              aria-label={t("engines")}
+              aria-labelledby="boat-engines-label"
               onValueChange={(next) => next && field.onChange(next)}
             >
               {ENGINE_COUNT_CHOICES.map((count) => (
@@ -355,7 +361,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
       ) : null}
 
       {asksAboutTender(type) ? (
-        <Field id="boat-tender-none" label={t("tender")} help={t("tenderHelp")}>
+        <Field id="boat-tender" group label={t("tender")} help={t("tenderHelp")}>
           <Controller
             control={form.control}
             name="tender"
@@ -363,7 +369,7 @@ export function NewBoatForm({ models }: { models: BoatModelOption[] }) {
               <ToggleGroup
                 type="single"
                 value={field.value}
-                aria-label={t("tender")}
+                aria-labelledby="boat-tender-label"
                 onValueChange={(next) => next && field.onChange(next)}
               >
                 {TENDER_CHOICES.map((choice) => (

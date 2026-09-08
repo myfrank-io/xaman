@@ -20,7 +20,7 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 }
 
 /**
- * The recap unrolled under a line of Dépenses (D80). Continues D77: the answer to « c'est quoi,
+ * The recap unrolled under a line of Dépenses (D86). Continues D77: the answer to « c'est quoi,
  * cette ligne ? » is read where the question is asked, not two screens away. It says what the
  * line paid for — statut, intervenant, notes, ce qui y est rattaché — and offers **one** way
  * out: the entity itself, one tap further, when the recap is not enough.

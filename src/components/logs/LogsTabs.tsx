@@ -25,7 +25,7 @@ export async function LogsTabs({
 }: {
   boatId: string;
   active: LogsTab;
-  /** Interventions urgentes ou datées d'aujourd'hui ou d'avant : le point rouge de l'onglet (D81). */
+  /** Interventions urgentes ou datées d'aujourd'hui ou d'avant : le point rouge de l'onglet (D88). */
   attentionCount?: number;
 }) {
   const t = await getTranslations("logs.tabs");

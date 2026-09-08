@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { daysLate, isOpenLog, type AttentionLog } from "@/lib/attention";
 
 /**
- * Ce qu'une intervention ouverte doit à aujourd'hui (D81).
+ * Ce qu'une intervention ouverte doit à aujourd'hui (D88).
  *
  * « Prévu » et une date ne disent pas si la date est passée : sur un écran lu en diagonale,
  * une intervention datée d'avant-hier ressemblait à une intervention prévue le mois prochain.

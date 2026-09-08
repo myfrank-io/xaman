@@ -32,7 +32,7 @@ const stateIcons = {
 } as const;
 
 /**
- * `dueToday` : ce qui tombe dans la journée porte son propre mot et la teinte rouge (D81).
+ * `dueToday` : ce qui tombe dans la journée porte son propre mot et la teinte rouge (D88).
  * « Bientôt » couvre trente jours ; l'écrire sur ce qui est à faire avant ce soir est
  * exactement ce qui empêchait de trouver la ligne que le point rouge de l'onglet annonce.
  */

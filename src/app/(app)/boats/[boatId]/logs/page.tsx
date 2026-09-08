@@ -133,7 +133,7 @@ export default async function LogsPage({
       : Promise.resolve({ data: null }),
     // Le point rouge de l'onglet Journal, rejoué sur l'onglet « Prévu » : il compte les
     // interventions du jour, pas celles que la liste affiche (filtres compris) — le même
-    // nombre que la navigation, sinon suivre le point mènerait à une liste sans point (D81).
+    // nombre que la navigation, sinon suivre le point mènerait à une liste sans point (D88).
     loadLogAttention(supabase, boatId, today),
   ]);
 

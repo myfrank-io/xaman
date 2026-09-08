@@ -5,9 +5,9 @@ Carnet d'entretien numérique et partagé pour bateaux. PWA iPad-first. Premier 
 ## Documents de référence (à lire avant toute tâche)
 - `docs/SPEC.md` — cahier des charges : vision, rôles, périmètre MoSCoW, parcours, exigences, architecture, design.
 - `docs/DATA-MODEL.md` — schéma Postgres, RLS, vues, triggers. **Source de vérité du schéma.**
-- `docs/BACKLOG.md` — épics et tickets ordonnés avec DoD. Mettre à jour les cases `[ ] / [~] / [x]` au fil de l'eau.
+- `docs/BACKLOG.md` — épics et tickets ordonnés avec DoD. Mettre à jour les cases `[ ] / [~] / [x]` au fil de l'eau. Un ticket neuf prend son numéro dans le tableau « Prochain numéro, par épique » en tête du fichier, dont on incrémente la ligne dans le même commit (D87).
 - `docs/AUDIT.md` — audit consolidé du 2 septembre 2026 et décisions D-xx (modèle de suivi, navigation, DA) ; **prime sur SPEC/DATA-MODEL pour les points qu'il tranche**.
-- `docs/DECISIONS.md` — journal des décisions produit ; y ajouter une ligne à chaque arbitrage.
+- `docs/DECISIONS.md` — journal des décisions produit ; y ajouter une ligne à chaque arbitrage. Le numéro se prend sur la ligne « Prochain numéro » en tête du fichier, qu'on incrémente dans le même commit (D85).
 - `seed/` — données Xaman (bateau, checklist ORC 50, historique du carnet papier).
 - `KICKOFF.md` — procédure de démarrage du projet (infra via MCP), à exécuter une seule fois.
 
@@ -63,7 +63,7 @@ pnpm lint · pnpm typecheck · pnpm test · pnpm test:e2e · pnpm build
 - Avant de coder un ticket : relire la section correspondante de `SPEC.md` et `DATA-MODEL.md`. En cas de contradiction entre les deux, `DATA-MODEL.md` prime pour le schéma, `SPEC.md` pour le comportement ; signaler l'écart dans la PR.
 - Définition de fini d'un ticket : critères du ticket remplis, `pnpm lint && pnpm typecheck && pnpm test` verts, écran vérifié en viewport iPad, textes en `fr.json`, migration + types commités si schéma modifié, `BACKLOG.md` mis à jour.
 - Ne pas démarrer les tickets E11 (V1.1 / V2) sans validation explicite.
-- Quand une décision produit manque, choisir l'option la plus simple compatible avec `SPEC.md`, la noter dans `docs/DECISIONS.md` (créer le fichier au premier besoin, format : date, question, décision, raison) et continuer.
+- Quand une décision produit manque, choisir l'option la plus simple compatible avec `SPEC.md`, la noter dans `docs/DECISIONS.md` (format : date, question, décision, raison ; numéro pris sur la ligne « Prochain numéro », incrémentée dans le même commit) et continuer.
 
 ## Personnes
 - Joseph — produit, admin plateforme (`is_platform_admin`), valide les écrans.

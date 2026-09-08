@@ -29,6 +29,11 @@ jobs:
       - run: pnpm format:check
       - run: pnpm typecheck
 
+      # Also covered by `pnpm test` (tests/unit/numbering.test.ts), but that waits three minutes
+      # for Postgres. A number taken twice is exactly what a branch discovers late, so it is said
+      # here, in a second, before the stack starts.
+      - run: pnpm check:numbering
+
       # Postgres with the migrations and supabase/seed.sql applied: tests/unit/rls.test.ts
       # connects to it directly on DATABASE_URL.
       #

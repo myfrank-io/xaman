@@ -62,11 +62,15 @@ export function LogbookStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <Label htmlFor="logbook-none">{t("question")}</Label>
+        {/* A span, not a `<label for>`: the group is a radiogroup, and a label pointing at
+            « Rien à reprendre » would make that chip announce itself as the question. */}
+        <Label asChild>
+          <span id="logbook-format-label">{t("question")}</span>
+        </Label>
         <ToggleGroup
           type="single"
           value={format}
-          aria-label={t("question")}
+          aria-labelledby="logbook-format-label"
           onValueChange={(next) => next && setFormat(next as ExistingLogFormat)}
         >
           {EXISTING_LOG_FORMATS.map((option) => {

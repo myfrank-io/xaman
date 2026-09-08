@@ -24,7 +24,7 @@ function NavRow({ item }: { item: NavItem }) {
       >
         <Icon className="size-5 shrink-0" />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
-        {/* Ce qui est à faire aujourd'hui, jamais un total de section (D81). */}
+        {/* Ce qui est à faire aujourd'hui, jamais un total de section (D88). */}
         <AttentionDot count={item.badge} />
       </NavLink>
     </li>

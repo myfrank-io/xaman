@@ -6,7 +6,7 @@ import type { Database } from "@/types/database";
 type LogStatus = Database["public"]["Enums"]["log_status"];
 
 /**
- * Ce qui mérite un point rouge — et rien d'autre (D81).
+ * Ce qui mérite un point rouge — et rien d'autre (D88).
  *
  * Le point rouge ne dit qu'une chose : « il y a quelque chose à faire aujourd'hui ». En retard,
  * ou dû dans la journée. « Bientôt » (30 jours), « jamais fait », une intervention planifiée le
