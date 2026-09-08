@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D92.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D93.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -1988,3 +1988,53 @@ et les documents sont rangés à la main. Les chemins de l'API de réception de 
 (`/emails/receiving/{id}/attachments/{id}` → `download_url`) sont écrits d'après sa documentation,
 que le proxy de ce poste n'a pas pu ouvrir : à vérifier au moment du branchement, en un seul
 fichier (`src/lib/inbox/resend-inbound.ts`).
+
+## 2026-09-08 — D92 : lire un document sans assistant
+
+**Question.** « Je ne veux pas mettre de clé Anthropic dès maintenant, ça va coûter cher :
+trouve une option pour scanner sans utiliser l'IA. » D91 confiait la lecture des documents à
+Claude ; sans clé, la carte arrivait vide et tout était à saisir — la promesse « il faut juste
+vérifier » ne tenait plus.
+
+**Décision. Un lecteur local, toujours là ; Claude en option.** Le document est d'abord
+transformé en texte sans rien envoyer nulle part : la couche texte du PDF (pdf.js) quand il en a
+une, sinon la reconnaissance de caractères Tesseract sur la photo, avec le modèle français
+embarqué dans le dépôt (`src/lib/inbox/tessdata/fra.traineddata.gz`, 600 Ko, `tessdata_fast`) —
+aucun téléchargement à l'exécution, aucun service tiers, le coût d'une seconde de fonction. Puis
+des règles écrites comme une personne classe ses factures (`src/lib/inbox/heuristics.ts`) :
+- **le papier** : devis, facture, ticket, rapport, d'après ses mots ; devis et rapport → intervention,
+  ticket → achat, facture → intervention si elle contient de la main-d'œuvre, achat sinon ;
+- **la date** : celle qui porte une étiquette de date (« Date : », « le 3 mars 2026 »), jamais une
+  échéance ou une validité, jamais dans le futur ; sans étiquette, la première plausible, signalée ;
+- **le montant** : la dernière valeur d'une ligne « Total TTC » / « Net à payer » (jamais une ligne
+  HT ou TVA) ; sinon le plus grand montant écrit avec une devise, signalé comme deviné ;
+- **le fournisseur** : un contact du bateau dont le nom ou la société figure sur la page, sinon la
+  première ligne d'en-tête qui ressemble à un nom, sinon l'expéditeur du mail ;
+- **le système** : un vocabulaire par famille (moteurs, voiles & gréement, coque & pont,
+  électronique, énergie, circuits, sécurité, dérives & safrans, remorque) qui atterrit sur la
+  catégorie du bateau par son `external_ref`, à défaut par son nom ;
+- **les lignes** terminées par un montant, hors totaux ; **les heures moteur** sur une ligne qui
+  parle de compteur, liées au moteur que la ligne nomme (bâbord / tribord) ;
+- **la confiance** d'après ce qui a été trouvé et étiqueté, plafonnée par la qualité de l'OCR ;
+  les avertissements sont des codes (`inbox.warningCodes`) que l'écran traduit, et la sortie
+  passe par le même `normaliseSuggestion` que celle du modèle.
+
+`ANTHROPIC_API_KEY` devient optionnelle : quand elle est là, Claude lit et le lecteur local prend
+le relais si l'appel échoue ; un document sans texte lisible (photo floue, scan sans couche texte)
+donne `noText`, et la carte se remplit à la main comme avant.
+
+**Raison.** Ce qui coûtait, c'était la lecture par un modèle à chaque document, pour un usage
+encore à démontrer. Une facture de chantier est un document structuré : ses mots, sa date et son
+total se trouvent avec des règles, et ce qui n'est pas trouvé est un champ vide plutôt qu'un
+chiffre faux — ce que l'écran demande déjà de vérifier. Le modèle reste à portée de variable
+d'environnement le jour où la lecture locale ne suffit plus (factures manuscrites, photos
+difficiles). Ce qui n'est pas fait : le rendu d'un PDF scanné en image pour l'OCR (il faudrait un
+canvas côté serveur), le redressement des photos de travers.
+
+**À vérifier au premier déploiement.** Les workers de Tesseract et de pdf.js et le modèle
+français sont chargés par chemin à l'exécution : `next.config.ts` les sort du bundle et les trace
+pour la page « À valider » et le webhook. Vercel refuse un paquet dont des fichiers tracés sont
+derrière un répertoire symbolique — ce que la disposition par défaut de pnpm (`.pnpm/` + liens)
+produit pour le worker : `.npmrc` passe en `node-linker=hoisted` (répertoires réels, lockfile
+inchangé). Une vraie photo lue sur Vercel valide le branchement.
+

@@ -38,7 +38,12 @@ import { parseDecimal } from "@/lib/numbers";
 import { logPath, suppliesPath } from "@/lib/queries/boat-routes";
 import type { InboxItem } from "@/lib/queries/inbox";
 import { isPdf } from "@/lib/schemas/attachments";
-import { validateInboxItemSchema, type InboxKind, type InboxSuggestion } from "@/lib/schemas/inbox";
+import {
+  validateInboxItemSchema,
+  type InboxKind,
+  type InboxSuggestion,
+  isInboxWarningCode,
+} from "@/lib/schemas/inbox";
 import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/purchases";
 import { cn } from "@/lib/utils";
 
@@ -308,7 +313,9 @@ export function InboxItemCard({
               <p className="text-caption font-semibold text-warning-fg">{t("warnings")}</p>
               <ul className="mt-1 list-disc pl-5 text-caption text-warning-fg">
                 {item.suggestion.warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
+                  <li key={warning}>
+                    {isInboxWarningCode(warning) ? t(`warningCodes.${warning}`) : warning}
+                  </li>
                 ))}
               </ul>
             </div>

@@ -18,7 +18,7 @@ export type InboxContext = {
   boatName: string;
   boatType: string;
   today: string;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; externalRef?: string | null }[];
   engines: { id: string; label: string; propulsion: string }[];
   contacts: { id: string; name: string; company: string | null; specialty: string }[];
 };
@@ -75,7 +75,7 @@ export function contextText(context: InboxContext, fileName: string): string {
   return [
     `Boat: ${JSON.stringify({ name: context.boatName, type: context.boatType })}`,
     `Today: ${context.today}`,
-    `Systems (categoryId → name): ${JSON.stringify(context.categories)}`,
+    `Systems (categoryId → name): ${JSON.stringify(context.categories.map((c) => ({ id: c.id, name: c.name })))}`,
     `Engines (engineId → label, propulsion): ${JSON.stringify(context.engines)}`,
     `Contacts (contactId → name, company, specialty): ${JSON.stringify(context.contacts)}`,
     `File name: ${fileName}`,

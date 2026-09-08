@@ -2168,7 +2168,7 @@
     "subtitle": "Ce qui est arrivé par photo ou par e-mail, prêt à entrer dans le carnet.",
     "capture": "Photographier un ticket",
     "choose": "Choisir un document",
-    "captureHelp": "Une facture, un ticket de caisse, un devis : la lecture pré-remplit l'intervention, vous vérifiez, vous validez.",
+    "captureHelp": "Une facture, un ticket de caisse, un devis : le document est lu (texte du PDF ou reconnaissance de caractères sur la photo), l'intervention est pré-remplie, vous vérifiez, vous validez.",
     "readOnly": "Seuls les membres qui écrivent dans le carnet peuvent valider un document.",
     "address": {
       "title": "Par e-mail",
@@ -2212,13 +2212,24 @@
       "low": "Incertaine"
     },
     "warnings": "À vérifier",
+    "warningCodes": {
+      "local": "Lecture automatique sans assistant : les champs sont déduits du texte du document, vérifiez-les.",
+      "ocrQuality": "Le texte de la photo est difficile à lire : les chiffres peuvent être faux.",
+      "noDate": "Aucune date trouvée sur le document.",
+      "dateUnlabelled": "La date a été prise sans étiquette claire sur le document.",
+      "noAmount": "Aucun montant total trouvé.",
+      "amountGuessed": "Le montant est le plus grand du document, faute de ligne « Total TTC ».",
+      "noSupplier": "Aucun fournisseur reconnu.",
+      "noCategory": "Aucun système reconnu : choisissez-le."
+    },
     "lineItems": "Lignes lues",
     "errors": {
-      "notConfigured": "La lecture automatique n'est pas configurée : remplissez les champs à la main.",
+      "notConfigured": "La lecture par l'assistant n'est pas configurée et le document n'a pas pu être lu autrement : remplissez les champs à la main.",
       "unsupportedFormat": "Ce format n'est pas lu automatiquement (photo HEIC ?) : remplissez à la main, ou renvoyez le document en JPEG ou en PDF.",
       "download": "Le document n'a pas pu être récupéré auprès de la messagerie.",
       "analysis": "La lecture a échoué. Relisez, ou remplissez les champs à la main.",
-      "refused": "Le document n'a pas pu être lu automatiquement : remplissez les champs à la main."
+      "refused": "Le document n'a pas pu être lu automatiquement : remplissez les champs à la main.",
+      "noText": "Aucun texte lisible dans le document (photo floue, PDF scanné sans texte ?) : remplissez les champs à la main, ou reprenez la photo bien à plat, de près et en pleine lumière."
     },
     "fields": {
       "kind": "Ranger comme",

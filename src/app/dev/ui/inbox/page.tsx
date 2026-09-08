@@ -72,7 +72,7 @@ const ITEMS: InboxItem[] = [
       ],
       notes: "Vidange des deux Yanmar avec filtres. Heures relevées sur le moteur bâbord.",
       confidence: "medium",
-      warnings: ["Le relevé d'heures du moteur tribord n'est pas lisible sur la facture."],
+      warnings: ["local", "Le relevé d'heures du moteur tribord n'est pas lisible sur la facture."],
     },
   },
   {
