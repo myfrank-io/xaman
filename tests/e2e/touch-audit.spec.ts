@@ -295,7 +295,7 @@ for (const path of PAGES) {
 }
 
 /**
- * The recap a line of Dépenses unrolls (D80). No URL of the gallery reaches it — it exists only
+ * The recap a line of Dépenses unrolls (D86). No URL of the gallery reaches it — it exists only
  * after a tap — and it is the densest surface of that screen: a grid of facts, a note and two
  * buttons folded inside a list row. One line of each of the three sources.
  */

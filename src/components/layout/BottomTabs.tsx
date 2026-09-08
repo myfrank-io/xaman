@@ -88,7 +88,7 @@ function Tab({ item }: { item: NavItem }) {
     <NavLink href={item.href} className={tabClass(active)}>
       <ActiveRule active={active} />
       <Icon className="size-6" />
-      {/* Le point rouge de l'onglet : ce qui est à faire aujourd'hui, et rien d'autre (D81). */}
+      {/* Le point rouge de l'onglet : ce qui est à faire aujourd'hui, et rien d'autre (D88). */}
       <AttentionDot
         count={item.badge}
         size="sm"

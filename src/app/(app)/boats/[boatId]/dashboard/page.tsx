@@ -106,7 +106,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       .eq("boat_id", boatId)
       .gte("date", since),
     // Ce qui est à faire aujourd'hui : le même compte que les points rouges de la navigation,
-    // pour que la tuile, la grille et l'onglet racontent la même chose (D81).
+    // pour que la tuile, la grille et l'onglet racontent la même chose (D88).
     loadBoatAttention(supabase, boatId, today),
   ]);
   if (!boat || !role) notFound();
@@ -300,7 +300,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
             href={checklistPath(boatId, { view: "todo", filter: "soon" })}
           />
           {/* Le rouge de la tuile suit ce qui est à faire aujourd'hui, pas le total ouvert :
-              une intervention prévue dans trois semaines n'est pas une alerte (D81). */}
+              une intervention prévue dans trois semaines n'est pas une alerte (D88). */}
           <StatCard
             variant="dark"
             label={t("stats.openLogs")}

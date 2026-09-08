@@ -114,7 +114,7 @@ export async function ExpensesTab({
   const change = variation(total, data.previousTotal);
 
   /**
-   * Where the lines are read (D80). Narrowing to a category used to move them a screen and a
+   * Where the lines are read (D86). Narrowing to a category used to move them a screen and a
    * half down, under a heading that looked untouched: « ça sélectionne la ligne, c'est tout ».
    * They now unroll under the row that was tapped — and the list below would be the same lines
    * twice, so it steps aside. Without a breakdown to unroll into (a category filter that matches

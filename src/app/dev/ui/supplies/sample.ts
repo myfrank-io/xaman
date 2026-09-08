@@ -101,7 +101,7 @@ const SUPPLIERS: Record<string, string> = {
 };
 
 /**
- * What each line unrolls (D80). One of each shape the recap has to survive: an intervention
+ * What each line unrolls (D86). One of each shape the recap has to survive: an intervention
  * with everything on it, one done by the crew with nothing but a note, a purchase attached to
  * an intervention, one that is not, and the haul-out with its own interventions.
  */

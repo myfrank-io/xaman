@@ -2,6 +2,12 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
+**Prochain numéro : D90.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
+toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
+change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
+`tests/unit/numbering.test.ts` refuse un numéro déjà pris et un compteur oublié.
+
 | Date | Question | Décision | Raison |
 |---|---|---|---|
 | 2026-09-02 | Stack | Next.js + Supabase + Vercel, PWA | iPad Safari en priorité, multi-tenant par RLS, MCP Supabase/Vercel déjà connectés, pas de serveur à maintenir |
@@ -205,7 +211,7 @@ Format : date · question · décision · raison. Claude Code ajoute une ligne �
 | 2026-09-03 | Écriture d'une ligne qui existe déjà (D42) | **Jamais d'`upsert`** : `update` sur l'identifiant quand la ligne existe, `upsert` réservé à la création | Les politiques d'insertion de `maintenance_logs`, `attachments`, `checklist_completions` et `engine_hour_readings` vérifient `created_by = auth.uid()`. Postgres évalue ce `with check` sur la ligne **proposée** par `insert … on conflict do update`, avant même de regarder la ligne en conflit : un upsert qui laisse `created_by` tranquille — ce que E10-4 exige, « créé par » doit continuer à nommer l'auteur — était donc refusé pour tout le monde, propriétaire compris. Signalé à l'usage : « dès que je veux enregistrer on me dit ça » ; **plus aucune intervention existante n'était modifiable**. La politique n'est pas à assouplir, c'est elle qui empêche un pro de déposer une ligne au nom d'un autre : c'est l'action qui devait changer. La création garde l'upsert, donc un double tap n'écrit toujours qu'une ligne (règle 11) |
 | 2026-09-03 | Bandeau sombre du tableau de bord | Il déborde à gauche et à droite, **jamais vers le haut** | La marge négative en haut (`-mt-8`) le peignait par-dessus le fil d'Ariane : « le titre Tableau de bord est caché derrière ce bloc ». Elle datait d'un temps où le bandeau était le premier enfant de la page ; le fil est passé au-dessus depuis. La maquette `/dev/ui/dashboard` portait la même ligne en double, ce qui explique que l'audit tactile ne l'ait jamais vu — les deux sont corrigées ensemble |
 | 2026-09-03 | Section d'un écran d'import (D43) | L'écran appartient à la liste que nomme son `?entity=` : le fil d'Ariane l'ouvre dessus (« Bateau › Moteurs › Importer ») et l'entrée correspondante s'allume dans le menu | `/import` est la même adresse pour les sept listes ; seul le paramètre dit laquelle. Le fil se construisant sur le chemin seul, l'écran restait orphelin et le menu ne montrait rien de sélectionné — sur l'écran le plus difficile à situer. Une entité inconnue laisse « Importer » seul plutôt que de désigner une liste au hasard |
-| 2026-09-03 | Stock sur l'écran Checklist (D43) | Une carte « Stock » ferme la grille des systèmes : nombre de pièces, badge « N sous le seuil », et le chemin vers la liste | C'est ce qu'on cherche en préparant le travail que ces cartes décrivent, donc elle est là où l'œil se trouve déjà plutôt qu'à deux taps. Neutre volontairement, sans barre de progression : une étagère n'a pas d'échéance, et une couleur de catégorie l'aurait fait lire comme un neuvième système (règle 12). Absente quand le bateau n'a aucune pièce |
+| 2026-09-03 | Stock sur l'écran Checklist (D84) | Une carte « Stock » ferme la grille des systèmes : nombre de pièces, badge « N sous le seuil », et le chemin vers la liste | C'est ce qu'on cherche en préparant le travail que ces cartes décrivent, donc elle est là où l'œil se trouve déjà plutôt qu'à deux taps. Neutre volontairement, sans barre de progression : une étagère n'a pas d'échéance, et une couleur de catégorie l'aurait fait lire comme un neuvième système (règle 12). Absente quand le bateau n'a aucune pièce |
 | 2026-09-03 | Nom de la section « Checklist » | **Conservé** ; « To Do List » écarté | Une to-do list se vide quand on la termine ; celle-ci ne se vide jamais — un point coché revient à son échéance. « Checklist » est le mot du bord pour des points de vérification récurrents, et l'UI est en français (règle 7). La confusion signalée portait sur le lien avec Interventions, réglée par les sous-titres des deux sections plutôt que par un renommage |
 | 2026-09-03 | Spécialité à l'import (D44) | Choisie parmi des puces — les sept métiers intégrés **plus** ceux déjà utilisés sur ce bateau — avec « Autre » pour en nommer un nouveau ; plus de texte libre nu | Signalé à l'usage : « ne mets pas un texte libre mais un menu déroulant des spécialités avec la possibilité de créer une nouvelle catégorie ». Un champ libre invite les fautes de frappe, et chacune crée un métier de plus dans un annuaire censé en avoir peu. C'est le contrôle exact du formulaire de contact, alimenté par le **même** lecteur (`usedSpecialties`), donc les deux écrans ne peuvent pas proposer des listes différentes — et un métier nommé ici devient une puce pour le contact suivant |
 | 2026-09-03 | Carte Stock quand le bateau n'a aucune pièce | **Affichée quand même**, « aucune pièce · Ajouter les pièces que vous gardez à bord » | La masquer à zéro revenait à cacher la porte d'entrée : signalé à l'usage, « dans checklist il n'y a toujours pas pièces détachées » — sur un bateau qui n'a encore rien saisi, c'est-à-dire exactement celui qui en a le plus besoin. Une carte vide n'est pas du vide : c'est le chemin |
@@ -1240,7 +1246,7 @@ nom, pas un acte, donc indiscernable d'un lien vers les relevés.
 **Rien n'est retiré.** Aucune information ne quitte la carte : elle est réarrangée, et le seul
 chemin qui disparaît (le faux bouton « N points liés ») est remplacé par un vrai, plus grand.
 
-## 2026-09-07 — D73 : tous les rôles dès l'invitation, une seule porte vers la propriété
+## 2026-09-07 — D89 : tous les rôles dès l'invitation, une seule porte vers la propriété
 
 **Question.** « Pourquoi on a que ça en sélection ? Et une fois ajouté j'ai la possibilité de
 changer. » Puis : « Je veux pouvoir ajouter tous les rôles dès l'ajout. »
@@ -1289,7 +1295,7 @@ l'invitation ne fait pas — il invite *et* il fait partir l'ancien propriétair
 l'acceptation confirmée. `ensure_last_owner` continue d'interdire de retirer le dernier
 propriétaire d'un bateau.
 
-## 2026-09-07 — D74 : la longueur du code n'est pas à nous
+## 2026-09-07 — D83 : la longueur du code n'est pas à nous
 
 **Question.** « Pour info le code à 6 chiffres en a 8. » Copie d'écran à l'appui : `97510872`,
 arrivé par e-mail, huit chiffres.
@@ -1584,7 +1590,79 @@ définitif l'est dès la première seconde. Écarté enfin : renvoyer automatiqu
 les événements `email.*`, puis poser `RESEND_WEBHOOK_SECRET` (le *signing secret*) dans les
 variables Vercel. Sans lui l'endpoint refuse tout et seule la relance à la lecture travaille.
 
-## 2026-09-08 — D80 : une ligne de dépense se déroule sur place, l'intervention reste à un geste
+## 2026-09-08 — D85 : un numéro de décision se prend sur une ligne, pas dans 1 500
+
+**Question.** Sur une seule branche, dans la même journée, un numéro a dû être changé **trois fois
+de suite** — D76, puis D77, puis D79, chaque fois repris par une autre PR avant la fusion — et sur
+`main` **D43, D73 et D74 nommaient chacun deux décisions différentes**. Et pendant que cette
+décision s'écrivait, un **quatrième** doublon est arrivé : #55 a fusionné en D80 cinquante-six
+minutes après #50, qui l'avait pris. La démonstration n'a donc pas eu à être cherchée. Le journal git porte même la trace du problème se reproduisant :
+`docs(engines): renumber to E13-10 / D73 after the merge with main` — un renumérotage qui est
+entré en collision une seconde fois.
+
+**Le constat.** Le numéro se choisit en lisant un document de 1 500 lignes sur une branche, contre
+un `main` qui bouge. Deux branches lisent donc le même « prochain libre ». Et rien ne les arrête :
+elles ajoutent chacune une section à un endroit différent du fichier, git fusionne les deux sans
+un mot, et le doublon n'existe qu'à partir de la seconde fusion — sans que personne le voie. Il se
+découvre plus tard, à la lecture : `// D73` dans `permissions.ts` et `// D73` dans `EnginesTab.tsx`
+ne désignaient pas la même décision. Un renumérotage laisse en plus des citations orphelines
+derrière lui : `boat-onboarding.ts` citait « D74 » sous une phrase qui appartient à D76.
+
+**Décision.** Le compteur devient **une ligne unique** en tête de ce fichier. On prend le numéro
+qu'elle annonce, et on l'incrémente **dans le même commit**. Deux branches qui prennent le même
+numéro réécrivent alors toutes les deux **cette ligne** : la seconde fusion s'arrête sur un
+conflit git. Le doublon n'atteint plus `main` — il se résout pendant qu'un numéro se change encore
+d'un `sed`, et non trois jours plus tard, quand il est cité dans une migration.
+
+**Pourquoi pas une clé `date + slug`,** qui n'aurait aucun compteur à partager : les numéros sont
+cités **près de huit cents fois, dans cent quatre-vingt-dix fichiers** — migrations appliquées en
+production, schémas zod, Server
+Actions, tests, `DATA-MODEL.md`. Les renommer serait un diff énorme et casserait toutes les
+références des PR déjà fusionnées, pour un identifiant qui n'a rien de faux. Ce n'est pas le
+numéro qui était mauvais, c'est la façon de l'attribuer.
+
+**Qui cède, pour les quatre doublons.** Règle mécanique, aucune appréciation sur le travail de
+quelqu'un : **celui qui est arrivé le second sur `main` change de numéro.** D73 reste au moteur
+sans compteur (#34, 15 h 58) et les rôles à l'invitation deviennent **D82** (#39, 17 h 32) ; D74
+reste à la fiche moteur (#38, 17 h 14) et la longueur du code devient **D83** (#40, 18 h 09) ; les
+deux D43 venant d'un même commit, c'est la seconde ligne du tableau — la carte Stock — qui devient
+**D84** ; et le récapitulatif d'une ligne de dépense, arrivé second sur D80, devient **D86**.
+Leurs citations suivent, et `boat-onboarding.ts` cite enfin D76.
+
+**Le garde-fou.** `scripts/check-numbering.mjs`, joué par `tests/unit/numbering.test.ts` donc par
+`pnpm test` et par la CI, tient trois règles : aucun numéro n'ouvre deux entrées ; le compteur
+reste au-dessus de **tout** `Dxx` écrit dans le dépôt ; et rien de daté du jour où le compteur est
+apparu ne porte un numéro inférieur à celui où il a commencé. La deuxième ne lit aucune notation —
+un numéro pris sans toucher la ligne échoue, qu'il ait été écrit dans un titre, dans une cellule
+de tableau ou au milieu d'une phrase, ce que le journal fait aussi.
+
+**La troisième existe pour la transition,** et elle n'est pas restée théorique une heure. Une
+branche ouverte avant le compteur ne peut pas le suivre : la ligne est un ajout d'un seul côté,
+donc git la fusionne sans un mot. #56 a ainsi pris **D81** pour un nouveau titre alors que D81
+nommait déjà une ligne du tableau ci-dessus, et a fusionné — ni la première règle (le numéro
+n'ouvre pas deux titres) ni la deuxième (81 est sous le compteur) ne le voient. La date le voit.
+C'est le bas de la série que cette règle garde, là où un numéro n'est pas disputé mais **repris**.
+Le point rouge est donc **D88**, et ses vingt-cinq citations suivent.
+
+**Elle prend effet plus tard que le jour où le compteur est écrit,** et c'est délibéré : #57 a pris
+**D82** pendant que cette PR était en revue, et D82 était réellement libre sur le `main` qu'elle
+voyait. Une branche qui ne peut pas voir la ligne fait le bon choix en prenant le suivant ; la
+faire échouer pour cela serait un faux positif, et un garde-fou qui crie au loup ne sert personne.
+La règle est donc datée du jour où toutes les branches auront eu le compteur, et la règle 1 couvre
+l'intervalle. Le corollaire vaut pour cette PR même : c'est **la nôtre** qui a cédé D82, puisque
+c'est celle qui n'avait pas encore fusionné — la règle « le second change » se lit depuis `main`,
+pas depuis la branche où l'on travaille.
+
+**Ce qu'il ne vérifie pas** : qu'un numéro cité désigne la bonne décision. Rien n'aurait pu
+attraper le « D74 » de `boat-onboarding.ts` — ce numéro existait, il voulait simplement dire autre
+chose. Seule la lecture attrape cela.
+
+**Les tickets ont la même maladie** — dans `BACKLOG.md`, `E13-10` et `E13-13` nommaient chacun
+deux tickets. Traité juste après, en **D87** : même compteur, mais une ligne par épique, puisqu'un
+numéro de ticket est relatif à la sienne. Reste hors de portée ce qu'aucun compteur ne rattrape :
+un numéro cité dans un nom de branche, un titre de PR ou un message de commit.
+
+## 2026-09-08 — D86 : une ligne de dépense se déroule sur place, l'intervention reste à un geste
 
 **Question.** Deux signalements sur le même écran, Dépenses. Sur la liste : « quand je clique sur
 un détail de toutes les lignes, j'aimerais bien avoir un récap de l'intervention qui déroule et
@@ -1630,7 +1708,48 @@ sous le bloc filtré, qui affichait les mêmes lignes deux fois à un écran d'i
 enfin : rendre le bloc « Par catégorie » dépliable **sans** filtrer — les totaux, la comparaison
 et l'export ne suivraient plus ce qui est affiché, ce que D77 avait justement corrigé.
 
-## 2026-09-08 — D81 : le point rouge ne dit qu'une chose, et il la dit jusqu'au bout
+## 2026-09-08 — D87 : un numéro de ticket se prend sur une ligne aussi, mais par épique
+
+**Question.** D85 nommait les tickets comme sa limite connue : `E13-10` et `E13-13` désignaient
+chacun deux tickets dans `BACKLOG.md`. Même maladie, même jour, même épique — celle des reprises
+signalées à l'usage, la seule où l'on ajoute un ticket au fil de l'eau.
+
+**Le constat.** Exactement la cause de D85, avec un détail qui aggrave : le numéro n'est pas
+seulement choisi contre un `main` qui bouge, il n'est **pas revérifié après la fusion**. Les deux
+`E13-10` sont séparés par une ligne vide dans le fichier — la seconde branche a fusionné `main`,
+puis a posé son ticket à la suite, avec le numéro qu'elle avait choisi avant. Git n'avait rien à
+signaler : deux insertions à des endroits différents d'une liste se fusionnent sans un mot.
+
+**Décision.** Le compteur de D85, mais **une ligne par épique** — un tableau en tête de
+`BACKLOG.md`. Deux branches qui ajoutent un ticket à la **même** épique écrivent la même ligne, et
+la seconde fusion s'arrête sur un conflit git. Deux branches qui travaillent des épiques
+différentes ne se gênent pas : elles n'allaient de toute façon pas entrer en collision. Une ligne
+unique, comme pour les décisions, les aurait fait échouer l'une contre l'autre sans raison.
+
+**Deux règles, pas trois.** Un ticket n'a qu'une seule notation — l'élément de liste
+`- [x] **E13-10** …`. Il n'y a donc aucune notation ancienne dont on ne saurait dire si elle
+définit ou si elle cite, et la règle « aucun identifiant n'ouvre deux tickets » suffit là où les
+décisions demandaient une troisième règle datée. La seconde règle exige en plus qu'une épique qui
+porte des tickets porte une ligne de compteur : ouvrir une épique neuve fait échouer la
+vérification jusqu'à ce que sa ligne existe, ce qui est le bon moment pour y penser.
+
+**Qui cède.** La même règle mécanique qu'en D85, et ici l'ordre d'écriture et l'ordre de fusion
+disent la même chose : le second change. `E13-10` reste au moteur sans compteur d'heures (13 h 32)
+et les rôles à l'invitation deviennent **E13-15** (15 h 27) ; `E13-13` reste aux quatre moteurs de
+l'étape 1 (16 h 25) et l'e-mail de code devient **E13-16** (16 h 36). Une seule citation hors du
+backlog les nomme, dans ce fichier, et elle vise un numéro conservé.
+
+**Ce qui reste hors de portée, et le restera.** Un numéro de ticket vit aussi dans des noms de
+branches, des titres de PR et des messages de commit — de l'histoire, qu'aucun compteur ne peut
+corriger. `claude/…` et « E13-10 / D73 » dans un message de commit continueront de désigner ce
+qu'ils désignaient. C'est le prix d'un renumérotage, il est payé une fois, et il est plus petit que
+deux tickets qui répondent au même nom.
+
+**Un seul garde-fou pour les deux.** `scripts/check-decisions.mjs` devient
+`scripts/check-numbering.mjs` et tient les cinq règles ; `tests/unit/decisions.test.ts` devient
+`tests/unit/numbering.test.ts`. Deux fichiers presque identiques auraient divergé au premier
+correctif (règle 10 : pas de poids sans raison).
+## 2026-09-08 — D88 : le point rouge ne dit qu'une chose, et il la dit jusqu'au bout
 
 **Question.** « Gère mieux les points rouges des notifications pour guider les users : que sur
 les trucs en retard ou dans la journée à faire, et mets le point rouge jusqu'au bout du flux,

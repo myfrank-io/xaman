@@ -89,7 +89,7 @@ const ROWS: ChecklistRow[] = [
     daysRemaining: 8,
     sortOrder: 2,
   }),
-  // Le point qui tombe dans la journée : badge « Aujourd'hui », échéance « aujourd'hui » (D81).
+  // Le point qui tombe dans la journée : badge « Aujourd'hui », échéance « aujourd'hui » (D88).
   row({
     id: "s2b",
     label: "Bas-étai et ridoirs (contrôle visuel)",

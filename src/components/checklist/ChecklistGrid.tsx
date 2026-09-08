@@ -21,7 +21,7 @@ export type CategoryProgress = {
   icon: string | null;
   total: number;
   overdue: number;
-  /** Points dus dans la journée, pas encore en retard : ils allument le point rouge (D81). */
+  /** Points dus dans la journée, pas encore en retard : ils allument le point rouge (D88). */
   dueToday: number;
   neverRecorded: number;
   punctual: number;
@@ -127,7 +127,7 @@ export async function ChecklistGrid({
         const neverDone = category.total > 0 && category.neverRecorded === category.total;
         const ratio = neverDone || category.total === 0 ? null : category.progress;
         // Le point rouge de l'onglet Checklist se rejoue ici, sur le système qui le porte :
-        // c'est la deuxième marche du flux, celle qui dit où taper (D81).
+        // c'est la deuxième marche du flux, celle qui dit où taper (D88).
         const attention = category.overdue + category.dueToday;
         return (
           <Tile

@@ -37,7 +37,7 @@ export type ExpenseLine = {
   kindLabel: string | null;
   supplier: string | null;
   needsReview: boolean;
-  /** What the row unrolls (D80); null when the line carries nothing more. */
+  /** What the row unrolls (D86); null when the line carries nothing more. */
   detail: ExpenseDetail | null;
 };
 
@@ -46,7 +46,7 @@ export type ExpenseLine = {
  * ledger, newest first. Every line says what it paid for and links to it, so the link between
  * an intervention and its cost is visible from both sides.
  *
- * A tap unrolls the recap under the line rather than opening the intervention (D80): reading
+ * A tap unrolls the recap under the line rather than opening the intervention (D86): reading
  * « c'est quoi, ces 320 € ? » must not cost the place in the list, and the intervention itself
  * stays one tap further, in the panel.
  */

@@ -117,7 +117,7 @@ export function CategoryItems({
   const todoCount = interval.filter(isTodo).length + punctualTodo.length;
   const overdueCount = rows.filter((row) => row.status === "overdue").length;
   // Dernière marche du flux : le point rouge de l'onglet, puis de la tuile, arrive ici — sur
-  // le filtre, puis sur la ligne elle-même, dont le badge dit « Aujourd'hui » (D81).
+  // le filtre, puis sur la ligne elle-même, dont le badge dit « Aujourd'hui » (D88).
   const attentionCount = countAttention(rows);
   const visible = sortRows(filter === "todo" ? interval.filter(isTodo) : interval);
   const visiblePunctual = sortRows(filter === "todo" ? punctualTodo : punctual);

@@ -11,7 +11,7 @@ import { checklistPath } from "@/lib/queries/boat-routes";
 /**
  * `attentionCount` : ce qui est en retard ou dû dans la journée. Le compte gris dit la
  * longueur de la liste (trente jours), le point rouge dit ce qui ne peut pas attendre — le
- * même que celui de l'onglet de navigation, une marche plus bas (D81).
+ * même que celui de l'onglet de navigation, une marche plus bas (D88).
  */
 export function ChecklistViewTabs({
   boatId,

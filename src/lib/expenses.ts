@@ -225,7 +225,7 @@ export function buildExpensesCsv(rows: readonly ExpenseRow[], labels: CsvLabels)
 }
 
 /**
- * What a line of the money list hides (D80). Tapping a line unrolls this under it instead of
+ * What a line of the money list hides (D86). Tapping a line unrolls this under it instead of
  * throwing the reader at the other end of the app: the answer to « c'est quoi, cette ligne ? »
  * is read where the question is asked, and one more tap opens the intervention itself.
  */

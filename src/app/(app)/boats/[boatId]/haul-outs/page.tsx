@@ -45,7 +45,7 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
         .is("deleted_at", null)
         .not("haul_out_id", "is", null),
       // Le bandeau d'onglets est le même objet sur les trois écrans : il porte donc le même
-      // point rouge sur « Prévu », d'où qu'on le regarde (D81).
+      // point rouge sur « Prévu », d'où qu'on le regarde (D88).
       loadLogAttention(supabase, boatId),
     ]);
   if (!role) notFound();

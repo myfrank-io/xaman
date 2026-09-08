@@ -9,7 +9,7 @@ import {
 import { todayString } from "@/lib/format";
 import type { Database } from "@/types/database";
 
-/** Ce qui est à faire aujourd'hui sur un bateau, tel que les points rouges le racontent (D81). */
+/** Ce qui est à faire aujourd'hui sur un bateau, tel que les points rouges le racontent (D88). */
 export type BoatAttention = {
   /** Points de checklist en retard ou dus dans la journée. */
   items: number;
