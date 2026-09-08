@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { Translations } from "@/i18n/Translations";
+import { BOAT_SHELL } from "@/i18n/slices";
 import { BoatProvider } from "@/components/boat/BoatProvider";
 import { RealtimeBridge } from "@/components/boat/RealtimeBridge";
 import { OfflineBanner } from "@/components/common/OfflineBanner";
@@ -95,23 +97,27 @@ export default async function BoatLayout({
   };
 
   return (
-    <BoatProvider boat={boat} role={boatRole}>
-      <RealtimeBridge boatId={boat.id} />
-      <AppShell
-        boatId={boatId}
-        boatName={boat.name}
-        boatSubtitle={[boat.builder, boat.model].filter(Boolean).join(" ")}
-        nav={nav}
-        primaryAction={
-          can(boatRole, "contribute") ? (
-            <PrimaryActionSheet boatId={boatId} role={boatRole} />
-          ) : undefined
-        }
-        accountMenu={<AccountMenu boatId={boatId} role={boatRole} user={account} />}
-        banner={<OfflineBanner lastSyncAt={new Date().toISOString()} />}
-      >
-        {children}
-      </AppShell>
-    </BoatProvider>
+    // The frame's own words only (D110): each section layout under `children` hands the client
+    // the groups its screens read, and a nested provider replaces rather than merges.
+    <Translations of={BOAT_SHELL}>
+      <BoatProvider boat={boat} role={boatRole}>
+        <RealtimeBridge boatId={boat.id} />
+        <AppShell
+          boatId={boatId}
+          boatName={boat.name}
+          boatSubtitle={[boat.builder, boat.model].filter(Boolean).join(" ")}
+          nav={nav}
+          primaryAction={
+            can(boatRole, "contribute") ? (
+              <PrimaryActionSheet boatId={boatId} role={boatRole} />
+            ) : undefined
+          }
+          accountMenu={<AccountMenu boatId={boatId} role={boatRole} user={account} />}
+          banner={<OfflineBanner lastSyncAt={new Date().toISOString()} />}
+        >
+          {children}
+        </AppShell>
+      </BoatProvider>
+    </Translations>
   );
 }

@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Fraunces } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+
+import { Translations } from "@/i18n/Translations";
+import { ROOT } from "@/i18n/slices";
 import { installPromptCapture } from "@/components/pwa/install-prompt-capture";
 import { PwaProvider } from "@/components/pwa/PwaProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -64,10 +66,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: installPromptCapture }} />
       </head>
       <body className="flex min-h-full min-w-0 flex-col font-sans">
-        <NextIntlClientProvider>
+        <Translations of={ROOT}>
           <PwaProvider>{children}</PwaProvider>
           <Toaster />
-        </NextIntlClientProvider>
+        </Translations>
       </body>
     </html>
   );

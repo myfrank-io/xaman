@@ -1790,6 +1790,48 @@ describeWithDb("secondary views", () => {
   });
 });
 
+describeWithDb("boat_expense_totals (0030)", () => {
+  const totals = (u: User | null) =>
+    as(u, async (c) => {
+      try {
+        const res = await c.query(
+          `select total::float8, line_count::int, cumulative_total::float8, by_category
+             from public.boat_expense_totals($1::uuid, '1900-01-01', '2999-12-31',
+                                             array['log','purchase','haul_out'])`,
+          [BOAT],
+        );
+        return res.rows[0] as {
+          total: number;
+          line_count: number;
+          cumulative_total: number;
+          by_category: unknown[];
+        };
+      } catch {
+        return null; // permission denied (anon)
+      }
+    });
+
+  it("every member gets the boat's totals", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const row = await totals(U[role]);
+      expect(row?.total, role).toBeGreaterThan(0);
+      expect(row?.line_count, role).toBeGreaterThan(0);
+      expect(row?.by_category.length, role).toBeGreaterThan(0);
+    }
+  });
+
+  // The function is `security invoker` over a `security_invoker` view: an outsider naming
+  // someone else's boat reads zero rows, so the answer is zeros — never another boat's money.
+  it("an outsider reads zeros, and anon is denied", async () => {
+    const row = await totals(U.stranger);
+    expect(row?.total).toBe(0);
+    expect(row?.line_count).toBe(0);
+    expect(row?.cumulative_total).toBe(0);
+    expect(row?.by_category).toEqual([]);
+    expect(await totals(null)).toBeNull();
+  });
+});
+
 describeWithDb("boat_todo_queue", () => {
   const seedQueue = async (c: PoolClient) => {
     await c.query("set local role service_role");
