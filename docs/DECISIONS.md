@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D88.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D89.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -1636,13 +1636,14 @@ apparu ne porte un numéro inférieur à celui où il a commencé. La deuxième 
 un numéro pris sans toucher la ligne échoue, qu'il ait été écrit dans un titre, dans une cellule
 de tableau ou au milieu d'une phrase, ce que le journal fait aussi.
 
-**La troisième existe pour la transition,** et elle n'est pas théorique. Une branche ouverte avant
-le compteur ne peut pas le suivre : la ligne est un ajout d'un seul côté, donc git la fusionne
-sans un mot. #56 a ainsi pris **D81** pour un nouveau titre alors que D81 nomme déjà une ligne du
-tableau ci-dessus — et ni la première règle (le numéro n'ouvre pas deux titres) ni la deuxième (81
-est sous le compteur) ne le voient. La date le voit : une entrée du 2026-09-08 qui porte moins de
-D85 n'a pas lu la ligne. C'est le bas de la série que celle-ci garde, là où un numéro n'est pas
-disputé mais **repris**.
+**La troisième existe pour la transition,** et elle n'est pas restée théorique une heure. Une
+branche ouverte avant le compteur ne peut pas le suivre : la ligne est un ajout d'un seul côté,
+donc git la fusionne sans un mot. #56 a ainsi pris **D81** pour un nouveau titre alors que D81
+nommait déjà une ligne du tableau ci-dessus, et a fusionné — ni la première règle (le numéro
+n'ouvre pas deux titres) ni la deuxième (81 est sous le compteur) ne le voient. La date le voit :
+une entrée du 2026-09-08 qui porte moins de D85 n'a pas lu la ligne. C'est le bas de la série que
+celle-ci garde, là où un numéro n'est pas disputé mais **repris**. Le point rouge est donc **D88**,
+et ses vingt-cinq citations suivent.
 
 **Ce qu'il ne vérifie pas** : qu'un numéro cité désigne la bonne décision. Rien n'aurait pu
 attraper le « D74 » de `boat-onboarding.ts` — ce numéro existait, il voulait simplement dire autre
@@ -1740,3 +1741,70 @@ deux tickets qui répondent au même nom.
 `scripts/check-numbering.mjs` et tient les cinq règles ; `tests/unit/decisions.test.ts` devient
 `tests/unit/numbering.test.ts`. Deux fichiers presque identiques auraient divergé au premier
 correctif (règle 10 : pas de poids sans raison).
+## 2026-09-08 — D88 : le point rouge ne dit qu'une chose, et il la dit jusqu'au bout
+
+**Question.** « Gère mieux les points rouges des notifications pour guider les users : que sur
+les trucs en retard ou dans la journée à faire, et mets le point rouge jusqu'au bout du flux,
+pas juste sur l'onglet de gauche. »
+
+**Le constat.** Deux pannes, chacune suffisante pour que la pastille cesse d'orienter.
+
+1. **Elle comptait trop.** L'onglet Journal portait `planned + in_progress + urgent`, c'est-à-dire
+   *toutes* les interventions ouvertes : un antifouling planifié pour le mois prochain allumait
+   l'onglet exactement comme une fuite d'inverseur du matin. Une pastille qui ne s'éteint jamais
+   n'est plus une notification, c'est un élément de décor — et on cesse de la regarder.
+2. **Elle s'arrêtait à la navigation.** L'onglet disait « 3 », et derrière, plus rien : la
+   Checklist s'ouvrait sur la grille des systèmes sans dire lequel des huit portait les trois
+   points, et le Journal s'ouvrait sur **Historique**, une liste d'interventions *terminées* où
+   par construction rien n'est à faire. Le point rouge posait une question et fermait la porte.
+
+**Décision — ce qui mérite un point rouge.** Une seule règle, écrite une fois
+(`src/lib/attention.ts`), lue partout : **en retard, ou dû dans la journée.**
+
+- point de checklist : `status = 'overdue'`, ou `days_remaining = 0` ;
+- intervention : `urgent` (c'est ce que le statut veut dire), ou ouverte et datée d'aujourd'hui
+  ou d'avant.
+
+Ne comptent donc plus : « Bientôt » (trente jours), « jamais fait », une intervention prévue plus
+tard, le stock sous le seuil, les lignes à vérifier. Ils gardent leurs écrans, leurs badges et
+leurs compteurs gris — ils n'ont simplement pas à interrompre la journée. La soustraction, elle,
+reste en base : la règle **lit** `checklist_item_status.days_remaining`, elle ne recalcule aucune
+échéance (règle 8).
+
+**Décision — le point rouge se rejoue à chaque marche.** Un seul objet, `AttentionDot`, du
+premier onglet jusqu'à la ligne :
+
+1. **Navigation** (barre d'onglets, bandeau de gauche, feuille « Plus ») : le compte du jour ;
+2. **Checklist** : la pastille sur l'onglet « À traiter », et une pastille nue sur **l'icône du
+   système** concerné dans la grille, dont le badge dit « 3 à faire » quand la journée s'en mêle ;
+3. **Catégorie** : la pastille sur le filtre « À traiter », le compte du jour dans le sous-titre ;
+4. **Journal** : la pastille sur l'onglet **Prévu** — l'onglet par défaut reste Historique, mais
+   il ne prétend plus être le bout du chemin —, et sur chaque ligne ouverte une puce rouge
+   « aujourd'hui » ou « 3 j de retard » ;
+5. **La ligne elle-même** : un point dû dans la journée porte le badge **« Aujourd'hui »** en
+   rouge au lieu de « Bientôt » en ambre, et son échéance se lit « aujourd'hui » au lieu de
+   « dans 0 j ».
+
+**Ce que ça change dans les chiffres.** La tuile « Interventions » du tableau de bord garde son
+total ouvert — c'est ce qu'elle nomme — mais son rouge et sa phrase suivent désormais la journée
+(« dont 2 à faire aujourd'hui »), et elle ouvre **Prévu** plutôt que l'historique.
+
+**Colonne d'état élargie.** « AUJOURD'HUI » est le plus long des libellés d'état : à 96 px il
+passait par-dessus le titre de la ligne. La pastille d'état passe à 112 px — la gouttière de la
+colonne absorbe la différence, aucun titre ne bouge — et ce libellé-là se passe d'icône : compter
+sur le rétrécissement d'un SVG dépendrait du moteur de rendu, et sur Safari il déborderait. Le
+mot porte seul ; la couleur ne travaille donc pas seule pour autant.
+
+**Aucune migration.** Tout se déduit des vues existantes (`checklist_item_status`,
+`maintenance_logs_view`). Le bandeau ne lit plus `boat_dashboard_stats` pour ses compteurs : deux
+lectures étroites (`src/lib/queries/attention.ts`) remplacent une vue dont les sous-requêtes
+— dépenses sur douze mois, sorties de l'eau, stock — ne servaient à rien ici, et qui ne savait de
+toute façon pas dire ce qui est daté d'aujourd'hui.
+
+**Écarté :** ajouter deux colonnes à `boat_dashboard_stats` — la journée est une date, pas un
+état, et deux `select` de trois colonnes coûtent moins que la vue entière. Écarté aussi : faire
+pointer l'onglet Journal vers « Prévu » quand il y a du rouge — une entrée de menu dont la
+destination change sous le doigt est un piège ; c'est la pastille sur l'onglet « Prévu » qui
+mène la suite. Écarté enfin : laisser le badge « Bientôt » sur un point dû le jour même, avec la
+seule échéance en rouge à droite — c'est exactement le mot qui empêchait de trouver la ligne que
+l'onglet annonçait.

@@ -33,7 +33,10 @@ export type NavItem = {
   label: string;
   /** Tab label (< 1024 px): « Bord », « Journal »… falls back to `label`. */
   shortLabel?: string;
-  /** Counter pill; nothing is rendered when it is 0 or undefined. */
+  /**
+   * The red dot: what is to be done TODAY on that screen — late, or due within the day (D88).
+   * Never a section total; nothing is rendered when it is 0 or undefined.
+   */
   badge?: number;
   /** Context value shown on the right of a « Plus » sheet row. */
   hint?: string;

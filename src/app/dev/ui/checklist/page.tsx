@@ -29,6 +29,7 @@ const PROGRESS: CategoryProgress[] = SAMPLE_CATEGORIES.map((category, index) => 
   icon: category.icon,
   total: [13, 6, 23, 12, 10, 7, 10, 9][index] ?? 8,
   overdue: [3, 0, 1, 0, 1, 0, 2, 1][index] ?? 0,
+  dueToday: [0, 0, 2, 0, 0, 1, 0, 0][index] ?? 0,
   neverRecorded: index === 1 ? 6 : ([2, 0, 4, 1, 3, 1, 5, 2][index] ?? 0),
   punctual: index === 3 ? 2 : 0,
   progress: index === 1 ? null : ([0.4, null, 0.85, 1, 0.55, 0.7, 0.3, 0.8][index] ?? 0.5),
@@ -86,6 +87,16 @@ const ROWS: ChecklistRow[] = [
     intervalMonths: 6,
     dueAt: "2026-09-10",
     daysRemaining: 8,
+    sortOrder: 2,
+  }),
+  // Le point qui tombe dans la journée : badge « Aujourd'hui », échéance « aujourd'hui » (D88).
+  row({
+    id: "s2b",
+    label: "Bas-étai et ridoirs (contrôle visuel)",
+    status: "soon",
+    intervalMonths: 6,
+    dueAt: "2026-09-08",
+    daysRemaining: 0,
     sortOrder: 2,
   }),
   row({

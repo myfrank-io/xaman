@@ -27,10 +27,10 @@
  *   3. Nothing dated on or after the day the counter appeared carries a number below the value it
  *      started at. Rule 2 guards the top of the series; this guards the bottom, where a number is
  *      not raced for but *re-taken*. That is not hypothetical: a branch opened before the counter
- *      existed took D81 for a new heading while D81 already named a table row, and neither of the
- *      first two rules sees it — the counter line is an addition on one side only, so git merges
- *      it without a word. A branch that predates the rule cannot follow it; this is what makes it
- *      answer for it anyway.
+ *      existed took D81 for a new heading while D81 already named a table row, and merged —
+ *      neither of the first two rules sees it, and the counter line cannot help, being an addition
+ *      on one side only that git merges without a word. A branch that predates the rule cannot
+ *      follow it; this is what makes it answer for it anyway.
  *
  * What it deliberately does not check: that a cited number resolves to a decision. Nothing here
  * could have caught boat-onboarding.ts quoting « D74 » for a sentence that belongs to D76 — that

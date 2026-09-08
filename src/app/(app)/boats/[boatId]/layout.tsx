@@ -15,6 +15,7 @@ import {
   type NavKey,
 } from "@/components/layout/nav";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadBoatAttention } from "@/lib/queries/attention";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -52,23 +53,19 @@ export default async function BoatLayout({
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
 
-  const [{ data: stats }, { data: profile }] = await Promise.all([
-    // Existing columns only (`boat_dashboard_stats`): no new column is required.
-    supabase
-      .from("boat_dashboard_stats")
-      .select("overdue_items, planned_logs, in_progress_logs, urgent_logs")
-      .eq("boat_id", boatId)
-      .maybeSingle(),
+  const [attention, { data: profile }] = await Promise.all([
+    loadBoatAttention(supabase, boatId),
     auth.user
       ? supabase.from("profiles").select("full_name, email").eq("id", auth.user.id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 
-  const openLogs =
-    (stats?.planned_logs ?? 0) + (stats?.in_progress_logs ?? 0) + (stats?.urgent_logs ?? 0);
+  // Le point rouge ne compte que ce qui est à faire aujourd'hui (D88) : l'onglet Journal
+  // portait le total des interventions ouvertes, donc une intervention prévue dans trois
+  // semaines l'allumait autant qu'une panne du jour, et le point ne guidait plus personne.
   const badges: Partial<Record<NavKey, number>> = {
-    checklist: stats?.overdue_items ?? 0,
-    logs: openLogs,
+    checklist: attention.items,
+    logs: attention.logs,
   };
 
   const tn = await getTranslations("nav");

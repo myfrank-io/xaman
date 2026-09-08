@@ -72,9 +72,10 @@ describe("numérotation des décisions", () => {
   });
 
   it("signale un numéro repris par une entrée postérieure au compteur", () => {
-    // Verbatim from a branch opened before the counter existed: it took D81 for a new heading
-    // while D81 already named a row of the table above. Neither of the other two rules sees it —
-    // the number is not defined twice by a heading, and it sits below the counter.
+    // Verbatim from the branch that did it: opened before the counter existed, it took D81 for a
+    // new heading while D81 already named a row of the table above, and it merged. Neither of the
+    // other two rules sees that — the number is not defined twice by a heading, and it sits below
+    // the counter. It is D88 now.
     const failures = reuseFailures(
       [
         {

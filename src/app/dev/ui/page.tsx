@@ -13,6 +13,7 @@ import {
 import { XamanLogotype } from "@/components/brand/XamanLogotype";
 import { XamanMark } from "@/components/brand/XamanMark";
 import { CategoryBadge, CategoryIcon } from "@/components/common/CategoryBadge";
+import { AttentionDot } from "@/components/common/AttentionDot";
 import { ChecklistStateBadge } from "@/components/common/ChecklistStateBadge";
 import { DueLabel } from "@/components/common/DueLabel";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -126,7 +127,8 @@ export default async function DevUiPage() {
   const tch = await getTranslations("checklist");
 
   const keys: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
-  const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2, trash: 4 };
+  // Le point rouge ne dit que « à faire aujourd'hui » (D88) : jamais un total de corbeille.
+  const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2 };
   const hints: Partial<Record<NavKey, string>> = { contacts: "6 fiches", supplies: "4 321 €" };
   const nav: NavItem[] = keys.map((key) => ({
     key,
@@ -343,6 +345,7 @@ export default async function DevUiPage() {
             <ChecklistStateBadge state="never" />
             <ChecklistStateBadge state="ok" />
             <ChecklistStateBadge state="soon" />
+            <ChecklistStateBadge state="soon" dueToday />
             <ChecklistStateBadge state="overdue" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -353,7 +356,12 @@ export default async function DevUiPage() {
               Personnalisé
             </Badge>
             <Badge size="sm">4</Badge>
+            {/* Le point rouge : compté dans la navigation, nu sur une icône (D88). */}
+            <AttentionDot count={3} />
+            <AttentionDot count={3} size="sm" />
+            <AttentionDot bare />
             <DueLabel status="overdue" daysRemaining={-126} />
+            <DueLabel status="soon" daysRemaining={0} />
             <DueLabel status="soon" daysRemaining={9} />
             <DueLabel status="soon" daysRemaining={null} hoursRemaining={40} />
             <DueLabel status="never" hasCounter={false} />

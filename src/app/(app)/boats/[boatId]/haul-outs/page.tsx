@@ -10,6 +10,7 @@ import { LogsTabs } from "@/components/logs/LogsTabs";
 import { Button } from "@/components/ui/button";
 import { daysAshore } from "@/lib/haul-outs";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadLogAttention } from "@/lib/queries/attention";
 import { newHaulOutPath } from "@/lib/queries/boat-routes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,7 +26,7 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
   const { boatId } = await params;
   const supabase = await createClient();
 
-  const [{ data: role }, { data: haulOuts }, { data: contacts }, { data: logs }] =
+  const [{ data: role }, { data: haulOuts }, { data: contacts }, { data: logs }, attentionCount] =
     await Promise.all([
       supabase.rpc("boat_role", { p_boat_id: boatId }),
       supabase
@@ -43,6 +44,9 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
         .eq("boat_id", boatId)
         .is("deleted_at", null)
         .not("haul_out_id", "is", null),
+      // Le bandeau d'onglets est le même objet sur les trois écrans : il porte donc le même
+      // point rouge sur « Prévu », d'où qu'on le regarde (D88).
+      loadLogAttention(supabase, boatId),
     ]);
   if (!role) notFound();
 
@@ -92,7 +96,7 @@ export default async function HaulOutsPage({ params }: { params: Promise<{ boatI
         }
       />
 
-      <LogsTabs boatId={boatId} active="haulOuts" />
+      <LogsTabs boatId={boatId} active="haulOuts" attentionCount={attentionCount} />
 
       <HaulOutsList boatId={boatId} haulOuts={list} canWrite={canWrite} />
     </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { MoreHorizontalIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { AttentionDot } from "@/components/common/AttentionDot";
 import { NavLink, useIsActive } from "@/components/layout/NavLink";
 import {
   NAV_ICONS,
@@ -29,15 +30,6 @@ function ActiveRule({ active }: { active: boolean }) {
   return active ? (
     <span className="absolute inset-x-0 top-0 h-[3px] rounded-b bg-primary" aria-hidden />
   ) : null;
-}
-
-function CounterDot({ count }: { count?: number }) {
-  if (!count) return null;
-  return (
-    <span className="absolute top-1.5 right-[calc(50%-1.25rem)] inline-flex min-w-4 items-center justify-center rounded-full bg-status-urgent px-1 num text-[10px] leading-4 font-bold text-white">
-      {count > 99 ? "99+" : count}
-    </span>
-  );
 }
 
 function MoreSheet({ items, accountMenu }: { items: NavItem[]; accountMenu?: React.ReactNode }) {
@@ -77,11 +69,7 @@ function MoreSheet({ items, accountMenu }: { items: NavItem[]; accountMenu?: Rea
                   {item.hint ? (
                     <span className="shrink-0 num text-caption text-ink-2">{item.hint}</span>
                   ) : null}
-                  {item.badge ? (
-                    <span className="inline-flex min-w-6 shrink-0 items-center justify-center rounded-full bg-status-urgent px-1.5 num text-caption font-bold text-white">
-                      {item.badge}
-                    </span>
-                  ) : null}
+                  <AttentionDot count={item.badge} />
                 </NavLink>
               </li>
             );
@@ -100,7 +88,12 @@ function Tab({ item }: { item: NavItem }) {
     <NavLink href={item.href} className={tabClass(active)}>
       <ActiveRule active={active} />
       <Icon className="size-6" />
-      <CounterDot count={item.badge} />
+      {/* Le point rouge de l'onglet : ce qui est à faire aujourd'hui, et rien d'autre (D88). */}
+      <AttentionDot
+        count={item.badge}
+        size="sm"
+        className="absolute top-1.5 right-[calc(50%-1.25rem)]"
+      />
       <span className="truncate">{item.shortLabel ?? item.label}</span>
     </NavLink>
   );
