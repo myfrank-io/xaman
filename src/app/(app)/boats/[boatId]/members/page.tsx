@@ -3,10 +3,11 @@ import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { InviteMemberDialog } from "@/components/members/InviteMemberDialog";
-import { InvitationsList, type InvitationStatus } from "@/components/members/InvitationsList";
+import { InvitationsList } from "@/components/members/InvitationsList";
 import { MembersList } from "@/components/members/MembersList";
 import { refreshInvitationDeliveries } from "@/lib/email/delivery";
 import { toDeliveryReason, toDeliveryStatus } from "@/lib/email/delivery-status";
+import type { InvitationStatus } from "@/lib/invitations";
 import { can, type BoatRole } from "@/lib/permissions";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
@@ -24,6 +25,8 @@ type InvitationSource = {
   invited_by_name: string | null;
   delivery_status: string | null;
   delivery_reason: string | null;
+  reminded_at: string | null;
+  reminder_count: number | null;
 };
 
 /**
@@ -38,7 +41,9 @@ type InvitationSource = {
  * D79.
  *
  * So a refused select falls back to the columns that have always existed: the list comes back,
- * the delivery reads as unknown, and the server log names the column that is missing.
+ * the delivery reads as unknown, and the server log names the column that is missing. The
+ * reminders of D109 (`0030`) join the same select, and the same fallback: an invitation nobody
+ * has relaunched yet is what the screen shows in the meantime.
  */
 async function loadInvitations(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -46,7 +51,7 @@ async function loadInvitations(
 ): Promise<InvitationSource[]> {
   const full = await supabase
     .from("boat_invitations_safe")
-    .select(`${INVITATION_COLUMNS}, delivery_status, delivery_reason`)
+    .select(`${INVITATION_COLUMNS}, delivery_status, delivery_reason, reminded_at, reminder_count`)
     .eq("boat_id", boatId)
     .order("created_at", { ascending: false });
   if (!full.error) return full.data;
@@ -57,7 +62,13 @@ async function loadInvitations(
     .select(INVITATION_COLUMNS)
     .eq("boat_id", boatId)
     .order("created_at", { ascending: false });
-  return (data ?? []).map((row) => ({ ...row, delivery_status: null, delivery_reason: null }));
+  return (data ?? []).map((row) => ({
+    ...row,
+    delivery_status: null,
+    delivery_reason: null,
+    reminded_at: null,
+    reminder_count: 0,
+  }));
 }
 
 // Owner: manage members and invitations. Editor: read-only list. Others: 404 (SPEC §4.3).
@@ -136,6 +147,8 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
               delivery: status
                 ? { status, reason: polled?.reason ?? toDeliveryReason(i.delivery_reason) }
                 : null,
+              remindedAt: i.reminded_at ?? null,
+              reminderCount: i.reminder_count ?? 0,
             };
           })}
         />

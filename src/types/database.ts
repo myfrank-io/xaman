@@ -188,6 +188,8 @@ export type Database = {
           expires_at: string
           id: string
           invited_by: string | null
+          reminded_at: string | null
+          reminder_count: number
           revoked_at: string | null
           role: Database["public"]["Enums"]["boat_role"]
           token: string
@@ -208,6 +210,8 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string | null
+          reminded_at?: string | null
+          reminder_count?: number
           revoked_at?: string | null
           role: Database["public"]["Enums"]["boat_role"]
           token: string
@@ -228,6 +232,8 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string | null
+          reminded_at?: string | null
+          reminder_count?: number
           revoked_at?: string | null
           role?: Database["public"]["Enums"]["boat_role"]
           token?: string
@@ -2101,6 +2107,8 @@ export type Database = {
           id: string | null
           invited_by: string | null
           invited_by_name: string | null
+          reminded_at: string | null
+          reminder_count: number | null
           revoked_at: string | null
           role: Database["public"]["Enums"]["boat_role"] | null
           status: string | null

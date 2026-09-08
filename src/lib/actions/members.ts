@@ -10,9 +10,16 @@ import { z } from "zod";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { recordInvitationSent } from "@/lib/email/delivery";
+import { toDeliveryStatus } from "@/lib/email/delivery-status";
 import { invitationEmail } from "@/lib/email/invitation";
 import { mailerConfigured, sendMail } from "@/lib/email/send";
 import { publicEnv } from "@/lib/env";
+import {
+  canRemind,
+  remindedTooRecently,
+  INVITATION_VALIDITY_DAYS,
+  type InvitationStatus,
+} from "@/lib/invitations";
 import { addDays, toIsoDate } from "@/lib/numbers";
 import { EDITOR_ASSIGNABLE_ROLES } from "@/lib/permissions";
 import {
@@ -23,6 +30,7 @@ import {
   inviteNewOwnerSchema,
   leaveBoatSchema,
   removeMemberSchema,
+  resendInvitationSchema,
   revokeInvitationSchema,
 } from "@/lib/schemas/members";
 import { boatPath } from "@/lib/queries/boat-routes";
@@ -40,6 +48,57 @@ export type SentInvitation = {
   /** The row exists, the message did not go out: the dialog says so and offers the link. */
   emailFailed: boolean;
 };
+
+type InvitationMail = {
+  email: string;
+  /** `/invite/[token]`: the invitation's own address, never an auth verification link (D75). */
+  inviteUrl: string;
+  boatName: string;
+  inviterName: string;
+  roleLabel: string;
+};
+
+/**
+ * Sends *the* invitation e-mail, by whichever of the two paths this deploy has (D75), and hands
+ * back the provider's id when there is one to follow afterwards (D79).
+ *
+ * One function because there are two callers now — the first send and the manual reminder
+ * (D109) — and « the reminder is the same message » has to be true in the code, not only in the
+ * intention. With a mailer configured the app sends it itself, from the HTML generated out of
+ * `supabase/templates/invite.html`; without one, Supabase Auth does, with the `invite` template
+ * for an address it does not know and a sign-in code for one it does. Neither of those two
+ * answers with an id, so a deploy without a mailer has no delivery status — which is exactly
+ * what a null `delivery_status` means on the screen.
+ */
+async function sendInvitationMail(
+  mail: InvitationMail,
+): Promise<{ sent: boolean; emailId: string | null }> {
+  if (mailerConfigured()) {
+    const { subject, html } = invitationEmail({ ...mail, appUrl: publicEnv.appUrl });
+    const result = await sendMail({ to: mail.email, subject, html });
+    return { sent: result.sent, emailId: result.sent ? result.id : null };
+  }
+  try {
+    const admin = createAdminClient();
+    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(mail.email, {
+      data: {
+        boat_name: mail.boatName,
+        inviter_name: mail.inviterName,
+        role_label: mail.roleLabel,
+      },
+      redirectTo: mail.inviteUrl,
+    });
+    if (!inviteError) return { sent: true, emailId: null };
+    // Already registered: a sign-in code that lands on the invitation page.
+    const { error: otpError } = await admin.auth.signInWithOtp({
+      email: mail.email,
+      options: { emailRedirectTo: mail.inviteUrl, shouldCreateUser: false },
+    });
+    return { sent: otpError === null, emailId: null };
+  } catch {
+    return { sent: false, emailId: null };
+  }
+}
 
 /**
  * Inserts the row with the user's client (RLS decides who may invite whom), reads nothing
@@ -127,48 +186,20 @@ async function createInvitation(
   ]);
   const t = await getTranslations("members.roles");
   const redirectTo = `${publicEnv.appUrl}/invite/${token}`;
-  const data = {
-    boat_name: boat?.name ?? "",
-    inviter_name: inviter?.full_name ?? inviter?.email ?? "",
-    role_label: t(role),
-  };
 
   // The row stays either way: the dialog offers the link, so a mailer having a bad day costs
   // an e-mail, never the invitation.
-  let emailFailed = false;
-  if (mailerConfigured()) {
-    const { subject, html } = invitationEmail({
-      email,
-      inviteUrl: redirectTo,
-      boatName: data.boat_name,
-      inviterName: data.inviter_name,
-      roleLabel: data.role_label,
-      appUrl: publicEnv.appUrl,
-    });
-    const sent = await sendMail({ to: email, subject, html });
-    emailFailed = !sent.sent;
-    // Accepted is not received (D79): the id is what the bounce, three seconds later, is named
-    // by — and what turns the row on the Membres screen into « Non délivré ».
-    if (sent.sent && sent.id) await recordInvitationSent(invitationId, sent.id);
-  } else {
-    try {
-      const admin = createAdminClient();
-      const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-        data,
-        redirectTo,
-      });
-      if (inviteError) {
-        // Already registered: a sign-in code that lands on the invitation page.
-        const { error: otpError } = await admin.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
-        });
-        emailFailed = otpError !== null;
-      }
-    } catch {
-      emailFailed = true;
-    }
-  }
+  const { sent, emailId } = await sendInvitationMail({
+    email,
+    inviteUrl: redirectTo,
+    boatName: boat?.name ?? "",
+    inviterName: inviter?.full_name ?? inviter?.email ?? "",
+    roleLabel: t(role),
+  });
+  const emailFailed = !sent;
+  // Accepted is not received (D79): the id is what the bounce, three seconds later, is named
+  // by — and what turns the row on the Membres screen into « Non délivré ».
+  if (emailId) await recordInvitationSent(invitationId, emailId);
 
   revalidatePath(boatPath(boatId, "members"));
   return ok({ invitationId, inviteUrl: redirectTo, validUntil, emailFailed });
@@ -302,6 +333,145 @@ export async function revokeInvitation(input: unknown): Promise<ActionResult> {
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
   revalidatePath(boatPath(parsed.data.boatId, "members"));
+  return ok(undefined);
+}
+
+/**
+ * The four states of an invitation, computed exactly as `boat_invitations_safe` computes them
+ * (0023, 0030). The view is what every screen reads; this is for the one caller that reads the
+ * table itself, with the service key, because it also needs the token.
+ */
+function invitationStatus(row: {
+  accepted_at: string | null;
+  revoked_at: string | null;
+  expires_at: string;
+}): InvitationStatus {
+  if (row.accepted_at) return "accepted";
+  if (row.revoked_at) return "revoked";
+  return Date.parse(row.expires_at) < Date.now() ? "expired" : "pending";
+}
+
+/**
+ * Sends the same invitation again, to the same address (D109).
+ *
+ * The screen had two ways out of an invitation nobody answered, and neither was this one:
+ * « Annuler », which throws it away, and « Réinviter » — the bounce path of D79 — which writes a
+ * *second* pending row for the same person. What an owner wants when a message went unread is
+ * the message again, at the same address, with the same link.
+ *
+ * **The same link.** The token is not re-drawn: `/invite/[token]` already went out, possibly to
+ * somebody who saved it, and a new token would silently kill that. It is read back with the
+ * service key, exactly as `storedToken` does and for the same reason — no screen may read that
+ * column (0002) — and behind the caller's own role, checked with *their* client.
+ *
+ * **Fourteen more days.** The e-mail promises a link valid for fourteen days, so the reminder
+ * makes that true again rather than handing out one that dies tomorrow. It is also what brings
+ * an expired invitation back, instead of leaving a dead row beside a fresh one.
+ *
+ * **Nothing is written before something leaves.** The row is only touched once the message has
+ * been accepted by the mailer: a refused send answers with an error the owner can act on, and
+ * costs neither the cooldown nor a counter. The reverse order would make a mailer's bad minute
+ * look like a reminder that went out.
+ *
+ * **The migration is the guard.** Read paths degrade when `0030` has not been applied yet (the
+ * Membres screen falls back to the columns that have always existed); this one refuses instead,
+ * on the select. Sending a message the row cannot record is how an address gets three copies of
+ * the same invitation.
+ */
+export async function resendInvitation(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(resendInvitationSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, invitationId } = parsed.data;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return fail("errors.forbidden");
+  // Owner only — the same right that puts the list on the screen (`boat_invitations_select`).
+  const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  if (role !== "owner") return fail("errors.forbidden");
+
+  let admin: ReturnType<typeof createAdminClient>;
+  try {
+    admin = createAdminClient();
+  } catch (error) {
+    console.error("resendInvitation: no admin client", error);
+    return fail("errors.unknown");
+  }
+
+  const { data: invitation, error } = await admin
+    .from("boat_invitations")
+    .select(
+      "email, role, token, invited_by, accepted_at, revoked_at, expires_at, delivery_status, reminded_at, reminder_count",
+    )
+    .eq("id", invitationId)
+    .eq("boat_id", boatId)
+    .maybeSingle();
+  if (error) {
+    console.error(`resendInvitation: invitation unreadable — ${error.message}`);
+    return fail("errors.unknown");
+  }
+  if (!invitation) return fail("errors.invitation_not_found");
+
+  const status = invitationStatus(invitation);
+  if (!canRemind({ status, delivery: toDeliveryStatus(invitation.delivery_status) })) {
+    if (status === "accepted") return fail("errors.invitation_accepted");
+    if (status === "revoked") return fail("errors.invitation_revoked");
+    // What is left is an address that bounced or pressed « spam »: the provider will not carry
+    // another message to it, so the way out is another address (« Réinviter »), not this button.
+    return fail("errors.invitation_address_refused");
+  }
+  if (remindedTooRecently(invitation.reminded_at)) {
+    return fail("errors.invitation_reminded_recently");
+  }
+
+  // The message names whoever issued the invitation, not whoever pressed the button: it is the
+  // same message as the first one. Their profile falls back to the caller's when they have left
+  // the boat since — an invitation with nobody's name is worse than one with a new name.
+  const inviterId = invitation.invited_by ?? user.id;
+  const [{ data: boat }, { data: profiles }] = await Promise.all([
+    supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
+    supabase.from("profiles").select("id, full_name, email").in("id", [inviterId, user.id]),
+  ]);
+  const inviter =
+    profiles?.find((p) => p.id === inviterId) ?? profiles?.find((p) => p.id === user.id);
+  const t = await getTranslations("members.roles");
+
+  const { sent, emailId } = await sendInvitationMail({
+    email: invitation.email,
+    inviteUrl: `${publicEnv.appUrl}/invite/${invitation.token}`,
+    boatName: boat?.name ?? "",
+    inviterName: inviter?.full_name ?? inviter?.email ?? "",
+    roleLabel: t(invitation.role),
+  });
+  if (!sent) return fail("errors.invitation_email_failed");
+
+  // One statement: the reminder, the new fourteen days, and the delivery of the message that
+  // just left. The old `email_id` goes with it — events about it no longer match any row, which
+  // is what stops a bounce from yesterday landing on the invitation of today (D79).
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + INVITATION_VALIDITY_DAYS * 86_400_000);
+  const { error: recordError } = await admin
+    .from("boat_invitations")
+    .update({
+      reminded_at: now.toISOString(),
+      reminder_count: (invitation.reminder_count ?? 0) + 1,
+      expires_at: expiresAt.toISOString(),
+      email_id: emailId,
+      delivery_status: emailId ? "sent" : null,
+      delivery_reason: null,
+      delivery_detail: null,
+      delivery_updated_at: emailId ? now.toISOString() : null,
+    })
+    .eq("id", invitationId)
+    .eq("boat_id", boatId);
+  // The message is gone; only what the screen says about it is behind. Never an error here.
+  if (recordError) {
+    console.error(`resendInvitation: reminder not recorded — ${recordError.message}`);
+  }
+
+  revalidatePath(boatPath(boatId, "members"));
   return ok(undefined);
 }
 

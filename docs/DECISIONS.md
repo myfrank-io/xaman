@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D109.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D110.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2287,3 +2287,51 @@ persisteur sérialisait donc un cache vide, à chaque seconde, dans le paquet de
 route de service worker `NetworkFirst` avec un délai réseau de 5 secondes et leur propre cache,
 vidé à la déconnexion — D102 étendue au service worker. `idb-keyval` reste : c'est lui qui purge
 le cache déjà installé sur les iPad d'aujourd'hui.
+
+## 2026-09-08 — D109 : une invitation se relance, elle ne se recrée pas
+
+**Question.** Capture de l'écran Membres : deux invitations, « En attente » toutes les deux,
+« expire le 21/09/2026 ». Les personnes n'ont simplement jamais ouvert le message. « Code des
+relances d'invitation à renvoyer manuellement pour les gens pas connectés. »
+
+**Le constat.** La ligne offrait deux gestes, et aucun n'était celui-là. **« Annuler »** jette
+l'invitation. **« Réinviter »** — le bouton du rebond (D79) — rouvre le dialogue et écrit une
+**seconde ligne en attente** pour la même adresse : deux invitations, deux liens, deux dates
+d'expiration, et rien qui dise laquelle la personne a reçue. Le geste qui manquait est le plus
+simple de tous : renvoyer le même message.
+
+**Décision.** Un bouton **« Relancer »** sur chaque invitation qu'on peut encore relancer, et un
+Server Action (`resendInvitation`) qui envoie **le même e-mail, au même destinataire, avec le
+même lien**. Aucune ligne n'est créée, aucun jeton n'est retiré au sort.
+
+**Le même lien, et c'est un choix.** Le jeton n'est pas régénéré : `/invite/[token]` est peut-être
+déjà chez quelqu'un qui l'a mis de côté, et un nouveau jeton tuerait l'ancien sans le dire. Il est
+relu avec la clé de service — aucun écran ne lit cette colonne (0002) — derrière le rôle de
+l'appelant, vérifié avec **son** client à lui. C'est exactement ce que fait déjà `storedToken`.
+
+**Quatorze jours de plus.** L'e-mail promet un lien valable quatorze jours ; la relance rend cette
+phrase vraie à nouveau, au lieu de distribuer un lien qui meurt demain. C'est aussi ce qui **fait
+revivre une invitation expirée** : une ligne, un lien, une histoire — plutôt qu'une ligne morte à
+côté d'une neuve.
+
+**Une heure entre deux relances.** Assez pour qu'un second tap — ou une seconde personne devant le
+même écran — coûte un message et non deux (règle 11) ; assez court pour que « je réessaie » ne soit
+pas une attente. Le bouton ne l'annonce pas : le cas est rare, et la phrase qui l'explique arrive
+au moment où elle sert.
+
+**Jamais vers une adresse qui a rebondi.** Une adresse en rebond dur passe en liste de suppression
+chez l'expéditeur : le message part et n'atterrit nulle part, pendant que l'écran dit « envoi en
+cours ». Sur ces lignes-là, « Relancer » **n'existe pas** — la sortie est l'encart rouge de D79 et
+son « Réinviter », c'est-à-dire une autre adresse. `failed`, en revanche, se relance : là, le
+message n'a jamais atteint le fournisseur.
+
+**Rien n'est écrit avant que quelque chose parte.** La ligne n'est touchée qu'une fois le message
+accepté : un envoi refusé répond par une erreur, et ne coûte ni le délai d'attente ni un compteur.
+L'ordre inverse ferait passer la mauvaise minute d'un expéditeur pour une relance envoyée.
+
+**Ce qui en reste sur la ligne.** `0030` ajoute `reminded_at` et `reminder_count`, lisibles par
+l'owner, écrits par la seule clé de service — `revoked_at` reste la seule colonne qu'un navigateur
+écrit sur cette table. L'écran le dit en fin de ligne : « relancée 3 fois, la dernière le
+06/09/2026 ». C'est le fait qui met fin à l'attente : l'adresse est bonne, le message n'est lu par
+personne, il faut téléphoner.
+
