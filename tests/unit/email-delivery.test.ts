@@ -8,6 +8,7 @@ import fr from "@/messages/fr.json";
 import {
   DELIVERY_REASONS,
   DELIVERY_STATUSES,
+  shouldAskAgain,
   bounceReason,
   deliveryFailed,
   deliveryFromEmail,
@@ -167,6 +168,45 @@ describe("webhook signature", () => {
     expect(verifyWebhookSignature({ ...valid, timestamp: "not-a-time" })).toBe(false);
     expect(verifyWebhookSignature({ ...valid, secret: "" })).toBe(false);
     expect(verifyWebhookSignature({ ...valid, signature: "v0,deadbeef" })).toBe(false);
+  });
+});
+
+/**
+ * Signalled in use: a bounced address and a delivered one both read « envoi en cours ». They
+ * did differ — the app had refused to look, because a single « once a minute » is blind over
+ * the exact minute someone watches the screen they just sent from.
+ */
+describe("when to ask the provider again", () => {
+  const now = Date.parse("2026-09-08T07:05:00.000Z");
+  const ago = (ms: number) => new Date(now - ms).toISOString();
+
+  it("asks again five seconds after a fresh send, not sixty", () => {
+    const justSent = { status: "sent", sentAt: ago(20_000), askedAt: ago(20_000) };
+    expect(shouldAskAgain(justSent, now)).toBe(true);
+    expect(shouldAskAgain({ ...justSent, askedAt: ago(3_000) }, now)).toBe(false);
+  });
+
+  it("leaves an older send alone until a minute has passed", () => {
+    const yesterday = { status: "sent", sentAt: ago(86_400_000), askedAt: ago(30_000) };
+    expect(shouldAskAgain(yesterday, now)).toBe(false);
+    expect(shouldAskAgain({ ...yesterday, askedAt: ago(61_000) }, now)).toBe(true);
+  });
+
+  it("never asks again once the answer is final", () => {
+    for (const status of DELIVERY_STATUSES.filter((s) => s !== "sent" && s !== "delayed")) {
+      expect(shouldAskAgain({ status, sentAt: ago(1_000), askedAt: ago(1_000) }, now), status).toBe(
+        false,
+      );
+    }
+    expect(
+      shouldAskAgain({ status: "delayed", sentAt: ago(1_000), askedAt: ago(10_000) }, now),
+    ).toBe(true);
+  });
+
+  it("asks when it has never asked, or cannot read what it stored", () => {
+    expect(shouldAskAgain({ status: "sent", sentAt: ago(1_000), askedAt: null }, now)).toBe(true);
+    expect(shouldAskAgain({ status: null, sentAt: null, askedAt: null }, now)).toBe(true);
+    expect(shouldAskAgain({ status: "sent", sentAt: ago(1_000), askedAt: "hier" }, now)).toBe(true);
   });
 });
 
