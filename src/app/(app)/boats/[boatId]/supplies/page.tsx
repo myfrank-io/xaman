@@ -10,7 +10,10 @@ import { ExpensesTab, type ExpensesData } from "@/components/supplies/ExpensesTa
 import type { ExpenseLine } from "@/components/supplies/ExpenseLines";
 import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
 import { GasFacts } from "@/components/supplies/GasFacts";
+import { parseEngineHours } from "@/components/logs/rows";
 import {
+  buildExpenseDetails,
+  expenseKey,
   isExpensePeriod,
   NO_CATEGORY,
   parseSources,
@@ -168,21 +171,75 @@ export default async function SuppliesPage({
     categoryColor: row.category_color,
   }));
 
-  // The view carries neither the supplier nor the imported-line flag: one extra read, keyed
-  // by the purchase ids of the page, keeps both visible in the merged list.
+  // The view carries neither the supplier nor the imported-line flag, and it says nothing of
+  // what a line actually paid for. One read per source, keyed by the ids of the **page** only,
+  // fills both the merged list and the recap each line unrolls (D80).
   const page = expenseRows.slice(0, limit);
-  const purchaseIds = page
-    .filter((row) => row.source === "purchase")
-    .map((row) => row.entityId)
-    .filter((id): id is string => Boolean(id));
-  const { data: purchaseExtras } = purchaseIds.length
-    ? await supabase
-        .from("purchases")
-        .select("id, supplier_contact_id, supplier_name, needs_review")
-        .in("id", purchaseIds)
-    : { data: null };
+  const idsOf = (source: string) =>
+    page
+      .filter((row) => row.source === source)
+      .map((row) => row.entityId)
+      .filter((id): id is string => Boolean(id));
+  const purchaseIds = idsOf("purchase");
+  const logIds = idsOf("log");
+  const haulOutIds = idsOf("haul_out");
+
+  const [{ data: purchaseExtras }, { data: logExtras }, { data: haulOutExtras }, { data: ashore }] =
+    await Promise.all([
+      purchaseIds.length
+        ? supabase
+            .from("purchases")
+            .select(
+              "id, designation, bottle_type, notes, needs_review, supplier_contact_id, supplier_name, maintenance_log_id, maintenance_logs(id, title)",
+            )
+            .in("id", purchaseIds)
+        : Promise.resolve({ data: null }),
+      logIds.length
+        ? supabase
+            .from("maintenance_logs_view")
+            .select(
+              "id, status, contact_name, equipment_name, notes, completions_count, purchases_count, attachments_count, needs_review, haul_out_id, engine_hours",
+            )
+            .in("id", logIds)
+        : Promise.resolve({ data: null }),
+      haulOutIds.length
+        ? supabase
+            .from("haul_outs")
+            .select("id, yard_name, yard_contact_id, started_at, ended_at, works")
+            .in("id", haulOutIds)
+        : Promise.resolve({ data: null }),
+      // A haul-out is a period, not a bill: what it really cost is the yard plus the
+      // interventions of those days (E6-1), and the recap says so without opening it.
+      haulOutIds.length
+        ? supabase
+            .from("maintenance_logs")
+            .select("haul_out_id, cost")
+            .in("haul_out_id", haulOutIds)
+            .is("deleted_at", null)
+        : Promise.resolve({ data: null }),
+    ]);
   const contactNames = new Map((contacts ?? []).map((contact) => [contact.id, contact.name]));
   const extras = new Map((purchaseExtras ?? []).map((row) => [row.id, row]));
+
+  const details = buildExpenseDetails({
+    logs: (logExtras ?? []).map((row) => ({
+      ...row,
+      engineHours: parseEngineHours(row.engine_hours).map(({ label, hours }) => ({
+        label,
+        hours,
+      })),
+    })),
+    purchases: purchaseExtras ?? [],
+    haulOuts: haulOutExtras ?? [],
+    haulOutLogs: ashore ?? [],
+    contactNames,
+    logTitles: new Map(
+      (purchaseExtras ?? []).flatMap((row) => {
+        const linked = row.maintenance_logs;
+        return linked ? [[linked.id, linked.title] as const] : [];
+      }),
+    ),
+  });
 
   const [t, tk, ti] = await Promise.all([
     getTranslations("supplies"),
@@ -209,6 +266,7 @@ export default async function SuppliesPage({
           : extra.supplier_name
         : null,
       needsReview: extra?.needs_review ?? false,
+      detail: details.get(expenseKey(row.source, row.entityId)) ?? null,
     };
   });
 

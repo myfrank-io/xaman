@@ -1658,6 +1658,20 @@
       "subtitle": "Interventions, achats et sorties de l'eau : une seule liste.",
       "filters": {
         "title": "Filtres"
+      },
+      "recap": {
+        "open": {
+          "log": "Ouvrir l'intervention",
+          "purchase": "Modifier l'achat",
+          "haul_out": "Ouvrir la sortie de l'eau"
+        },
+        "openLinkedLog": "Ouvrir l'intervention liée",
+        "counts": {
+          "completions": "{count, plural, one {# point de checklist coché} other {# points de checklist cochés}}",
+          "purchases": "{count, plural, one {# achat lié} other {# achats liés}}",
+          "attachments": "{count, plural, one {# document joint} other {# documents joints}}"
+        },
+        "empty": "Rien de plus à afficher sur cette ligne."
       }
     },
     "purchases": {

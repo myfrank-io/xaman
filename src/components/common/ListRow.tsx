@@ -19,6 +19,11 @@ type ListRowProps = {
   categoryColor?: string;
   href?: string;
   onClick?: () => void;
+  /**
+   * Disclosure row: the chevron points down once the panel below is open, and the row
+   * announces itself as such. Undefined = an ordinary row, which navigates.
+   */
+  expanded?: boolean;
   /** 64 px (one line) or 76 px (two lines, portrait). */
   size?: "md" | "lg";
   className?: string;
@@ -43,6 +48,7 @@ export function ListRow({
   categoryColor,
   href,
   onClick,
+  expanded,
   size = "md",
   className,
 }: ListRowProps) {
@@ -87,7 +93,14 @@ export function ListRow({
   );
   const chevron =
     href || onClick ? (
-      <ChevronRightIcon className="size-5 shrink-0 text-n-400" aria-hidden />
+      <ChevronRightIcon
+        className={cn(
+          "size-5 shrink-0 text-n-400",
+          expanded !== undefined && "transition-transform duration-200",
+          expanded && "rotate-90",
+        )}
+        aria-hidden
+      />
     ) : null;
 
   const shell = cn(
@@ -109,8 +122,11 @@ export function ListRow({
             {content}
           </Link>
         ) : (
-          <button type="button" onClick={onClick} className={target}>
+          // A disclosure row keeps its chevron even beside an action button: without it the
+          // only thing saying « this unrolls » would be the tap itself.
+          <button type="button" onClick={onClick} aria-expanded={expanded} className={target}>
             {content}
+            {expanded === undefined ? null : chevron}
           </button>
         )}
         <div className="shrink-0">{action}</div>
@@ -136,7 +152,7 @@ export function ListRow({
   }
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={interactive}>
+      <button type="button" onClick={onClick} aria-expanded={expanded} className={interactive}>
         {body}
       </button>
     );

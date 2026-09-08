@@ -1584,6 +1584,52 @@ définitif l'est dès la première seconde. Écarté enfin : renvoyer automatiqu
 les événements `email.*`, puis poser `RESEND_WEBHOOK_SECRET` (le *signing secret*) dans les
 variables Vercel. Sans lui l'endpoint refuse tout et seule la relance à la lecture travaille.
 
+## 2026-09-08 — D80 : une ligne de dépense se déroule sur place, l'intervention reste à un geste
+
+**Question.** Deux signalements sur le même écran, Dépenses. Sur la liste : « quand je clique sur
+un détail de toutes les lignes, j'aimerais bien avoir un récap de l'intervention qui déroule et
+la possibilité d'accéder à l'intervention en 1 clic supplémentaire plutôt que d'être direct
+balancé à l'autre bout du software ». Sur le bloc « Par catégorie » : « quand je clique sur une,
+ça sélectionne la ligne mais ça me donne juste la possibilité de la désélectionner. J'aimerais
+bien avoir le détail en dessous des interventions qui ont coûté de l'argent par catégories avec
+la possibilité d'accéder à l'intervention si besoin ».
+
+**Le constat.** C'est la même remarque, deux étages plus haut à chaque fois. D77 avait rendu la
+ligne de catégorie cliquable en disant que « la réponse existait déjà, un mètre plus bas » — sauf
+qu'un mètre plus bas, sur un iPad, c'est hors de l'écran : le filtre s'appliquait à une liste que
+personne ne voyait bouger, donc le geste ne semblait rien faire d'autre que cocher la ligne. Et
+la liste, elle, coûtait cher au moindre coup d'œil : lire « c'est quoi, ces 320 € ? » quittait
+Dépenses pour la fiche de l'intervention, perdait la place dans la liste, les filtres, le
+scroll — et il fallait deux gestes pour revenir vérifier la ligne suivante.
+
+**Décision. La réponse est écrite là où la question est posée, et l'entité reste à un geste.**
+
+1. **Une ligne de dépense se déroule** au lieu de naviguer. Le panneau donne ce qu'on venait
+   vérifier — pour une intervention : statut, réalisé par, équipement, heures moteur relevées, la
+   note (quatre lignes au plus), « 2 points de checklist cochés · 1 achat lié · 1 document
+   joint » ; pour un achat : fournisseur, type de bouteille, intervention liée **nommée**, la
+   note, et la phrase du carnet papier quand la ligne est à vérifier ; pour une sortie de l'eau :
+   chantier, dates, travaux, « 14 jours à terre · 1 intervention · 450,00 € ». Puis **un** bouton :
+   « Ouvrir l'intervention ». Un achat n'a pas d'écran de lecture — son formulaire est là où on
+   le corrige — donc seul qui a le droit d'écrire y est envoyé, et « Ouvrir l'intervention liée »
+   passe devant quand l'achat en porte une.
+2. **Un seul panneau ouvert à la fois**, et le chevron de la ligne pivote : trois récapitulatifs
+   déroulés rendraient le registre illisible, ce qui était précisément le problème.
+3. **Le bloc « Par catégorie » déroule ses lignes sous la ligne touchée.** Le filtre continue de
+   passer par l'URL (D77 : le retour défait le filtre, une vue filtrée s'envoie), mais les lignes
+   remontent là où on a appuyé. Comme ce seraient les mêmes lignes deux fois, la carte « Toutes
+   les lignes » s'efface tant qu'une catégorie est active — sauf si le filtre ne ramène rien, où
+   elle reste pour porter l'état vide et sa sortie.
+4. **Ce que le panneau montre est lu avec la page**, pas au moment du geste : une requête par
+   source, sur les seuls identifiants de la page affichée. Pas de spinner sous le doigt, et le
+   récapitulatif tient dans le cache Next d'une page déjà ouverte.
+
+**Écarté :** une feuille modale ou un tiroir — c'est encore une couche par-dessus la liste, et
+« déroule » disait exactement le contraire. Écarté aussi : garder la carte « Toutes les lignes »
+sous le bloc filtré, qui affichait les mêmes lignes deux fois à un écran d'intervalle. Écarté
+enfin : rendre le bloc « Par catégorie » dépliable **sans** filtrer — les totaux, la comparaison
+et l'export ne suivraient plus ce qui est affiché, ce que D77 avait justement corrigé.
+
 ## 2026-09-08 — D81 : le point rouge ne dit qu'une chose, et il la dit jusqu'au bout
 
 **Question.** « Gère mieux les points rouges des notifications pour guider les users : que sur
