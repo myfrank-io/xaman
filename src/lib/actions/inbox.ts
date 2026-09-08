@@ -10,6 +10,7 @@ import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actio
 import { analyseInboxItem, type AnalysisOutcome } from "@/lib/inbox/analyse";
 import { notifyInboxValidated } from "@/lib/inbox/notify";
 import { boatPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
+import { ATTACHMENT_BUCKET } from "@/lib/schemas/attachments";
 import {
   createInboxUploadSchema,
   inboxItemRefSchema,
@@ -235,7 +236,10 @@ export async function validateInboxItem(
   });
 }
 
-/** « Ignorer » — a status, not a deletion: the document stays readable in the history. */
+/**
+ * « Ignorer » — a status, not a deletion: the document stays readable in the history, where
+ * « Réouvrir » brings it back and « Supprimer » is the only thing that ever destroys it (D93).
+ */
 export async function dismissInboxItem(input: unknown): Promise<ActionResult> {
   const parsed = parseInput(inboxItemRefSchema, input);
   if (!parsed.ok) return parsed.result;
@@ -261,6 +265,83 @@ export async function dismissInboxItem(input: unknown): Promise<ActionResult> {
     .in("status", ["received", "analysing", "ready"]);
   if (error) return fail(dbErrorKey(error));
   if (!count) return fail("errors.forbidden");
+
+  revalidateInbox(boatId);
+  return ok(undefined);
+}
+
+/**
+ * « Réouvrir » — the way back out of « Ignoré » (D93). A mis-tap on a phone is one card away from
+ * the right one, and the history had no button at all. The row returns to `ready`, where the card
+ * shows its fields again, with the reading it already had: nothing is re-read, nothing is lost.
+ * `validated_at` goes back to null, because the document is once more waiting for a decision.
+ */
+export async function reopenInboxItem(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(inboxItemRefSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, itemId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  // Only a dismissed row: a validated document became an intervention, and un-validating it here
+  // would leave that line behind without its origin.
+  const { error, count } = await supabase
+    .from("inbox_items")
+    .update(
+      { status: "ready", validated_by: null, validated_at: null, updated_by: userId },
+      { count: "exact" },
+    )
+    .eq("id", itemId)
+    .eq("boat_id", boatId)
+    .eq("status", "dismissed");
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.conflict");
+
+  revalidateInbox(boatId);
+  return ok(undefined);
+}
+
+/**
+ * « Supprimer » — the document leaves for good, row and object (D93). Reserved to a dismissed
+ * row, in the database as well as here (`inbox_items_delete`, migration `0027`): a document has
+ * to be ignored before it can be destroyed, which is two taps and never one, and a validated one
+ * is out of reach — its object is the attachment of the line it produced.
+ *
+ * The path is read before the delete — afterwards there is nothing left to read it from — and the
+ * object is removed last, so a refused delete never leaves a row pointing at a file that is gone.
+ * Same order as `purgeAttachment`.
+ */
+export async function deleteInboxItem(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(inboxItemRefSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, itemId } = parsed.data;
+
+  const supabase = await createClient();
+  const userId = await currentUserId(supabase);
+  if (!userId) return fail("errors.forbidden");
+
+  const { data: item, error: readError } = await supabase
+    .from("inbox_items")
+    .select("storage_path")
+    .eq("id", itemId)
+    .eq("boat_id", boatId)
+    .eq("status", "dismissed")
+    .maybeSingle();
+  if (readError) return fail(dbErrorKey(readError));
+  if (!item) return fail("errors.conflict");
+
+  const { error, count } = await supabase
+    .from("inbox_items")
+    .delete({ count: "exact" })
+    .eq("id", itemId)
+    .eq("boat_id", boatId)
+    .eq("status", "dismissed");
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+
+  await supabase.storage.from(ATTACHMENT_BUCKET).remove([item.storage_path]);
 
   revalidateInbox(boatId);
   return ok(undefined);

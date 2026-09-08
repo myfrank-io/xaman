@@ -372,7 +372,9 @@ describe("insert", () => {
 /**
  * The inbox (D91, migration 0026). Members read it, contributors add to it — a pro photographing
  * the invoice of their own work — and only owner / editor validate or dismiss, because that is
- * what writes the carnet. Nobody deletes: a dismissed document is a status.
+ * what writes the carnet. Deleting one is reserved to a document already dismissed (D93, `0027`):
+ * a line waiting for a decision has to be ignored first, and a validated one is out of reach for
+ * good — its file is the attachment of the intervention it produced.
  */
 describe("inbox_items", () => {
   const INBOX = "00000000-0000-0000-0000-000000009001";
@@ -409,9 +411,33 @@ describe("inbox_items", () => {
     }
   });
 
-  it("nobody deletes a document, and the path must belong to the boat", async () => {
-    const del = await run(U.owner, "delete from public.inbox_items where id = $1", [INBOX]);
-    expect(del.ok ? del.rowCount : 0).toBe(0);
+  it("deletes an ignored document, never one that still waits or was validated (D93)", async () => {
+    // The seeded row is `ready`: no status, no delete, whoever asks.
+    for (const role of ["owner", "editor", "admin"] as Role[]) {
+      const del = await run(U[role], "delete from public.inbox_items where id = $1", [INBOX]);
+      expect(del.ok ? del.rowCount : 0, role).toBe(0);
+    }
+
+    // Ignored inside the transaction (rolled back like the rest), it goes — for owner / editor.
+    const deleteOnceDismissed = (user: User, status = "dismissed") =>
+      as(user, async (c) => {
+        await c.query("set local role service_role");
+        await c.query("update public.inbox_items set status = $2 where id = $1", [INBOX, status]);
+        await c.query("set local role authenticated");
+        const res = await c.query("delete from public.inbox_items where id = $1", [INBOX]);
+        return res.rowCount ?? 0;
+      });
+    for (const role of ["owner", "editor", "admin"] as Role[]) {
+      expect(await deleteOnceDismissed(U[role]), role).toBe(1);
+    }
+    for (const role of ["pro", "viewer", "stranger"] as Role[]) {
+      expect(await deleteOnceDismissed(U[role]), role).toBe(0);
+    }
+    // A validated document keeps its file: it is the attachment of the line it produced.
+    expect(await deleteOnceDismissed(U.owner, "validated")).toBe(0);
+  });
+
+  it("keeps a document's path inside its own boat", async () => {
     const wrongBoat = await run(
       U.owner,
       `insert into public.inbox_items (id, boat_id, source, file_name, mime_type, size_bytes, storage_path, created_by)
