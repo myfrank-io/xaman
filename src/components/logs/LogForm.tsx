@@ -53,7 +53,12 @@ import { formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import type { AttachmentItem } from "@/lib/queries/attachments";
 import { logPath, logsPath } from "@/lib/queries/boat-routes";
-import { saveLogSchema, SEGMENT_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
+import {
+  FUTURE_ALLOWED_STATUSES,
+  saveLogSchema,
+  SEGMENT_STATUSES,
+  type LogStatusValue,
+} from "@/lib/schemas/logs";
 
 type Segment = (typeof SEGMENT_STATUSES)[number];
 
@@ -242,6 +247,9 @@ export function LogForm({
     suggested.key === `${categoryId}|${title.trim()}` && title.trim().length >= MIN_MATCH_CHARS
       ? suggested.items
       : [];
+  // Le statut décide du sens de la date (D82). « Planifié » et « Urgent » se datent devant —
+  // c'est la même liste que celle dont la validation se sert, jamais une seconde écrite ici.
+  const plannedWork = FUTURE_ALLOWED_STATUSES.includes(status);
   const futureDate = performedAt > todayString();
   const backHref = log ? logPath(boatId, log.id) : logsPath(boatId);
 
@@ -446,18 +454,29 @@ export function LogForm({
             </Button>
           </div>
         </div>
+        {/* Le champ dit ce qu'il date : « Date » sur du fait, « Prévu le » sur du planifié.
+            Les raccourcis suivent (« Demain » remplace « Hier »), et le calendrier natif ne
+            propose plus une date impossible — au-delà d'aujourd'hui, la validation refuse une
+            intervention terminée. Rien n'est bloqué dans l'autre sens : un travail prévu la
+            semaine dernière et pas fait est en retard, pas une faute de saisie. */}
         <Field
           id="log-date"
-          label={t("date")}
+          label={plannedWork ? t("datePlanned") : t("date")}
           required
           error={fieldError(errors.performedAt)}
-          warning={futureDate && !errors.performedAt ? t("dateFuture") : undefined}
+          warning={futureDate && !plannedWork && !errors.performedAt ? t("dateFuture") : undefined}
         >
           <Controller
             control={form.control}
             name="performedAt"
             render={({ field }) => (
-              <DateField id="log-date" value={field.value} onValueChange={field.onChange} />
+              <DateField
+                id="log-date"
+                value={field.value}
+                onValueChange={field.onChange}
+                future={plannedWork}
+                max={plannedWork ? undefined : todayString()}
+              />
             )}
           />
         </Field>

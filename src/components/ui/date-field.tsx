@@ -18,10 +18,16 @@ function shiftDays(days: number): string {
  * Quick chips + native `<input type="date">`: on iPad the system wheel is
  * localised, timezone-safe and beats any custom picker with wet fingers
  * (ux-flows §4.3). No calendar dependency in V1.
+ *
+ * `future` : les puces regardent dans le sens du travail (D82). Presque toutes les dates de
+ * l'application se sont déjà produites — une réalisation, un relevé, un achat — d'où
+ * « Aujourd'hui · Hier » par défaut. Une intervention *planifiée*, elle, se date devant : lui
+ * proposer « Hier » était le seul raccourci du formulaire, et il pointait à l'envers.
  */
 export function DateField({
   value,
   onValueChange,
+  future = false,
   min,
   max,
   id,
@@ -31,6 +37,8 @@ export function DateField({
 }: {
   value: string;
   onValueChange: (value: string) => void;
+  /** Deuxième puce : « Demain » au lieu de « Hier ». */
+  future?: boolean;
   /** `yyyy-MM-dd`; `max` = today on past-only dates (completion, reading). */
   min?: string;
   max?: string;
@@ -41,8 +49,8 @@ export function DateField({
 }) {
   const t = useTranslations("common");
   const today = toDateString(new Date());
-  const yesterday = shiftDays(-1);
-  const shortcut = value === today ? "today" : value === yesterday ? "yesterday" : "";
+  const other = shiftDays(future ? 1 : -1);
+  const shortcut = value === today ? "today" : value === other ? "other" : "";
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
@@ -51,13 +59,13 @@ export function DateField({
         value={shortcut}
         onValueChange={(next) => {
           if (next === "today") onValueChange(today);
-          if (next === "yesterday") onValueChange(yesterday);
+          if (next === "other") onValueChange(other);
         }}
         disabled={disabled}
         aria-label={t("today")}
       >
         <ToggleGroupItem value="today">{t("today")}</ToggleGroupItem>
-        <ToggleGroupItem value="yesterday">{t("yesterday")}</ToggleGroupItem>
+        <ToggleGroupItem value="other">{future ? t("tomorrow") : t("yesterday")}</ToggleGroupItem>
       </ToggleGroup>
       <Input
         id={id}

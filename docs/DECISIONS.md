@@ -1697,3 +1697,47 @@ destination change sous le doigt est un piège ; c'est la pastille sur l'onglet 
 mène la suite. Écarté enfin : laisser le badge « Bientôt » sur un point dû le jour même, avec la
 seule échéance en rouge à droite — c'est exactement le mot qui empêchait de trouver la ligne que
 l'onglet annonçait.
+
+## 2026-09-08 — D82 : la date d'une intervention regarde dans le sens de son statut
+
+**Question.** « Pourquoi quand je mets en planifié ça ne met pas que des trucs dans le futur ? »,
+capture du formulaire à l'appui : *Planifié* sélectionné, et sous « Date » les deux seuls
+raccourcis du formulaire — **Aujourd'hui · Hier**.
+
+**Le constat.** Le modèle savait déjà qu'une date à venir n'a de sens que sur du travail qui
+n'a pas eu lieu (D17 : `FUTURE_ALLOWED_STATUSES`, la validation refuse une intervention
+*terminée* datée demain). L'écran, lui, l'ignorait complètement : mêmes puces tournées vers
+hier quel que soit le statut, aucune borne sur la roulette native, le même mot « Date », et un
+avertissement ambre **« Date dans le futur »** affiché sur une intervention planifiée — c'est-à-dire
+sur la seule chose qui doit précisément l'être. Le formulaire disait donc l'inverse de la règle
+qu'il applique.
+
+**Décision.** Le statut décide du sens de la date, et l'écran le montre à trois endroits :
+
+- **les puces** — « Aujourd'hui · Hier » sur du fait, « Aujourd'hui · **Demain** » sur du
+  planifié ou de l'urgent (`DateField` gagne `future`) ;
+- **la roulette** — une intervention terminée ou en cours est bornée à aujourd'hui, donc le
+  calendrier natif ne propose plus une date que la validation refusera ;
+- **les mots** — le champ s'appelle **« Prévu le »** au lieu de « Date », et l'avertissement
+  ambre ne se déclenche plus que là où il veut dire quelque chose (une date à venir sur du
+  travail déclaré fait).
+
+La liste des statuts qui autorisent l'avenir n'est pas réécrite dans le formulaire : il lit
+`FUTURE_ALLOWED_STATUSES`, la constante dont la validation se sert (règle 6). Les deux ne
+peuvent donc pas diverger.
+
+**Ce qui n'est pas bloqué : le passé sur du planifié.** La question demandait « que des trucs
+dans le futur » ; la réponse est non, et c'est délibéré. Un travail prévu la semaine dernière et
+pas fait n'est pas une faute de saisie, c'est **du retard** — l'état que D81 vient précisément de
+faire remonter en rouge, de l'onglet jusqu'à la ligne. Poser un `min` sur « Prévu le »
+interdirait de saisir ce retard et d'en corriger la date. Les puces pointent devant, la roulette
+reste libre derrière.
+
+**Ce qui ne bouge pas.** La date par défaut reste **aujourd'hui**, y compris quand on bascule sur
+« Planifié » : une intervention planifiée le jour même est un cas courant et, depuis D81, celui
+qui allume le point rouge. Rien ne se déplace sous le doigt de qui a déjà choisi une date.
+
+**Écarté :** avancer automatiquement la date à demain au passage en « Planifié » — c'est la
+saisie de quelqu'un d'autre, et « planifié aujourd'hui » est légitime. Écarté aussi : une
+troisième puce « Dans une semaine », qui ferait trois raccourcis là où le calendrier natif fait
+déjà le travail au-delà de demain.
