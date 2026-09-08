@@ -2195,14 +2195,21 @@
       "validated": "Validé",
       "dismissed": "Ignoré"
     },
+    "badge": {
+      "received": "Reçu",
+      "analysing": "Lecture…",
+      "ready": "À valider",
+      "validated": "Validé",
+      "dismissed": "Ignoré"
+    },
     "kind": {
       "log": "Intervention",
       "purchase": "Achat"
     },
     "confidence": {
       "high": "Lecture sûre",
-      "medium": "Lecture à vérifier",
-      "low": "Lecture incertaine"
+      "medium": "À vérifier",
+      "low": "Incertaine"
     },
     "warnings": "À vérifier",
     "lineItems": "Lignes lues",

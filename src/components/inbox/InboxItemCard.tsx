@@ -231,8 +231,10 @@ export function InboxItemCard({
             {item.fileName} · {formatBytes(item.sizeBytes)}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
+            {/* Short words: an uppercase badge is 200 px wide with a sentence in it, and a
+                phone's card has 160 to give. The sentence lives on the spinner line below. */}
             <Badge variant={settled ? "outline" : reading ? "secondary" : "success"} size="md">
-              {t(`status.${item.status}`)}
+              {t(`badge.${item.status}`)}
             </Badge>
             {item.suggestion && !settled ? (
               <Badge

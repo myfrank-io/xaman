@@ -258,6 +258,7 @@ describe("the inbox's words", () => {
   it.each([
     ["source", INBOX_SOURCES],
     ["status", INBOX_STATUSES],
+    ["badge", INBOX_STATUSES],
     ["kind", INBOX_KINDS],
     ["confidence", INBOX_CONFIDENCES],
     ["errors", INBOX_ERROR_KEYS],
