@@ -1789,6 +1789,9 @@ describeWithDb("secondary views", () => {
     expect(columns).not.toContain("delivery_detail");
     // D109: the reminders are read from the same place as the rest of an invitation.
     expect(columns).toEqual(expect.arrayContaining(["reminded_at", "reminder_count"]));
+    // A recreated view comes back granted to everyone by Supabase's default privileges; 0030
+    // restates what 0004 wanted, and this is what would have caught the drift 0023 left.
+    expect(await count(null, "boat_invitations_safe")).toBe(-1);
   });
 
   it("maintenance_logs_trash_view: a trashed log shows for owner/editor, nothing for outsiders", async () => {

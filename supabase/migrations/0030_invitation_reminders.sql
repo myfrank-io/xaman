@@ -84,3 +84,11 @@ left join public.profiles p on p.id = i.invited_by;
 comment on view public.boat_invitations_safe is
   'Invitations without the token, with the computed status, the inviter name, what became of the '
   'e-mail (D79) and the manual reminders sent since (D109).';
+
+-- 0004 granted this view to `authenticated` and took it away from `anon`; a dropped view takes
+-- both with it, and Supabase's default privileges hand the fresh one back to all three roles.
+-- Stated again here rather than left to a default (rule 2). Nothing would leak either way — the
+-- view is `security_invoker`, so RLS on `boat_invitations` answers `anon` with no rows — but the
+-- posture of 0004 is what the next reader of this schema expects to find.
+grant select on public.boat_invitations_safe to authenticated, service_role;
+revoke all on public.boat_invitations_safe from anon;
