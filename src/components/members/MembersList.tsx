@@ -36,7 +36,7 @@ export type MemberRow = {
   email: string;
 };
 
-// The same four the invitation offers (D73). It used to be a second list written here, which is
+// The same four the invitation offers (D82). It used to be a second list written here, which is
 // how the dropdown came to hand out `owner` while the invitation refused to.
 
 export function MembersList({

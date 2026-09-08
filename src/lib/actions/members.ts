@@ -139,7 +139,7 @@ export async function inviteMember(
     if (!EDITOR_ASSIGNABLE_ROLES.includes(role)) return fail("errors.forbidden");
     if (duration === "unlimited") return fail("errors.invitation_duration_required");
   }
-  // D73: an owner never expires. A proprietor whose access lapses on a date is not a proprietor,
+  // D82: an owner never expires. A proprietor whose access lapses on a date is not a proprietor,
   // and the form hides the question rather than asking it — this is what makes that true.
   const validUntil =
     role === "owner" || duration === "unlimited" ? null : addDays(toIsoDate(), Number(duration));

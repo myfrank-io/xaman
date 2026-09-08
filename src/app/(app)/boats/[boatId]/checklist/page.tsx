@@ -54,7 +54,7 @@ export default async function ChecklistPage({
         .eq("boat_id", boatId)
         .in("status", ["overdue", "soon", "never"]),
       supabase.from("engines").select("id, label").eq("boat_id", boatId),
-      // The stock closes the grid: what is aboard, and what is under its threshold (D43). The
+      // The stock closes the grid: what is aboard, and what is under its threshold (D84). The
       // low lines also feed the « À racheter » checklist above the grid (D63) — one read, one
       // source of truth, so the card and the list can never disagree.
       loadStockItems(supabase, boatId),
@@ -85,7 +85,7 @@ export default async function ChecklistPage({
 
   // Always shown, empty stock included: the card is also the way in. Hiding it on a boat with
   // no part yet left « pièces détachées » nowhere to be found from here — reported at the
-  // tiller — and that is exactly the boat that most needs the door (D43).
+  // tiller — and that is exactly the boat that most needs the door (D84).
   const lowParts = toRestockList(stockItems);
   const stock = { total: stockItems.length, low: lowParts.length };
 

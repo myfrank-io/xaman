@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const memberRoleSchema = z.enum(["owner", "editor", "pro", "viewer"]);
-// Since D73 an invitation may carry any of them, `owner` included; who is allowed to issue which
+// Since D82 an invitation may carry any of them, `owner` included; who is allowed to issue which
 // is decided by the insert policy on `boat_invitations`, and mirrored in `inviteMember`.
 export const invitableRoleSchema = memberRoleSchema;
 
