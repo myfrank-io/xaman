@@ -23,7 +23,16 @@ export const upsertContactSchema = z.object({
   boatId: uuid,
   expectedUpdatedAt,
   name: requiredText(120),
-  specialty: requiredText(60),
+  /**
+   * Optional: a provider written down with a phone number and no trade is still worth having,
+   * and the trade is a filter rather than an identity. The column is NOT NULL, so an unanswered
+   * question is stored as an empty string — which every screen already reads as « Autre »
+   * (`groupBySpecialty`), with no migration and no null to guard against.
+   */
+  specialty: z.preprocess(
+    (value) => (typeof value === "string" ? value.trim() : ""),
+    z.string().max(60),
+  ),
   company: nullableText(120),
   phone: nullableText(40),
   email: z.preprocess(emptyToNull, z.string().trim().email().max(160).nullable()),

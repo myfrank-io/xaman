@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ import {
   sortRows,
   type ChecklistRow,
 } from "@/components/checklist/rows";
+import { toCompletable, type EngineReadDates } from "@/components/checklist/completable";
 import { StepsChecklist, clearSteps } from "@/components/checklist/StepsChecklist";
 import { AttentionDot } from "@/components/common/AttentionDot";
 import { CategoryIcon } from "@/components/common/CategoryBadge";
@@ -67,6 +68,28 @@ export type DisabledItem = { id: string; label: string };
 const HISTORY_PREVIEW = 3;
 const PRO_UNDO_HOURS = 24;
 
+/**
+ * A completion this iPad knows about and the server has not sent back yet.
+ *
+ * The rows and the history come from the props: the Realtime subscription calls
+ * `router.refresh()`, and a point ticked on the other iPad has to appear here. Copying the props
+ * into `useState` — which is what this screen did — seeds them once and ignores every refresh
+ * afterwards, so the list stayed frozen on what the first render happened to carry.
+ *
+ * So the props are the truth, and what this device did in the last second is laid *over* them:
+ * `added` while the acknowledgement is not in the props yet (an optimistic tick, or one queued
+ * offline that will not be there for hours), `removed` while an undone one still is. Each entry
+ * lifts itself as soon as the props agree — no timers, no reconciliation, and a refresh coming
+ * from anywhere lands immediately.
+ */
+type PendingCompletion = {
+  itemId: string;
+  row: CompletionRow;
+  saved: SavedCompletion;
+  /** The props row as it was before the tick: what « Annuler » puts back. */
+  before: ChecklistRow | null;
+};
+
 // Points of one category (E4-4): sorted rows, one row expanded at a time, in place.
 export function CategoryItems({
   boatId,
@@ -81,6 +104,7 @@ export function CategoryItems({
   canWrite,
   canContribute,
   filter,
+  engineReadDates,
 }: {
   boatId: string;
   category: { id: string; name: string; color: string; icon: string | null };
@@ -94,19 +118,58 @@ export function CategoryItems({
   canWrite: boolean;
   canContribute: boolean;
   filter: "all" | "todo";
+  /** When each engine was last read, so a fresh reading fills the hours by itself. */
+  engineReadDates?: EngineReadDates;
 }) {
   const t = useTranslations("checklist");
   const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [rows, setRows] = useState(initialRows);
-  const [completions, setCompletions] = useState(initialCompletions);
-  const [snapshots] = useState(() => new Map<string, ChecklistRow>());
+  const [added, setAdded] = useState<Map<string, PendingCompletion>>(() => new Map());
+  const [removed, setRemoved] = useState<Set<string>>(() => new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
   const [completing, setCompleting] = useState<CompletableItem | null>(null);
   const [deleting, setDeleting] = useState<CompletionRow | null>(null);
   const [showAll, setShowAll] = useState<Set<string>>(new Set());
+
+  // What the server currently says, by completion id: the arbiter of both overlays.
+  const serverCompletionIds = useMemo(
+    () => new Set(initialCompletions.map((completion) => completion.id)),
+    [initialCompletions],
+  );
+
+  // No effect prunes the two overlays: an entry the props have caught up with is simply
+  // filtered out below, and setting state from an effect is exactly the cascade the React
+  // compiler refuses. They only ever hold what this device did on this screen.
+  const pendingTicks = useMemo(
+    () => [...added.values()].filter((entry) => !serverCompletionIds.has(entry.row.id)),
+    [added, serverCompletionIds],
+  );
+
+  const completions = useMemo(
+    () => [
+      ...pendingTicks.map((entry) => entry.row),
+      ...initialCompletions.filter((completion) => !removed.has(completion.id)),
+    ],
+    [pendingTicks, initialCompletions, removed],
+  );
+
+  const rows = useMemo(() => {
+    if (pendingTicks.length === 0 && removed.size === 0) return initialRows;
+    const byItem = new Map(pendingTicks.map((entry) => [entry.itemId, entry]));
+    return initialRows.map((row) => {
+      const tick = byItem.get(row.id);
+      if (tick) return applyCompletion(row, tick.saved);
+      // Undone here, still acknowledged in the props: the refresh has not landed yet, so the
+      // row is put back the way it was before the tick rather than showing as done.
+      if (row.lastCompletionId && removed.has(row.lastCompletionId)) {
+        const before = added.get(row.lastCompletionId)?.before;
+        if (before) return before;
+      }
+      return row;
+    });
+  }, [initialRows, pendingTicks, removed, added]);
 
   const interval = rows.filter((row) => !isPunctual(row));
   const punctual = rows.filter(isPunctual);
@@ -122,58 +185,56 @@ export function CategoryItems({
   const visible = sortRows(filter === "todo" ? interval.filter(isTodo) : interval);
   const visiblePunctual = sortRows(filter === "todo" ? punctualTodo : punctual);
 
-  function toCompletable(row: ChecklistRow): CompletableItem {
-    return {
-      id: row.id,
-      label: row.label,
-      categoryName: row.categoryName,
-      intervalMonths: row.intervalMonths,
-      intervalHours: row.intervalHours,
-      engine: row.engineId
-        ? {
-            id: row.engineId,
-            label: row.engineLabel ?? "",
-            lastHours: row.currentHours,
-            lastDate: null,
-            tracksHours: row.engineTracksHours,
-          }
-        : null,
-      lastCompletedAt: row.lastCompletedAt,
-      lastCompletedByName: row.lastCompletedByName,
-      lastEngineHours: row.lastEngineHours,
-    };
-  }
-
   function onCompleted(item: CompletableItem, completion: SavedCompletion) {
-    setRows((current) =>
-      current.map((row) => {
-        if (row.id !== item.id) return row;
-        if (!snapshots.has(row.id)) snapshots.set(row.id, row);
-        return applyCompletion(row, completion);
-      }),
-    );
-    setCompletions((current) => [
-      {
-        id: completion.id,
+    const before = initialRows.find((row) => row.id === item.id);
+    setAdded((current) => {
+      const next = new Map(current);
+      next.set(completion.id, {
         itemId: item.id,
-        completedAt: completion.completedAt,
-        completedByName: completion.completedByName,
-        engineHours: completion.engineHours,
-        nextDueAt: completion.nextDueAt,
-        note: null,
-        maintenanceLogId: null,
-        createdBy: currentUserId,
-        createdAt: new Date().toISOString(),
-      },
-      ...current,
-    ]);
+        saved: completion,
+        before: before ?? null,
+        row: {
+          id: completion.id,
+          itemId: item.id,
+          completedAt: completion.completedAt,
+          completedByName: completion.completedByName,
+          engineHours: completion.engineHours,
+          nextDueAt: completion.nextDueAt,
+          note: null,
+          maintenanceLogId: null,
+          createdBy: currentUserId,
+          createdAt: new Date().toISOString(),
+        },
+      });
+      return next;
+    });
     clearSteps(item.id);
   }
 
-  function onUndone(item: CompletableItem, completionId: string) {
-    const snapshot = snapshots.get(item.id);
-    if (snapshot) setRows((current) => current.map((row) => (row.id === item.id ? snapshot : row)));
-    setCompletions((current) => current.filter((completion) => completion.id !== completionId));
+  /**
+   * A completion that is not there any more: « Annuler » on the toast, or « Supprimer » in the
+   * history. It leaves the optimistic overlay, and enters `removed` when the props still carry
+   * it — the deletion is already done server-side, the refresh that will say so is on its way.
+   */
+  function forget(completionId: string) {
+    const stillInProps = serverCompletionIds.has(completionId);
+    setRemoved((current) => {
+      if (!stillInProps || current.has(completionId)) return current;
+      const next = new Set(current);
+      next.add(completionId);
+      return next;
+    });
+    setAdded((current) => {
+      // Kept while the props still show it: its `before` is what puts the row back meanwhile.
+      if (stillInProps || !current.has(completionId)) return current;
+      const next = new Map(current);
+      next.delete(completionId);
+      return next;
+    });
+  }
+
+  function onUndone(_item: CompletableItem, completionId: string) {
+    forget(completionId);
   }
 
   function canDelete(completion: CompletionRow): boolean {
@@ -194,6 +255,7 @@ export function CategoryItems({
         return;
       }
       toast.success(t("complete.deleted"));
+      forget(target.id);
       router.refresh();
     });
   }
@@ -219,7 +281,11 @@ export function CategoryItems({
         <ChecklistItemRow
           row={row}
           onClick={() => setExpanded(open ? null : row.id)}
-          onDone={canContribute ? (target) => setCompleting(toCompletable(target)) : undefined}
+          onDone={
+            canContribute
+              ? (target) => setCompleting(toCompletable(target, engineReadDates))
+              : undefined
+          }
         />
         {open ? (
           <div className="flex flex-col gap-5 border-b border-border px-4 pt-2 pb-5 sm:pl-[calc(1rem+6rem+0.75rem)]">

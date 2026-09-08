@@ -16,10 +16,12 @@ import { useFieldError } from "@/components/forms/use-field-error";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DateField } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { upsertEngine } from "@/lib/actions/engines";
+import { todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatTabPath, enginePath } from "@/lib/queries/boat-routes";
 import {
@@ -207,12 +209,14 @@ export function EngineForm({
             control={form.control}
             name="installedAt"
             render={({ field }) => (
-              <Input
+              // Rule 13: chips + the native wheel. An engine is installed in the past, so the
+              // chips look backwards and today is the ceiling — unless the stored date is
+              // already beyond it, which must stay editable rather than become unreachable.
+              <DateField
                 id="engine-installed"
-                type="date"
                 value={field.value ?? ""}
-                onChange={(event) => field.onChange(event.target.value || null)}
-                className="w-auto min-w-40 num"
+                max={(field.value ?? "") > todayString() ? undefined : todayString()}
+                onValueChange={(value) => field.onChange(value || null)}
               />
             )}
           />

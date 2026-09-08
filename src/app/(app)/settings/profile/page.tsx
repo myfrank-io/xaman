@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from "lucide-react";
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PageHeader } from "@/components/common/PageHeader";
+import { PageShell } from "@/components/layout/PageShell";
 import { DeleteAccountCard } from "@/components/profile/DeleteAccountCard";
 import { PasswordCard } from "@/components/profile/PasswordCard";
 import { ProfileForm } from "@/components/profile/ProfileForm";
@@ -47,7 +48,7 @@ export default async function ProfilePage() {
   const tc = await getTranslations("common");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-8">
+    <PageShell>
       <Button asChild variant="ghost" className="w-fit">
         <Link href={"/boats" as Route}>
           <ArrowLeftIcon />
@@ -62,6 +63,6 @@ export default async function ProfilePage() {
       <ProfileForm defaultValues={{ fullName: profile?.full_name ?? "" }} />
       <PasswordCard />
       <DeleteAccountCard blockingBoats={blocking} />
-    </main>
+    </PageShell>
   );
 }

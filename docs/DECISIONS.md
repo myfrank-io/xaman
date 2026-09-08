@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D96.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D103.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2126,3 +2126,99 @@ réussi** — jamais à la frappe, pour qu'un brouillon abandonné n'apprenne ri
 **Raison.** C'est la différence entre « un formulaire » et « l'app me connaît » : un tap de moins sur
 l'acte dominant, à chaque fois, sans schéma ni synchronisation. Une préférence d'appareil n'a pas
 sa place en base : deux personnes sur deux appareils ont deux habitudes.
+
+## 2026-09-08 — D96 : « À valider » se met à jour tout seul, et se valide en un tap
+
+**Question.** L'écran des documents reçus rafraîchissait la page **toutes les cinq secondes** tant
+qu'une lecture tournait — une douzaine de requêtes serveur par tick, indéfiniment si un document
+restait coincé — et chaque carte, même celle qu'aucune réserve n'accompagnait, ouvrait huit champs
+modifiables sur sept cents pixels.
+
+**Décision.** Trois changements qui vont ensemble :
+
+- `inbox_items` rejoint la publication `supabase_realtime` (`0028`). La carte, le compteur de la
+  navigation et la bannière du tableau de bord bougent ensemble, sur l'appareil qui a validé comme
+  sur l'autre. Le sondage reste, mais **borné** (3 s → 15 s, deux minutes au total), en filet pour
+  un projet dont le service temps réel serait éteint.
+- Une carte **sans réserve** s'ouvre sur une ligne — nature, titre, date, montant, fournisseur — avec
+  « Valider » et « Modifier ». L'avertissement `local`, que D94 pose sur *toute* lecture locale, ne
+  compte pas comme une réserve : le prendre en compte aurait rendu la règle inapplicable. Ce qui
+  mérite le formulaire, ce sont les vraies réserves de D92 (montant deviné, date sans étiquette,
+  OCR douteux).
+- « Tout valider » classe les cartes sûres **une par une** par la Server Action existante : un refus
+  laisse les autres classées, et chaque écriture reste idempotente.
+
+**Raison.** Cinq factures passaient de cinq taps et trois mille pixels de défilement à un seul tap.
+
+## 2026-09-08 — D97 : l'identité de la ligne qu'un document devient est dérivée du document
+
+**Question.** `validateInboxItem` tirait un identifiant neuf à chaque appel et ne l'écrivait qu'à la
+toute fin. Un échec après l'écriture de l'intervention laissait la carte en « À valider » ; le tap
+suivant tirait un **second** identifiant, donc une **seconde** intervention pour la même facture.
+
+**Décision.** L'identifiant est **dérivé** de celui du document (XOR d'un masque par nature), donc
+stable : rejouer « Valider » réécrit la même ligne. Le rattachement du fichier est relu par son
+`storage_path` au lieu d'être supposé.
+
+**Raison.** Réserver l'identifiant sur la ligne avant d'écrire l'entité est impossible sans
+migration : `inbox_items.log_id` et `purchase_id` portent des clés étrangères non différables.
+
+## 2026-09-08 — D98 : un seul compte pour « à traiter », celui de l'écran d'arrivée
+
+**Question.** Le tableau de bord annonçait « Tous les points à traiter (47) » sous une liste de six,
+et l'écran d'arrivée n'en montrait pas 47 : `overdue + soon + neverRecorded` additionnait un
+ensemble **qui se recoupe** — un point à intervalle jamais fait porte déjà un état.
+
+**Décision.** `todoCount = overdue + soon`, exactement ce que la file classe et ce que l'onglet
+« À traiter » liste. Même correction sur « Interventions ouvertes », dont le lien menait à
+l'historique et pointe désormais sur l'onglet « Prévu ».
+
+**Raison.** Un compte qui mène à une liste plus courte détruit la confiance dans tous les autres.
+
+## 2026-09-08 — D99 : le tableau de bord mène par l'acte, et récompense la semaine
+
+**Décision.** La première ligne de la file est promue en bloc « À faire maintenant » (libellé,
+raison, « Fait ») — c'est la même entrée, jamais une copie. La phrase d'état devient un bilan de
+sept jours (« 3 points réglés et 1 intervention notée cette semaine par Xavier et Emmanuel · rien
+de nouveau en retard ») et la quatrième vignette passe de « Dépenses 2026 » à « Réglés cette
+semaine ». Le récapitulatif se replie en un bloc de trois lignes, les dernières interventions
+passent de cinq à trois, et aucune destination n'est perdue.
+
+**Raison.** L'écran offrait quatre portes vers la même liste avant d'offrir un seul acte, et sa
+phrase répétait des compteurs affichés cinq centimètres plus bas. Un écart motive ; un niveau
+informe.
+
+## 2026-09-08 — D100 : rien n'est écrit tant que tout ne peut pas l'être
+
+**Question.** `saveLog` écrivait l'intervention **et** les relevés, puis refusait « heures moteur
+obligatoires » : le journal montrait la ligne pendant que le formulaire annonçait un échec.
+
+**Décision.** La vérification des points cochés passe avant la première écriture. Dans le même
+esprit : une Server Action qui **lève** devient un refus (`errors.unknown`) au lieu de faire
+tomber le formulaire dans la frontière d'erreur avec tout ce qui y était tapé, et le brouillon
+n'est pas réécrit tant que la bannière « Reprendre / Supprimer » n'a pas de réponse.
+
+**Raison.** Règle 13 : jamais de saisie perdue, et jamais un message qui ment sur ce qui est en base.
+
+## 2026-09-08 — D101 : un chemin de retour est résolu, jamais préfixé
+
+**Question.** `?next=//evil.com` et `?next=/\evil.com` passaient le test « commence par `/` » de la
+connexion et de l'inscription, et emmenaient une personne connectée sur un site tiers.
+
+**Décision.** Un seul helper (`safeNextPath`) résout le chemin contre l'origine de l'application et
+ne garde que `pathname + search` si l'origine correspond ; connexion, inscription et `/auth/callback`
+l'utilisent.
+
+**Raison.** Une redirection ouverte sur un écran de connexion est un hameçonnage clé en main.
+
+## 2026-09-08 — D102 : les props sont la vérité, l'optimiste est un calque
+
+**Question.** La liste d'une catégorie recopiait ses props dans un `useState` au premier rendu :
+un point coché sur un autre iPad n'apparaissait jamais, le rafraîchissement temps réel étant jeté
+par l'état local.
+
+**Décision.** Les listes temps réel dérivent leur affichage des props, avec un calque
+d'optimisme indexé par identifiant de réalisation, effacé dès que les props le portent. Dans la même
+veine : se déconnecter vide le cache de lecture persistant (l'iPad est partagé), et les suites de
+tests qui ont besoin d'une base se sautent sans `DATABASE_URL`, pour que `pnpm test` soit
+exécutable sans Docker.

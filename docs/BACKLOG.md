@@ -29,7 +29,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E13 | E13-17 |
 | E14 | E14-8 |
 | E15 | E15-9 |
-| E16 | E16-1 |
+| E16 | E16-6 |
 
 ---
 
@@ -208,3 +208,31 @@ Six audits parallèles (doublons et code mort, longueur des flux et pré-remplis
 cassées, responsive, performance perçue, boucle produit) et leurs corrections. Règle du lot :
 **aucune fonction nouvelle**, on enlève des taps, des écrans concurrents et des lignes.
 
+- [x] **E16-1 (M, 2)** **Huit défauts corrigés** (D100, D101, D102) : redirection ouverte sur `?next=`
+  (`//evil.com`, `/\evil.com`) résolue par un seul helper ; une Server Action qui lève devient un refus
+  au lieu de démonter le formulaire ; le brouillon n'est plus réécrit avant que sa bannière ait une
+  réponse ; `saveLog` vérifie les heures exigées **avant** d'écrire ; l'invitation est idempotente et un
+  e-mail non parti n'annule plus la ligne ; la liste d'une catégorie suit le temps réel (props + calque
+  d'optimisme) ; la déconnexion vide le cache persistant ; les suites qui ont besoin d'une base se
+  sautent sans `DATABASE_URL`. Tests ajoutés : `auth-redirect`, `submit-or-queue`.
+- [x] **E16-2 (M, 2)** **L'app se souvient** (D95) : `useLastUsed` par bateau et par appareil —
+  catégorie et intervenant de l'intervention, « réalisé par » du cochage, fournisseur et catégorie
+  d'un achat, chantier d'une sortie de l'eau, prix de la dernière bouteille, intervenants récents en
+  puces. « Par » passe du sélecteur natif aux puces, les heures se remplissent seules quand le relevé
+  a moins de 48 h, « Valide jusqu'au » n'apparaît que là où une péremption existe, le toast dit la
+  prochaine échéance, et « Enregistrer et en saisir une autre » garde date, catégorie et intervenant.
+  Dates restantes passées sur `DateField`, spécialité d'un intervenant devenue facultative jusque
+  dans l'import.
+- [x] **E16-3 (M, 2)** **Responsive** : tableaux de reprise et d'import qui défilent enfin sous 640 px
+  (le repère disait l'inverse de ce que faisait le tableau), barres d'action au-dessus du clavier
+  (`useKeyboardOffset`), bascule des dialogues déplacée de 768 px (largeur exacte de l'iPad en
+  portrait) à 640, confirmations destructives alignées sur la règle des modales, utilitaire
+  `bleed-gutters` pour la gouttière `lg` oubliée, grille des huit systèmes à trois colonnes avec titres
+  sur deux lignes, `PageHeader` sur les jetons de typographie, `PageShell` pour les écrans hors cadre.
+- [x] **E16-4 (M, 2)** **Tableau de bord** (D98, D99) : un seul compte pour « à traiter », action
+  suivante promue, phrase de bilan hebdomadaire, vignette « Réglés cette semaine », récapitulatif
+  replié, états vides honnêtes, « échéance estimée » sur une échéance encore ancrée, un seul contrôle
+  nommé par viewport.
+- [x] **E16-5 (M, 2)** **« À valider »** (D96, D97) : publication temps réel (`0028`), fin du
+  rafraîchissement toutes les 5 s, carte sûre en une ligne, « Tout valider », identité de la ligne
+  dérivée du document pour qu'un « Valider » rejoué n'écrive pas une seconde intervention.

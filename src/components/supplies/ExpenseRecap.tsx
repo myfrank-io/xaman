@@ -164,7 +164,9 @@ export function ExpenseRecap({
   return (
     <div className="flex animate-in flex-col gap-4 border-t border-border bg-surface-sunken px-4 py-4 duration-200 fade-in motion-reduce:animate-none sm:px-5">
       {facts.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 lg:grid-cols-3">{facts}</div>
+        // Two columns of « statut · intervenant · équipement » on a 390 px phone leave about
+        // 160 px a fact: one column below `sm`, where the recap is read one line at a time.
+        <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">{facts}</div>
       ) : null}
 
       {/* Four lines of notes, no more: the whole point of the panel is that the list stays

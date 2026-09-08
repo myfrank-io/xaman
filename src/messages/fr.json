@@ -515,7 +515,9 @@
       "copyLink": "Copier le lien",
       "linkCopied": "Lien copié.",
       "share": "Partager",
-      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman"
+      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman",
+      "emailFailedTitle": "E-mail non envoyé",
+      "emailFailed": "Aucun e-mail n’est parti vers {email}. L’invitation est bien créée : copiez le lien ci-dessous et transmettez-le vous-même."
     },
     "invitations": {
       "title": "Invitations en attente",
@@ -657,7 +659,9 @@
       "openLogsHint": "{count, plural, =0 {aucune ouverte} one {dont # urgente} other {dont # urgentes}}",
       "openLogsDue": "{count, plural, one {dont # à faire aujourd'hui} other {dont # à faire aujourd'hui}}",
       "expenses": "Dépenses {year}",
-      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}"
+      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}",
+      "settled": "Réglés cette semaine",
+      "settledHint": "{items, plural, =0 {aucun point} one {# point} other {# points}} · {logs, plural, =0 {aucune intervention} one {# intervention} other {# interventions}}"
     },
     "engines": {
       "title": "Heures moteur",
@@ -684,7 +688,8 @@
       "startStep2Action": "Vérifier",
       "startStep3Action": "Ouvrir la checklist",
       "startDismiss": "Masquer",
-      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}"
+      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}",
+      "emptyNoDated": "Aucune échéance datée pour l'instant."
     },
     "categories": {
       "title": "État des 8 systèmes",
@@ -710,7 +715,8 @@
       "other": "Autres",
       "haulOutDetail": "Voir les sorties de l'eau",
       "stockDetail": "Voir le stock",
-      "stockOk": "Aucune pièce sous le seuil"
+      "stockOk": "Aucune pièce sous le seuil",
+      "title": "Récapitulatif"
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
@@ -726,13 +732,26 @@
       "soon": "{count, plural, one {# point à faire bientôt} other {# points à faire bientôt}}",
       "ok": "Tout est à jour",
       "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}",
-      "empty": "Carnet neuf : la checklist attend son plan d'entretien"
+      "empty": "Carnet neuf : la checklist attend son plan d'entretien",
+      "weekItems": "{count, plural, one {# point réglé} other {# points réglés}}",
+      "weekLogs": "{count, plural, one {# intervention notée} other {# interventions notées}}",
+      "week": "{activity} cette semaine",
+      "weekBy": "{activity} cette semaine par {names}",
+      "weekNone": "Rien de noté cette semaine",
+      "weekNamesMore": "{names} et {count, plural, one {# autre} other {# autres}}",
+      "newOverdue": "{count, plural, one {# nouveau point en retard} other {# nouveaux points en retard}}",
+      "noNewOverdue": "rien de nouveau en retard"
     },
     "banner": {
       "noReadings": "Aucun relevé d'heures pour {engines}.",
       "noReadingsAction": "Saisir",
       "unfinished": "Votre mise en route n'est pas terminée : sans plan d'entretien, la checklist reste vide.",
       "unfinishedAction": "Reprendre"
+    },
+    "next": {
+      "title": "À faire maintenant",
+      "open": "Ouvrir",
+      "estimated": "échéance estimée"
     }
   },
   "offline": {
@@ -876,7 +895,8 @@
       "attachments": "Photos et documents",
       "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
       "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants.",
-      "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}"
+      "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}",
+      "saveAndNew": "Enregistrer et en saisir une autre"
     },
     "detail": {
       "fields": {
@@ -1007,7 +1027,6 @@
       "date": "Date",
       "by": "Réalisé par",
       "me": "Moi",
-      "someoneElse": "Quelqu'un d'autre…",
       "otherName": "Nom",
       "hours": "Heures {engine}",
       "hoursRequired": "Ce point se compte en heures moteur : saisissez le compteur.",
@@ -1026,7 +1045,13 @@
       "deleteTitle": "Supprimer cette réalisation ?",
       "deleteDescription": "La réalisation du {date} sera supprimée, ainsi que le relevé d'heures qui en découle. Cette suppression est définitive : elle ne passe pas par la corbeille.",
       "deleted": "Réalisation supprimée",
-      "addDetails": "+ Ajouter les détails"
+      "addDetails": "+ Ajouter les détails",
+      "otherChip": "Autre",
+      "addValidUntil": "+ Valide jusqu'au…",
+      "plusOneYear": "+ 1 an",
+      "plusTwoYears": "+ 2 ans",
+      "nextDue": "Prochaine : {next}",
+      "nextDueBoth": "{date} ou {hours}"
     },
     "form": {
       "new": "Nouveau point",
@@ -1536,7 +1561,8 @@
       "placeholder": "Choisir un intervenant",
       "add": "Nouvel intervenant",
       "quickTitle": "Nouvel intervenant",
-      "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire."
+      "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire.",
+      "recents": "Récents"
     },
     "references": {
       "logs": "Interventions",
@@ -1789,7 +1815,8 @@
         "next": "Prochaine estimée vers le {date} (estimé)",
         "noEstimate": "Estimation à partir de 3 intervalles",
         "total": "Total dépensé : {amount}"
-      }
+      },
+      "lastPrice": "Dernier prix : {amount}"
     }
   },
   "haulOuts": {
@@ -1950,7 +1977,6 @@
       "empty": "Le tableau est vide.",
       "tooMany": "Le tableau dépasse {max} lignes. Importez-le en plusieurs fois.",
       "noName": "Nom manquant",
-      "noSpecialty": "Spécialité manquante",
       "badEmail": "Adresse e-mail invalide",
       "badDate": "Date illisible (attendu 12/03/2026)",
       "legacyExcel": "Ce fichier est un ancien Excel (.xls). Ouvrez-le, puis « Enregistrer sous » au format .xlsx — ou copiez les cellules et collez-les ci-dessous.",
@@ -2270,6 +2296,18 @@
       "analysing": "L'agent IA lit le document…"
     },
     "uploaded": "Document lu : vérifiez puis validez.",
-    "uploadedNoRead": "Document reçu : remplissez les champs puis validez."
+    "uploadedNoRead": "Document reçu : remplissez les champs puis validez.",
+    "summary": {
+      "hint": "Un agent IA a lu le document : vérifiez cette ligne, puis validez.",
+      "edit": "Modifier"
+    },
+    "validateAll": {
+      "help": "{count, plural, one {# document a été lu sans réserve : rangez-le d'un tap.} other {# documents ont été lus sans réserve : rangez-les d'un seul tap.}}",
+      "action": "Tout valider",
+      "progress": "{done} / {total}",
+      "done": "{count, plural, one {# document classé} other {# documents classés}}",
+      "result": "{filed, plural, =0 {Aucun document classé} one {# classé} other {# classés}}{refused, plural, =0 {} one { · # refusé} other { · # refusés}}",
+      "failed": "Restés à valider : {files}"
+    }
   }
 }

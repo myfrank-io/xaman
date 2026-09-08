@@ -690,7 +690,7 @@ Par bateau : `overdue_items`, `soon_items`, `planned_logs`, `in_progress_logs`, 
 Le **registre des modèles** tel que le lit le sélecteur de création d'un bateau (D64) : une ligne par modèle lisible, avec son nombre de catégories et de points (« 8 systèmes · 70 points »). `security_invoker`, donc `checklist_templates_select` (`is_public or is_platform_admin()`) décide seul de ce qui est visible.
 
 ## 7. Realtime
-Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `checklist_completions`, `engine_hour_readings`, `purchases`, `parts`, `haul_outs`, `contacts`. Le client ouvre un canal par bateau avec filtre `boat_id=eq.{id}` sur ces 8 tables et invalide les queries TanStack correspondantes. La RLS s'applique aux événements Realtime (Supabase le garantit pour les tables avec RLS).
+Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `checklist_completions`, `engine_hour_readings`, `purchases`, `parts`, `haul_outs`, `contacts`, plus `engines` et `boat_categories` (`0013`) et `inbox_items` (`0028` — un document arrive sans que personne ne touche l'écran). Le client ouvre un canal par bateau avec filtre `boat_id=eq.{id}` sur ces tables et invalide les queries TanStack correspondantes. La RLS s'applique aux événements Realtime (Supabase le garantit pour les tables avec RLS).
 
 ## 8. Seed et idempotence
 - Deux mécanismes distincts : `supabase/seed.sql` (dev et CI : 5 utilisateurs de test, un bateau de test minimal, pour les tests RLS et E2E) et `pnpm seed:xaman` (`scripts/seed.ts`, données réelles de `seed/*.json`, exécutable en local, preview et prod).

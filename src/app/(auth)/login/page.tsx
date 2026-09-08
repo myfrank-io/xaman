@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { safeNextPath } from "@/lib/auth/redirect";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth");
@@ -16,7 +17,7 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const t = await getTranslations("auth");
-  const next = params.next && params.next.startsWith("/") ? params.next : "/boats";
+  const next = safeNextPath(params.next);
 
   return (
     <AuthShell title={t("title")} subtitle={t("subtitle")}>

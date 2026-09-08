@@ -11,6 +11,13 @@ import { createClient } from "@/lib/supabase/client";
 // Tables published on supabase_realtime (DATA-MODEL.md §7). engines and boat_categories are here
 // because checklist_item_status reads them: a lone counter reset (D12), engine disable (D14) or
 // category toggle must reach a second device live, not only when some other table also changes.
+//
+// inbox_items is listed for the same reason and one more: a document arrives on its own (D91), so
+// nobody is holding a button when it does. The count beside « À valider », the banner on the
+// dashboard and the screen itself all read the same three statuses, and this subscription is what
+// makes them move together — on the device that validated, and on the one that did not.
+// inbox_items joined the publication in 0028; the capped polling fallback in InboxScreen stays as
+// a safety net for a project whose Realtime service is off, where no event ever arrives.
 export const REALTIME_TABLES = [
   "maintenance_logs",
   "checklist_items",
@@ -22,6 +29,7 @@ export const REALTIME_TABLES = [
   "contacts",
   "engines",
   "boat_categories",
+  "inbox_items",
 ] as const;
 
 // One channel per boat: any change on the boat's tables invalidates the boat's queries and

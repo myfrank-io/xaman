@@ -141,7 +141,6 @@ export function ContactForm({
             <Field
               id="contact-specialty"
               label={t("fields.specialty")}
-              required
               error={fieldError(errors.specialty)}
             >
               <ToggleGroup

@@ -20,6 +20,7 @@ import { NumericField } from "@/components/ui/numeric-field";
 import { Spinner } from "@/components/ui/spinner";
 import { submitReview, type ReviewSummary } from "@/lib/actions/review";
 import { numberToInput } from "@/components/forms/form-values";
+import { useKeyboardOffset } from "@/components/forms/use-keyboard-offset";
 import { todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { logsPath, logsReviewPath } from "@/lib/queries/boat-routes";
@@ -58,6 +59,7 @@ export function ReviewTable({
   const tc = useTranslations("common");
   const errorMessage = useErrorMessage();
   const router = useRouter();
+  const keyboard = useKeyboardOffset();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
@@ -189,10 +191,12 @@ export function ReviewTable({
       {logs.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-overline text-ink-2 uppercase">{t("logsTitle")}</h2>
-          {/* Says it scrolls, rather than looking like a table with three columns (F9). */}
-          <p className="text-caption text-ink-3 sm:hidden">{tc("scrollTable")}</p>
+          {/* Says it scrolls, rather than looking like a table with three columns (F9). The
+              `min-w` below holds the columns at every width, so the hint holds until the width
+              where the table stops scrolling — the content column of the iPad in portrait. */}
+          <p className="text-caption text-ink-3 md:hidden">{tc("scrollTable")}</p>
           <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-            <table className="w-full border-collapse sm:min-w-[42rem]">
+            <table className="w-full min-w-[42rem] border-collapse">
               <thead>
                 <tr className="border-b border-border text-left">
                   <th scope="col" className="px-4 py-3 text-caption font-semibold text-ink-2">
@@ -273,8 +277,10 @@ export function ReviewTable({
       {purchases.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-overline text-ink-2 uppercase">{t("purchasesTitle")}</h2>
+          {/* Four columns of fields do not fit a phone either: same hint as the logs table (F9). */}
+          <p className="text-caption text-ink-3 md:hidden">{tc("scrollTable")}</p>
           <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-            <table className="w-full border-collapse sm:min-w-[40rem]">
+            <table className="w-full min-w-[40rem] border-collapse">
               <thead>
                 <tr className="border-b border-border text-left">
                   <th scope="col" className="px-4 py-3 text-caption font-semibold text-ink-2">
@@ -349,9 +355,14 @@ export function ReviewTable({
         </section>
       ) : null}
 
+      {/* Above the keyboard, not under it: this screen is nothing but fields (see
+          `useKeyboardOffset`), and « Valider » is the only way out of it. */}
       <div
-        className="sticky z-20 -mx-4 flex justify-end border-t border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6"
-        style={{ bottom: "var(--bottom-nav-height, 0px)" }}
+        className="sticky z-20 bleed-gutters flex justify-end border-t border-border bg-surface py-3"
+        style={{
+          bottom: `calc(var(--bottom-nav-height, 0px) + ${keyboard}px)`,
+          paddingBottom: keyboard > 0 ? undefined : "max(0.75rem, env(safe-area-inset-bottom))",
+        }}
       >
         <Button type="submit" size="xl" disabled={pending} aria-busy={pending}>
           {pending ? <Spinner /> : null}

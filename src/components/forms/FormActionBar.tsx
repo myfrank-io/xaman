@@ -41,6 +41,8 @@ export function FormActionBar({
   saveLabel,
   cancelLabel,
   onCancel,
+  secondaryLabel,
+  onSecondary,
   queueable = false,
   className,
 }: {
@@ -49,6 +51,14 @@ export function FormActionBar({
   saveLabel?: string;
   cancelLabel?: string;
   onCancel: () => void;
+  /**
+   * Second way out of a creation form: « Enregistrer et en saisir une autre ». It submits the
+   * same form — the callback only says which of the two buttons was pressed, before the submit
+   * event travels — so validation, the busy state and the offline queue behave identically.
+   * Never offered on an edit: there is no second row to open behind it.
+   */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   /**
    * Creation form whose result can wait on the device (E9-1b): offline it still submits and
    * says so, instead of refusing. An edit is never queueable — replaying it later could
@@ -75,29 +85,42 @@ export function FormActionBar({
       <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
         {cancelLabel ?? t("cancel")}
       </Button>
-      {/* Offline: the form is never emptied. A creation is saved on the device and re-sent
-          later (E9-1b); anything else says why the button cannot do its job (§5.4). */}
-      <Button
-        type={online || queueable ? "submit" : "button"}
-        disabled={pending || disabled}
-        aria-busy={pending}
-        aria-disabled={(!online && !queueable) || undefined}
-        variant={online ? "default" : "outline"}
-        onClick={online || queueable ? undefined : () => toast.error(to("actionUnavailable"))}
-      >
-        {pending ? (
-          <>
-            <Spinner className="size-4" />
-            {t("saving")}
-          </>
-        ) : online ? (
-          (saveLabel ?? t("save"))
-        ) : queueable ? (
-          to("saveOnDevice")
-        ) : (
-          to("retryLabel")
-        )}
-      </Button>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {secondaryLabel && onSecondary ? (
+          <Button
+            type={online || queueable ? "submit" : "button"}
+            variant="outline"
+            disabled={pending || disabled}
+            aria-disabled={(!online && !queueable) || undefined}
+            onClick={online || queueable ? onSecondary : () => toast.error(to("actionUnavailable"))}
+          >
+            {secondaryLabel}
+          </Button>
+        ) : null}
+        {/* Offline: the form is never emptied. A creation is saved on the device and re-sent
+            later (E9-1b); anything else says why the button cannot do its job (§5.4). */}
+        <Button
+          type={online || queueable ? "submit" : "button"}
+          disabled={pending || disabled}
+          aria-busy={pending}
+          aria-disabled={(!online && !queueable) || undefined}
+          variant={online ? "default" : "outline"}
+          onClick={online || queueable ? undefined : () => toast.error(to("actionUnavailable"))}
+        >
+          {pending ? (
+            <>
+              <Spinner className="size-4" />
+              {t("saving")}
+            </>
+          ) : online ? (
+            (saveLabel ?? t("save"))
+          ) : queueable ? (
+            to("saveOnDevice")
+          ) : (
+            to("retryLabel")
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

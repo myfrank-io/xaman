@@ -568,6 +568,27 @@
   padding-bottom: calc(--value(integer) * var(--spacing) + env(safe-area-inset-bottom, 0px));
 }
 
+/*
+ * Full-bleed inside the content container.
+ *
+ * The container is `px-4 sm:px-6 lg:px-8`; a sticky action bar or a header that must touch the
+ * screen edges has to cancel exactly that padding and put it back inside. Written by hand it was
+ * always written `-mx-4 px-4 sm:-mx-6 sm:px-6` — the `lg` tier forgotten — so on iPad landscape
+ * the bar stopped 8 px short on both sides. One utility, the three tiers, no way to forget one.
+ */
+@utility bleed-gutters {
+  margin-inline: calc(var(--spacing) * -4);
+  padding-inline: calc(var(--spacing) * 4);
+  @media (min-width: 40rem) {
+    margin-inline: calc(var(--spacing) * -6);
+    padding-inline: calc(var(--spacing) * 6);
+  }
+  @media (min-width: 64rem) {
+    margin-inline: calc(var(--spacing) * -8);
+    padding-inline: calc(var(--spacing) * 8);
+  }
+}
+
 /* Figures aligned in a column: engine hours, amounts, counters.
    Put it on every displayed number, otherwise columns dance. */
 @utility num {

@@ -23,6 +23,7 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { formResolver } from "@/components/forms/form-resolver";
 import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useDraft } from "@/components/forms/use-draft";
+import { useLastUsed } from "@/components/forms/use-last-used";
 import { useFieldError } from "@/components/forms/use-field-error";
 import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
@@ -126,7 +127,14 @@ export function LogForm({
   const [pending, startTransition] = useTransition();
   const outbox = useOutbox(boatId);
   const { online } = useOnline();
-  const [newId] = useState(() => crypto.randomUUID());
+  // Redrawn after « Enregistrer et en saisir une autre »: each line is its own row, and the
+  // upsert stays idempotent on the id the form opened with (rule 11).
+  const [newId, setNewId] = useState(() => crypto.randomUUID());
+  // What this boat last wrote (D95): the category and who did the work come back on their own.
+  const lastCategory = useLastUsed<string>(boatId, "log.category");
+  const lastContact = useLastUsed<string>(boatId, "log.contact");
+  // Which of the two submit buttons was pressed, read by the submit it precedes.
+  const another = useRef(false);
 
   const initialHours = engines.map((engine) => ({
     engineId: engine.id,
@@ -196,10 +204,49 @@ export function LogForm({
   // Documents (E10-1). On a creation their objects go up while the form is being typed — the id
   // of the intervention is drawn at open — and their rows are written once it exists.
   const [picked, setPicked] = useState<PickedAttachment[]>([]);
-  // Same id the form will save under: the objects can go up before the row exists.
+  // Same id the form will save under: the objects can go up before the row exists. After
+  // « en saisir une autre » it is the new row's id, so the picker starts empty on the new line.
   const attachmentOwnerId = log?.id ?? newId;
   // Points the user ticked or unticked by hand are never re-decided by the suggestions.
   const decided = useRef<Set<string>>(new Set(defaultValues.checklistItemIds));
+
+  // Storage only opens after hydration, so the memory lands once, right after mount, and only
+  // on a blank creation: an edited intervention, a `?category=` in the URL and anything already
+  // chosen always win (D95). `shouldDirty: false` keeps a merely pre-filled form from claiming
+  // unsaved changes, so « Annuler » stays silent.
+  const applied = useRef(false);
+  const rememberedCategory = lastCategory.value;
+  const rememberedContact = lastContact.value;
+  useEffect(() => {
+    if (log || applied.current) return;
+    if (rememberedCategory === null && rememberedContact === null) return;
+    applied.current = true;
+    if (
+      rememberedCategory &&
+      !prefill?.categoryId &&
+      form.getValues("categoryId") === "" &&
+      categories.some((category) => category.id === rememberedCategory)
+    ) {
+      form.setValue("categoryId", rememberedCategory, { shouldDirty: false });
+    }
+    if (
+      rememberedContact &&
+      !prefill?.contactId &&
+      form.getValues("contactId") === null &&
+      contacts.some((contact) => contact.id === rememberedContact)
+    ) {
+      form.setValue("contactId", rememberedContact, { shouldDirty: false });
+    }
+  }, [
+    categories,
+    contacts,
+    form,
+    log,
+    prefill?.categoryId,
+    prefill?.contactId,
+    rememberedCategory,
+    rememberedContact,
+  ]);
 
   // Session draft (creations only, D25): every change is kept, nothing is restored behind
   // the user's back — the banner asks first.
@@ -257,7 +304,60 @@ export function LogForm({
     form.setValue("status", next, { shouldDirty: true });
   }
 
+  /**
+   * « Enregistrer et en saisir une autre » (D95): a mechanic's visit is five lines, and each one
+   * used to cost a full round trip through the list and the « + ». The row just written is
+   * closed and a fresh id is drawn; the date, the category and who did the work stay, because
+   * they are what the five lines share. Everything that belongs to one line — title, cost,
+   * notes, hours, the points it ticks, its documents — starts empty.
+   */
+  function resetForAnother(values: LogOutput) {
+    const nextId = crypto.randomUUID();
+    setNewId(nextId);
+    form.reset({
+      id: nextId,
+      boatId,
+      expectedUpdatedAt: undefined,
+      title: "",
+      categoryId: values.categoryId,
+      status: values.status,
+      performedAt: values.performedAt,
+      cost: "",
+      contactId: values.contactId,
+      equipmentId: null,
+      haulOutId: null,
+      notes: "",
+      engineHours: engines.map((engine) => ({ engineId: engine.id, hours: "" })),
+      checklistItemIds: [],
+    });
+    decided.current = new Set();
+    setSuggested({ key: "", items: [] });
+    setPicked([]);
+    setFocusEngineId(null);
+    setDetailsOpen(false);
+    setHoursOpen(engineCategoryIds.includes(values.categoryId));
+    if (values.status !== "urgent") setSegment(values.status as Segment);
+    // The hand goes back where the next line starts, without a scroll.
+    form.setFocus("title");
+  }
+
+  function remember(values: LogOutput) {
+    lastCategory.remember(values.categoryId);
+    lastContact.remember(values.contactId);
+  }
+
+  // `handleSubmit` is called from inside the event, never during render: the ref that says
+  // which button was pressed is then read where a ref may be read.
+  function submitForm(event: React.FormEvent<HTMLFormElement>) {
+    void form.handleSubmit(onSubmit, () => {
+      // A refused save forgets which button asked for it: the next one speaks for itself.
+      another.current = false;
+    })(event);
+  }
+
   function onSubmit(values: LogOutput) {
+    const again = another.current;
+    another.current = false;
     setServerError(null);
     startTransition(async () => {
       // A new intervention typed at sea is kept on the iPad rather than lost (E9-1b, D25);
@@ -279,7 +379,13 @@ export function LogForm({
       }
       if (outcome.status === "queued") {
         draft.clear();
+        // Written on the save and never on a keystroke: an abandoned form teaches nothing (D95).
+        remember(values);
         toast.success(to("savedOnDevice"));
+        if (again) {
+          resetForAnother(values);
+          return;
+        }
         router.push(logsPath(boatId) as Parameters<typeof router.push>[0]);
         return;
       }
@@ -297,6 +403,7 @@ export function LogForm({
         if (!committed.ok) toast.error(ta("commitFailed"));
       }
       draft.clear();
+      remember(values);
       const reading = result.data.readings[0];
       const engine = reading ? engines.find((row) => row.id === reading.engineId) : undefined;
       toast.success(
@@ -311,6 +418,11 @@ export function LogForm({
           },
         },
       );
+      if (again) {
+        resetForAnother(values);
+        router.refresh();
+        return;
+      }
       router.push(
         (log ? logPath(boatId, result.data.logId) : logsPath(boatId)) as Parameters<
           typeof router.push
@@ -321,7 +433,7 @@ export function LogForm({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
+    <form onSubmit={submitForm} noValidate className="flex flex-col gap-6">
       <PageHeader title={log ? t("editTitle") : t("newTitle")} />
 
       {draft.draft && !log ? (
@@ -618,6 +730,7 @@ export function LogForm({
       <div className="flex flex-col gap-3">
         <Label>{t("attachments")}</Label>
         <AttachmentPicker
+          key={attachmentOwnerId}
           boatId={boatId}
           owner={{ type: "maintenance_log", id: attachmentOwnerId }}
           initial={attachments}
@@ -646,6 +759,14 @@ export function LogForm({
       <FormActionBar
         pending={pending}
         queueable={!log}
+        secondaryLabel={log ? undefined : t("saveAndNew")}
+        onSecondary={
+          log
+            ? undefined
+            : () => {
+                another.current = true;
+              }
+        }
         onCancel={() =>
           guard.leave(() => {
             draft.clear();

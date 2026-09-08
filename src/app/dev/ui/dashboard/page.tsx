@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { ChevronRightIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
+import { PlusIcon, TriangleAlertIcon } from "lucide-react";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { CategoryIcon } from "@/components/common/CategoryBadge";
@@ -155,19 +155,15 @@ const SYSTEMS = [
   { category: SAMPLE_CATEGORIES[7], total: 9, ratio: 0.8, overdue: 1 },
 ];
 
+// Trois lignes : au-delà, c'est l'onglet Journal (le tableau de bord n'en est pas une copie).
 const RECENT = [
   { id: "r1", date: "2026-03-25", title: "Niveaux + courroie", cost: null },
   { id: "r2", date: "2026-03-06", title: "Vidange + entretien complet (2 moteurs)", cost: 620 },
   { id: "r3", date: "2025-12-30", title: "Niveaux + check", cost: null },
-  { id: "r4", date: "2025-10-20", title: "Niveaux + liquide de refroidissement", cost: null },
-  { id: "r5", date: "2025-08-28", title: "Check niveaux", cost: null },
 ];
 
-const EXPENSES = [
-  { category: SAMPLE_CATEGORIES[0], amount: 2480, ratio: 1 },
-  { category: SAMPLE_CATEGORIES[3], amount: 1200, ratio: 0.48 },
-  { category: SAMPLE_CATEGORIES[7], amount: 641, ratio: 0.26 },
-];
+/** Ce qui a été réglé cette semaine : la 4ᵉ vignette et la phrase d'état lisent le même objet. */
+const WEEK = { completions: 3, logs: 1, total: 4, people: ["Xavier", "Emmanuel"] };
 
 /** Static dashboard mock-up: visual acceptance in 1024×768 and 768×1024, no seed needed. */
 export default async function DevDashboardPage() {
@@ -179,6 +175,16 @@ export default async function DevDashboardPage() {
   const td = await getTranslations("dev");
   const tl = await getTranslations("logs");
   const tcreate = await getTranslations("create");
+
+  // Same assembly as the real screen: two clauses joined by the locale, never by a hard « et ».
+  const list = new Intl.ListFormat("fr-FR", { style: "long", type: "conjunction" });
+  const statePhrase = `${t("state.weekBy", {
+    activity: list.format([
+      t("state.weekItems", { count: WEEK.completions }),
+      t("state.weekLogs", { count: WEEK.logs }),
+    ]),
+    names: list.format(WEEK.people),
+  })} · ${t("state.noNewOverdue")}`;
 
   const keys: NavKey[] = [...PRIMARY_NAV_KEYS, ...SECONDARY_NAV_KEYS, ...ACCOUNT_NAV_KEYS];
   const badges: Partial<Record<NavKey, number>> = { checklist: 3, logs: 2 };
@@ -214,8 +220,8 @@ export default async function DevDashboardPage() {
                 ORC 50 #25 · Marsaudon Composites · Catamaran
               </p>
             </div>
-            {/* The role already shows in the account row below `lg`. */}
-            <p className="hidden text-caption text-on-navy-3 sm:block">Xavier · Propriétaire</p>
+            {/* La phrase d'état : ce qui a bougé cette semaine, pas les deux vignettes répétées. */}
+            <p className="text-label text-on-navy-2">{statePhrase}</p>
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -244,10 +250,10 @@ export default async function DevDashboardPage() {
             />
             <StatCard
               variant="dark"
-              label={t("stats.expenses", { year: 2026 })}
-              value={formatCurrency(4321.5)}
-              hint={t("stats.expensesHint", { count: 12 })}
-              href="/dev/ui/dashboard"
+              label={t("stats.settled")}
+              value={WEEK.total}
+              hint={t("stats.settledHint", { items: WEEK.completions, logs: WEEK.logs })}
+              tone="success"
             />
           </div>
 
@@ -280,6 +286,7 @@ export default async function DevDashboardPage() {
           title={t("upcoming.title")}
           actionHref="/dev/ui/dashboard"
           actionLabel={t("upcoming.allChecklist")}
+          bare
         >
           <UpcomingList
             boatId={DEV_BOAT_ID}
@@ -292,7 +299,8 @@ export default async function DevDashboardPage() {
             currentUserName="Xavier Marin"
             canContribute
             today={todayString()}
-            todoCount={23}
+            /* En retard + bientôt, le compte de l'écran d'arrivée : 3 + 5, comme les vignettes. */
+            todoCount={8}
             openLogs={2}
           />
         </SectionCard>
@@ -386,58 +394,24 @@ export default async function DevDashboardPage() {
           ))}
         </SectionCard>
 
-        {/* 6 — management recap */}
-        <div className="grid gap-4 lg:grid-cols-2">
-          <SectionCard title={t("recap.expenses", { year: 2026 })} bare>
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
-              <p className="num text-num-md font-semibold">{formatCurrency(4321.5)}</p>
-              {EXPENSES.map(({ category, amount, ratio }) => (
-                <div key={category.id} className="flex flex-col gap-1">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-caption text-ink-2">{category.name}</span>
-                    <span className="shrink-0 num text-num-sm">{formatCurrency(amount)}</span>
-                  </div>
-                  <ProgressBar
-                    ratio={ratio}
-                    color={category.color}
-                    label={category.name}
-                    showValue={false}
-                  />
-                </div>
-              ))}
-              <a
-                href="/dev/ui/dashboard"
-                className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
-              >
-                {t("recap.expensesDetail")}
-                <ChevronRightIcon className="size-4" aria-hidden />
-              </a>
-            </div>
-          </SectionCard>
-
-          <SectionCard title={t("recap.haulOut")} bare>
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
-              <p className="num text-body">
-                {t("recap.lastHaulOut", { date: "12/2024", months: 14 })}
-              </p>
-              <Button variant="outline" className="w-fit">
-                <PlusIcon />
-                {tc("add")}
-              </Button>
-              <hr className="border-border" />
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-body">{t("recap.lowStock", { count: 2 })}</p>
-                <a
-                  href="/dev/ui/dashboard"
-                  className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
-                >
-                  {t("recap.stock")}
-                  <ChevronRightIcon className="size-4" aria-hidden />
-                </a>
-              </div>
-            </div>
-          </SectionCard>
-        </div>
+        {/* 6 — one recap block: three facts, three destinations, three rows */}
+        <SectionCard title={t("recap.title")}>
+          <ListRow
+            title={t("recap.expenses12m")}
+            trailing={<span className="num text-num-sm">{formatCurrency(4321.5)}</span>}
+            href="/dev/ui/dashboard"
+          />
+          <ListRow
+            title={t("recap.haulOut")}
+            meta={t("recap.lastHaulOut", { date: "12/2024", months: 14 })}
+            href="/dev/ui/dashboard"
+          />
+          <ListRow
+            title={t("recap.stock")}
+            meta={t("recap.lowStock", { count: 2 })}
+            href="/dev/ui/dashboard"
+          />
+        </SectionCard>
       </div>
     </AppShell>
   );

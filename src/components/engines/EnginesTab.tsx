@@ -297,7 +297,7 @@ export function EnginesTab({
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           {active.map((engine) => (
             <EngineCard
               key={engine.id}
@@ -315,7 +315,7 @@ export function EnginesTab({
           <AccordionItem value="inactive">
             <AccordionTrigger>{t("inactiveList", { count: inactive.length })}</AccordionTrigger>
             <AccordionContent>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {inactive.map((engine) => (
                   <EngineCard
                     key={engine.id}

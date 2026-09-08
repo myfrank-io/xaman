@@ -13,6 +13,7 @@ import { boatPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
 import { ATTACHMENT_BUCKET } from "@/lib/schemas/attachments";
 import {
   createInboxUploadSchema,
+  inboxEntityId,
   inboxItemRefSchema,
   validateInboxItemSchema,
 } from "@/lib/schemas/inbox";
@@ -99,8 +100,10 @@ export async function reanalyseInboxItem(input: unknown): Promise<ActionResult<A
 /**
  * « Valider » — the tap that writes the carnet. The intervention or the purchase is created by
  * the form's own action, the document becomes its attachment (same object, new row), and the
- * inbox row remembers what it became. Idempotent: a second tap on a validated row is refused
- * with a conflict, never a second line.
+ * inbox row remembers what it became. Idempotent twice over: a second tap on a validated row is
+ * refused with a conflict, and a tap that *retries* a failed one writes the same line again
+ * rather than a second one — the id comes from the document (`inboxEntityId`), and the
+ * attachment is read back by its path instead of being guessed.
  */
 export async function validateInboxItem(
   input: unknown,
@@ -123,9 +126,14 @@ export async function validateInboxItem(
   if (!item) return fail("errors.forbidden");
   if (item.status === "validated" || item.status === "dismissed") return fail("errors.conflict");
 
-  // The ids are drawn here rather than by the form: the row is the memory of the tap, and an
-  // action that fails after the line is written finds it again below (`log_id` / `purchase_id`).
-  const entityId = item.log_id ?? item.purchase_id ?? crypto.randomUUID();
+  // The id of the line is derived from the document itself (`inboxEntityId`), not drawn at
+  // random: a « Valider » that writes the intervention and then fails further down — a lost
+  // connection, a refused attachment — used to leave the person with a card still saying « À
+  // valider », and the second tap wrote a *second* intervention. Now the second tap re-derives
+  // the same id, so `saveLog` / `upsertPurchase` update the line they already wrote (rule 11).
+  // A row that already remembers what it became keeps that id, whatever it was drawn with.
+  const remembered = values.kind === "log" ? item.log_id : item.purchase_id;
+  const entityId = remembered ?? inboxEntityId(values.itemId, values.kind);
   const notes = values.notes;
 
   if (values.kind === "log") {
@@ -165,10 +173,9 @@ export async function validateInboxItem(
   }
 
   // The document, hung on the line it produced. Same object in the bucket, one more row.
-  const attachmentId = crypto.randomUUID();
   const { error: attachmentError } = await supabase.from("attachments").upsert(
     {
-      id: attachmentId,
+      id: crypto.randomUUID(),
       boat_id: values.boatId,
       entity_type: values.kind === "log" ? "maintenance_log" : "purchase",
       entity_id: entityId,
@@ -184,6 +191,18 @@ export async function validateInboxItem(
   );
   if (attachmentError) return fail(dbErrorKey(attachmentError));
 
+  // Which row the object actually belongs to, asked rather than assumed. The upsert above is a
+  // « do nothing » on conflict, so on a second attempt it writes nothing and the id drawn a line
+  // earlier names no row at all: writing *that* id on `inbox_items.attachment_id` was refused by
+  // its foreign key, and the retry could never get past this point. The object's path is unique
+  // in `attachments`, so reading it back gives the one row that exists, first tap or fifth.
+  const { data: attachment } = await supabase
+    .from("attachments")
+    .select("id")
+    .eq("boat_id", values.boatId)
+    .eq("storage_path", item.storage_path)
+    .maybeSingle();
+
   const { error: updateError, count } = await supabase
     .from("inbox_items")
     .update(
@@ -191,7 +210,7 @@ export async function validateInboxItem(
         status: "validated",
         log_id: values.kind === "log" ? entityId : null,
         purchase_id: values.kind === "purchase" ? entityId : null,
-        attachment_id: attachmentId,
+        attachment_id: attachment?.id ?? null,
         validated_by: userId,
         validated_at: new Date().toISOString(),
         updated_by: userId,

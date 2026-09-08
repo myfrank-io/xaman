@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { ChecklistGrid, toCategoryProgress } from "@/components/checklist/ChecklistGrid";
 import { ChecklistViewTabs } from "@/components/checklist/ChecklistViewTabs";
 import { ChoosePlanBlock } from "@/components/checklist/ChoosePlanBlock";
+import type { EngineReadDates } from "@/components/checklist/completable";
 import { TodoList, type TodoFilter } from "@/components/checklist/TodoList";
 import { countAttention, isDueToday, toChecklistRow } from "@/components/checklist/rows";
 import { PlusIcon } from "lucide-react";
@@ -40,25 +41,32 @@ export default async function ChecklistPage({
 }) {
   const [{ boatId }, { view, filter }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
-  const [{ data: role }, { data: progress }, { data: status }, { data: engines }, stockItems] =
-    await Promise.all([
-      supabase.rpc("boat_role", { p_boat_id: boatId }),
-      supabase
-        .from("checklist_category_progress")
-        .select("*")
-        .eq("boat_id", boatId)
-        .order("sort_order"),
-      supabase
-        .from("checklist_item_status")
-        .select("*")
-        .eq("boat_id", boatId)
-        .in("status", ["overdue", "soon", "never"]),
-      supabase.from("engines").select("id, label").eq("boat_id", boatId),
-      // The stock closes the grid: what is aboard, and what is under its threshold (D84). The
-      // low lines also feed the « À racheter » checklist above the grid (D63) — one read, one
-      // source of truth, so the card and the list can never disagree.
-      loadStockItems(supabase, boatId),
-    ]);
+  const [
+    { data: role },
+    { data: progress },
+    { data: status },
+    { data: engines },
+    { data: readings },
+    stockItems,
+  ] = await Promise.all([
+    supabase.rpc("boat_role", { p_boat_id: boatId }),
+    supabase
+      .from("checklist_category_progress")
+      .select("*")
+      .eq("boat_id", boatId)
+      .order("sort_order"),
+    supabase
+      .from("checklist_item_status")
+      .select("*")
+      .eq("boat_id", boatId)
+      .in("status", ["overdue", "soon", "never"]),
+    supabase.from("engines").select("id, label").eq("boat_id", boatId),
+    supabase.from("engine_current_hours").select("engine_id, read_at").eq("boat_id", boatId),
+    // The stock closes the grid: what is aboard, and what is under its threshold (D84). The
+    // low lines also feed the « À racheter » checklist above the grid (D63) — one read, one
+    // source of truth, so the card and the list can never disagree.
+    loadStockItems(supabase, boatId),
+  ]);
   if (!role) notFound();
   const boatRole = role as BoatRole;
 
@@ -69,6 +77,10 @@ export default async function ChecklistPage({
   const categories = (progress ?? []).map(toCategoryProgress);
   const byCategory = new Map(categories.map((category) => [category.id, category]));
   const engineLabels = new Map((engines ?? []).map((engine) => [engine.id, engine.label]));
+  // The day each counter was last read: a fresh reading fills the hours of a tick by itself.
+  const engineReadDates: EngineReadDates = Object.fromEntries(
+    (readings ?? []).map((row) => [row.engine_id ?? "", row.read_at]),
+  );
   const rows = (status ?? [])
     .filter((row) => row.category_id && byCategory.has(row.category_id))
     .map((row) => {
@@ -205,6 +217,7 @@ export default async function ChecklistPage({
         </>
       ) : (
         <TodoList
+          engineReadDates={engineReadDates}
           boatId={boatId}
           rows={todoRows}
           filter={activeFilter}

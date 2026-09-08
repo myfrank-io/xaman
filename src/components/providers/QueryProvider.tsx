@@ -8,6 +8,28 @@ import { del, get, set } from "idb-keyval";
 
 const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 
+/** Where the persisted read cache lives in IndexedDB. Also what sign-out has to remove. */
+export const QUERY_CACHE_KEY = "xaman-query-cache";
+
+/**
+ * Drops the persisted cache from this device (E9-1, rule 2 in spirit).
+ *
+ * The iPad is shared: Xav signs out, Emmanuel signs in, and a week-old dehydrated cache of the
+ * previous member's boat is still sitting in IndexedDB waiting to be rehydrated — every list
+ * they were entitled to read, and Emmanuel may not be. Clearing the in-memory client is not
+ * enough, because the persisted copy is what a reload restores from.
+ *
+ * Called on the way out (`AccountMenu`); a signed-in user's offline cache is untouched.
+ */
+export async function clearPersistedQueryCache(): Promise<void> {
+  if (typeof indexedDB === "undefined") return;
+  try {
+    await del(QUERY_CACHE_KEY);
+  } catch {
+    // a browser refusing IndexedDB has nothing stored to remove either
+  }
+}
+
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -34,7 +56,7 @@ const noopPersister: Persister = {
 function makePersister(): Persister {
   if (typeof window === "undefined" || typeof indexedDB === "undefined") return noopPersister;
   return createAsyncStoragePersister({
-    key: "xaman-query-cache",
+    key: QUERY_CACHE_KEY,
     throttleTime: 1_000,
     storage: {
       getItem: (key) => get<string>(key).then((v) => v ?? null),

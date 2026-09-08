@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
@@ -22,6 +22,7 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { formResolver } from "@/components/forms/form-resolver";
 import { numberToInput, textToInput } from "@/components/forms/form-values";
 import { useFieldError } from "@/components/forms/use-field-error";
+import { useLastUsed } from "@/components/forms/use-last-used";
 import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { useOnline } from "@/components/common/use-online";
@@ -89,6 +90,9 @@ type PurchaseFormState = {
 };
 type PurchaseOutput = z.output<typeof upsertPurchaseSchema>;
 
+/** Where the last purchase was made (D95): a directory entry, or the place typed by hand. */
+type LastSupplier = { contactId: string | null; name: string };
+
 /**
  * Purchase form (E5-2), a page and not a dialog: eight fields and a textarea (ux-flows §1.2).
  * No quantity, no currency. Four visible kinds; an imported « consumable » row keeps its
@@ -126,6 +130,9 @@ export function PurchaseForm({
   const [newId] = useState(() => crypto.randomUUID());
   const outbox = useOutbox(boatId);
   const { online } = useOnline();
+  // Two purchases in a row come from the same shop and land in the same category (D95).
+  const lastSupplier = useLastUsed<LastSupplier>(boatId, "purchase.supplier");
+  const lastCategory = useLastUsed<string>(boatId, "purchase.category");
   // Invoice scanned while the amount is being typed: the objects go up straight away, their
   // rows are written once the purchase exists (E10-1).
   const [picked, setPicked] = useState<PickedAttachment[]>([]);
@@ -155,6 +162,40 @@ export function PurchaseForm({
   const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const errors = form.formState.errors;
   const backHref = suppliesPath(boatId);
+
+  // Storage only opens after hydration, so the memory lands once, right after mount, and only on
+  // a blank creation: an edited purchase and anything already filled in always win (D95).
+  // `shouldDirty: false` keeps a merely pre-filled form from claiming unsaved changes.
+  const applied = useRef(false);
+  const rememberedSupplier = lastSupplier.value;
+  const rememberedCategory = lastCategory.value;
+  useEffect(() => {
+    if (purchase || applied.current) return;
+    if (rememberedSupplier === null && rememberedCategory === null) return;
+    applied.current = true;
+    if (
+      rememberedSupplier &&
+      form.getValues("supplierContactId") === null &&
+      form.getValues("supplierName") === ""
+    ) {
+      // A provider deleted since then is forgotten rather than pre-filled as a dead id.
+      if (
+        rememberedSupplier.contactId !== null &&
+        contacts.some((contact) => contact.id === rememberedSupplier.contactId)
+      ) {
+        form.setValue("supplierContactId", rememberedSupplier.contactId, { shouldDirty: false });
+      } else if (rememberedSupplier.contactId === null && rememberedSupplier.name.trim() !== "") {
+        form.setValue("supplierName", rememberedSupplier.name, { shouldDirty: false });
+      }
+    }
+    if (
+      rememberedCategory &&
+      form.getValues("categoryId") === "" &&
+      categories.some((category) => category.id === rememberedCategory)
+    ) {
+      form.setValue("categoryId", rememberedCategory, { shouldDirty: false });
+    }
+  }, [categories, contacts, form, purchase, rememberedCategory, rememberedSupplier]);
   const choices: CategoryChoice[] = [
     { id: "", name: t("fields.noCategory"), color: NO_CATEGORY_COLOR },
     ...categories,
@@ -200,6 +241,12 @@ export function PurchaseForm({
           if (!committed.ok) toast.error(ta("commitFailed"));
         }
       }
+      // Written on the save and never on a keystroke: an abandoned form teaches nothing (D95).
+      lastSupplier.remember({
+        contactId: values.supplierContactId,
+        name: values.supplierName ?? "",
+      });
+      lastCategory.remember(values.categoryId);
       toast.success(outcome.status === "queued" ? to("savedOnDevice") : t("saved"));
       router.push(backHref as Parameters<typeof router.push>[0]);
       router.refresh();

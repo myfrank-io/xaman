@@ -530,7 +530,7 @@ export function ImportWizard({
             <h2 className="text-h2">{heading("mapping")}</h2>
             <p className="text-caption text-ink-2">{t("mapping.help")}</p>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {columns.map((column) => {
                 const fieldKey = fieldByColumn.get(column.index) ?? NO_FIELD;
                 const field = fields.find((candidate) => candidate.key === fieldKey);
@@ -684,10 +684,12 @@ export function ImportWizard({
             <h2 className="text-h2">{heading("preview")}</h2>
             <p className="text-body">{t("preview.plan", plan)}</p>
             {/* Seven columns cannot fit 328 px and stay a table, so it scrolls — and a table that
-                scrolls without saying so reads as a table with three columns (F9). */}
-            <p className="text-caption text-ink-3 sm:hidden">{tCommon("scrollTable")}</p>
+                scrolls without saying so reads as a table with three columns (F9). The table
+                keeps its width instead of squashing (`min-w`), and the hint holds until the
+                width where it stops scrolling: the content column of the iPad in portrait. */}
+            <p className="text-caption text-ink-3 md:hidden">{tCommon("scrollTable")}</p>
             <div className="relative overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-              <table className="w-full border-collapse text-caption">
+              <table className="w-full min-w-[42rem] border-collapse text-caption">
                 <thead>
                   <tr className="border-b border-border bg-n-50 text-left">
                     <th className="px-3 py-2 font-medium whitespace-nowrap">

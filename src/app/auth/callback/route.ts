@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
+import { safeNextPath } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/server";
 
 // Magic-link fallback: Supabase redirects here with either `code` (PKCE) or `token_hash` + `type`.
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = safeNext(searchParams.get("next"));
+  const next = safeNextPath(searchParams.get("next"));
 
   const supabase = await createClient();
 
@@ -25,9 +26,4 @@ export async function GET(request: NextRequest) {
   const url = new URL("/login", origin);
   url.searchParams.set("error", "link");
   return NextResponse.redirect(url);
-}
-
-function safeNext(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/boats";
-  return value;
 }
