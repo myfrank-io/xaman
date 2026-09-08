@@ -492,7 +492,7 @@ Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, u
 | id | uuid | PK | tiré côté client pour une photo (règle 11) ; par le webhook pour un e-mail |
 | boat_id | uuid | FK boats on delete cascade | |
 | source | inbox_source | not null | `email` / `upload` |
-| status | inbox_status | not null default 'received' | `received` → `analysing` → `ready` (avec ou sans `suggestion`) → `validated` / `dismissed` |
+| status | inbox_status | not null default 'received' | `received` → `analysing` → `ready` (avec ou sans `suggestion`) → `validated` / `dismissed` ; `dismissed` → `ready` par « Réouvrir » (D93), `validated` ne revient jamais |
 | received_at | timestamptz | not null default now() | |
 | sender_email / sender_name / subject | text | | l'expéditeur, affiché sur la carte, jamais utilisé pour décider quoi que ce soit |
 | file_name / mime_type / size_bytes | | mêmes checks que `attachments` | |
@@ -504,7 +504,7 @@ Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, u
 | external_ref | text | unique `(boat_id, external_ref)` | idempotence du webhook : `resend:{email_id}:{attachment_id}` |
 | created_by / updated_by / created_at / updated_at | | | `created_by` null pour un e-mail (écrit par la clé service) |
 
-RLS : select `is_boat_member` ; insert `can_contribute_boat and created_by = auth.uid()` (un pro photographie la facture de son propre travail) ; update `can_write_boat` (valider ou ignorer écrit le carnet) ; **aucune politique delete** — ignoré est un statut, l'objet reste dans le bucket. Le webhook écrit avec la clé service.
+RLS : select `is_boat_member` ; insert `can_contribute_boat and created_by = auth.uid()` (un pro photographie la facture de son propre travail) ; update `can_write_boat` (valider, ignorer ou **rouvrir** écrit le carnet) ; delete `can_write_boat and status = 'dismissed'` (`0027`, D93) — un document doit avoir été ignoré avant d'être détruit, donc jamais un seul tap, et une ligne validée reste hors d'atteinte : son objet est la pièce jointe de l'intervention ou de l'achat qu'elle a produits. Le webhook écrit avec la clé service.
 
 ## 4. Fonctions et triggers
 
@@ -793,6 +793,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 
 - **0024** (D90) : `engines.propulsion`, `boats.navigation_zone`, `checklist_template_items.zone_scope`, contrainte `engine_scope` élargie aux quatre propulsions, `engine_scope_matches()`, `apply_checklist_template` réécrite (appariement sur la propulsion, points hauturiers sautés sur un bateau côtier), `create_boat` avec `p_navigation_zone` et `propulsion` par moteur (signature `0021` supprimée), `generic_template_for_boat_type` : semi-rigide → `generic-rib-v1`. Aucune table nouvelle, aucune politique modifiée ; rien n'est supprimé sur les bateaux existants (`navigation_zone` par défaut `offshore`, propulsion rétro-remplie).
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
+- **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés

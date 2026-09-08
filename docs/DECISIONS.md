@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D93.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D94.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2038,3 +2038,39 @@ derrière un répertoire symbolique — ce que la disposition par défaut de pnp
 produit pour le worker : `.npmrc` passe en `node-linker=hoisted` (répertoires réels, lockfile
 inchangé). Une vraie photo lue sur Vercel valide le branchement.
 
+## 2026-09-08 — D93 : un document ignoré se rouvre, ou s'en va
+
+**Question.** « Je veux pouvoir réouvrir ou supprimer les ignorés. »
+
+**Le constat.** « Ignorer » (D91) était une porte à sens unique. La carte descendait dans
+« Déjà traités », y gardait un badge **IGNORÉ**, un lien « Ouvrir le document » — et plus un seul
+bouton. Deux choses manquaient, chacune pour une raison différente : un tap se trompe de carte sur
+un iPad, et il n'y avait alors aucun retour ; une publicité arrivée en pièce jointe reste ensuite
+dans le carnet pour toujours, sous la liste, avec son fichier dans le bucket.
+
+**Décision. Deux boutons sur une carte ignorée, et rien sur les autres.**
+
+1. **« Réouvrir »** ramène la ligne à `ready`, avec la lecture qu'elle avait déjà : rien n'est
+   relu, `validated_at` redevient nul, et la carte remonte dans « À valider » avec ses champs.
+   La base n'a rien eu à apprendre — `inbox_items_update` de `0026` (owner / editor) le couvrait.
+2. **« Supprimer »** efface la ligne **et l'objet du bucket**, derrière une confirmation qui nomme
+   le fichier. `0027` ajoute la politique qui manquait, la plus étroite qui réponde à la demande :
+   `can_write_boat(boat_id) and status = 'dismissed'`.
+
+**Pourquoi une suppression franche, et pas la corbeille.** La règle 9 garde 30 jours ce qui est un
+**fait du carnet** — une intervention, un achat, une sortie de l'eau. Un document ignoré n'en est
+jamais devenu un : il n'y a pas de ligne à restaurer, et une seconde corbeille ne serait qu'une
+seconde liste à vider. Ce qui protège ici n'est pas un délai, c'est l'ordre des gestes : **il faut
+avoir ignoré un document avant de pouvoir le détruire**, donc jamais un seul tap, et « Réouvrir »
+est la sortie non destructrice qui reste offerte jusqu'au dernier moment.
+
+**Ce que la politique interdit, et qui compte autant.** Une ligne qui attend encore une décision
+ne se supprime pas — on l'ignore d'abord. Une ligne **validée** non plus, jamais : son objet dans
+le bucket est la pièce jointe de l'intervention ou de l'achat qu'elle a produits, et la détruire
+arracherait une facture d'une ligne du carnet. La garde est en base (règle 2), pas seulement dans
+l'action : la matrice RLS couvre les trois cas et les six rôles.
+
+**Ce qui n'a pas été fait.** Une suppression en lot des ignorés, une purge automatique après
+N jours : un carnet reçoit quelques documents par mois, la liste des « Déjà traités » est déjà
+bornée à dix, et une purge qui efface des fichiers toute seule est exactement ce qu'on ne veut pas
+écrire avant qu'un usage réel la demande.

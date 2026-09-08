@@ -266,4 +266,14 @@ describe("the inbox's words", () => {
     const words = inbox[section] as Record<string, string>;
     for (const key of keys) expect(words[key]?.trim(), `${section}.${key}`).toBeTruthy();
   });
+
+  it("gives an ignored document a way back and a way out (D93)", () => {
+    for (const key of ["reopen", "reopened", "delete", "deleted"] as const)
+      expect((inbox[key] as string)?.trim(), key).toBeTruthy();
+    const confirm = inbox.deleteConfirm as Record<string, string>;
+    for (const key of ["title", "description", "action"] as const)
+      expect(confirm[key]?.trim(), `deleteConfirm.${key}`).toBeTruthy();
+    // The dialog names the file it is about to destroy (ux-flows §5.6).
+    expect(confirm.description).toContain("{fileName}");
+  });
 });

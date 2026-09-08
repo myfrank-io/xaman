@@ -2250,6 +2250,15 @@
     "validate": "Valider",
     "dismiss": "Ignorer",
     "reanalyse": "Relire le document",
+    "reopen": "Réouvrir",
+    "reopened": "Document remis à valider",
+    "delete": "Supprimer",
+    "deleted": "Document supprimé",
+    "deleteConfirm": {
+      "title": "Supprimer ce document ?",
+      "description": "{fileName} sera effacé définitivement, avec le fichier lui-même. Les documents ignorés n'ont pas de corbeille ; « Réouvrir » les remet à valider.",
+      "action": "Supprimer définitivement"
+    },
     "open": "Ouvrir le document",
     "validated": "Validé : {title}",
     "dismissed": "Document ignoré",

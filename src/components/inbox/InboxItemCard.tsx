@@ -13,11 +13,14 @@ import {
   FileTextIcon,
   MailIcon,
   RefreshCwIcon,
+  RotateCcwIcon,
+  Trash2Icon,
   TriangleAlertIcon,
   XIcon,
 } from "lucide-react";
 
 import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ContactPicker } from "@/components/contacts/ContactPicker";
 import type { ContactOption } from "@/components/contacts/specialties";
 import { Field } from "@/components/forms/Field";
@@ -30,7 +33,13 @@ import { NumericField } from "@/components/ui/numeric-field";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { dismissInboxItem, reanalyseInboxItem, validateInboxItem } from "@/lib/actions/inbox";
+import {
+  deleteInboxItem,
+  dismissInboxItem,
+  reanalyseInboxItem,
+  reopenInboxItem,
+  validateInboxItem,
+} from "@/lib/actions/inbox";
 import { formatBytes } from "@/lib/attachments/image";
 import { formatCurrency, formatDate, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -117,6 +126,7 @@ export function InboxItemCard({
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<Draft>(() => draftFrom(item, item.suggestion));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const patch = (changes: Partial<Draft>) => setDraft((current) => ({ ...current, ...changes }));
   const reading = item.status === "received" || item.status === "analysing";
@@ -171,6 +181,33 @@ export function InboxItemCard({
         return;
       }
       toast.success(t("dismissed"));
+      router.refresh();
+    });
+  }
+
+  /** « Réouvrir » (D93): the card goes back up to « À valider », with the reading it already had. */
+  function reopen() {
+    startTransition(async () => {
+      const result = await reopenInboxItem({ boatId, itemId: item.id });
+      if (!result.ok) {
+        toast.error(errorMessage(result.error));
+        return;
+      }
+      toast.success(t("reopened"));
+      router.refresh();
+    });
+  }
+
+  /** « Supprimer » (D93): the row and the file, for good — hence the dialog that names it. */
+  function remove() {
+    startTransition(async () => {
+      const result = await deleteInboxItem({ boatId, itemId: item.id });
+      if (!result.ok) {
+        toast.error(errorMessage(result.error));
+        return;
+      }
+      setConfirmingDelete(false);
+      toast.success(t("deleted"));
       router.refresh();
     });
   }
@@ -281,6 +318,38 @@ export function InboxItemCard({
             <Button asChild variant="outline" size="sm">
               <Link href={suppliesPath(boatId) as Route}>{t("went.purchase")}</Link>
             </Button>
+          ) : null}
+          {/* An ignored document is not the end of the road (D93): back up, or gone for good.
+              A validated one keeps neither — its file is the attachment of the line it made. */}
+          {item.status === "dismissed" && canWrite ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={reopen}
+                disabled={pending}
+                aria-busy={pending}
+              >
+                {pending ? <Spinner /> : <RotateCcwIcon />}
+                {t("reopen")}
+              </Button>
+              <ConfirmDialog
+                open={confirmingDelete}
+                onOpenChange={setConfirmingDelete}
+                trigger={
+                  <Button type="button" variant="ghost" size="sm" disabled={pending}>
+                    <Trash2Icon />
+                    {t("delete")}
+                  </Button>
+                }
+                title={t("deleteConfirm.title")}
+                description={t("deleteConfirm.description", { fileName: item.fileName })}
+                confirmLabel={t("deleteConfirm.action")}
+                pending={pending}
+                onConfirm={remove}
+              />
+            </>
           ) : null}
         </div>
       ) : reading ? (
