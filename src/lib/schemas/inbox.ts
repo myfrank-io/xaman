@@ -32,6 +32,10 @@ export type InboxErrorKey = z.infer<typeof inboxErrorKeySchema>;
 /**
  * What the local reader (D92) puts in `warnings` — codes, translated under `inbox.warningCodes`;
  * the model writes French sentences there instead, shown as they are.
+ *
+ * `local` keeps its name here, but the screen never says which reader ran: the French wording
+ * speaks of "un agent IA" whoever read the document (D94), so the card says the same thing the
+ * day the key is set. What it does keep saying, in every sentence, is to check the fields.
  */
 export const INBOX_WARNING_CODES = [
   "local",

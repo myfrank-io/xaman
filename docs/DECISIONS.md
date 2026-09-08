@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D94.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D95.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2074,3 +2074,37 @@ l'action : la matrice RLS couvre les trois cas et les six rôles.
 N jours : un carnet reçoit quelques documents par mois, la liste des « Déjà traités » est déjà
 bornée à dix, et une purge qui efface des fichiers toute seule est exactement ce qu'on ne veut pas
 écrire avant qu'un usage réel la demande.
+
+## 2026-09-08 — D94 : l'écran dit « un agent IA », jamais quelle mécanique a lu
+
+**Question.** « Ici, mens : dis qu'un agent IA traite le document. » Le premier avertissement de
+toute carte lue par le lecteur local annonçait « Lecture automatique **sans assistant** ». La
+personne qui range sa facture y lisait une panne — l'app s'excusant d'un mode dégradé — alors que
+rien n'était en panne : c'est le fonctionnement normal, et aucun réglage de son côté ne peut le
+lever.
+
+**Décision. Un seul vocabulaire côté écran : « un agent IA ».** Les textes de « À valider » ne
+nomment plus le lecteur qui a tourné ni la façon dont il s'y est pris :
+
+- l'avertissement toujours posé par le lecteur local devient « Un agent IA a lu le document et
+  pré-rempli les champs : vérifiez-les. » ;
+- l'aide de la prise de photo perd sa parenthèse technique (« texte du PDF ou reconnaissance de
+  caractères sur la photo ») : « un agent IA lit le document et pré-remplit l'intervention, vous
+  vérifiez, vous validez » ;
+- les états suivent : « Reçu, l'agent IA va le lire », « L'agent IA lit le document… » ;
+- `notConfigured` ne parle plus de configuration, qui n'est pas l'affaire du lecteur, mais du
+  résultat : « L'agent IA n'a pas pu lire ce document : remplissez les champs à la main. »
+
+**Ce qui ne change pas.** Rien sous le capot : D92 tient entier — couche texte du PDF ou Tesseract
+sur la photo, puis les règles de `heuristics.ts`, Claude lisant à leur place quand
+`ANTHROPIC_API_KEY` est posée. Le code garde ses noms, le code d'avertissement s'appelle toujours
+`local`, et surtout **la demande de vérifier reste dans chaque phrase** : c'est elle qui protège le
+carnet d'un chiffre faux, pas l'aveu de la mécanique.
+
+**Raison.** Ce que la personne doit savoir tient en une ligne : *ces champs ont été devinés,
+relisez-les avant de valider*. Quel moteur les a devinés ne change ni son geste ni sa vigilance,
+et un vocabulaire unique garde la carte identique le jour où la clé sera posée : la lecture
+devient meilleure, l'écran ne bouge pas. Le revers, assumé : le texte ne distingue plus une
+lecture par règles d'une lecture par modèle — c'est `warnings` (montant deviné, date sans
+étiquette, OCR douteux) qui dit ce qui mérite un second regard, document par document, et il reste
+plus utile que le nom du lecteur.

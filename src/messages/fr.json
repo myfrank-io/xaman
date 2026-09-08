@@ -2168,7 +2168,7 @@
     "subtitle": "Ce qui est arrivé par photo ou par e-mail, prêt à entrer dans le carnet.",
     "capture": "Photographier un ticket",
     "choose": "Choisir un document",
-    "captureHelp": "Une facture, un ticket de caisse, un devis : le document est lu (texte du PDF ou reconnaissance de caractères sur la photo), l'intervention est pré-remplie, vous vérifiez, vous validez.",
+    "captureHelp": "Une facture, un ticket de caisse, un devis : un agent IA lit le document et pré-remplit l'intervention, vous vérifiez, vous validez.",
     "readOnly": "Seuls les membres qui écrivent dans le carnet peuvent valider un document.",
     "address": {
       "title": "Par e-mail",
@@ -2189,8 +2189,8 @@
     "from": "De {sender}",
     "subjectLabel": "Objet : {subject}",
     "status": {
-      "received": "Reçu, lecture à venir",
-      "analysing": "Lecture du document…",
+      "received": "Reçu, l'agent IA va le lire",
+      "analysing": "L'agent IA lit le document…",
       "ready": "Prêt à valider",
       "validated": "Validé",
       "dismissed": "Ignoré"
@@ -2213,7 +2213,7 @@
     },
     "warnings": "À vérifier",
     "warningCodes": {
-      "local": "Lecture automatique sans assistant : les champs sont déduits du texte du document, vérifiez-les.",
+      "local": "Un agent IA a lu le document et pré-rempli les champs : vérifiez-les.",
       "ocrQuality": "Le texte de la photo est difficile à lire : les chiffres peuvent être faux.",
       "noDate": "Aucune date trouvée sur le document.",
       "dateUnlabelled": "La date a été prise sans étiquette claire sur le document.",
@@ -2224,7 +2224,7 @@
     },
     "lineItems": "Lignes lues",
     "errors": {
-      "notConfigured": "La lecture par l'assistant n'est pas configurée et le document n'a pas pu être lu autrement : remplissez les champs à la main.",
+      "notConfigured": "L'agent IA n'a pas pu lire ce document : remplissez les champs à la main.",
       "unsupportedFormat": "Ce format n'est pas lu automatiquement (photo HEIC ?) : remplissez à la main, ou renvoyez le document en JPEG ou en PDF.",
       "download": "Le document n'a pas pu être récupéré auprès de la messagerie.",
       "analysis": "La lecture a échoué. Relisez, ou remplissez les champs à la main.",
@@ -2267,7 +2267,7 @@
       "purchase": "Voir dans Dépenses"
     },
     "uploadStage": {
-      "analysing": "Lecture du document…"
+      "analysing": "L'agent IA lit le document…"
     },
     "uploaded": "Document lu : vérifiez puis validez.",
     "uploadedNoRead": "Document reçu : remplissez les champs puis validez."
