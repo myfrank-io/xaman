@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { STOCK_FILTER } from "@/lib/logs-filters";
 import { LOG_STATUSES } from "@/lib/schemas/logs";
-import { importDocumentsPath, logsPath } from "@/lib/queries/boat-routes";
+import { inboxPath, logsPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -59,11 +59,11 @@ export function LogsToolbar({
   categories: CategoryChoice[];
   reviewCount: number;
   contactName: string | null;
-  /** Only someone who may write documents is offered the batch import (E10-1). */
+  /** Only someone who may add documents is offered the door to « À valider » (D109). */
   canContribute?: boolean;
 }) {
   const t = useTranslations("logs");
-  const ta = useTranslations("attachments.import");
+  const ti = useTranslations("inbox");
   const ts = useTranslations("logStatus");
   const router = useRouter();
   const [query, setQuery] = useState(filters.q);
@@ -164,12 +164,13 @@ export function LogsToolbar({
           </Button>
         ) : null}
         {canContribute ? (
-          /* Not a « + » (D19): this ranges documents onto interventions, it creates nothing on
-             its own. */
+          /* Not a « + » (D19): a document creates nothing until someone validates it. The pile
+             goes to « À valider » (D109), where the agent reads it and each card is checked —
+             « Importer », in the header, is for a table, and says so with another verb. */
           <Button asChild variant="outline" className="shrink-0 sm:ml-auto">
-            <Link href={importDocumentsPath(boatId) as Route}>
+            <Link href={inboxPath(boatId) as Route}>
               <PaperclipIcon />
-              {ta("entry")}
+              {ti("entry")}
             </Link>
           </Button>
         ) : null}

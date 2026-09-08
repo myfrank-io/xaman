@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { BoatsShell } from "@/components/boats/BoatsShell";
-import type { CategoryChoice } from "@/components/common/CategoryChips";
 import { LogbookStep } from "@/components/onboarding/LogbookStep";
 import { OnboardingSteps } from "@/components/onboarding/OnboardingSteps";
 import { TourStep, type TourEngine } from "@/components/onboarding/TourStep";
@@ -20,12 +19,6 @@ import { DEV_BOAT_ID } from "../DevShell";
  * spreadsheet one carries the whole import wizard, the paper one the document sorter, and those
  * are the two densest surfaces of the flow.
  */
-const CATEGORIES: CategoryChoice[] = [
-  { id: "c1", name: "Moteurs & Propulsion", color: "#B24A2E", icon: "engine" },
-  { id: "c2", name: "Gréement & Voiles", color: "#2F6F8F", icon: "sail" },
-  { id: "c3", name: "Coque & Pont", color: "#4C6B52", icon: "hull" },
-  { id: "c4", name: "Sécurité", color: "#8A6A2F", icon: "safety" },
-];
 
 const TEMPLATES: TemplateOption[] = [
   {
@@ -76,7 +69,6 @@ export default async function DevOnboardingPage() {
             <OnboardingSteps step={2} />
             <LogbookStep
               boatId={DEV_BOAT_ID}
-              categories={CATEGORIES}
               nextHref={`/boats/new/${DEV_BOAT_ID}?step=3`}
               initialFormat={format}
             />
