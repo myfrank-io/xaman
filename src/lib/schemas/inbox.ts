@@ -24,9 +24,29 @@ export const INBOX_ERROR_KEYS = [
   "download",
   "analysis",
   "refused",
+  "noText",
 ] as const;
 export const inboxErrorKeySchema = z.enum(INBOX_ERROR_KEYS);
 export type InboxErrorKey = z.infer<typeof inboxErrorKeySchema>;
+
+/**
+ * What the local reader (D92) puts in `warnings` — codes, translated under `inbox.warningCodes`;
+ * the model writes French sentences there instead, shown as they are.
+ */
+export const INBOX_WARNING_CODES = [
+  "local",
+  "ocrQuality",
+  "noDate",
+  "dateUnlabelled",
+  "noAmount",
+  "amountGuessed",
+  "noSupplier",
+  "noCategory",
+] as const;
+export type InboxWarningCode = (typeof INBOX_WARNING_CODES)[number];
+export function isInboxWarningCode(value: string): value is InboxWarningCode {
+  return (INBOX_WARNING_CODES as readonly string[]).includes(value);
+}
 
 /** Kinds a document can be filed as: the two lists a receipt can land in. */
 export const INBOX_KINDS = ["log", "purchase"] as const;

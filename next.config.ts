@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
+const INBOX_READER_FILES = [
+  "./src/lib/inbox/tessdata/*",
+  "./node_modules/tesseract.js/**/*",
+  "./node_modules/tesseract.js-core/**/*",
+  "./node_modules/pdfjs-dist/legacy/build/*.mjs",
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
@@ -11,7 +18,17 @@ const nextConfig: NextConfig = {
    */
   outputFileTracingIncludes: {
     "/dev/ui/emails": ["./supabase/templates/*.html"],
+    /**
+     * The local reader of the inbox (D92) runs behind the inbox page's Server Actions and the
+     * mail webhook: Tesseract's worker and wasm, pdf.js's worker and the French OCR model are
+     * loaded by path at run time, which the tracer cannot follow on its own.
+     */
+    // The key is a picomatch glob: the brackets of the segment have to be escaped.
+    "/boats/\\[boatId\\]/inbox": INBOX_READER_FILES,
+    "/api/webhooks/resend": INBOX_READER_FILES,
   },
+  /** Loaded as they are from node_modules: they spawn workers and load wasm by file path. */
+  serverExternalPackages: ["tesseract.js", "tesseract.js-core", "pdfjs-dist"],
   env: {
     /**
      * The commit this bundle was built from, shown in the install dialog.

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { InboxScreen } from "@/components/inbox/InboxScreen";
-import { analysisConfigured } from "@/lib/inbox/analyse";
 import { inboundDomain } from "@/lib/inbox/receive";
 import { can, type BoatRole } from "@/lib/permissions";
 import { listInboxItems } from "@/lib/queries/inbox";
@@ -52,7 +51,7 @@ export default async function InboxPage({ params }: { params: Promise<{ boatId: 
       contacts={form.contacts}
       canContribute={can(boatRole, "contribute")}
       canWrite={can(boatRole, "write")}
-      analysisEnabled={analysisConfigured()}
+      analysisEnabled
       inboxAddress={domain ? inboxAddress(boat.name, boat.inbox_token, domain) : null}
     />
   );
