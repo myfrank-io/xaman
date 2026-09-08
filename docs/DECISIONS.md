@@ -2033,5 +2033,8 @@ canvas côté serveur), le redressement des photos de travers.
 
 **À vérifier au premier déploiement.** Les workers de Tesseract et de pdf.js et le modèle
 français sont chargés par chemin à l'exécution : `next.config.ts` les sort du bundle et les trace
-pour la page « À valider » et le webhook. Une vraie photo lue sur Vercel valide le branchement.
+pour la page « À valider » et le webhook. Vercel refuse un paquet dont des fichiers tracés sont
+derrière un répertoire symbolique — ce que la disposition par défaut de pnpm (`.pnpm/` + liens)
+produit pour le worker : `.npmrc` passe en `node-linker=hoisted` (répertoires réels, lockfile
+inchangé). Une vraie photo lue sur Vercel valide le branchement.
 

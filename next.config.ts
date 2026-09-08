@@ -3,9 +3,17 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const INBOX_READER_FILES = [
   "./src/lib/inbox/tessdata/*",
-  "./node_modules/tesseract.js/**/*",
-  "./node_modules/tesseract.js-core/**/*",
-  "./node_modules/pdfjs-dist/legacy/build/*.mjs",
+  "./node_modules/tesseract.js/package.json",
+  "./node_modules/tesseract.js/src/**/*",
+  // The OCR engine: the LSTM builds only (the ones tesseract.js picks by default), not the legacy ones.
+  "./node_modules/tesseract.js-core/package.json",
+  "./node_modules/tesseract.js-core/index.js",
+  "./node_modules/tesseract.js-core/tesseract-core-*lstm*",
+  // What the worker script requires at run time; the tracer stops at the worker boundary.
+  "./node_modules/tesseract.js/node_modules/**/*",
+  "./node_modules/{bmp-js,idb-keyval,is-url,node-fetch,whatwg-url,tr46,webidl-conversions}/**/*",
+  "./node_modules/{regenerator-runtime,wasm-feature-detect,zlibjs}/**/*",
+  "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
 ];
 
 const nextConfig: NextConfig = {
