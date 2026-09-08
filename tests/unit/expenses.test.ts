@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildExpenseDetails,
   buildExpensesCsv,
+  categoryTotalsFrom,
   expenseFilterQuery,
   expenseKey,
   groupByCategory,
@@ -183,6 +184,61 @@ describe("expense totals", () => {
     expect(groups[0]).toMatchObject({ name: "Sans catégorie", amount: 1850, count: 1 });
     expect(groups[1]).toMatchObject({ name: "Moteurs", amount: 400, count: 2 });
     expect(groups[2]).toMatchObject({ name: "Hydraulique & Circuits", amount: 34.5 });
+  });
+
+  /**
+   * The breakdown now arrives already counted by `boat_expense_totals` (D110) rather than
+   * summed over the rows the list fetched. These cases pin the reading of that payload: the
+   * screen must survive a null system, a numeric that travelled as a string, and a shape it
+   * did not expect — a money screen that throws is worse than one that shows nothing.
+   */
+  it("reads the breakdown the database returns", () => {
+    const groups = categoryTotalsFrom(
+      [
+        {
+          category_id: "c1",
+          category_name: "Moteurs",
+          category_color: "#D97706",
+          amount: 400,
+          count: 2,
+        },
+        {
+          category_id: null,
+          category_name: null,
+          category_color: null,
+          amount: "1850.00",
+          count: 1,
+        },
+      ],
+      "Sans catégorie",
+      "#8A99AC",
+    );
+    expect(groups).toEqual([
+      { id: "c1", name: "Moteurs", color: "#D97706", amount: 400, count: 2 },
+      { id: "", name: "Sans catégorie", color: "#8A99AC", amount: 1850, count: 1 },
+    ]);
+  });
+
+  it("keeps the order the database chose, and never invents one", () => {
+    // Largest first is the database's `order by`; the reader must not re-sort behind it.
+    const groups = categoryTotalsFrom(
+      [
+        { category_id: "a", category_name: "A", category_color: "#111111", amount: 10, count: 1 },
+        { category_id: "b", category_name: "B", category_color: "#222222", amount: 90, count: 1 },
+      ],
+      "Sans catégorie",
+      "#8A99AC",
+    );
+    expect(groups.map((group) => group.id)).toEqual(["a", "b"]);
+  });
+
+  it("survives a payload that is not a breakdown", () => {
+    expect(categoryTotalsFrom(null, "Sans catégorie", "#8A99AC")).toEqual([]);
+    expect(categoryTotalsFrom("[]", "Sans catégorie", "#8A99AC")).toEqual([]);
+    expect(categoryTotalsFrom([null, 3], "Sans catégorie", "#8A99AC")).toEqual([]);
+    expect(categoryTotalsFrom([{ amount: "nope" }], "Sans catégorie", "#8A99AC")).toEqual([
+      { id: "", name: "Sans catégorie", color: "#8A99AC", amount: 0, count: 0 },
+    ]);
   });
 
   it("computes a variation only against a non-empty previous period", () => {

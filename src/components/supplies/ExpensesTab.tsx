@@ -19,13 +19,11 @@ import { ExpenseLines, type ExpenseLine } from "@/components/supplies/ExpenseLin
 import { ExportExpensesButton } from "@/components/supplies/ExportExpensesButton";
 import {
   expenseFilterQuery,
-  groupByCategory,
   NO_CATEGORY,
-  totalAmount,
   variation,
+  type CategoryTotal,
   type DateRange,
   type ExpensePeriod,
-  type ExpenseRow,
   type ExpenseSource,
 } from "@/lib/expenses";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
@@ -34,12 +32,16 @@ import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/
 import type { PurchaseKind } from "@/lib/schemas/purchases";
 import { cn } from "@/lib/utils";
 
-/** Neutral grey for the « no category » bucket: a category colour never travels alone. */
-const NO_CATEGORY_COLOR = "#8A99AC";
-
 export type ExpensesData = {
-  rows: ExpenseRow[];
+  /** The page of lines that was fetched — never the whole selection (D110). */
   lines: ExpenseLine[];
+  /**
+   * The five figures below are counted by the database over **every** matching line, so they
+   * keep saying what the selection costs however few lines the list has fetched.
+   */
+  total: number;
+  lineCount: number;
+  categoryTotals: CategoryTotal[];
   previousTotal: number;
   cumulativeTotal: number;
   firstDate: string | null;
@@ -109,8 +111,7 @@ export async function ExpensesTab({
       expenseFilterQuery({ period, range, sources, kind, categoryId: next }),
     );
 
-  const total = totalAmount(data.rows);
-  const categoryTotals = groupByCategory(data.rows, t("uncategorized"), NO_CATEGORY_COLOR);
+  const { total, categoryTotals } = data;
   const change = variation(total, data.previousTotal);
 
   /**
@@ -169,7 +170,7 @@ export async function ExpensesTab({
           value={formatCurrency(total)}
           hint={
             period === "all"
-              ? t("lines", { count: data.rows.length })
+              ? t("lines", { count: data.lineCount })
               : tp("range", { from: formatDate(range.from), to: formatDate(range.to) })
           }
         />
@@ -199,10 +200,10 @@ export async function ExpensesTab({
               sources={sources}
               kind={kind}
               categoryId={categoryId}
-              disabled={data.rows.length === 0}
+              disabled={data.lineCount === 0}
             />
           }
-          footer={t("lines", { count: data.rows.length })}
+          footer={t("lines", { count: data.lineCount })}
         >
           {/* A share of the total is a question — « c'est quoi, ces 1 850 € ? » — and the answer
               is the list below, narrowed to that system. The row is the link that narrows it;

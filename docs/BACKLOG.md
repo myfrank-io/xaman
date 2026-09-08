@@ -29,7 +29,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E13 | E13-17 |
 | E14 | E14-8 |
 | E15 | E15-9 |
-| E16 | E16-8 |
+| E16 | E16-10 |
 
 ---
 
@@ -121,6 +121,21 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 - [x] **E5-4 (S, 1)** Stock déclaratif (D10) : liste plate (nom, quantité, seuil, emplacement), +/− atomiques, filtre « sous le seuil », « vérifié il y a N mois ». **Fait** (`0010` : `checked_at` + `adjust_part_quantity`, onglet Stock, fiche création / édition, tests unitaires et RLS ; la suppression physique de D10 est passée à la corbeille par E3-8 / `0012`).
 - [ ] **E8-1 (M, 1)** Compléter `seed/xaman-boat.json` (e-mails réels, modèles de moteurs, contacts). La liste des 80+ points **ne bloque plus** : Xav trie dans l'assistant (E4-9).
 - [~] **E8-2 (M, 1)** Mise en production (**prod déployée le 2026-09-02** : Supabase `xaman` migré et chargé, `main` → https://xaman-blue.vercel.app ; **reste** : variables Vercel et réglages Supabase Auth côté utilisateur, puis les points ci-dessous) : seed, connexion des 3 comptes, assistant de mise en route, reprise du carnet, **première saisie réelle par Xav chronométrée (< 45 s)**, vérification à trois sur iPad.
+
+- [x] **E16-8 (M, 2)** **Chaque écran ne reçoit que les mots qu'il lit** (D109) : le provider
+  `next-intl` posé à la racine sans `messages` héritait de tout `fr.json` et le sérialisait dans
+  la charge utile de chaque page (88 Ko). Tranches déclarées dans `src/i18n/slices.ts` et posées
+  par `Translations` — racine vide, `(auth)`, mise en route, cadre du bateau, et treize
+  `layout.tsx` de section. Mesuré : `/login` 123 Ko → 34 Ko, page d'accueil 146 Ko → 50 Ko, pire
+  écran du bateau 88 Ko → 44 Ko. `scripts/i18n-usage.mjs` parcourt le graphe d'imports et
+  `tests/unit/i18n-slices.test.ts` refuse une tranche qui ne couvre plus ses écrans (vérifié : le
+  test échoue en nommant le groupe retiré).
+- [x] **E16-9 (M, 2)** **Les totaux des dépenses sont comptés par la base** (D110) : migration
+  `0030`, fonction `boat_expense_totals` (`security invoker`) rendant total, nombre de lignes,
+  répartition par système, cumul, première dépense et période précédente ; la liste passe à
+  `limit + 1` au lieu de lire tout l'historique deux fois. Lecteur TS `categoryTotalsFrom` avec
+  ses cas de charge utile hostile, cas RLS (un étranger lit des zéros), galerie `/dev/ui` alignée
+  sur la nouvelle forme.
 
 ## Retirés ou reportés (voir `AUDIT.md §3.4`)
 

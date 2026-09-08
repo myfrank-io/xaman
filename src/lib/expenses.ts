@@ -32,6 +32,9 @@ export const EXPENSE_EPOCH = "1900-01-01";
  */
 export const NO_CATEGORY = "none";
 
+/** Neutral grey for the « no category » bucket: a category colour never travels alone (rule 12). */
+export const NO_CATEGORY_COLOR = "#8A99AC";
+
 export type DateRange = { from: string; to: string };
 
 export type ExpenseRow = {
@@ -155,6 +158,9 @@ export function totalAmount(rows: readonly ExpenseRow[]): number {
 /**
  * One line per category, largest first. Rows without a category are gathered under
  * `fallbackName` with a neutral colour: a category colour never travels alone (rule 12).
+ *
+ * Kept for the CSV export, which reads whole rows. The screen's own breakdown comes from
+ * `boat_expense_totals` (D110): it counts every matching line, not the page that was fetched.
  */
 export function groupByCategory(
   rows: readonly ExpenseRow[],
@@ -178,6 +184,35 @@ export function groupByCategory(
   return [...totals.values()].sort(
     (a, b) => b.amount - a.amount || a.name.localeCompare(b.name, "fr"),
   );
+}
+
+/**
+ * The breakdown as `boat_expense_totals` returns it (D110): one object per system, already
+ * summed and ordered by the database over **every** matching line — not over the page the list
+ * happens to have fetched. A null system is the « Sans catégorie » bucket, and it keeps the
+ * empty id the screen already uses for it.
+ */
+export function categoryTotalsFrom(
+  value: unknown,
+  fallbackName: string,
+  fallbackColor: string,
+): CategoryTotal[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const row = entry as Record<string, unknown>;
+    const amount = Number(row.amount);
+    const count = Number(row.count);
+    return [
+      {
+        id: typeof row.category_id === "string" ? row.category_id : "",
+        name: typeof row.category_name === "string" ? row.category_name : fallbackName,
+        color: typeof row.category_color === "string" ? row.category_color : fallbackColor,
+        amount: Number.isFinite(amount) ? amount : 0,
+        count: Number.isFinite(count) ? count : 0,
+      },
+    ];
+  });
 }
 
 /** null when the previous period holds nothing: « +∞ % » says less than « aucune dépense ». */

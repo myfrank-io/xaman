@@ -13,9 +13,11 @@ import { GasFacts } from "@/components/supplies/GasFacts";
 import { parseEngineHours } from "@/components/logs/rows";
 import {
   buildExpenseDetails,
+  categoryTotalsFrom,
   expenseKey,
   isExpensePeriod,
   NO_CATEGORY,
+  NO_CATEGORY_COLOR,
   parseSources,
   previousRange,
   resolveRange,
@@ -107,16 +109,16 @@ export default async function SuppliesPage({
   else if (categoryId) listQuery = listQuery.eq("category_id", categoryId);
 
   /**
-   * « Toute la période », sans système ni type : la liste ci-dessus **est** déjà l'historique
-   * complet de ces sources (la borne basse de la période est l'époque, 1900). La seconde
-   * lecture reposait alors la même question à la base pour en refaire la somme — sur l'écran
-   * d'arrivée, celui qu'on ouvre neuf fois sur dix, et sur un carnet papier repris ça fait
-   * deux fois toutes les lignes de dépense du bateau.
+   * Les totaux sont comptés par la base (D110), pas par la page.
    *
-   * Dès qu'un filtre restreint la liste, l'historique reste nécessaire : le cumul et la date de
-   * première dépense ne suivent aucun filtre, et la période précédente est hors de la fenêtre.
+   * L'écran affiche un total, une répartition par système, un nombre de lignes, un cumul depuis
+   * l'origine et la période précédente. Tout cela se calculait en TypeScript sur le tableau des
+   * lignes — ce qui obligeait à **lire toutes les lignes du bateau** pour n'en afficher que
+   * vingt. `boat_expense_totals` rend ces six chiffres en une lecture, et la liste ci-dessous ne
+   * demande plus que sa page (`limit + 1`, la ligne de trop disant seulement qu'il y en a
+   * d'autres). Poser un `limit` sans cette fonction aurait fait dire aux totaux le montant de la
+   * page au lieu de celui de la sélection : un chiffre faux coûte plus cher qu'un chiffre lent.
    */
-  const derivedHistory = period === "all" && !categoryId && !kind;
 
   // Une seule vague : les filtres viennent de l'URL, rien ici n'attend la réponse d'autre chose.
   // Le rôle et les systèmes formaient une première vague à eux seuls, devant tout le reste.
@@ -124,7 +126,7 @@ export default async function SuppliesPage({
     { data: role },
     { data: categories },
     { data: rows },
-    { data: history },
+    { data: totals },
     { data: contacts },
     { data: gasRows },
   ] = await Promise.all([
@@ -135,16 +137,22 @@ export default async function SuppliesPage({
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
-    listQuery.order("date", { ascending: false }),
-    // Light query (two columns) feeding both the comparison and the running total.
-    derivedHistory
-      ? Promise.resolve({ data: null })
-      : supabase
-          .from("expenses_by_category")
-          .select("amount, date")
-          .eq("boat_id", boatId)
-          .in("source", sources)
-          .order("date", { ascending: true }),
+    // One row past the page: enough to say « en voir plus », never the whole history.
+    listQuery.order("date", { ascending: false }).limit(limit + 1),
+    supabase
+      .rpc("boat_expense_totals", {
+        p_boat_id: boatId,
+        p_from: range.from,
+        p_to: range.to,
+        p_sources: sources,
+        p_kind: kind ?? undefined,
+        p_category: categoryId && categoryId !== NO_CATEGORY ? categoryId : undefined,
+        p_uncategorized: categoryId === NO_CATEGORY,
+        // « Toute la période » n'a pas de période d'avant : la carte de comparaison le dit.
+        p_previous_from: period === "all" ? undefined : previous.from,
+        p_previous_to: period === "all" ? undefined : previous.to,
+      })
+      .maybeSingle(),
     supabase
       .from("contacts")
       .select("id, name, specialty, company, phone")
@@ -172,19 +180,6 @@ export default async function SuppliesPage({
     icon: category.icon,
   }));
 
-  // `rows` descend par date ; l'historique montait. Le cumul ne lit que des montants et la
-  // première dépense n'est que le dernier élément d'une liste triée : l'ordre suffit à les dire.
-  const all: { amount: number | null; date: string | null }[] =
-    history ?? (rows ?? []).map((row) => ({ amount: row.amount, date: row.date }));
-  const cumulativeTotal = all.reduce((sum, row) => sum + (row.amount ?? 0), 0);
-  const firstDate = (history ? all[0] : all[all.length - 1])?.date ?? null;
-  const previousTotal =
-    period === "all"
-      ? 0
-      : all
-          .filter((row) => (row.date ?? "") >= previous.from && (row.date ?? "") <= previous.to)
-          .reduce((sum, row) => sum + (row.amount ?? 0), 0);
-
   const expenseRows: ExpenseRow[] = (rows ?? []).map((row) => ({
     source: row.source,
     purchaseKind: row.purchase_kind,
@@ -200,6 +195,8 @@ export default async function SuppliesPage({
   // The view carries neither the supplier nor the imported-line flag, and it says nothing of
   // what a line actually paid for. One read per source, keyed by the ids of the **page** only,
   // fills both the merged list and the recap each line unrolls (D86).
+  // `rows` holds at most `limit + 1`: the extra one only answers « y en a-t-il d'autres ? ».
+  const hasMore = expenseRows.length > limit;
   const page = expenseRows.slice(0, limit);
   const idsOf = (source: string) =>
     page
@@ -296,25 +293,30 @@ export default async function SuppliesPage({
     };
   });
 
-  const moreHref =
-    expenseRows.length > limit
-      ? suppliesPath(boatId, undefined, {
-          kind: kind ?? undefined,
-          category: categoryId ?? undefined,
-          period: period === "all" ? undefined : period,
-          from: period === "custom" ? range.from : undefined,
-          to: period === "custom" ? range.to : undefined,
-          source: kind ? undefined : query.source,
-          limit: limit + PURCHASE_PAGE_SIZE,
-        })
-      : null;
+  const moreHref = hasMore
+    ? suppliesPath(boatId, undefined, {
+        kind: kind ?? undefined,
+        category: categoryId ?? undefined,
+        period: period === "all" ? undefined : period,
+        from: period === "custom" ? range.from : undefined,
+        to: period === "custom" ? range.to : undefined,
+        source: kind ? undefined : query.source,
+        limit: limit + PURCHASE_PAGE_SIZE,
+      })
+    : null;
 
   const data: ExpensesData = {
-    rows: expenseRows,
     lines,
-    previousTotal,
-    cumulativeTotal,
-    firstDate,
+    total: totals?.total ?? 0,
+    lineCount: totals?.line_count ?? 0,
+    categoryTotals: categoryTotalsFrom(
+      totals?.by_category,
+      t("expenses.uncategorized"),
+      NO_CATEGORY_COLOR,
+    ),
+    previousTotal: totals?.previous_total ?? 0,
+    cumulativeTotal: totals?.cumulative_total ?? 0,
+    firstDate: totals?.first_date ?? null,
     moreHref,
   };
 
