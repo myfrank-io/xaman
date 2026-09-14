@@ -1,4 +1,4 @@
--- 0034_log_categories_and_supplier.sql — une intervention porte plusieurs systèmes (D117).
+-- 0034_log_categories_and_supplier.sql — une intervention porte plusieurs systèmes (D118).
 --
 -- « Vidange + changement d'anode + contrôle du gréement » est une seule visite du mécanicien et
 -- une seule facture, mais trois systèmes du bateau. La colonne unique obligeait à choisir le
@@ -31,7 +31,7 @@ create table if not exists public.maintenance_log_categories (
 );
 
 comment on table public.maintenance_log_categories is
-  'Les systèmes d''une intervention (D117). Le principal reste maintenance_logs.category_id ; cette table les porte tous, lui compris.';
+  'Les systèmes d''une intervention (D118). Le principal reste maintenance_logs.category_id ; cette table les porte tous, lui compris.';
 
 create index if not exists maintenance_log_categories_boat_idx
   on public.maintenance_log_categories (boat_id, category_id);

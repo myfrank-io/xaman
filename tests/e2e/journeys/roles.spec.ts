@@ -28,7 +28,7 @@ test.describe("§6.4 the mechanic comes aboard", () => {
     const title = `Révision Yanmar ${Date.now()}`;
     await page.getByLabel(fr.logs.form.title).fill(title);
     // The category is required, like it is for anyone else: a pro writes a whole row or none.
-    // A checkbox since D117 — several systems on one intervention.
+    // A checkbox since D118 — several systems on one intervention.
     await page.getByRole("checkbox", { name: SEED.category }).first().tap();
     await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
 

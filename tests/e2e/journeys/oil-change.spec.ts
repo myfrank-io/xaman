@@ -25,7 +25,7 @@ test.describe("§6.2 oil change at the dock", () => {
 
     // 1 — the one primary action of the screen opens the intervention form.
     await taps.tap(page.getByRole("link", { name: fr.create.primary }).first());
-    // The form opens on its document (D118) — and on its fields in the same breath. A vidange
+    // The form opens on its document (D119) — and on its fields in the same breath. A vidange
     // done by the crew has no invoice, and must not pay a tap to reach the title: the document
     // block sits at the head of the form, it is not a screen in front of it.
     await expect(page.getByRole("heading", { name: fr.logs.document.title })).toBeVisible();
@@ -34,7 +34,7 @@ test.describe("§6.2 oil change at the dock", () => {
     // Typing is not a tap: the field is already focused by the tap that opened the form.
     await page.getByLabel(fr.logs.form.title).fill("Vidange moteur SB");
 
-    // 2 — the category, as a chip rather than a select (rule 13). A checkbox since D117: an
+    // 2 — the category, as a chip rather than a select (rule 13). A checkbox since D118: an
     // intervention carries several systems, and the first ticked is the principal.
     await taps.tap(page.getByRole("checkbox", { name: SEED.category }).first());
 

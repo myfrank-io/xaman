@@ -50,7 +50,7 @@ insert into public.engines (id, boat_id, label, position, brand, external_ref, c
 values ('00000000-0000-0000-0000-00000000e001', '00000000-0000-0000-0000-00000000b001', 'Moteur', 'center', 'Test', 'test-engine', '00000000-0000-0000-0000-000000000011')
 on conflict (id) do nothing;
 
--- Deux systèmes, pas un : une intervention en porte plusieurs depuis D117, et la matrice RLS de
+-- Deux systèmes, pas un : une intervention en porte plusieurs depuis D118, et la matrice RLS de
 -- `maintenance_log_categories` a besoin d'un second pour distinguer « lié » de « à lier ».
 insert into public.boat_categories (id, boat_id, name, color, icon, sort_order, template_category_id, external_ref, created_by)
 values
@@ -77,7 +77,7 @@ values
   ('00000000-0000-0000-0000-000000002002', '00000000-0000-0000-0000-00000000b001', 'Vidange (pro)', '00000000-0000-0000-0000-00000000ca01', 'done', '2026-04-01', 300, 'test-log-pro', '00000000-0000-0000-0000-000000000013')
 on conflict (id) do nothing;
 
--- Le système principal est aussi une liaison (D117) : `saveLog` écrit les deux, la reprise de
+-- Le système principal est aussi une liaison (D118) : `saveLog` écrit les deux, la reprise de
 -- `0034` aussi, et une intervention posée ici sans elle ne ressemblerait à aucune vraie ligne.
 insert into public.maintenance_log_categories (log_id, category_id, boat_id, created_by)
 values

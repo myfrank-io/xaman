@@ -403,9 +403,9 @@ Suppression : mise à la corbeille (`deleted_at`), restaurable 30 jours. Toutes 
 
 Index : `(boat_id, performed_at desc)`, `(boat_id, status)`, `(boat_id, category_id)`, index GIN trigram sur `title || ' ' || coalesce(notes,'')` pour la recherche (`pg_trgm`).
 
-`category_id` est le **système principal** : le premier coché dans le formulaire. Depuis D117 (`0034`) une intervention en porte plusieurs, listés dans `maintenance_log_categories` ci-dessous ; la colonne reste la source des filtres, du rapport, de l'export et de la grille des systèmes.
+`category_id` est le **système principal** : le premier coché dans le formulaire. Depuis D118 (`0034`) une intervention en porte plusieurs, listés dans `maintenance_log_categories` ci-dessous ; la colonne reste la source des filtres, du rapport, de l'export et de la grille des systèmes.
 
-### 3.12b `maintenance_log_categories` (les systèmes d'une intervention, D117, `0034`)
+### 3.12b `maintenance_log_categories` (les systèmes d'une intervention, D118, `0034`)
 
 | Colonne | Type | Contraintes | Notes |
 |---|---|---|---|
@@ -904,7 +904,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
-- **0034** (D117) : table `maintenance_log_categories` (les systèmes d'une intervention) avec ses politiques et son trigger de cohérence de bateau, reprise des lignes existantes depuis `maintenance_logs.category_id`, et `maintenance_logs_view` qui gagne `category_ids` — **en dernière colonne**, parce qu'un `create or replace view` ne sait qu'ajouter à la fin. `category_id` ne change ni de sens ni de valeur : c'est le système principal, et tout ce qui le lisait continue.
+- **0034** (D118) : table `maintenance_log_categories` (les systèmes d'une intervention) avec ses politiques et son trigger de cohérence de bateau, reprise des lignes existantes depuis `maintenance_logs.category_id`, et `maintenance_logs_view` qui gagne `category_ids` — **en dernière colonne**, parce qu'un `create or replace view` ne sait qu'ajouter à la fin. `category_id` ne change ni de sens ni de valeur : c'est le système principal, et tout ce qui le lisait continue.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés
 

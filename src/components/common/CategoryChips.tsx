@@ -55,7 +55,7 @@ export function CategoryChips({
 }
 
 /**
- * The same chips, several at a time (D117): « vidange + anode + gréement » is one visit of the
+ * The same chips, several at a time (D118): « vidange + anode + gréement » is one visit of the
  * mechanic and one invoice, but three systems of the boat.
  *
  * Checkboxes rather than radios, so the assistive technology announces what the eye already
@@ -96,7 +96,7 @@ export function CategoryChipsMulti({
               onValuesChange(
                 selected
                   ? values.filter((id) => id !== category.id)
-                  : // Appended, never inserted: the first chosen is the principal (D117).
+                  : // Appended, never inserted: the first chosen is the principal (D118).
                     [...values, category.id],
               )
             }

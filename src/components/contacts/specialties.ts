@@ -36,7 +36,7 @@ export type ContactOption = {
   specialty: string;
   company?: string | null;
   phone?: string | null;
-  /** Read from a document to recognise a provider already in the directory (D119). */
+  /** Read from a document to recognise a provider already in the directory (D120). */
   email?: string | null;
 };
 

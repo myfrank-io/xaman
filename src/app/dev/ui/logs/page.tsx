@@ -116,7 +116,7 @@ export default async function DevLogsPage() {
 
         <Section
           title="Formulaire"
-          description="Le document en tête (D118) — appareil photo, photothèque, fichiers — puis les champs, déjà là : aucun tap n'est dépensé pour les atteindre. Deux systèmes cochés (D117) et le prestataire lu sur le document (D119), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
+          description="Le document en tête (D119) — appareil photo, photothèque, fichiers — puis les champs, déjà là : aucun tap n'est dépensé pour les atteindre. Deux systèmes cochés (D118) et le prestataire lu sur le document (D120), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
         >
           <LogForm
             boatId={DEV_BOAT_ID}

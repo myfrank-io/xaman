@@ -33,7 +33,7 @@ export type InboxDraft = {
   kind: InboxFiling;
   title: string;
   date: string;
-  /** The systems an intervention touches (D117); a purchase keeps the first. */
+  /** The systems an intervention touches (D118); a purchase keeps the first. */
   categoryIds: string[];
   amount: string;
   contactId: string | null;

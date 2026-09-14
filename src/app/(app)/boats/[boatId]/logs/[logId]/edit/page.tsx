@@ -51,7 +51,7 @@ export default async function EditLogPage({
       .from("checklist_completions")
       .select("checklist_item_id")
       .eq("maintenance_log_id", logId),
-    // Every system of the intervention (D117). The principal stays on the row itself, so a line
+    // Every system of the intervention (D118). The principal stays on the row itself, so a line
     // written before the liaison existed — an import — still opens with its one chip ticked.
     supabase
       .from("maintenance_log_categories")

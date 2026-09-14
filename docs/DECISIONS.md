@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D120.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D121.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2563,7 +2563,7 @@ lui faire (`AUTOPILOT.md §10`).
 heures sans `engine_scope` est refusé — une heure se lit sur un moteur ; un consommable sans nom est
 refusé, parce que c'est le stock d'E17-8 qu'il irait remplir de lignes anonymes.
 
-## 2026-09-14 — D117 : une intervention porte plusieurs systèmes
+## 2026-09-14 — D118 : une intervention porte plusieurs systèmes
 
 **Question.** Le formulaire d'intervention n'accepte qu'une catégorie. Une visite de mécanicien —
 vidange, anode, contrôle du gréement, une seule facture — doit-elle se ranger sous un seul système,
@@ -2585,7 +2585,7 @@ lignes aurait triplé la saisie et éclaté un coût unique en trois montants in
 colonne principale plutôt que la remplacer par un tableau était la moitié la plus importante de la
 décision : aucune vue, aucun filtre, aucun export n'a eu à changer, et la migration ne réécrit rien.
 
-## 2026-09-14 — D118 : une intervention commence par son document
+## 2026-09-14 — D119 : une intervention commence par son document
 
 **Question.** « Noter une intervention » ouvre huit champs vides, et les photos se joignent en bas
 de l'écran, une fois tout saisi. Or l'intervention naît presque toujours d'un papier — la facture du
@@ -2618,7 +2618,7 @@ descend donc d'un cran, dans le formulaire. Celui qui a le papier commence par l
 de faire le travail tape son titre et n'a rien à traverser. Le budget ne bouge pas d'un seul tap, et
 la demande — commencer par le document — est tenue à l'endroit où elle se voit : en haut de l'écran.
 
-## 2026-09-14 — D119 : le prestataire se lit sur le document, et sa fiche s'ouvre remplie
+## 2026-09-14 — D120 : le prestataire se lit sur le document, et sa fiche s'ouvre remplie
 
 **Question.** Une facture porte le nom du chantier, son téléphone, son e-mail et son adresse. La
 lecture n'en gardait que le nom (`supplierName`), et proposait un contact seulement quand le modèle

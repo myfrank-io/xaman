@@ -122,7 +122,7 @@ export function LogForm({
   /** Documents already stored on this intervention (E10-1); empty on a creation. */
   attachments?: AttachmentItem[];
   /**
-   * Whether the form opens on its document (D118). False on an edit, and on every path that
+   * Whether the form opens on its document (D119). False on an edit, and on every path that
    * already says what the intervention is about — the checklist dialog, « Refaire », an engine
    * sheet: they arrive with their subject named and have nothing to read.
    */
@@ -215,15 +215,15 @@ export function LogForm({
     items: [],
   });
   const [serverError, setServerError] = useState<string | null>(null);
-  // The document the form opens on (D118), read in place: the fields below are already on
+  // The document the form opens on (D119), read in place: the fields below are already on
   // screen, so nothing is traversed and no tap is spent to reach them.
   const [read, setRead] = useState<ReadDocument | null>(null);
   const sourceDocument: LogFormDocument | null = read
     ? { itemId: read.itemId, fileName: read.fileName, kind: read.suggestion?.kind ?? "log" }
     : null;
-  // Read on that document (D119); the URL never carries a provider block, only a contact id.
+  // Read on that document (D120); the URL never carries a provider block, only a contact id.
   const [supplier, setSupplier] = useState(prefill?.supplier ?? null);
-  // A fiche created from the document (D119) has to reach the picker of *this* form at once,
+  // A fiche created from the document (D120) has to reach the picker of *this* form at once,
   // without a round trip to the server that would lose everything already typed.
   const [extraContacts, setExtraContacts] = useState<ContactOption[]>([]);
   const knownContacts = extraContacts.length === 0 ? contacts : [...contacts, ...extraContacts];
@@ -440,7 +440,7 @@ export function LogForm({
         action: saveLog,
         enqueue: outbox.enqueue,
         online,
-        // Never queued when a document opened the form (D118): the reading came from the
+        // Never queued when a document opened the form (D119): the reading came from the
         // network anyway, and a line saved on the iPad would leave its document behind.
         allowQueue: !log && !sourceDocument,
       });
@@ -474,7 +474,7 @@ export function LogForm({
         if (!committed.ok) toast.error(ta("commitFailed"));
       }
       // The document the intervention started from joins it, by the very path « Valider » takes
-      // from « À valider » (D118). A refusal is said and nothing else: the intervention is
+      // from « À valider » (D119). A refusal is said and nothing else: the intervention is
       // written, and the document is still on its card, one tap from the same outcome.
       if (sourceDocument) {
         const joined = await attachInboxDocument({
@@ -518,7 +518,7 @@ export function LogForm({
     <form onSubmit={submitForm} noValidate className="flex flex-col gap-6">
       <PageHeader title={log ? t("editTitle") : t("newTitle")} />
 
-      {/* En tête du formulaire, jamais devant lui (D118) : le document d'abord pour qui l'a en
+      {/* En tête du formulaire, jamais devant lui (D119) : le document d'abord pour qui l'a en
           main, et pas un tap de plus pour qui n'en a pas — les champs sont déjà là. */}
       {askForDocument && !log ? (
         <LogDocumentStart boatId={boatId} read={read} onRead={applyReading} />
@@ -556,7 +556,7 @@ export function LogForm({
                 onClick={() => {
                   const found = draft.draft;
                   // Rebased on the current defaults, never used raw: a draft written before
-                  // D117 carries `categoryId` and no `categoryIds` at all, and resetting to it
+                  // D118 carries `categoryId` and no `categoryIds` at all, and resetting to it
                   // would hand the chips an undefined list. What the older shape does not name,
                   // the form's own defaults still answer for.
                   if (found) form.reset({ ...defaultValues, ...found, id: form.getValues("id") });
@@ -777,7 +777,7 @@ export function LogForm({
                   canCreate={canCreateContact}
                   label={t("by")}
                 />
-                {/* Who the document says did the work (D119): recognised here, or created with
+                {/* Who the document says did the work (D120): recognised here, or created with
                     everything the invoice carries rather than retyped from it. */}
                 <SupplierSuggestion
                   boatId={boatId}
