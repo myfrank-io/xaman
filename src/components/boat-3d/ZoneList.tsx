@@ -85,39 +85,9 @@ export function ZoneList({
 
               {open ? (
                 <div className="flex flex-col gap-4 border-t border-border bg-surface-sunken px-4 py-3">
-                  <Section title={t("todo")}>
-                    {zone.points.length === 0 ? (
-                      <p className="text-caption text-ink-3">{t("nothingDue")}</p>
-                    ) : (
-                      <ul className="flex flex-col gap-1">
-                        {zone.points.map((point) => (
-                          <li key={point.id}>
-                            <Link
-                              href={
-                                (point.categoryId
-                                  ? categoryPath(boatId, point.categoryId)
-                                  : "#") as Route
-                              }
-                              className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                            >
-                              <ChecklistStateBadge state={point.state} size="sm" />
-                              <span className="min-w-0 flex-1 truncate text-label">
-                                {point.label}
-                              </span>
-                              <DueLabel
-                                status={point.state}
-                                daysRemaining={point.daysRemaining}
-                                hoursRemaining={point.hoursRemaining}
-                                hasCounter={point.hasCounter}
-                                compact
-                              />
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </Section>
-
+                  {/* What is due comes first only when something is: the rest of the time this
+                    panel answers « c'est quoi, ce truc ? », which is what an owner opens it for. */}
+                  {(zone.state === "overdue" || zone.state === "soon") && todo(zone, t, boatId)}
                   <Section title={t("aboard")}>
                     {zone.things.length === 0 ? (
                       <p className="text-caption text-ink-3">{t("noEquipment")}</p>
@@ -127,17 +97,17 @@ export function ZoneList({
                           <li key={thing.id}>
                             <Link
                               href={equipmentPath(boatId, thing.id) as Route}
-                              className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                              className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 py-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                             >
                               <PackageIcon className="size-4 shrink-0 text-ink-3" aria-hidden />
-                              <span className="min-w-0 flex-1 truncate text-label">
-                                {thing.name}
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-label">{thing.name}</span>
+                                {thing.facts.length > 0 || thing.meta ? (
+                                  <span className="block truncate text-caption text-ink-3">
+                                    {[thing.meta, ...thing.facts].filter(Boolean).join(" · ")}
+                                  </span>
+                                ) : null}
                               </span>
-                              {thing.meta ? (
-                                <span className="shrink-0 truncate text-caption text-ink-3">
-                                  {thing.meta}
-                                </span>
-                              ) : null}
                               <ChevronRightIcon
                                 className="size-4 shrink-0 text-ink-3"
                                 aria-hidden
@@ -148,6 +118,7 @@ export function ZoneList({
                       </ul>
                     )}
                   </Section>
+                  {zone.state !== "overdue" && zone.state !== "soon" && todo(zone, t, boatId)}
                 </div>
               ) : null}
             </div>
@@ -158,9 +129,45 @@ export function ZoneList({
   );
 }
 
+/** « À faire » — the points due on this zone, the worst first. */
+function todo(
+  zone: ZoneSummary,
+  t: ReturnType<typeof useTranslations<"boat3d">>,
+  boatId: string,
+): React.ReactNode {
+  return (
+    <Section title={t("todo")}>
+      {zone.points.length === 0 ? (
+        <p className="text-caption text-ink-3">{t("nothingDue")}</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {zone.points.map((point) => (
+            <li key={point.id}>
+              <Link
+                href={(point.categoryId ? categoryPath(boatId, point.categoryId) : "#") as Route}
+                className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                <ChecklistStateBadge state={point.state} size="sm" />
+                <span className="min-w-0 flex-1 truncate text-label">{point.label}</span>
+                <DueLabel
+                  status={point.state}
+                  daysRemaining={point.daysRemaining}
+                  hoursRemaining={point.hoursRemaining}
+                  hasCounter={point.hasCounter}
+                  compact
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
 /**
- * « 3 équipements · 2 points de suivi », and « Rien de noté ici » when there is neither. Counting
- * zeroes out loud on eleven rows is what made the list read as a form with nothing in it.
+ * « 3 équipements · 2 points », and « Rien de noté ici » when there is neither. Counting zeroes
+ * out loud on eleven rows is what made the list read as a form with nothing in it.
  */
 function meta(zone: ZoneSummary, t: ReturnType<typeof useTranslations<"boat3d">>): string {
   const parts: string[] = [];

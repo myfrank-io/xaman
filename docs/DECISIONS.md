@@ -2712,15 +2712,29 @@ même nombre de faces et donnent le mât en carbone noir, la toile en écru, la 
 qui empêche les facettes de lire comme une mosaïque : le coefficient n'est pas décoratif, il dit
 comment le matériau se comporte à la lumière.
 
-**Décision — ce qu'on comprend.** Trois ajouts, aucun texte d'aide :
+**Décision — ce qu'on comprend.** Quatre ajouts, aucun texte d'aide :
 1. Une **pastille sur la maquette** qui dit « Touchez un élément du bateau », et qui **nomme la
    zone survolée** dès qu'une souris passe dessus. Elle disparaît quand quelque chose est choisi.
 2. Le **survol teinte la zone** sous le pointeur (souris uniquement : un doigt ne survole pas).
 3. Une **ligne d'invite au-dessus de la liste** — celle sous la maquette est hors écran dès qu'on
-   a déroulé — et des lignes qui se comportent en boutons : fond au survol, barre d'accent à
-   gauche quand elles sont ouvertes, chevron plus franc.
+   a déroulé — et des lignes qui se comportent en boutons.
+4. **Toutes les zones sont marquées, à deux voix.** Ce qui est en retard ou bientôt dû garde sa
+   pastille — icône, compte, et c'est un bouton. Tout le reste reçoit un **plot** : un petit
+   disque neutre qui n'est *pas* une cible (la coque dessous en est une, la liste à côté aussi) et
+   dont le seul métier est de dire « il y a quelque chose ici ».
 
 **Raison.** Une maquette qui tourne toute seule ressemble à une illustration ; rien ne disait
-qu'elle répondait. La pastille est le seul endroit où l'affordance ne coûte rien : elle est sur
-l'objet, elle sert de survol sur ordinateur, et elle s'efface dès qu'elle a été comprise.
+qu'elle répondait. Et la première version ne marquait que les retards : le retour est tombé le
+jour même — « on voit bien où cliquer quand c'est en retard », et nulle part ailleurs. Deux voix
+gardent la hiérarchie et suppriment l'angle mort ; deux rangs de boutons de 44 px se seraient
+chevauchés sur un cadre de 340 px et se seraient volé les touches.
+
+**Décision — ce que la maquette sert.** Elle ne sert pas qu'à la checklist. Un propriétaire
+l'ouvre pour **connaître son bateau** et aller y chercher une information. Donc une zone ouverte
+commence par **ce qu'elle est** — « Code 0 (J0) · Incidence PX Black · 87,5 m² », « Batteries
+Lithium · Victron · 210 Ah · 12 V » — lus dans `equipment.specs` par `src/lib/boat-3d/specs.ts`,
+qui met l'unité que la clé annonce et laisse parler les valeurs qui se nomment elles-mêmes. « À
+faire » ne passe devant que si quelque chose est dû. Et quand rien n'est en retard, le titre de la
+carte annonce ce que le bateau porte, pas « rien » : « rien en retard » n'apprend rien sur un
+bateau.
 

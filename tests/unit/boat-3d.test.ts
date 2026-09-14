@@ -4,6 +4,7 @@ import { readFeatures, NO_FEATURES } from "../../src/lib/boat-3d/features";
 import { buildBoatMesh, meshZones, type BoatShape } from "../../src/lib/boat-3d/model";
 import { buildZoneSummaries } from "../../src/lib/boat-3d/summary";
 import { buildRamp, MATERIALS, parseColour, type Palette } from "../../src/lib/boat-3d/renderer";
+import { specFacts } from "../../src/lib/boat-3d/specs";
 import { fitCamera, Projector } from "../../src/lib/boat-3d/scene";
 import {
   normalise,
@@ -510,5 +511,62 @@ describe("matières", () => {
     expect(parseColour("   #fff  ")).toEqual([255, 255, 255]);
     expect(parseColour("rgb(12, 34, 56)")).toEqual([12, 34, 56]);
     expect(() => buildRamp({ ...palette, hull: "" })).not.toThrow();
+  });
+});
+
+describe("ce que le carnet sait d'un équipement", () => {
+  it("met l'unité que la clé annonce, et laisse parler les valeurs qui se nomment", () => {
+    expect(specFacts({ surface_m2: 88, tissu: "Hydranet" })).toEqual(["88 m²", "Hydranet"]);
+    expect(specFacts({ puissance_w: 990, emplacement: "Sur bossoirs" })).toEqual([
+      "990 W",
+      "Sur bossoirs",
+    ]);
+    expect(specFacts({ capacite_ah: 210, tension_v: 12 })).toEqual(["210 Ah", "12 V"]);
+    expect(specFacts({ diametre_mm: 10, longueur_m: 60 })).toEqual(["10 mm", "60 m"]);
+    expect(specFacts({ debit_l_h: 65 })).toEqual(["65 L/h"]);
+    expect(specFacts({ poids_kg: 25 })).toEqual(["25 kg"]);
+  });
+
+  it("écrit les nombres en français et n'invente pas de décimales", () => {
+    expect(specFacts({ surface_m2: 87.5 })).toEqual(["87,5 m²"]);
+    expect(specFacts({ surface_m2: "88" })).toEqual(["88 m²"]);
+  });
+
+  it("dit un booléen par son nom, et tait ce qui est vide", () => {
+    expect(specFacts({ chaussette: true, housse: false, note: "x" })).toEqual(["Chaussette"]);
+    expect(specFacts({ materiau: "", ref_chantier: "STRC01" })).toEqual([]);
+    expect(specFacts(null)).toEqual([]);
+    expect(specFacts(undefined)).toEqual([]);
+  });
+
+  it("s'arrête au nombre demandé", () => {
+    const specs = { a_m: 1, b_m: 2, c_m: 3, d_m: 4 };
+    expect(specFacts(specs)).toHaveLength(3);
+    expect(specFacts(specs, 2)).toEqual(["1 m", "2 m"]);
+  });
+
+  it("porte les faits jusque dans la zone", () => {
+    const mesh = buildBoatMesh({ ...CAT, features: readFeatures(XAMAN) });
+    const zones = buildZoneSummaries({
+      mesh,
+      hasKeel: false,
+      categories: [{ id: "c", externalRef: "sails_rigging" }],
+      equipment: [
+        {
+          id: "e1",
+          name: "Grand-voile (GV)",
+          brand: "Incidence",
+          model: null,
+          quantity: 1,
+          categoryId: "c",
+          specs: { surface_m2: 88, tissu: "Hydranet" },
+        },
+      ],
+      points: [],
+      engines: [],
+    });
+    const main = zones.find((zone) => zone.key === "mainsail");
+    expect(main?.things[0]?.facts).toEqual(["88 m²", "Hydranet"]);
+    expect(main?.things[0]?.meta).toBe("Incidence");
   });
 });

@@ -56,7 +56,7 @@ export function ModelCanvas({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   // The pins that are on screen right now, by zone: the loop writes to them directly, and a
   // zone that stops being pinned removes itself here rather than leaving a hole in an array.
-  const pinsRef = React.useRef(new Map<ZoneKey, HTMLButtonElement>());
+  const pinsRef = React.useRef(new Map<ZoneKey, HTMLElement>());
 
   // Everything the animation loop reads lives in a ref: a frame must never re-render React.
   const stateRef = React.useRef({
@@ -76,10 +76,23 @@ export function ModelCanvas({
   });
   const [hoveredZone, setHoveredZone] = React.useState<ZoneKey | null>(null);
 
-  // The pins only exist for what is late or due soon — plus whatever is selected. A pin on every
-  // zone at once would bury the two that matter under eleven that do not.
-  const pinned = React.useMemo(
-    () => zones.filter((zone) => zone.overdue > 0 || zone.soon > 0 || zone.key === selected),
+  /**
+   * Every zone is marked, in two voices. What is late or due soon gets a **pin**: a chip with its
+   * icon and its count, and it is a button. Everything else gets a **stud**: a small neutral disc
+   * that is not a target at all (the hull under it already is, and the list beside it too), and
+   * whose only job is to say « il y a quelque chose ici ».
+   *
+   * The first version pinned only what was late, and the answer came back the same day: « on voit
+   * bien où cliquer quand c'est en retard » — and nowhere else. Two voices keep the hierarchy and
+   * lose the blind spot; two ranks of 44 px buttons would have overlapped and stolen each other's
+   * taps.
+   */
+  const marks = React.useMemo(
+    () =>
+      zones.map((zone) => ({
+        zone,
+        loud: zone.overdue > 0 || zone.soon > 0 || zone.key === selected,
+      })),
     [zones, selected],
   );
 
@@ -352,10 +365,11 @@ export function ModelCanvas({
             </span>
           </span>
         ) : null}
-        {pinned.map((zone) => (
+        {marks.map(({ zone, loud }) => (
           <ZonePin
             key={zone.key}
             zone={zone}
+            loud={loud}
             label={zone.name ?? t(ZONE_LABELS[zone.labelKey ?? "hulls"])}
             active={zone.key === selected}
             onSelect={() => select(zone.key === selected ? null : zone.key)}
@@ -417,22 +431,37 @@ function ControlButton({
 }
 
 const ZonePin = React.forwardRef<
-  HTMLButtonElement,
+  HTMLElement,
   {
     zone: ZoneSummary;
+    /** true = a chip with its count, and a button; false = a quiet stud, and scenery. */
+    loud: boolean;
     label: string;
     active: boolean;
     onSelect: () => void;
   }
->(function ZonePin({ zone, label, active, onSelect }, ref) {
+>(function ZonePin({ zone, loud, label, active, onSelect }, ref) {
   const t = useTranslations("boat3d");
   const overdue = zone.overdue > 0;
   const count = overdue ? zone.overdue : zone.soon;
   const Icon = overdue ? TriangleAlertIcon : ClockIcon;
 
+  if (!loud) {
+    // Not a target: the part of the hull under it is, and so is its row in the list. Two ranks
+    // of 44 px buttons on a 340 px canvas would overlap and steal each other's taps.
+    return (
+      <span
+        ref={ref as React.Ref<HTMLSpanElement>}
+        aria-hidden
+        className="pointer-events-none absolute top-0 left-0 block size-2.5 rounded-full border border-surface/70 bg-ink-3/70 shadow-sm"
+        style={{ transform: "translate3d(-100px, -100px, 0)" }}
+      />
+    );
+  }
+
   return (
     <button
-      ref={ref}
+      ref={ref as React.Ref<HTMLButtonElement>}
       type="button"
       onClick={onSelect}
       aria-pressed={active}
