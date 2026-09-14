@@ -32,6 +32,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E16 | E16-10 |
 | E17 | E17-12 |
 | E18 | E18-13 |
+| E19 | E19-10 |
 
 ---
 
@@ -228,7 +229,7 @@ annonçait « Tout est à jour » sur un carnet sans un seul point.
 - [x] **E15-10** **Une intervention porte plusieurs systèmes** (D118) : « fais en sorte qu'on puisse sélectionner différentes catégories ». Les puces de catégorie du formulaire d'intervention deviennent multiples (`CategoryChipsMulti`, rôle `checkbox`, six au plus) ; la **première cochée reste le système principal** et `maintenance_logs.category_id` ne bouge pas, donc les filtres du journal, le rapport, l'export, la grille des systèmes et « Refaire » continuent de lire ce qu'ils lisaient. Migration `0034` : table de liaison `maintenance_log_categories` (RLS calquée sur l'intervention — membre pour lire, `contribute` pour ajouter, `write` ou le pro sur *ses* lignes pour retirer, aucune politique UPDATE puisqu'une liaison s'ajoute ou se retire), trigger qui refuse un `boat_id` qui mentirait (règle 4), reprise des lignes existantes, et `maintenance_logs_view` gagne `category_ids` — qui retombe sur la colonne seule quand la liaison est vide, donc une ligne importée reste classée. `saveLog` réécrit la liste entière à chaque enregistrement ; les points de checklist proposés sont ceux de **tous** les systèmes cochés, dédoublonnés au meilleur score. La carte de « À valider » suit pour une intervention ; un achat garde son système unique. Tests : schéma (plusieurs systèmes, principal, minimum et maximum), validation d'une carte, matrice RLS de la table. Signalé à l'usage.
 - [x] **E15-11** **Une intervention commence par son document** (D119) : « l'ajout d'une nouvelle intervention doit commencer par l'importation d'un document et utilise la même techno que quand on envoie un doc par email ». `/logs/new` ouvre sur **« Commencez par le document »** (`LogDocumentStart` : appareil photo, photothèque, fichiers) **en tête du formulaire**, et le fichier passe par la **chaîne de « À valider »**, sans une ligne de lecture dupliquée — `inboxStoragePath`, `createInboxUpload`, la lecture de D91/D92 — ; ce qu'elle trouve (titre, date, montant, prestataire, heures moteur, lignes de la facture dans les notes) tombe dans les champs **restés vides**, jamais par-dessus une saisie, et l'enregistrement accroche le document à l'intervention par le rangement `attach` de D109 (`attachInboxDocument`, enveloppe mince sur `validateInboxItem`). **En tête et non devant** : une première version en faisait un écran à part avec un « Saisir sans document », et le parcours §6.2 (vidange à quai, budget sept taps) est tombé en rouge — la vidange de l'équipage n'a pas de facture et payait un tap pour atteindre un champ. Le budget est inchangé à trois taps. Les chemins qui savent déjà de quoi ils parlent sautent l'étape (`hasPrefillParams` : `?item=`, `?title=`, `?category=`, `?date=`, `?hours=`, `?contact=`, `?equipment=`, `?engine=`). Une saisie partie d'un document ne passe plus par la file hors ligne, et rien n'est perdu si la personne abandonne : le document est déjà dans « À valider ». Aucune migration. Tests : traduction du préremplissage (`mergePrefill`), paramètres qui sautent l'étape. Signalé à l'usage.
 - [x] **E15-12** **Le prestataire se lit sur le document** (D120) : « quand on importe les datas depuis une facture ou une photo, fais en sorte de repréremplir le prestataire en faisant soit le mapping avec un existant soit en proposant d'en créer un nouveau avec toutes les infos déjà remplies — numéros, mail, etc. ». La lecture renvoie le bloc entier de l'émetteur (`supplier` : nom, société, téléphone, e-mail, adresse) — le modèle par son prompt, le lecteur local par `findSupplierDetails` (en-tête et pied de page, numéro étiqueté ou de l'en-tête seulement, code postal + ville pour l'adresse) ; le champ est **défauté**, donc une ligne écrite par l'ancien prompt continue d'ouvrir sa carte. `src/lib/contacts/match.ts` rapproche sans score flou : e-mail exact, puis téléphone sur ses neuf derniers chiffres, puis nom ou raison sociale accents, casse et formes sociales ignorés — et `normaliseSuggestion` ne s'en sert que pour **remplir un `contactId` nul**, jamais pour corriger une réponse du modèle. `SupplierSuggestion` (formulaire d'intervention et carte de « À valider ») dit ce qui a été lu, sélectionne la fiche reconnue en nommant la clé qui l'a reconnue, ou ouvre **« Créer la fiche prestataire »** sur un `QuickContactDialog` **pré-rempli** — société, e-mail et adresse s'ajoutent aux trois champs habituels quand le document les porte —, et la nouvelle fiche est choisie sans quitter la saisie. `contactOptions` lit désormais l'e-mail. Aucune migration. Tests : rapprochement (e-mail, téléphone international, raison sociale, refus d'un homonyme trop court), fiche pré-remplie sans nom écrit deux fois, repli de `normaliseSuggestion`. Signalé à l'usage.
-- [x] **E15-13** **Une ligne en retard tient dans ses colonnes** (D125) : `ListRow`, la ligne partagée par tous les écrans de liste, donnait deux colonnes latérales de largeur fixe qui ne rognent rien — l'état à 104 px, la valeur plafonnée à 112 — pendant que « EN RETARD » en mesure **115** et « 105 j de retard » **117**. Sur une ligne en retard, la puce sortait de sa propre puce et l'échéance de la ligne : le bouton de la ligne rapportait un `scrollWidth` de 575 pour 570 px de large, ce que l'audit tactile appelle « un libellé plus large que son bouton » — la panne de la pastille « Sorties de l'eau » débordant de sa puce, signalée depuis le bateau. Colonne d'état à **120 px** (`sm:min-w-30`, la plus large des puces plus sa marge ; les puces de la Checklist et de la file la remplissent exactement), colonne de valeur **sans plafond** (un `max-width` ne rognait pas une échéance `whitespace-nowrap`, il la laissait sortir : « 426 h de retard » en demande 123 et « compteur inconnu » 150) ; `min-w` et non `w`, donc un libellé imprévu pousse son titre au lieu de lui passer dessus. Les titres restent alignés d'une ligne à l'autre, ce pour quoi la colonne est fixe (D88). **Pourquoi l'audit ne l'avait pas vu** : aucune recette ne montrait la forme — `/dev/ui/checklist` n'a une ligne en retard que depuis peu et jamais à trois chiffres, `/dev/ui` montrait ses lignes de référence avec des puces `sm` que l'application n'écrit nulle part, et la fiche d'un moteur ne listait que des interventions terminées. Les trois recettes portent désormais la forme qui casse (retard à 105 j, puces à la taille des listes, une intervention **urgente** sur le moteur) ; vérifié en échec sans le correctif sur les deux viewports iPad. Les autres écrans à `ListRow` sont sans colonne d'état (dates, quantités) ou déjà couverts — la fiche d'un équipement pose la même puce que celle d'un moteur. Aucune migration, aucun texte nouveau. `pnpm lint`, `typecheck`, `test` et l'audit tactile complet verts sur les cinq viewports.
+- [x] **E15-13** **Une ligne en retard tient dans ses colonnes** (D127) : `ListRow`, la ligne partagée par tous les écrans de liste, donnait deux colonnes latérales de largeur fixe qui ne rognent rien — l'état à 104 px, la valeur plafonnée à 112 — pendant que « EN RETARD » en mesure **115** et « 105 j de retard » **117**. Sur une ligne en retard, la puce sortait de sa propre puce et l'échéance de la ligne : le bouton de la ligne rapportait un `scrollWidth` de 575 pour 570 px de large, ce que l'audit tactile appelle « un libellé plus large que son bouton » — la panne de la pastille « Sorties de l'eau » débordant de sa puce, signalée depuis le bateau. Colonne d'état à **120 px** (`sm:min-w-30`, la plus large des puces plus sa marge ; les puces de la Checklist et de la file la remplissent exactement), colonne de valeur **sans plafond** (un `max-width` ne rognait pas une échéance `whitespace-nowrap`, il la laissait sortir : « 426 h de retard » en demande 123 et « compteur inconnu » 150) ; `min-w` et non `w`, donc un libellé imprévu pousse son titre au lieu de lui passer dessus. Les titres restent alignés d'une ligne à l'autre, ce pour quoi la colonne est fixe (D88). **Pourquoi l'audit ne l'avait pas vu** : aucune recette ne montrait la forme — `/dev/ui/checklist` n'a une ligne en retard que depuis peu et jamais à trois chiffres, `/dev/ui` montrait ses lignes de référence avec des puces `sm` que l'application n'écrit nulle part, et la fiche d'un moteur ne listait que des interventions terminées. Les trois recettes portent désormais la forme qui casse (retard à 105 j, puces à la taille des listes, une intervention **urgente** sur le moteur) ; vérifié en échec sans le correctif sur les deux viewports iPad. Les autres écrans à `ListRow` sont sans colonne d'état (dates, quantités) ou déjà couverts — la fiche d'un équipement pose la même puce que celle d'un moteur. Aucune migration, aucun texte nouveau. `pnpm lint`, `typecheck`, `test` et l'audit tactile complet verts sur les cinq viewports.
 
 ## E16 — Simplification (audit du 8 septembre 2026)
 
@@ -418,7 +419,103 @@ indépendants dans cet ordre : le premier se livre seul.
   agrégats **cliquables** qui se résolvent en lignes, jamais un cadran ; index vérifiés sur un seed
   de charge de 3 000 carnets. **DoD** : budget de requête mesuré et écrit dans le ticket, aucun
   compte qui compte la page (D111).
-- [ ] **E18-12 (C, 3)** **Le constructeur publie son plan, et ses bulletins.** `owner_organization_id`
+- [ ] **E18-12 (M, 3)** **Le constructeur publie son plan, et ses bulletins.** *(« Could » jusqu'à
+  D125 : c'est ce que l'option de service vend, donc un Must d'E19.)* `owner_organization_id`
   prend son sens : le chantier maintient le plan de son modèle, une version suivante se **propose**
   aux carnets déjà instanciés — affichée, décochée, jamais écrite sans un tap (D113) — et un
   bulletin de service est un point de checklist poussé à un modèle, pas un message.
+
+---
+
+## E19 — Le constructeur vend du service (D125, D126)
+
+Ouverte le 2026-09-14. **Bascule de marché** (D125) : deux acheteurs, un seul produit. Le
+propriétaire ne paie pas — carnet complet, partage illimité, export toujours gratuit — et le
+**constructeur** est le cœur de cible : il livre le carnet avec le bateau et en vend l'option de
+service, au prix qu'il fixe, comme un constructeur automobile vend son contrat d'entretien. Xaman
+facture le chantier, jamais son client. Seul encaissement côté propriétaire : la **passation** à la
+vente, et jamais l'export.
+
+Trois raisons, toutes déjà écrites ailleurs dans ce dépôt : le coût d'amorçage est le premier tueur
+du secteur (`SPEC.md §3.3.1`) et seul le chantier peut remplir le carnet avant le propriétaire ; le
+jour de la livraison, l'acheteur **et** le constructeur perdent quelque chose en même temps
+(`SPEC.md §4.4`) ; et une option présentée au bon de commande se vend, là où un abonnement à 60 €/an
+s'arrache un par un.
+
+**Dépendances.** Le socle est E18 lot 3 (E18-9 à E18-12) : sans `organizations` ouvertes et sans les
+deux accès de D121, rien de ce qui suit ne tient en base. **E18-12 cesse d'être un « Could »** : le
+plan officiel et les bulletins sont ce que l'option vend. Aucun ticket de cette épique ne se démarre
+sans validation explicite, à l'exception d'E19-1, qui ne touche que le site public.
+
+**Ce qui ne changera pas, quoi qu'il arrive.** L'export reste gratuit et affiché ; le partage n'est
+jamais facturé ; un contrat n'ouvre jamais un carnet — seul le propriétaire le fait, pour une durée,
+et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l'option s'arrête.
+
+### Lot 1 — Le site public (V1, livrable seul)
+
+- [x] **E19-1 (M, 2)** **La page d'accueil porte les deux lectures, et le chantier a la sienne**
+  (D126). `/` garde le propriétaire, gagne « Deux façons d'avoir un carnet à jour » (gratuit /
+  option du chantier, même hauteur, même vocabulaire : ce qui change est **qui remplit le carnet le
+  premier jour**) et une carte constructeur. `/constructeurs` est la page du chantier : ce que la
+  poignée de main lui coûte, ce qu'il obtient, comment l'option se vend, **ce qu'il ne verra
+  jamais** (la clause de D121, écrite du côté de celui qui doit pouvoir la dire à haute voix).
+  En-tête et pied partagés (`MarketingHeader`, `MarketingFooter`), aperçu de flotte dessiné
+  (`FleetPreview`) dont la légende dit qu'il est un dessin, route publique dans `src/proxy.ts` et
+  absente de `SIGNED_IN_ELSEWHERE`. Page annoncée comme **programme pilote** : l'étage constructeur
+  n'existe pas encore, et un chantier qui l'apprend à la démo ne revient pas.
+
+### Lot 2 — Ce qui manque au carnet avant qu'un chantier puisse le vendre — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E19-2 (M, 3)** **Les garanties n'existent pas.** Ni date de mise en service, ni durée, ni
+  pièce couverte, ni réclamation : premier levier du chantier, première douleur de l'acheteur, et un
+  domaine entier à créer. Table `warranties` (`boat_id`, portée : bateau, moteur ou équipement,
+  début, fin en date **et/ou** en heures — « premier atteint », comme les échéances (D1), garant :
+  contact ou organisation, conditions, documents) et affichage là où la question se pose : « sous
+  garantie jusqu'au … » sur la fiche moteur et la fiche équipement, et dans la file quand la
+  garantie expire avant l'échéance suivante. **DoD** : RLS et privilèges de colonnes dans la même
+  migration (règle 2), `pnpm db:types` commité, parité avec `DATA-MODEL.md`, vérifié en 1024×768.
+- [ ] **E19-3 (M, 2)** **Une réclamation part avec sa preuve.** Depuis une ligne du journal :
+  « Ouvrir une réclamation » attache la date, les heures moteur du jour, les photos et la facture
+  déjà présentes, et l'envoie au garant. Le chantier arbitre sur des faits au lieu d'un appel
+  téléphonique. Table `warranty_claims` (état, garantie, intervention d'origine, réponse), jamais de
+  suppression physique (règle 9).
+- [ ] **E19-4 (M, 3)** **Le carnet livré avec le bateau.** Un chantier prépare une coque — modèle
+  exact, moteurs et numéros de série, équipements, garanties, plan d'entretien — puis la **remet** :
+  l'acheteur ouvre un compte et trouve son bateau dedans, `owner` dès la première seconde. C'est le
+  parcours d'entrée que D64/D65/D67 ne couvrent pas (ils supposent un propriétaire qui saisit).
+  Remise par invitation datée comme toutes les autres (D28, D29) ; tant qu'elle n'est pas acceptée,
+  le carnet appartient à l'organisation et non à une personne.
+- [ ] **E19-5 (S, 2)** **L'option de service se voit, et se coupe.** Un contrat (`boat_id`,
+  organisation, début, fin, état) affiché en clair dans le carnet : qui regarde, jusqu'à quand,
+  et « Retirer l'accès » à côté. Le contrat **ne donne aucun droit par lui-même** — il propose
+  l'invitation que le propriétaire accepte (D121). À l'échéance, l'accès tombe ; le carnet, lui, ne
+  bouge pas. **DoD** : un test RLS prouve qu'un contrat sans invitation acceptée ne lit rien.
+
+### Lot 3 — Les deux moments payants — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E19-6 (M, 3)** **La passation à la vente.** Le carnet se sépare en deux — le technique d'un
+  côté, l'argent et le privé de l'autre, ligne à ligne, **décoché par défaut** —, le vendeur garde
+  une **copie archivée en lecture**, l'acheteur reçoit un carnet dont il est propriétaire dès le
+  premier jour, garanties comprises, et un **certificat de passation** imprimable (le moteur de
+  `/report` existe déjà). À côté de D30, pas à sa place : inviter l'acheteur en `owner` puis quitter
+  le bateau reste gratuit, et reste du tout-ou-rien. **DoD** : aucune donnée du vendeur ne franchit
+  la passation sans une case cochée par lui (test), l'export reste gratuit et accessible des deux
+  côtés.
+- [ ] **E19-7 (S, 3)** **Encaisser.** Paiement unique pour la passation ; contrat facturé pour le
+  chantier, hors application (pas de self-service B2B). `SPEC.md §5.4` excluait la facturation :
+  D125 la requalifie. **Aucun mur de paiement dans le carnet du propriétaire** — un seul écran
+  payant, celui de la passation, et il annonce son prix avant de demander quoi que ce soit.
+- [ ] **E19-8 (M, 1)** **Ce qu'un contrat oblige à écrire.** Le chantier voit des données
+  personnelles de ses clients : mentions légales, CGU/CGV, sous-traitance RGPD, et la trace du
+  consentement — qui a ouvert l'accès, quand, jusqu'à quand, et qui l'a retiré. Sans cela, l'option
+  ne se signe pas. **DoD** : la trace est en base, pas dans un journal applicatif.
+
+### Lot 4 — Ce qui reste à trancher avant d'écrire une ligne de prix
+
+- [ ] **E19-9 (M, 1)** **Les trois prix, et une boîte aux lettres.** (1) Prix de la passation et qui
+  la paie — vendeur (argument de vente) ou acheteur (exigence d'expert). (2) Prix payé par le
+  chantier et son unité : par coque sous contrat, par coque livrée, par an. (3) Existence de
+  `constructeurs@xaman.boats`, citée par `/constructeurs` et **à créer avant la mise en ligne** :
+  le domaine existe (il envoie déjà `noreply@`), la boîte non. Tant que les deux premiers points
+  sont ouverts, aucune page de tarifs n'est écrite (D126) : une grille avec des « à partir de »
+  inventés est exactement ce que la règle interdit.
