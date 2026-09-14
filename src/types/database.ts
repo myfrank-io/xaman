@@ -1812,6 +1812,80 @@ export type Database = {
           },
         ]
       }
+      maintenance_rules: {
+        Row: {
+          actions: NonNullable<Json>
+          brand: string | null
+          consumables: NonNullable<Json>
+          created_at: string
+          description: string | null
+          engine_scope: string
+          external_ref: string
+          id: string
+          interval_hours: number | null
+          interval_months: number | null
+          is_active: boolean
+          kind_id: string
+          label: string
+          model: string | null
+          sort_order: number
+          source: string
+          source_ref: string | null
+          updated_at: string
+          zone_scope: string
+        }
+        Insert: {
+          actions?: NonNullable<Json>
+          brand?: string | null
+          consumables?: NonNullable<Json>
+          created_at?: string
+          description?: string | null
+          engine_scope?: string
+          external_ref: string
+          id?: string
+          interval_hours?: number | null
+          interval_months?: number | null
+          is_active?: boolean
+          kind_id: string
+          label: string
+          model?: string | null
+          sort_order?: number
+          source?: string
+          source_ref?: string | null
+          updated_at?: string
+          zone_scope?: string
+        }
+        Update: {
+          actions?: NonNullable<Json>
+          brand?: string | null
+          consumables?: NonNullable<Json>
+          created_at?: string
+          description?: string | null
+          engine_scope?: string
+          external_ref?: string
+          id?: string
+          interval_hours?: number | null
+          interval_months?: number | null
+          is_active?: boolean
+          kind_id?: string
+          label?: string
+          model?: string | null
+          sort_order?: number
+          source?: string
+          source_ref?: string | null
+          updated_at?: string
+          zone_scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_rules_kind_id_fkey"
+            columns: ["kind_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_kinds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -2780,6 +2854,10 @@ export type Database = {
           occurrences: number
           title: string
         }[]
+      }
+      maintenance_rule_consumables_valid: {
+        Args: { p_consumables: Json }
+        Returns: boolean
       }
       mark_log_reviewed: {
         Args: { p_hours_override?: Json; p_log_id: string }

@@ -300,6 +300,62 @@ bateau a (moteurs, gréement, mouillage, sécurité). Une famille entre quand un
 jamais « au cas où » (`docs/AUTOPILOT.md §10`) — une famille inutilisée est une ligne de plus dans
 un menu, qui rend la bonne plus dure à trouver.
 
+### 3.10 ter `maintenance_rules` — bibliothèque de règles d'entretien (E17-4, `0033`)
+
+Table de **référence** comme `equipment_kinds` (§3.10 bis) : **pas de `boat_id`**, lisible par tout
+compte connecté quand `is_active`, écrite par le seul admin plateforme.
+
+C'est la **seconde couche du plan** (`docs/AUTOPILOT.md §4`), et la raison d'être de la première :
+une règle s'accroche à une *famille* et dit ce qu'il faut lui faire, à quelle fréquence, avec quoi.
+Écrite une fois pour un chauffage à air pulsé, elle sert tous les bateaux qui en portent un — c'est
+le seul actif du produit qui **grandit** au lieu d'être consommé.
+
+Cette table **ne compose aucun plan** : rien ici ne lit un bateau ni n'écrit un `checklist_item`.
+C'est E17-5 qui compose « points du modèle de coque + règles des équipements présents », et c'est
+ce ticket-là qui aura besoin de `checklist_items.equipment_id`.
+
+| Colonne | Type | Contraintes | Notes |
+|---|---|---|---|
+| id | uuid | PK | |
+| external_ref | text | not null unique | clé d'upsert (`heater-forced-air-service`) |
+| kind_id | uuid | FK equipment_kinds **on delete cascade**, not null | la famille visée. Une règle sans sa famille n'est rien ; une famille se désactive plutôt qu'elle ne se supprime |
+| brand / model | text | null | restriction facultative. Null = toute la famille ; « Wallas » = cette marque seule. Comparés sans casse ni accents (`normaliseForMatch`), jamais tels quels |
+| label | text | not null | « Remplacer la turbine de pompe à eau de mer » |
+| description | text | | |
+| interval_months | int | null, check > 0 | |
+| interval_hours | int | null, check > 0 | heures moteur |
+| engine_scope | text | not null default `'none'` | même vocabulaire que `checklist_template_items` (D90, `0024`), pour que E17-5 compose avec `engine_scope_matches` plutôt qu'avec une seconde règle d'appariement |
+| zone_scope | text | not null default `'all'` / `'offshore'` | une règle hauturière (radeau, balise, dessalinisateur) n'est pas appliquée à un bateau côtier (D90) |
+| actions | jsonb | not null default `'[]'`, check tableau | étapes pas à pas, comme sur un point de modèle |
+| consumables | jsonb | not null default `'[]'` | ce que le geste consomme, dans la forme que `parts` stocke : `[{"name": "Filtre à gasoil", "reference": "…", "quantity": 1, "unit": "pc"}]`. E17-8 alimente le stock et « À racheter » depuis là |
+| source | text | not null default `'proposal'` | `proposal` / `manual` / `builder` / `regulation` |
+| source_ref | text | null | « Manuel Wallas 30DT, p. 14 » |
+| sort_order | int | not null default 0 | |
+| is_active | boolean | not null default true | |
+| created_at / updated_at | timestamptz | | |
+
+Contraintes : `interval_hours is null or engine_scope <> 'none'` (une heure se lit sur un moteur,
+exactement comme sur un point de modèle) ; `source = 'proposal' or coalesce(source_ref,'') <> ''`
+— **`AUTOPILOT.md §6` mis en base** : ce qui revendique une autorité doit la nommer ;
+`maintenance_rule_consumables_valid(consumables)`, fonction `immutable` qui refuse un consommable
+sans nom, parce que c'est le stock d'E17-8 qu'il irait remplir de lignes anonymes.
+
+Index : `maintenance_rules_kind_idx (kind_id, sort_order) where is_active` — la lecture que fera
+E17-5, les règles actives des familles qu'un bateau porte.
+
+**Ce qui est semé** : 49 règles sur 36 des 41 familles de `0032`. Cinq familles n'en reçoivent
+volontairement aucune — congélateur, lave-linge, traceur, AIS, liaison satellite : il n'y a pas de
+geste périodique qu'on remercierait quelqu'un d'avoir rappelé, et « contrôler que ça marche » est
+une ligne qu'on coche sans la lire, au prix de la crédibilité des autres.
+
+**Toutes les règles semées portent `source = 'proposal'`**, et c'est un choix, pas un oubli (D116) :
+`AUTOPILOT.md §6` dit qu'un intervalle ne s'invente pas. Les intervalles semés sont ceux de la
+pratique courante — ce qui est exactement la définition d'une proposition : bon à montrer à
+quelqu'un, pas à lui imposer. Citer la page d'un manuel que personne n'a ouvert serait précisément
+la faute que cette table existe pour empêcher. Les sources réelles arrivent quand un bateau dépose
+ses manuels (E17-1, E17-2). Le précédent est déjà dans le dépôt : les 93 points de l'ORC 50 sont
+semés `source: proposal` pour la même raison.
+
 ### 3.11 `contacts` (annuaire des intervenants)
 
 | Colonne | Type | Contraintes | Notes |
@@ -691,6 +747,7 @@ Cas particuliers :
 - `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` (et, depuis `0023`, `email_id` / `delivery_detail` jamais accordés — l'état de remise l'est, pas l'identifiant du message ni le texte du fournisseur) — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.
 - `boat_models` : select tout utilisateur authentifié où `is_active` (ou `is_platform_admin()`) ; write `is_platform_admin()`. Catalogue publié, sans `boat_id` : aucune donnée de locataire à cloisonner.
+- `equipment_kinds` (`0032`) et `maintenance_rules` (`0033`) : même règle et même raison que `boat_models` — select tout utilisateur authentifié où `is_active` (ou `is_platform_admin()`) ; write `is_platform_admin()`. Un bateau ne peut pas tirer son plan d'une bibliothèque qu'il ne voit pas, et un intervalle faux publié là tombe sur tous les bateaux qui portent la famille : d'où la lecture ouverte et l'écriture fermée.
 - `organizations*` : V1, select/write `is_platform_admin()` uniquement.
 - Storage bucket `boat-files` (privé) : policies sur le préfixe `boats/{boat_id}/` avec les mêmes fonctions (select membre ; insert contribute ; delete write). Depuis `0011` le bucket porte aussi `file_size_limit = 10 Mo` et `allowed_mime_types = {image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf}` : un client cassé ne peut pas écrire ce que la table refuserait. Les URL sont **signées** (1 h), jamais publiques.
 - Vues : toutes en `security_invoker = true` ; elles n'ont pas de politique propre, la RLS des tables s'applique.
