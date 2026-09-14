@@ -6,7 +6,8 @@ import type { Route } from "next";
 import { ChevronRightIcon, PrinterIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { ChecklistItemRow } from "@/components/checklist/ChecklistItemRow";
+import { TodoRow } from "@/components/checklist/TodoRow";
+import { useTick } from "@/components/checklist/use-tick";
 import {
   CompleteItemDialog,
   type CompletableItem,
@@ -101,6 +102,16 @@ export function UpcomingList({
   }
 
   const [next, ...rest] = entries;
+  // Cocher en un geste depuis le plan de travail (E20-2) : la date, la personne et les heures
+  // sont connues, donc aucune n'est demandée. Le dialogue ne revient que pour un compteur
+  // qu'aucun relevé ne donne, parce que la base l'exige alors (`check_completion_hours`).
+  const { tick, busy } = useTick(boatId, {
+    currentUserName,
+    onTicked: (row, ticked) => onCompleted(toCompletable(row, engineReadDates), ticked),
+    onUndone: (row) => onUndone(toCompletable(row, engineReadDates)),
+    onNeedsCounter: (row) => setCompleting(toCompletable(row, engineReadDates)),
+  });
+
   const groups = useMemo(() => groupQueue(rest, today), [rest, today]);
 
   function renderEntry(entry: UpcomingEntry) {
@@ -147,15 +158,14 @@ export function UpcomingList({
       );
     }
     return entry.kind === "item" ? (
-      <ChecklistItemRow
+      // La même ligne que la checklist (E20-1) : un seul dessin de ligne dans l'app, le titre
+      // sur toute la largeur, l'échéance en toutes lettres et la case qui coche en un geste.
+      <TodoRow
         key={entryKey(entry)}
         row={entry.row}
-        withCategory
-        compact
         href={categoryPath(boatId, entry.row.categoryId)}
-        onDone={
-          canContribute ? (row) => setCompleting(toCompletable(row, engineReadDates)) : undefined
-        }
+        onTick={canContribute ? tick : undefined}
+        busy={busy === entry.row.id}
       />
     ) : (
       <ListRow

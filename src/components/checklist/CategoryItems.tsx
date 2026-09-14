@@ -8,7 +8,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { ChevronLeftIcon, Trash2Icon } from "lucide-react";
 
-import { ChecklistItemRow } from "@/components/checklist/ChecklistItemRow";
+import { TodoRow } from "@/components/checklist/TodoRow";
+import { useTick } from "@/components/checklist/use-tick";
 import {
   CompleteItemDialog,
   type CompletableItem,
@@ -237,6 +238,20 @@ export function CategoryItems({
     forget(completionId);
   }
 
+  // Cocher en un geste, ici comme sur la porte (E20-2). La superposition optimiste est celle
+  // que le dialogue alimentait déjà : une réalisation cochée est une réalisation, d'où qu'elle
+  // vienne, et « Annuler » la retire du même endroit.
+  const { tick, busy } = useTick(boatId, {
+    currentUserName,
+    onTicked: (row, ticked) => onCompleted(toCompletable(row, engineReadDates), ticked),
+    onUndone: (row) => {
+      for (const [completionId, entry] of added) {
+        if (entry.itemId === row.id) forget(completionId);
+      }
+    },
+    onNeedsCounter: (row) => setCompleting(toCompletable(row, engineReadDates)),
+  });
+
   function canDelete(completion: CompletionRow): boolean {
     if (canWrite) return true;
     if (!canContribute || completion.createdBy !== currentUserId) return false;
@@ -278,14 +293,16 @@ export function CategoryItems({
     const shown = showAll.has(row.id) ? history : history.slice(0, HISTORY_PREVIEW);
     return (
       <div key={row.id} className={cn(open && "bg-surface-2")}>
-        <ChecklistItemRow
+        {/* La même ligne que la porte (E20-1) : le titre d'abord, l'échéance en toutes lettres
+            dessous, et la case de 44 px qui coche en un geste. La page d'un système écrivait
+            « dans 365 j » — une durée que personne ne lit en jours. */}
+        <TodoRow
           row={row}
-          onClick={() => setExpanded(open ? null : row.id)}
-          onDone={
-            canContribute
-              ? (target) => setCompleting(toCompletable(target, engineReadDates))
-              : undefined
-          }
+          onOpen={() => setExpanded(open ? null : row.id)}
+          open={open}
+          onTick={canContribute ? tick : undefined}
+          busy={busy === row.id}
+          withCategory={false}
         />
         {open ? (
           <div className="flex flex-col gap-5 border-b border-border px-4 pt-2 pb-5 sm:pl-[calc(1rem+6rem+0.75rem)]">
