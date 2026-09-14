@@ -44,6 +44,8 @@ const suggestion: InboxSuggestion = {
   notes: "Vidange et filtre.",
   checklistItemId: null,
   validUntil: null,
+  documentFamily: "maintenance_invoice" as const,
+  batch: [],
   confidence: "high",
   warnings: [],
 };
