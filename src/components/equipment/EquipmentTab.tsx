@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useTranslations } from "next-intl";
 import { PackageIcon } from "lucide-react";
 
+import { BoatModel3D, type BoatModelData } from "@/components/boat-3d/BoatModel3D";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ListRow } from "@/components/common/ListRow";
@@ -32,6 +33,10 @@ export type EquipmentSummary = {
   categoryId: string | null;
   installedAt: string | null;
   removedAt: string | null;
+  /** Seed reference, when the line came from one: the 3D model routes on it (E2-8). */
+  externalRef?: string | null;
+  /** Free key/value pairs: sail areas and fittings the 3D model draws from (E2-8). */
+  specs?: Readonly<Record<string, unknown>> | null;
 };
 
 export type CategorySummary = {
@@ -39,6 +44,8 @@ export type CategorySummary = {
   name: string;
   color: string;
   icon: string | null;
+  /** The template's own word for the system (`sails_rigging`…): what the 3D model routes on. */
+  externalRef?: string | null;
 };
 
 /** Everything the stock section needs, read by the page and handed down as plain props. */
@@ -71,15 +78,20 @@ function meta(item: EquipmentSummary, quantityLabel: (count: number) => string):
  */
 export function EquipmentTab({
   boatId,
+  boatName,
   items,
   categories,
   stock,
+  model,
   canWrite,
 }: {
   boatId: string;
+  boatName: string;
   items: EquipmentSummary[];
   categories: CategorySummary[];
   stock: StockData;
+  /** The 3D model of the boat and what each of its places owes (E2-8). */
+  model: BoatModelData;
   canWrite: boolean;
 }) {
   const t = useTranslations("equipment");
@@ -111,7 +123,12 @@ export function EquipmentTab({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      {/* « À racheter » first, when there is anything to buy back (D63): the parts at or under
+      {/* The boat itself, first (D117): the inventory below answers « qu'y a-t-il à bord », the
+          model answers « où, et qu'est-ce qu'il y a à y faire ». It is the one block of this
+          screen that is worth the fold. */}
+      <BoatModel3D boatId={boatId} boatName={boatName} data={model} />
+
+      {/* « À racheter » next, when there is anything to buy back (D63): the parts at or under
           their threshold, as a checklist to tick off before the next outing. Derived from the
           same stock shown below — one source of truth, never a second entry. */}
       {stock.lowParts.length > 0 ? (

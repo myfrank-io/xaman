@@ -4,7 +4,9 @@ import { BoatIdentity } from "@/components/boat/BoatIdentity";
 import { BoatTabs } from "@/components/boat/BoatTabs";
 import { isBoatTab, type BoatTab } from "@/components/boat/tabs";
 import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab";
+import type { BoatModelData } from "@/components/boat-3d/BoatModel3D";
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
+import type { ChecklistState } from "@/lib/checklist-status";
 import { applyStockFilter, countLowStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
 import { inboundDomain } from "@/lib/inbox/receive";
@@ -18,6 +20,12 @@ import { createClient } from "@/lib/supabase/server";
  * Boat screen (tab 4, D34, D37): the identity is the heading, then two lists — the engines
  * and, with the equipment, the spare-parts stock. The tab is kept in the URL.
  */
+/** `equipment.specs` is jsonb: anything could be in there, so only a plain object survives. */
+function specsRecord(specs: unknown): Record<string, unknown> | null {
+  if (!specs || typeof specs !== "object" || Array.isArray(specs)) return null;
+  return specs as Record<string, unknown>;
+}
+
 export default async function BoatPage({
   params,
   searchParams,
@@ -35,6 +43,7 @@ export default async function BoatPage({
     { data: linkedItems },
     { data: equipment },
     { data: categories },
+    { data: statuses },
     allParts,
     models,
   ] = await Promise.all([
@@ -57,17 +66,28 @@ export default async function BoatPage({
       .not("engine_id", "is", null),
     supabase
       .from("equipment")
-      .select("id, name, brand, model, quantity, category_id, installed_at, removed_at")
+      .select(
+        "id, name, brand, model, quantity, category_id, installed_at, removed_at, external_ref, specs",
+      )
       .eq("boat_id", boatId)
       .is("deleted_at", null)
       .order("sort_order")
       .order("name"),
     supabase
       .from("boat_categories")
-      .select("id, name, color, icon")
+      // `external_ref` is what routes a system to a place of the 3D model (E2-8): it is the
+      // template's own word (`sails_rigging`…), stable across boats, unlike the display name.
+      .select("id, name, color, icon, external_ref")
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
+    // What is due, per point: the model turns it into « ce qu'il y a à faire » on each place.
+    supabase
+      .from("checklist_item_status")
+      .select(
+        "id, label, status, days_remaining, hours_remaining, category_id, engine_id, engine_tracks_hours",
+      )
+      .eq("boat_id", boatId),
     // The spare-parts stock lives in this tab now (D34): read it with the equipment, enriched
     // with its system and supplier names by the shared loader the checklist screen uses too.
     loadStockItems(supabase, boatId),
@@ -120,9 +140,53 @@ export default async function BoatPage({
     categoryId: item.category_id,
     installedAt: item.installed_at,
     removedAt: item.removed_at,
+    externalRef: item.external_ref,
+    // `specs` is what tells the 3D model this boat has 88 m² of mainsail and its panels on the
+    // davits (E2-8): free pairs, read as text, never trusted to be of any shape.
+    specs: specsRecord(item.specs),
   }));
 
   const stockFilter: StockFilter = low === "1" ? "low" : "all";
+
+  // The 3D model (E2-8, D117): the boat's own shape, its systems and what each of them owes.
+  const model: BoatModelData = {
+    shape: {
+      type: boat.type,
+      lengthM: boat.length_m,
+      beamM: boat.beam_m,
+      draftM: boat.draft_m,
+      engines: engineRows
+        .filter((engine) => engine.isActive)
+        .map((engine) => ({ id: engine.id, position: engine.position })),
+    },
+    categories: (categories ?? []).map((category) => ({
+      id: category.id,
+      externalRef: category.external_ref,
+    })),
+    equipment: equipmentRows
+      .filter((item) => !item.removedAt)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        brand: item.brand,
+        model: item.model,
+        quantity: item.quantity,
+        categoryId: item.categoryId,
+        externalRef: item.externalRef,
+        specs: item.specs,
+      })),
+    points: (statuses ?? []).map((row) => ({
+      id: row.id ?? "",
+      label: row.label ?? "",
+      state: (row.status ?? "never") as ChecklistState,
+      daysRemaining: row.days_remaining,
+      hoursRemaining: row.hours_remaining,
+      hasCounter: row.engine_tracks_hours ?? true,
+      categoryId: row.category_id,
+      engineId: row.engine_id,
+    })),
+    engines: engineRows.map((engine) => ({ id: engine.id, label: engine.label })),
+  };
 
   // `?tab=identity` still arrives from an old link: it now lands on the default list, with
   // the identity right above it (D37).
@@ -167,6 +231,8 @@ export default async function BoatPage({
             lowCount: countLowStock(allParts),
             totalCount: allParts.length,
           }}
+          model={model}
+          boatName={boat.name}
           canWrite={can(boatRole, "write")}
         />
       ) : null}
