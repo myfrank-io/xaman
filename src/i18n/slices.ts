@@ -116,7 +116,7 @@ export const BOAT_SECTIONS = {
     "validation",
   ],
   dashboard: [
-    // La maquette 3D est le bloc « consulter mon bateau » de l'écran d'arrivée (D124) : ses mots
+    // La maquette 3D est le bloc « consulter mon bateau » de l'écran d'arrivée (D127) : ses mots
     // voyagent donc avec ceux du tableau de bord, comme ils voyagent avec l'onglet Bateau.
     "boat3d",
     "checklist",

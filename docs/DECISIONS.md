@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D125.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D128.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2800,9 +2800,126 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+## 2026-09-14 — D122 : le plan se compose par trigger, et un point ne se supprime jamais
+
+**Question.** E17-5 doit recomposer le plan « à l'ajout et au dépôt d'un équipement ». Où mettre ce
+déclenchement, et que faire des points d'un équipement qui s'en va ?
+
+**Décision — un trigger, pas les Server Actions.** `equipment_plan_sync` sur `equipment` (after
+insert or update de `kind_id`, `brand`, `model`, `category_id`, `removed_at`, `deleted_at`).
+
+**Raison.** Un équipement entre par plus d'une porte : le formulaire, le document validé (D91), le
+seed, l'import — et E17-1/E17-2 en ouvriront une de plus. Une Server Action qui appelle la
+composition est une ligne que la porte suivante oubliera. La règle 8 met déjà la logique de
+checklist en base. Et l'autorité du trigger n'est pas un supplément : pour qu'il se déclenche,
+l'appelant a dû passer les politiques d'`equipment`, qui demandent `can_write_boat` — exactement ce
+que demandent celles de `checklist_items`.
+
+**Décision — un point n'est jamais supprimé, il est désactivé.** Équipement déposé ou mis à la
+corbeille → `is_active = false` ; il revient → `is_active = true` ; il est purgé pour de bon → le
+point reste, `equipment_id` à `null`.
+
+**Raison.** `checklist_completions` est en `on delete cascade` sur `checklist_items` : supprimer un
+point emporterait la trace du travail réellement fait. Un carnet vaut par ce qu'il atteste ; perdre
+« turbine changée en 2024 » parce que le chauffage a été déposé en 2027 serait détruire la seule
+chose qu'on lui demande de garder. La vue `checklist_item_status` filtre déjà `is_active`, donc la
+désactivation retire le point de la checklist et des compteurs sans une ligne d'interface.
+
+**Décision — pas de système, pas de point.** Si ni l'équipement ni sa famille ne désignent un
+système du bateau, ses règles sont sautées.
+
+**Raison.** Un point ne peut pas exister sans système (`category_id` est `not null`), et le ranger
+sous celui qui vient en premier mettrait l'entretien du chauffage dans « Sécurité ». Ne rien
+proposer est le même choix qu'en E17-3 : ne rien trouver est une réponse.
+
+**Décision — l'ancrage est `current_date`**, comme `apply_checklist_template`, et non
+`installed_at`. Ancrer sur la date de pose ferait arriver un chauffage de 2019 avec vingt points
+déjà en retard, alors que le carnet ne dit pas que l'entretien n'a pas été fait — il dit qu'il n'a
+pas été noté. D113 : le carnet gagne, mais ce qu'il ne sait pas, il ne l'affirme pas.
+
+## 2026-09-14 — D123 : les aides de rôle répondent faux, jamais « on ne sait pas »
+
+**Question.** En testant la garde d'`apply_maintenance_rules`, un étranger — membre d'aucun bateau —
+passait au travers. Pourquoi, et jusqu'où ça va ?
+
+**Constat.** `can_write_boat` lisait `boat_role(p_boat_id) in ('owner','editor')`. `boat_role` est
+`null` pour un non-membre, `null in (…)` vaut `null`, donc l'aide répondait **`null`**. Toute garde
+écrite
+
+```
+if not public.can_write_boat(p_boat_id) then raise exception 'forbidden' …
+```
+
+évaluait alors `not null` → `null`, ne prenait pas la branche, et laissait l'appelant entrer. Il y a
+**six gardes de cette forme** dans le dépôt — `apply_checklist_template` comprise — et elles sont
+toutes `security definer` : la RLS n'était pas là pour rattraper ce que la garde laissait passer.
+`can_contribute_boat` et `is_boat_owner` avaient la même forme ; `is_boat_member`, écrite avec
+`exists`, répondait déjà faux.
+
+Les **politiques** n'ont jamais été exposées : un `using` à `null` vaut faux pour la RLS. C'est
+précisément ce qui a fait durer la chose — la matrice RLS était verte, et elle avait raison.
+
+**Décision.** Corriger à la racine plutôt que dans six branches : les trois aides renvoient
+`coalesce(…, false)`. `null` n'a jamais voulu dire « autorisé », donc rien ne change pour qui
+passait légitimement. `tests/unit/rls.test.ts` refuse désormais un `null` sur les quatre aides,
+vérifie que les quatre rôles obtiennent toujours la même réponse qu'avant, et vérifie que la garde
+d'`apply_checklist_template` se déclenche bien pour un étranger.
+
+**Raison.** Une correction par garde en oublierait une, et la prochaine garde écrite reprendrait la
+forme dangereuse. Une aide qui répond « on ne sait pas » à « a-t-il le droit ? » est le vrai défaut.
+
+## 2026-09-14 — D124 : un document de bateau rend un lot, et chaque ligne dit d'où elle tient son droit
+
+**Question.** « À valider » sait lire une facture, un ticket et un papier daté : trois documents qui
+produisent **une** ligne. Un bon de livraison, un devis, une expertise ou une fiche de courtier
+n'en produisent pas une — ils décrivent un bateau. Que doit rendre la lecture, et avec quelles
+garanties ?
+
+**Décision — un lot, et la famille avant le contenu.** La lecture gagne deux champs :
+`documentFamily`, parmi les seize familles de `AUTOPILOT.md §2.1`, **reconnue avant de lire le
+contenu** ; et `batch`, jusqu'à 80 lignes, chacune d'un des quatre types — équipement,
+fournisseur, identité, échéance.
+
+**Raison.** `§2.3` règle 1 : un devis, un bon de livraison et une expertise ne produisent ni les
+mêmes lignes ni la même confiance. Un bon de livraison referme la question de l'inventaire ; un
+devis dit seulement ce que quelqu'un a voulu un an plus tôt (D113). L'écran d'E17-2 ne peut
+expliquer pourquoi une ligne arrive cochée que s'il sait de quelle famille elle vient.
+
+**Décision — le statut décide de la case, pas la lecture.** Chaque ligne porte un `status` lu sur
+le document : `fitted`, `retained`, `optional`, `cancelled`, `removed`, `unknown`. Seuls `fitted`
+et `retained` arrivent **cochés** (`INBOX_CHECKED_STATUSES`). `unknown` est délibérément dehors.
+
+**Raison.** `§2.3` règle 4. Lire la colonne des statuts est la différence entre un inventaire et
+une liste de souhaits : un devis imprime des options retenues, des options écartées et des lignes
+barrées, et les écrire toutes donnerait au bateau un équipement qu'il n'a jamais porté. Et une
+ligne dont personne n'a pu lire le statut n'est pas une raison d'écrire dans le carnet de
+quelqu'un.
+
+**Décision — la date voyage avec la ligne.** `documentDate` est porté **par ligne**, et une ligne
+sans date propre hérite de celle du document.
+
+**Raison.** `§2.3` règle 2. Un bon de livraison date tout son inventaire d'un coup ; une expertise
+date ses réserves une par une. C'est la date qui justifie la ligne, donc elle doit être à côté
+d'elle quand quelqu'un décide de la cocher — pas en haut de l'écran.
+
+**Décision — ce qui ne tient pas est jeté, pas affiché.** Une référence de famille ou de système
+que le bateau n'a pas devient `null` ; une ligne qui ne dit pas ce que son propre type exige — une
+échéance sans date de fin, une identité sans champ, un fournisseur sans nom — est **retirée du
+lot**.
+
+**Raison.** Une ligne vide sur l'écran « ce que j'ai lu » est pire qu'une ligne de moins : elle
+demande une décision sur rien.
+
+**Le lecteur local ne joue pas** (D92). Il ne nomme aucune famille et ne rend aucun lot.
+Reconnaître un bon de livraison d'un devis est un jugement sur une page, pas un motif dans son
+texte, et une famille fausse expliquerait une ligne avec la mauvaise autorité — précisément ce que
+la famille existe pour bien dire. `unknown` est sa réponse honnête.
+
+**Ce ticket n'écrit rien.** E17-1 est le contrat de lecture ; l'écran, la contradiction affichée
+côte à côte et « Tout ajouter » sont E17-2.
 
 
-## 2026-09-14 — D122 : ce qui attend sans échéance entre quand même dans la file
+## 2026-09-14 — D125 : ce qui attend sans échéance entre quand même dans la file
 
 **Question.** Un document arrivé dans « À valider » et une pièce passée sous son seuil attendent
 une personne exactement comme un point en retard. Ni l'un ni l'autre ne porte de date. La file,
@@ -2842,7 +2959,7 @@ tests qui s'en servaient comme sonde interrogent maintenant ce que l'écran lit 
 moteurs sans relevé sur leurs tables, le stock bas sur la file elle-même.
 
 
-## 2026-09-14 — D123 : le fil dit ce qui a eu lieu, jamais ce qui a été défait
+## 2026-09-14 — D126 : le fil dit ce qui a eu lieu, jamais ce qui a été défait
 
 **Question.** E18-1 a retiré de l'écran d'arrivée les trois blocs qui résumaient d'autres onglets.
 À leur place vient « Ce qui a bougé » — le fil partagé du carnet. Que met-on dedans, et que n'y
@@ -2877,7 +2994,7 @@ la dernière visite sans se transformer en journal. Le reste est sur `/activity`
 pages de cinquante — jamais de défilement infini sur une liste qu'on lit à l'envers (E3-2).
 
 
-## 2026-09-14 — D124 : l'écran d'arrivée nomme deux actes, puis ouvre deux portes
+## 2026-09-14 — D127 : l'écran d'arrivée nomme deux actes, puis ouvre deux portes
 
 **Question.** Capture de production, carnet de Xaman, file vide : l'écran est un en-tête suivi de
 « Rien à faire dans les 30 prochains jours ». Joseph : « ici on peut scinder en 2 : Ajouter une

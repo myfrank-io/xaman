@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { newChecklistItemPath, newLogPath } from "@/lib/queries/boat-routes";
 
 /**
- * Les deux actes de l'écran d'arrivée, séparés par le temps du verbe (E18-13, D124).
+ * Les deux actes de l'écran d'arrivée, séparés par le temps du verbe (E18-13, D127).
  *
  * Il n'y en avait qu'un — « Noter une intervention », c'est-à-dire ce qui est **déjà fait**.
  * Se souvenir de « changer l'anode au printemps » obligeait à ouvrir la Checklist et à y trouver

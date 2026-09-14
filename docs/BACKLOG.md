@@ -305,11 +305,11 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
   qui écrit `boats.navigation_zone` — et faire passer un carnet de côtier à hauturier **réapplique
   le plan** (`updateBoat`). Cela appartient au lot de la lecture d'inventaire (E17-1, E17-2), avec
   la même règle : proposé, décoché, jamais écrit sans un tap.
-- [ ] **E17-1 (M, 3)** Lire un document de bateau : reconnaissance de la famille (`AUTOPILOT.md §2.1`), sortie en **lot**, statut et date portés ligne à ligne.
+- [x] **E17-1 (M, 3)** **Lire un document de bateau** (D124). La lecture gagne `documentFamily` — les **seize familles** d'`AUTOPILOT.md §2.1`, reconnue **avant** le contenu — et `batch`, jusqu'à 80 lignes de quatre types : équipement, fournisseur, identité, échéance. Chaque ligne porte son **statut** lu sur le document (`fitted` / `retained` / `optional` / `cancelled` / `removed` / `unknown`) et **sa date**, héritée du document quand elle n'en a pas — seuls `fitted` et `retained` arriveront cochés (`INBOX_CHECKED_STATUSES`). La normalisation annule une famille ou un système que le bateau n'a pas, respecte les quantités (règle 6), garde la référence chantier hors du libellé (règle 8) et **retire** une ligne qui ne dit pas ce que son type exige. Le contexte de lecture reçoit le catalogue d'`equipment_kinds`, pour rapprocher par famille et non par libellé (règle 5). Le lecteur local (D92) ne nomme aucune famille et ne rend aucun lot. **N'écrit rien** : l'écran et « Tout ajouter » sont E17-2. Tests : treize cas sur le lot et les statuts.
 - [ ] **E17-2 (M, 3)** L'écran « ce que j'ai lu » : lot groupé par système, contradiction avec le carnet affichée **et décochée** (D113), « Tout ajouter » idempotent, rapport au format E12-1.
 - [x] **E17-3 (M, 2)** **Familles d'équipement** (D115). `equipment_kinds` (`0032`) : table de référence sans `boat_id` — comme `boat_models` —, 41 familles semées d'après ce que le carnet porte réellement, RLS calquée sur le catalogue de modèles (lecture par tout compte connecté quand `is_active`, écriture par le seul admin plateforme), plus `equipment.kind_id`. Le rapprochement (`src/lib/equipment-kinds.ts`) cherche libellé et synonymes en **mots entiers** dans « nom marque modèle » et garde le terme le plus long ; il **propose** dans le formulaire et se tait dès que quelqu'un touche au champ. La fiche équipement dit la famille à côté du système. Aperçu : `/dev/ui/boat/equipment-form?new=1` monte le formulaire vide, seul état où la famille se propose. Tests : neuf cas pour le rapprochement, trois pour la RLS de la nouvelle table (règle 2), audit tactile sur les deux états.
 - [x] **E17-4 (M, 3)** **Bibliothèque `maintenance_rules`** (D116, `0033`). Table de référence sans `boat_id` comme `equipment_kinds` : une règle s'accroche à une **famille**, restreint éventuellement à une marque ou un modèle, et porte ce qu'un point de modèle porte — libellé, intervalle en mois et/ou en heures, `engine_scope` et `zone_scope` du **même vocabulaire** que `checklist_template_items` (D90), actions pas à pas — plus ses **consommables** (dans la forme que `parts` stocke, pour E17-8) et sa **source**. 49 règles sur 36 familles ; cinq familles sans aucune règle, volontairement. Trois contraintes en base : une source autre que `proposal` doit nommer sa référence (`AUTOPILOT.md §6`), une heure exige un moteur, un consommable a un nom. **Ne compose aucun plan** — c'est E17-5. Tests : onze cas sur le catalogue et ses refus, deux pour la RLS de la nouvelle table (règle 2).
-- [ ] **E17-5 (M, 3)** Le plan se compose : modèle de coque + règles des équipements présents ; `checklist_items.equipment_id` ; recalcul à l'ajout et au dépôt d'un équipement.
+- [x] **E17-5 (M, 3)** **Le plan se compose** (D122, D123, `0035`). Les deux couches d'`AUTOPILOT.md §4` deviennent un plan : `apply_maintenance_rules(boat, equipment?) returns int` (vérifie `can_write_boat`, idempotente) au-dessus de `compose_maintenance_rules` (le corps que seul le trigger appelle). `checklist_items.equipment_id` dit **ce que le point entretient** et `rule_id` **d'où il vient** — le frère de `template_item_id`, dont E17-7 aura besoin. Le système vient de l'équipement, sinon de `category_ref` de sa famille, sinon **rien n'est proposé** ; le libellé est suffixé par l'équipement, ou par le moteur quand la règle se duplique (D90) ; les règles hauturières sautent un bateau côtier. Trigger `equipment_plan_sync` : compose à l'entrée, **désactive** au dépôt et à la corbeille, réactive au retour — jamais de suppression, `checklist_completions` étant en cascade. `normalise_for_match()` en base, jumelle de `normaliseForMatch`, tenue à parité. **Au passage (D123)** : `can_write_boat`, `can_contribute_boat` et `is_boat_owner` renvoyaient `null` pour un non-membre, donc les six gardes `if not …` du dépôt ne se déclenchaient pas pour un étranger — corrigé à la racine. Tests : treize cas sur la composition et le cycle de vie, cinq sur les aides de rôle et la garde.
 - [ ] **E17-7 (S, 2)** Dégraisser `orc50-v1` de ses douze marques (`AUTOPILOT.md §1.4`) vers les règles ; migration des bateaux déjà instanciés.
 - [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
@@ -353,10 +353,10 @@ indépendants dans cet ordre : le premier se livre seul.
   **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
   `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
   390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
-- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D122). Un document « À
+- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D125). Un document « À
   valider » (D91) et une pièce sous son seuil (D84) attendaient une personne exactement comme un
   point en retard — mais le premier criait depuis un bandeau et la seconde depuis un écran qu'on
-  n'ouvre pas avant de partir. `boat_todo_queue` passe à **six rangs** (`0035`) et gagne
+  n'ouvre pas avant de partir. `boat_todo_queue` passe à **six rangs** (`0036`) et gagne
   `kind = 'inbox'` et `kind = 'part'` : le document se range dans **« Aujourd'hui »** (sa raison
   est *depuis quand* il attend, le plus ancien devant), la pièce ouvre le cinquième palier
   **« À racheter »**, en bas avec « Aux heures moteur » — les deux qui ne tombent pas avec le
@@ -368,9 +368,9 @@ indépendants dans cet ordre : le premier se livre seul.
   maintenant ce que l'écran lit vraiment (les moteurs sans relevé sur leurs tables, le stock bas
   sur la file). **Vérifié** : `pnpm db:types` commité, 153 tests RLS verts sur la base reconstruite
   (dont le rang des quatre genres), 13 cas sur les paliers, lint/format/typecheck/build verts.
-- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D123). Le bloc qui remplace les trois résumés :
+- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D126). Le bloc qui remplace les trois résumés :
   le fil partagé du carnet — points cochés, interventions terminées, achats, relevés d'heures
-  saisis à la main, sorties de l'eau — avec **qui** et **quand**. Vue `boat_activity` (`0036`),
+  saisis à la main, sorties de l'eau — avec **qui** et **quand**. Vue `boat_activity` (`0037`),
   `security_invoker`, sans table ni politique nouvelle : chaque table source décide comme sur son
   propre écran. `who` lit le **nom figé** avant le profil (D31), l'intervenant avant l'auteur. Ce
   que le fil ne montre pas est une décision, pas un oubli : ni corbeille ni modification — un
@@ -394,7 +394,7 @@ indépendants dans cet ordre : le premier se livre seul.
   imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
   le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
 
-- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D124) — signalé à
+- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D127) — signalé à
   l'usage sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à
   faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
   consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses de

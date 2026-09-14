@@ -356,6 +356,56 @@ la faute que cette table existe pour empêcher. Les sources réelles arrivent qu
 ses manuels (E17-1, E17-2). Le précédent est déjà dans le dépôt : les 93 points de l'ORC 50 sont
 semés `source: proposal` pour la même raison.
 
+### 3.10 quater — le plan se compose (E17-5, `0035`)
+
+Les deux couches de `docs/AUTOPILOT.md §4` deviennent un seul plan :
+
+> **points du modèle de coque** (`apply_checklist_template`, `0003`) **+ règles des équipements
+> présents** (`compose_maintenance_rules`, `0035`)
+
+`apply_maintenance_rules(p_boat_id, p_equipment_id default null) returns int` est la porte : elle
+vérifie `can_write_boat`, délègue, et rend le nombre de points ajoutés. Idempotente — upsert sur
+`(boat_id, external_ref)` —, donc la rejouer n'ajoute rien (règle 11).
+
+`compose_maintenance_rules` est le corps, **sans contrôle de droits et sans `execute` pour
+`authenticated`** : c'est le trigger qui l'appelle, et le trigger n'a pu se déclencher que sur une
+ligne d'`equipment` que l'appelant avait le droit d'écrire — or les politiques d'`equipment` et de
+`checklist_items` demandent exactement la même chose, `can_write_boat`.
+
+**Comment un point naît.** Pour chaque équipement vivant (`removed_at` et `deleted_at` nuls) portant
+une famille, chaque règle active de cette famille :
+
+- **Le système** : celui sous lequel l'équipage a rangé l'équipement, sinon celui où la famille vit
+  d'habitude (`equipment_kinds.category_ref` → `boat_categories.external_ref`). Si aucun ne
+  résout, **l'équipement est sauté** : un point ne peut pas exister sans système, et ranger
+  l'entretien du chauffage sous « Sécurité » serait pire que de ne rien proposer.
+- **Le libellé** : suffixé par ce qui est le sujet. `engine_scope = 'none'` → « — {nom de
+  l'équipement} », parce que deux chauffages à bord ne doivent pas donner deux lignes
+  indiscernables. Sinon → « — {libellé du moteur} », et la règle se duplique par moteur dont la
+  propulsion correspond (`engine_scope_matches`, D90), exactement comme un point de modèle.
+- **La zone** : une règle `zone_scope = 'offshore'` n'est pas appliquée à un bateau côtier (D90).
+- **La marque / le modèle** : `null` ne restreint rien ; sinon comparaison via
+  `normalise_for_match()`, **jumelle SQL** de `normaliseForMatch` (`src/lib/equipment-kinds.ts`),
+  tenue à parité par `tests/unit/plan-composition.test.ts`.
+- **`external_ref`** : `rule:{règle}:{équipement}` (+ `:{moteur}` si la règle se duplique). C'est la
+  clé de l'idempotence.
+- **`anchor_date`** : `current_date`, comme `apply_checklist_template`. Ancrer sur `installed_at`
+  ferait arriver un chauffage de 2019 avec vingt points déjà en retard — ce qui n'est pas su, le
+  carnet ne le dit pas.
+
+**Ce qui se passe quand l'équipement s'en va.** Le trigger `equipment_plan_sync` (after insert or
+update of `kind_id`, `brand`, `model`, `category_id`, `removed_at`, `deleted_at`) **désactive**
+(`is_active = false`) les points de l'équipement déposé ou mis à la corbeille, et les **réactive**
+quand il revient. Il ne les supprime **jamais** : `checklist_completions` est en `on delete cascade`
+sur `checklist_items`, donc supprimer un point emporterait la trace du travail réellement fait. Un
+équipement purgé pour de bon laisse ses points derrière lui, `equipment_id` à `null` — un carnet qui
+dit toujours que la turbine a été changée en 2024, ce qui est l'objet même de la chose.
+
+La vue `checklist_item_status` filtre déjà `where i.is_active` : la désactivation suffit à retirer
+le point de la checklist, du tableau de bord et des compteurs, sans une ligne d'interface. La vue
+n'expose pas `equipment_id` — rien ne le lit encore, et le suffixe du libellé dit déjà ce que le
+point entretient.
+
 ### 3.11 `contacts` (annuaire des intervenants)
 
 | Colonne | Type | Contraintes | Notes |
@@ -474,6 +524,8 @@ Les points sans aucun intervalle sont **autorisés** (contrôle ponctuel) : l'é
 | actions | jsonb | not null default '[]' | étapes détaillées |
 | source | checklist_item_source | not null default 'custom' | |
 | template_item_id | uuid | FK checklist_template_items, null | |
+| equipment_id | uuid | FK equipment **on delete set null**, null | ce que ce point entretient (E17-5, `0035`). Null sur un point venu du modèle de coque, et sur un point dont l'équipement a été purgé — le point et ses réalisations lui survivent |
+| rule_id | uuid | FK maintenance_rules on delete set null, null | la règle qui a produit ce point (E17-5), frère de `template_item_id` |
 | is_active | boolean | not null default true | désactivation au lieu de suppression |
 | sort_order | int | not null default 0 | |
 | external_ref | text | | seed ; pour un point dupliqué par moteur : `{item_ref}:{engine_external_ref}` (ex. `eng-oil:xaman-engine-sb`) |
@@ -746,6 +798,7 @@ Cas particuliers :
 - `boat_members` : select `can_write_boat(boat_id)` (owner + editor voient la liste) **ou** `user_id = auth.uid()` (sa propre ligne) ; insert/update/delete `is_boat_owner(boat_id)` (+ trigger dernier owner).
 - `boat_invitations` : select/insert/update `is_boat_owner(boat_id)` ; `revoke select (token) on boat_invitations from authenticated` (et, depuis `0023`, `email_id` / `delivery_detail` jamais accordés — l'état de remise l'est, pas l'identifiant du message ni le texte du fournisseur) — le client sélectionne des colonnes explicites ou la vue `boat_invitations_safe` ; la Server Action d'invitation insère avec le client utilisateur (RLS owner) puis lit le token avec la clé service pour envoyer l'e-mail.
 - `checklist_templates*` : select tout utilisateur authentifié où `is_public` ; write `is_platform_admin()`.
+- **Les aides de rôle ne renvoient jamais `null`** (E17-5, `0035`). `can_write_boat`, `can_contribute_boat` et `is_boat_owner` lisaient `boat_role(id) in (…)`, et `boat_role` est `null` pour un non-membre : l'aide répondait donc `null`, et les six gardes écrites `if not public.can_write_boat(…) then raise 'forbidden'` évaluaient `not null` → `null`, ne prenaient pas la branche et laissaient passer. Ces fonctions sont `security definer`, donc la RLS n'était pas là pour rattraper. Les **politiques** n'ont jamais été exposées (un `using` à `null` vaut faux pour la RLS) ; c'est ce qui a fait durer la chose. Les trois aides `coalesce(…, false)` désormais ; `tests/unit/rls.test.ts` refuse un `null` avant qu'il n'atteigne une garde.
 - `boat_models` : select tout utilisateur authentifié où `is_active` (ou `is_platform_admin()`) ; write `is_platform_admin()`. Catalogue publié, sans `boat_id` : aucune donnée de locataire à cloisonner.
 - `equipment_kinds` (`0032`) et `maintenance_rules` (`0033`) : même règle et même raison que `boat_models` — select tout utilisateur authentifié où `is_active` (ou `is_platform_admin()`) ; write `is_platform_admin()`. Un bateau ne peut pas tirer son plan d'une bibliothèque qu'il ne voit pas, et un intervalle faux publié là tombe sur tous les bateaux qui portent la famille : d'où la lecture ouverte et l'écriture fermée.
 - `organizations*` : V1, select/write `is_platform_admin()` uniquement.
@@ -793,9 +846,9 @@ La même logique est implémentée en TypeScript dans `src/lib/checklist-status.
 Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `purchase_kind = null`), `purchases` (`amount`, `date = purchased_at`, `source = 'purchase'`, `purchase_kind = kind`), `haul_outs` (`cost`, `date = started_at`, `source = 'haul_out'`, `purchase_kind = null`), non supprimés, montant non null. Colonnes : `boat_id`, `category_id` (null → « Non catégorisé »), `category_name`, `source`, `purchase_kind`, `date`, `amount`, `currency`, `entity_id`. Agrégation par période côté requête ; le tableau E5-5 croise `category_name` × (`source`, `purchase_kind`).
 
 ### 6.6 `boat_dashboard_stats`
-Par bateau : `review_pending_logs`, `review_pending_purchases` — et rien d'autre depuis `0035`. La vue portait onze sous-requêtes corrélées (états des points, interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau, stock bas, moteurs sans relevé) ; E18-1 a retiré de l'écran les blocs qui les lisaient, et ce qu'il reste à demander à la base est le compte du bandeau « lignes importées à vérifier ». Ce que les autres colonnes disaient se lit là où il se montre : la file (`boat_todo_queue`) pour ce qui attend, `checklist_category_progress` pour les points, `expenses_by_category` pour l'argent, les tables elles-mêmes pour la sortie de l'eau et les compteurs.
+Par bateau : `review_pending_logs`, `review_pending_purchases` — et rien d'autre depuis `0036`. La vue portait onze sous-requêtes corrélées (états des points, interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau, stock bas, moteurs sans relevé) ; E18-1 a retiré de l'écran les blocs qui les lisaient, et ce qu'il reste à demander à la base est le compte du bandeau « lignes importées à vérifier ». Ce que les autres colonnes disaient se lit là où il se montre : la file (`boat_todo_queue`) pour ce qui attend, `checklist_category_progress` pour les points, `expenses_by_category` pour l'argent, les tables elles-mêmes pour la sortie de l'eau et les compteurs.
 
-### 6.6 bis `boat_activity` (le fil du carnet — D123, `0036`)
+### 6.6 bis `boat_activity` (le fil du carnet — D126, `0037`)
 Union de cinq faits, `security_invoker` (chaque table source décide, comme sur son propre écran) :
 cochages (`checklist_completions`), interventions **terminées** non supprimées, achats non
 supprimés, relevés d'heures **saisis à la main** (`source = 'manual'` : ceux que l'app dérive d'une
@@ -807,7 +860,7 @@ Colonnes : `boat_id`, `kind ('completion'|'log'|'purchase'|'reading'|'haul_out')
 (`completed_by_name`, D31) avant le profil, et l'intervenant avant l'auteur sur une intervention,
 un achat ou une sortie de l'eau. Tri de lecture : `happened_at desc, recorded_at desc`.
 
-Ce que la vue **ne porte pas** : les lignes à la corbeille et les modifications (D123). Le fil dit
+Ce que la vue **ne porte pas** : les lignes à la corbeille et les modifications (D126). Le fil dit
 ce que le bateau a vécu, pas ce qui a été défait.
 
 ### 6.7 `checklist_template_catalog`
@@ -888,10 +941,10 @@ Fonction `stable`, **security invoker** (la RLS de l'appelant s'applique : un é
 |---|---|---|
 | 0 | interventions `urgent` | `performed_at` (la plus ancienne d'abord) |
 | 1 | points `overdue` | `-severity` — **retard relatif** `greatest((today − due_at)/max(interval_months×30, 30), (current_hours − due_hours)/max(interval_hours, 25))` |
-| 2 | documents `received` / `analysing` / `ready` de « À valider » (D122) | `received_at` (le plus ancien d'abord) |
+| 2 | documents `received` / `analysing` / `ready` de « À valider » (D125) | `received_at` (le plus ancien d'abord) |
 | 3 | interventions `in_progress` puis `planned` dont `performed_at ≤ today + 30 j` | `+1 000 000` pour `planned`, puis `performed_at` |
 | 4 | points `soon` | `least(days_remaining, hours_remaining × 1,2)` — 1 h moteur ≈ 1,2 jour (seuils 30 j / 25 h) |
-| 5 | pièces sous leur seuil, corbeille exclue (D10, D122) | `-severity` — ce qui manque (`min_quantity − quantity`), le stock le plus court d'abord |
+| 5 | pièces sous leur seuil, corbeille exclue (D10, D125) | `-severity` — ce qui manque (`min_quantity − quantity`), le stock le plus court d'abord |
 
 Colonnes : `rank, kind ('log'|'item'|'inbox'|'part'), id, title, category_id, category_name, category_color, engine_id, engine_label, status, due_at, due_hours, days_remaining, hours_remaining, severity, sort_key`. Pour une intervention, `due_at = performed_at` et `days_remaining = performed_at − current_date`. Pour un document, `due_at` porte le **jour d'arrivée** et `days_remaining` reste nul : un papier n'est pas en retard, il est sans réponse. Pour une pièce, tout ce qui est daté est nul et `severity` dit ce qui manque. **Les points `never` sont exclus** : au lancement les ~90 points de la checklist ORC 50 sont tous « jamais faits » et noieraient la file.
 
@@ -921,10 +974,10 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
-- **0036** (D123) : vue `boat_activity`, le fil partagé du carnet — cinq faits, aucune table,
+- **0037** (D126) : vue `boat_activity`, le fil partagé du carnet — cinq faits, aucune table,
   aucune politique (`security_invoker`). Les tests RLS couvrent les trois choses qu'une union peut
   rater : un membre lit, un étranger ne lit rien, une ligne mise à la corbeille sort du fil.
-- **0035** (D122) : `boat_todo_queue` passe à six rangs — les documents qui attendent une décision et les pièces sous leur seuil entrent dans la file, avec `kind = 'inbox'` et `kind = 'part'` —, et `boat_dashboard_stats` est refaite à deux colonnes (drop + create : la liste change). Aucune table, aucune politique : les deux objets sont `security_invoker`, donc la RLS de `inbox_items` et de `parts` décide comme avant.
+- **0036** (D125) : `boat_todo_queue` passe à six rangs — les documents qui attendent une décision et les pièces sous leur seuil entrent dans la file, avec `kind = 'inbox'` et `kind = 'part'` —, et `boat_dashboard_stats` est refaite à deux colonnes (drop + create : la liste change). Aucune table, aucune politique : les deux objets sont `security_invoker`, donc la RLS de `inbox_items` et de `parts` décide comme avant.
 - **0034** (D118) : table `maintenance_log_categories` (les systèmes d'une intervention) avec ses politiques et son trigger de cohérence de bateau, reprise des lignes existantes depuis `maintenance_logs.category_id`, et `maintenance_logs_view` qui gagne `category_ids` — **en dernière colonne**, parce qu'un `create or replace view` ne sait qu'ajouter à la fin. `category_id` ne change ni de sens ni de valeur : c'est le système principal, et tout ce qui le lisait continue.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés
