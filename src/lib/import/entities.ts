@@ -39,6 +39,42 @@ export function cellNumber(value: string | undefined): number | null {
 }
 
 /** Accepts 12/03/2026, 12-03-2026 and 2026-03-12; anything else is rejected as a date. */
+/**
+ * « surface_m2: 88 ; tissu: Hydranet » → `{ surface_m2: "88", tissu: "Hydranet" }`.
+ *
+ * The free pairs of `equipment.specs` (E2-8): what the maquette reads to say « 88 m² · Hydranet »
+ * and what the builder's own document is full of. Separated by `;` or a newline, the key from the
+ * value by `:` or `=`. A key with no value is dropped — half a pair says nothing — and a key is
+ * folded to the carnet's own shape (lower case, spaces to underscores) so `Surface m2`,
+ * `surface_m2` and `SURFACE M2` are one key and not three.
+ */
+export const SPEC_KEY_MAX = 60;
+export const SPEC_VALUE_MAX = 200;
+export const SPEC_PAIRS_MAX = 20;
+
+export function cellSpecs(value: string | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const pair of (value ?? "").split(/[;\n]+/)) {
+    if (Object.keys(out).length >= SPEC_PAIRS_MAX) break;
+    const at = pair.search(/[:=]/);
+    if (at < 0) continue;
+    const key = pair
+      .slice(0, at)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, SPEC_KEY_MAX);
+    const text = pair
+      .slice(at + 1)
+      .trim()
+      .slice(0, SPEC_VALUE_MAX);
+    if (!key || !text) continue;
+    out[key] ??= text;
+  }
+  return out;
+}
+
 export function cellDate(value: string | undefined): string | null {
   const text = (value ?? "").trim();
   if (text === "") return null;
@@ -489,6 +525,19 @@ export const ENTITY_DESCRIPTORS: Record<ImportEntity, EntityDescriptor> = {
         label: "Installé le",
         aliases: ["date installation", "installation", "date"],
         sample: "12/03/2019",
+      },
+      {
+        key: "specs",
+        label: "Caractéristiques",
+        aliases: [
+          "caracteristiques",
+          "specs",
+          "specifications",
+          "spécifications",
+          "details",
+          "détails",
+        ],
+        sample: "puissance_w: 1500 ; materiau: Inox",
       },
       { ...NOTES, sample: "Révisé au carénage 2025" },
     ],

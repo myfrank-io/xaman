@@ -47,6 +47,7 @@ const suggestion: InboxSuggestion = {
   documentFamily: "maintenance_invoice" as const,
   batch: [],
   confidence: "high",
+  inventory: [],
   warnings: [],
 };
 

@@ -210,6 +210,7 @@ const output = {
   documentFamily: "maintenance_invoice" as const,
   batch: [],
   confidence: "high" as const,
+  inventory: [],
   warnings: [],
 };
 
@@ -588,6 +589,7 @@ describe("a card that opens on one line", () => {
     documentFamily: "maintenance_invoice" as const,
     batch: [],
     confidence: "high" as const,
+    inventory: [],
     warnings: ["local"],
   };
 
