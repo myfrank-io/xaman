@@ -321,12 +321,12 @@ Tailles dans l'échelle du backlog (1 = moins d'une demi-journée, 2 = une demi-
 | E17-9 | **Le compteur se relève en photo.** Troisième classement de « À valider » : *relevé*. Appel depuis la bande des moteurs après 60 jours sans relevé. | 2 |
 | E17-10 | **Le digest sait où on en est** : l'e-mail hebdomadaire (E9-6) devient contextuel — avant une sortie de l'eau, à J-30 d'une péremption, à l'entrée de l'hiver. | 2 |
 
-**Décisions à ouvrir** le jour où l'épique s'ouvre (numéros pris à ce moment-là, pas avant) :
+**Décisions.** La première est prise : **D113 — le carnet fait foi, un document ne l'écrase jamais**
+(§1.3). Les trois autres s'ouvriront avec l'épique, leurs numéros pris à ce moment-là :
 
-1. Un document est une pièce datée : il propose, il n'écrase jamais le carnet.
-2. Le plan d'entretien se compose de deux couches ; un modèle de bateau ne nomme jamais une marque.
-3. Un intervalle sans source constructeur est marqué « proposé » et le reste à l'écran.
-4. Le prix d'acquisition n'entre pas dans les dépenses.
+1. Le plan d'entretien se compose de deux couches ; un modèle de bateau ne nomme jamais une marque.
+2. Un intervalle sans source constructeur est marqué « proposé » et le reste à l'écran.
+3. Le prix d'acquisition n'entre pas dans les dépenses.
 
 ---
 
@@ -352,11 +352,15 @@ tapés à la main pour ce bateau-ci**, donc manqueront à tout autre bateau port
 | **Tablette durcie Sailproof** | Charge, étanchéité, mise à jour | 12 m | **Non** |
 | **Roof et cloisons carbone** | Laquage, liaisons, inspection de délaminage | 12 m | **En partie** (le point ne couvre que la traverse et les poutres) |
 
-Et ce que les documents du §2 remplissent hors checklist : les six fiches d'annuaire aujourd'hui à
-`"name": "TODO"` (le chantier constructeur figure en pied de page du spécimen, avec téléphone et
-e-mail), le numéro de coque, l'année, et les deux adresses e-mail que **E8-1** attend — l'un des
-deux seuls tickets Must encore intouchés avec la QA iPad E9-4. Le modèle exact des Yanmar, lui,
-est dans le **descriptif technique standard** (D3), pas dans la STB.
+Et ce que les documents du §2 remplissent hors checklist. **Déjà appliqué au seed le 14/09**, sous
+la règle D113 et sans reporter aucune des cinq divergences du §1.3 : le contact **Marsaudon
+Composites** (le pied de page du spécimen porte adresse, téléphone et e-mail), six
+`specs.ref_chantier` sur les équipements dont la désignation correspond mot pour mot à la ligne du
+chantier, et les références du dossier dans les notes du bateau. **Reste ouvert dans E8-1** : les
+deux adresses e-mail de Xavier et Emmanuel — celles du document datent de 2023, des comptes réels
+existent en production, et le seed *invite* l'adresse qu'il lit ; les cinq autres intervenants ;
+`flag`, `home_port`, `year` ; et le modèle exact des Yanmar, qui est dans le **descriptif technique
+standard** (D3), pas dans la STB.
 
 ---
 
