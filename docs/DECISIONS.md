@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D132.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D137.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3249,6 +3249,121 @@ savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu 
 vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
 flottaison.
 
+## 2026-09-14 — D131 : ce qui attend sans échéance entre quand même dans la file
+
+**Question.** Un document arrivé dans « À valider » et une pièce passée sous son seuil attendent
+une personne exactement comme un point en retard. Ni l'un ni l'autre ne porte de date. La file,
+elle, ne classait que ce qui en avait une — alors le document criait depuis un bandeau et la pièce
+attendait sur un écran que personne n'ouvre avant de partir.
+
+**Décision.** Les deux entrent dans la file (`boat_todo_queue`, `0035`), chacun avec son geste :
+
+- un **document** se range dans **« Aujourd'hui »**. Il n'a pas d'échéance, il a une *durée
+  d'attente* : sa ligne dit le jour où il est arrivé, le plus ancien passe devant, et le rang 2 le
+  place juste après les points en retard. C'est exactement ce que le bandeau disait, à ceci près
+  qu'une ligne se traite et qu'une bannière se lit ;
+- une **pièce** sous son seuil ouvre un cinquième palier, **« À racheter »**, tout en bas. Elle ne
+  tombe pas un jour : elle tombe quand on ira au shipchandler. Sa raison est ce qui manque
+  (`min_quantity − quantity`), et le stock le plus court passe devant — une boîte vide avant une
+  boîte à moitié.
+
+**Le bandeau perd son cas « documents ».** Il ne reste que ce qui n'est pas une ligne de travail :
+la mise en route inachevée, les lignes importées à vérifier, les compteurs jamais saisis.
+
+**Raison.** La file est la primitive du produit (D121) : *un objet, une raison datée, un geste*. La
+raison n'a jamais eu à être un calendrier — « depuis 3 jours » et « il en manque 2 » sont des
+raisons, et ce sont même les deux plus faciles à traiter. Ce qui compte est qu'elles se résolvent
+en un geste, et que la personne n'ait pas à se souvenir d'aller voir ailleurs. Un bandeau qui
+compte des documents demande précisément ce souvenir-là.
+
+**Les deux paliers sans calendrier sont en bas, et c'est un choix.** « Aux heures moteur » et
+« À racheter » ne se convertissent pas en jours : la conversion de la file (1 h ≈ 1,2 j) est une
+supposition sur la façon de naviguer, et une supposition sous un titre de semaine se lit comme un
+fait. Ils restent donc à part, après tout ce que le calendrier sait dater.
+
+**Ce que ça enlève à la base.** `boat_dashboard_stats` est refaite à deux colonnes — les comptes
+du bandeau. E18-1 avait retiré de l'écran les blocs qui lisaient les onze autres (états des points,
+interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau, stock bas, moteurs
+sans relevé) : elles étaient recalculées à chaque rendu de l'écran d'arrivée pour personne. Deux
+tests qui s'en servaient comme sonde interrogent maintenant ce que l'écran lit vraiment — les
+moteurs sans relevé sur leurs tables, le stock bas sur la file elle-même.
+
+## 2026-09-14 — D132 : le fil dit ce qui a eu lieu, jamais ce qui a été défait
+
+**Question.** E18-1 a retiré de l'écran d'arrivée les trois blocs qui résumaient d'autres onglets.
+À leur place vient « Ce qui a bougé » — le fil partagé du carnet. Que met-on dedans, et que n'y
+met-on pas ?
+
+**Décision.** Le fil montre **les faits du carnet** : un point coché, une intervention terminée, un
+achat, un relevé d'heures saisi à la main, une sortie de l'eau — avec **qui** l'a fait et **quand**.
+Une vue, `boat_activity` (`0036`), unit ces cinq tables ; elle est `security_invoker`, donc chaque
+table décide de ce qui est lisible exactement comme sur l'écran où le fait se montre déjà.
+
+**Ce qu'il ne montre pas.** Les mises à la corbeille et les modifications. Ce n'est pas un journal
+d'audit, c'est ce que le bateau a vécu : une ligne à la corbeille sort du fil comme elle sort des
+listes, et c'est vérifié. Un carnet qui afficherait « Xavier a supprimé… » changerait de nature —
+il deviendrait une surveillance entre associés, et la confiance qu'on lui demande est l'inverse.
+
+**Les relevés dérivés n'y sont pas non plus.** Une vidange notée avec ses heures écrit un relevé
+(D5) : il est déjà dit par la ligne de l'intervention. Seuls les relevés saisis à la main
+(`source = 'manual'`) sont un acte de plus, donc une ligne de plus.
+
+**Le nom d'abord, le compte jamais.** Une ligne nomme la personne — le nom figé (D31) quand le
+compte a disparu, l'intervenant quand il y en a un, sinon celui qui a noté. C'est ce que le papier
+ne sait pas faire et que personne d'autre ne dit : *ce que l'autre a fait depuis ma dernière
+visite*. La vignette « Réglés cette semaine » qui comptait ces actes est partie avec E18-1 ; un
+compte n'a jamais dit qui.
+
+**Les lignes du fil ne mènent nulle part, et c'est voulu.** Un fait n'est pas une porte. Un relevé
+d'heures n'a pas d'écran à lui, et rendre cliquable une moitié des lignes aurait fait croire que
+l'autre moitié est cassée. Les écrans sont à un tap dans la barre ; le fil, lui, se lit.
+
+**Dix lignes, puis un écran.** L'écran d'arrivée en montre dix : de quoi voir ce qui a bougé depuis
+la dernière visite sans se transformer en journal. Le reste est sur `/activity`, qui charge par
+pages de cinquante — jamais de défilement infini sur une liste qu'on lit à l'envers (E3-2).
+
+## 2026-09-14 — D133 : l'écran d'arrivée nomme deux actes, puis ouvre deux portes
+
+**Question.** Capture de production, carnet de Xaman, file vide : l'écran est un en-tête suivi de
+« Rien à faire dans les 30 prochains jours ». Joseph : « ici on peut scinder en 2 : Ajouter une
+tâche à faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en
+mode : consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses
+de maintenance ».
+
+**Décision.**
+
+**1. Écrire se scinde en deux, par le temps du verbe.** « Ajouter une tâche à faire » ouvre la
+création d'un point de checklist ; « Noter une intervention » ouvre le journal. Le carnet n'avait
+qu'une porte, celle de ce qui est **déjà fait** — et la note qu'on prend le plus souvent à bord est
+l'autre : « il faudra changer l'anode au printemps ». Elle obligeait à ouvrir la Checklist et à y
+trouver « Ajouter un point », c'est-à-dire à connaître le rangement de l'app avant de pouvoir s'en
+servir. Deux cartes, dans l'ordre où on y pense, chacune disant son objet et où elle mène.
+
+**Ce que ça renverse.** L'audit §7.3 avait posé « un contrôle nommé par viewport » pour tuer les
+deux primaires concurrents qui menaient au **même** endroit. Ici les deux ne mènent pas au même
+endroit : ils nomment deux temps. La règle tenait contre la redondance, pas contre le choix — et
+c'est bien parce qu'elles ne sont pas deux boutons primaires, mais deux cartes, que l'écran ne
+redemande pas le geste que la sidebar porte déjà.
+
+**2. « Consulter mon bateau » est la maquette.** Le bloc large sous la file est le modèle 3D d'E2-8,
+qui est déjà exactement cet objet : le bateau lui-même, ses zones, ce qu'il y a à y faire. Il
+deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). L'assemblage des lignes est **partagé**
+avec l'onglet Bateau (`toBoatModelData`) : deux assemblages auraient fini par dessiner deux bateaux
+différents du même carnet.
+
+**3. « Ce que le bateau a coûté » revient, autrement.** E18-1 avait retiré la ligne « Dépenses,
+12 derniers mois » du récapitulatif, avec les trois liens de sommaire. Elle revient comme une
+**découverte** : un montant qu'on regarde, et les trois systèmes qui le composent. C'est un
+renversement assumé de mon propre dégraissage — et il est juste : un écran qui n'a rien à faire doit
+proposer autre chose que du vide, et « où part l'argent » est la question qu'un propriétaire se pose
+sans jamais penser à ouvrir un onglet pour ça. Total et répartition comptés par la base
+(`boat_expense_totals`, D111), trois barres de part, aucun graphique (règle 10).
+
+**Ce que l'ordre de l'écran devient.** Écrire (les deux actes) · le bandeau · faire (la file) ·
+savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu dès qu'elle n'est pas
+vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
+flottaison.
+
 ## 2026-09-14 — D134 : chercher est une porte du carnet, et sept réponses à la même question
 
 **Question.** « C'était quand, la dernière courroie ? Combien ? Quelle référence ? » est la
@@ -3335,3 +3450,40 @@ page.
 **Ce que cela ne change pas.** Aucune migration : la page lit `boat_todo_queue` (E18-2) telle
 quelle, avec le même plafond de 200 lignes que le tableau de bord — une feuille qu'on emmène
 porte ce qui reste à faire, pas les vingt premières lignes.
+
+## 2026-09-14 — D136 : une colonne de liste large de ce qu'elle porte, et une valeur jamais plafonnée
+
+**Question.** La ligne de liste partagée (`ListRow`) donne deux colonnes latérales de largeur
+fixe : l'état à gauche, la valeur à droite. Aucune des deux ne rogne son contenu, et sur une ligne
+**en retard** les deux sont trop étroites — « EN RETARD » demande 115 px dans 104, « 105 j de
+retard » 117 px dans 112. Élargir, laisser la colonne se dimensionner, ou raccourcir la phrase ?
+
+**Décision.** Élargir la gauche, déplafonner la droite.
+
+- **Colonne d'état : 120 px** (`sm:min-w-30`), au lieu de 104. C'est la largeur de la plus large
+  des puces que l'application écrit — « EN RETARD », icône et capitales comprises — plus sa marge.
+  La puce d'un point de checklist et celle d'une intervention de la file la remplissent
+  exactement (`min-w-30` sur la puce) ; celles qui se dimensionnent d'elles-mêmes, comme sur la
+  fiche d'un moteur, s'y rangent à gauche. Les titres continuent de s'aligner d'une ligne à
+  l'autre, ce pour quoi la colonne est fixe (D88).
+- **Colonne de valeur : plus de plafond.** Un `max-width` ne rognait rien — une échéance est
+  `whitespace-nowrap` — donc il ne faisait que laisser le texte sortir : « 105 j de retard »
+  (117 px) et « 426 h de retard » (123 px) dépassaient les 112 px du plafond, et « compteur
+  inconnu » les aurait dépassés de 40. La colonne qui cède est le titre, la seule qui porte
+  `min-w-0` : il se tronque, ce qui est son métier.
+
+**`min-w` et non `w`.** Une largeur fixe recrée la panne le jour où un libellé dépasse la mesure
+d'aujourd'hui. Avec un minimum, un libellé imprévu **pousse** son titre vers la droite au lieu de
+lui passer dessus : une ligne désalignée se voit et se corrige, un mot coupé en deux se lit faux.
+
+**Ce qui n'est pas retenu.** *Raccourcir la phrase* (« 105 j » au lieu de « 105 j de retard »,
+comme le fait déjà la file du tableau de bord en `compact`) : la Checklist est l'écran où l'on
+compare des retards entre eux, et le mot qui les nomme y vaut ses 40 px. *Rogner la colonne*
+(`truncate`) : un nombre coupé est pire qu'un nombre absent. *Réduire la puce à la taille `sm`* :
+elle porte le seul signal rouge de la liste, on ne l'affaiblit pas pour gagner 25 px.
+
+**Pourquoi l'audit ne l'avait pas vu.** La recette `/dev/ui/checklist` n'a porté une ligne en
+retard que récemment, et jamais avec un retard à trois chiffres ; `/dev/ui` montrait ses lignes de
+référence avec des puces en taille `sm`, que l'application n'écrit nulle part ; et la fiche d'un
+moteur ne listait que des interventions **terminées**. Les trois recettes portent désormais la
+forme qui casse, donc `tests/e2e/touch-audit.spec.ts` la mesure sur les cinq viewports.
