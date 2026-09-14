@@ -17,7 +17,7 @@ export type BoatModelData = Omit<SummaryInput, "mesh" | "hasKeel"> & {
 };
 
 /**
- * « Le bateau en 3D » (E2-8, D116): the boat itself as the way in to what is aboard and what is
+ * « Le bateau en 3D » (E2-8, D117): the boat itself as the way in to what is aboard and what is
  * due on it. The model is turned by a finger or turns on its own; every place of it is a target,
  * and the list beside it carries the same places for anyone who would rather read than aim.
  *

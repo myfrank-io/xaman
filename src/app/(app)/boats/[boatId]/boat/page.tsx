@@ -148,7 +148,7 @@ export default async function BoatPage({
 
   const stockFilter: StockFilter = low === "1" ? "low" : "all";
 
-  // The 3D model (E2-8, D116): the boat's own shape, its systems and what each of them owes.
+  // The 3D model (E2-8, D117): the boat's own shape, its systems and what each of them owes.
   const model: BoatModelData = {
     shape: {
       type: boat.type,

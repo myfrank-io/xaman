@@ -123,7 +123,7 @@ export function EquipmentTab({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      {/* The boat itself, first (D116): the inventory below answers « qu'y a-t-il à bord », the
+      {/* The boat itself, first (D117): the inventory below answers « qu'y a-t-il à bord », the
           model answers « où, et qu'est-ce qu'il y a à y faire ». It is the one block of this
           screen that is worth the fold. */}
       <BoatModel3D boatId={boatId} boatName={boatName} data={model} />

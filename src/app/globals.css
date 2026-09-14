@@ -168,7 +168,7 @@
   --success-tint: #e3f4e9;
   --success-border: #b9e3c9;
 
-  /* ---------------------------------------- the 3D model of the boat (D116)
+  /* ---------------------------------------- the 3D model of the boat (D117)
      Read by the canvas through getComputedStyle, never by Tailwind: the painter
      mixes `--model-hull` into `--model-light` face by face, so these two are the
      ends of one ramp and not two independent colours. The brass stays out of it

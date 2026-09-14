@@ -13,7 +13,7 @@ const OTHERS = [
 ] as const;
 
 /**
- * Visual acceptance of the 3D model (E2-8, D116). The catamaran first, with the real spread of
+ * Visual acceptance of the 3D model (E2-8, D117). The catamaran first, with the real spread of
  * states, then one boat of each other type — the hull the builder draws when the carnet says
  * « monocoque » has to be checked as much as the one it draws for Xaman.
  */
