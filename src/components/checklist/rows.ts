@@ -75,6 +75,15 @@ export function toChecklistRow(
   };
 }
 
+/**
+ * Une échéance en heures n'est lisible que derrière un compteur : un point sans moteur n'en
+ * dépend pas, un point dont le moteur n'a jamais été relevé ne peut pas dire « dans 40 h ».
+ * La ligne, la carte « À faire maintenant » et les paliers de la file lisent cette règle-ci.
+ */
+export function hasCounter(row: ChecklistRow): boolean {
+  return row.engineId === null || row.currentHours !== null;
+}
+
 export function isPunctual(row: ChecklistRow): boolean {
   return row.intervalMonths === null && row.intervalHours === null;
 }

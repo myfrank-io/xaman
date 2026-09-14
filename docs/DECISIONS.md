@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D121.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D122.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2690,3 +2690,113 @@ retaper est exactement le travail que cet écran existe pour supprimer. Sans rap
 facture reposait une question déjà répondue dix fois et la réponse finissait en texte libre à côté
 de la fiche qui existait déjà ; sans pré-remplissage, la fiche créée à la volée n'avait qu'un nom,
 et quelqu'un la complétait à la main plus tard — ou jamais.
+
+
+## 2026-09-14 — D121 : le premier écran est un plan de travail, à trois altitudes
+
+**Question.** Le tableau de bord récapitule tout et n'approfondit rien : « est-ce qu'il ne perd pas
+juste les utilisateurs ? ». Et la question se repose une échelle plus haut, maintenant que le
+chantier s'ouvre vers les constructeurs qui veulent vendre du service à leurs acheteurs : le même
+écran doit servir quelqu'un qui a **un** bateau, quelqu'un qui en a **deux à dix**, et un
+constructeur qui en suit **trois mille**.
+
+**Le constat.** Six blocs, une trentaine de cibles tactiles, et quatre de ces six blocs sont des
+copies tronquées d'un onglet qui est déjà à un tap dans la barre de navigation : les deux premières
+vignettes redisent la pastille rouge de la Checklist et la troisième celle du Journal (D88) ; la
+grille des huit systèmes est **le même composant** que la racine de la Checklist (`ChecklistGrid`) ;
+les trois dernières interventions sont le haut exact du Journal ; le récapitulatif est trois liens
+vers trois onglets. Deux blocs seulement portent ce qui n'existe nulle part ailleurs : la **file
+d'attente** (`boat_todo_queue`, le seul endroit qui mêle points de checklist et interventions
+ouvertes dans un ordre exécutable, avec « Fait » en ligne) et la **bande des moteurs** (un relevé en
+un tap).
+
+Six moments amènent quelqu'un à ouvrir Xaman : *je viens de faire quelque chose* (écrire), *je vais
+au bateau samedi* (préparer), *c'était quand, la dernière courroie* (chercher), *qu'a fait
+Emmanuel depuis ma dernière visite* (suivre), *est-ce que tout va bien* (se rassurer), *le mécano
+monte à bord* (prouver). L'écran répond au cinquième — le plus rare — et sert de sommaire aux
+autres. Chercher et suivre n'ont **aucun écran** : la recherche n'existe qu'à l'intérieur du
+Journal, sur titre et notes, et « ce qu'ont fait les autres » est une vignette qui compte.
+
+**Décision.** Le premier écran cesse d'être un résumé et devient un **plan de travail**, en trois
+zones dans cet ordre : **écrire** (l'acte nommé, D35 et l'audit §7), **faire** (la file, déployée),
+**savoir** (ce qui a bougé, avec les noms). Il prend le nom de ce qu'il montre : **« À bord »**.
+Disparaissent les quatre vignettes, la grille des huit systèmes, les trois dernières interventions
+et le récapitulatif. Restent la phrase d'état, la bande des moteurs et le bandeau contextuel. La
+recherche du carnet monte dans la barre du haut, où elle sert à tous les écrans.
+
+**Une ligne, trois altitudes.** La file n'est pas un bloc de cet écran : c'est **la primitive** du
+produit, et c'est elle qui monte d'un étage. Sa grammaire ne change jamais — *un objet, une raison
+datée, un geste* — seul change ce que la ligne désigne.
+
+| Altitude | Ce que la ligne désigne | Ce que dit la raison | Le geste |
+|---|---|---|---|
+| Un carnet | un point, une intervention, un document, une pièce | « 12 j de retard », « valide jusqu'au 04/11 » | Fait · Valider · Ouvrir |
+| Une flotte (2 à 10) | un bateau | « 3 points en retard, le plus ancien depuis 21 j » | Ouvrir · Noter · Relever |
+| Une organisation (jusqu'à 3 000) | un bateau concédé, ou un segment (modèle, série, millésime, zone) | « 14 ORC 50 en retard de vidange » | Ouvrir · Filtrer |
+
+C'est ce qui évite d'écrire trois produits. Un propriétaire qui achète un deuxième bateau ne change
+pas d'application : il gagne un étage au-dessus de ses carnets. Un constructeur n'apprend pas un
+second vocabulaire : il lit les mêmes mots, sur des objets plus gros.
+
+**Un agrégat n'est légitime que s'il se résout en lignes.** Un chiffre qui ne mène nulle part est ce
+qui a vidé l'écran actuel de sa valeur, et une console de flotte en est le piège naturel : taux de
+conformité, jauges, « 87 % ». La règle, à toutes les altitudes : **un compte n'est affiché que s'il
+est un filtre** — on le tape, il rend les lignes qu'il comptait. Aucun cadran, aucun score, aucun
+graphique (règle 10). Le compte affiché est toujours celui de la **sélection**, jamais celui de la
+page chargée (D111).
+
+**L'altitude se déduit, elle ne se choisit pas.** Un bateau : on atterrit dans le carnet, comme
+aujourd'hui (E1-3). Plusieurs : on atterrit sur la file de flotte — l'actuel `/boats`, qui est une
+salle d'attente (un sélecteur de noms, aucun état). Une organisation : la même file, avec la
+recherche et les filtres devant, parce qu'à trois mille lignes la première question n'est plus « que
+fait-on aujourd'hui » mais « lequel ». Aucun sélecteur d'altitude, aucun mode : ce que la personne
+peut voir décide de ce qu'elle voit.
+
+**Ce qu'un constructeur voit, et ce qu'il ne voit jamais.** « La donnée suit le bateau, pas la
+personne » ne survit pas à un chantier qui lirait trois mille carnets parce qu'il a vendu les
+coques. Deux accès, séparés, et rien entre les deux :
+
+1. **Concédé, nominatif.** Le carnet invite l'organisation comme il invite un professionnel :
+   rôle contraint, **accès daté** (D28, D29), retirable par le propriétaire en un geste. La file de
+   l'organisation est exactement **la somme de ses accès** — pas une ligne de plus. C'est ce que le
+   constructeur qui vend un contrat d'entretien obtient de ses clients, un par un, et c'est aussi
+   ce qui rend l'offre honnête : le propriétaire sait qui regarde, et jusqu'à quand.
+2. **Agrégé, non nominatif.** Sur les carnets instanciés depuis un plan dont l'organisation est
+   propriétaire (`checklist_templates.owner_organization_id`), elle lit des **statistiques sans
+   ligne et sans nom** : quel point est fait, à quel âge, dans quelle proportion. Jamais un titre
+   d'intervention, jamais un montant, jamais un nom de bateau ni de personne. **Jamais en dessous
+   de cinq carnets** dans la maille interrogée, sans quoi la moyenne désigne quelqu'un. Activé par
+   défaut, et **retirable d'un réglage du carnet** que le propriétaire voit.
+
+**Raison.** Le premier accès est ce qui se vend ; le second est ce qui fait vivre les plans
+d'entretien — un chantier ne corrigera l'intervalle d'un point que s'il voit que personne ne le
+tient. Les mélanger donnerait un produit que personne de sensé n'installe sur son bateau. Cette
+séparation est aussi la seule qui se défende en base : le premier passe par `boat_members`, que la
+RLS sait déjà lire ; le second par une vue agrégée, qui n'expose aucune ligne à protéger.
+
+**Ce qui n'est pas retenu.**
+
+- *Supprimer l'écran et atterrir sur « À traiter ».* C'est la version radicale du constat, et elle
+  supprimerait la dernière duplication — la file et l'onglet « À traiter » listent les mêmes
+  lignes. Refusée : la file mêle des points et des interventions, que ni la Checklist ni le Journal
+  ne peuvent héberger sans mentir sur leur propre objet ; et atterrir sur une liste pure enterre à nouveau
+  l'acte d'écrire, qu'on vient de remonter (audit §7).
+- *Un onglet « Flotte » dans la navigation du bateau.* La flotte n'est pas à côté des quatre
+  onglets d'un carnet : elle est l'écran d'avant. Un onglet de plus aurait fait revenir la barre à
+  cinq entrées pour un usage que le propriétaire d'un seul bateau n'a jamais.
+- *Une console séparée pour les constructeurs.* Même file, mêmes mots, mêmes couleurs. Un second
+  produit coûte un second design system et une seconde vérité.
+- *Le nom « À faire ».* Trop proche de « À traiter » (Checklist) et de « À valider » (boîte) : trois
+  écrans dont le nom commence pareil ne se distinguent plus dans une barre.
+
+**Ce que ça coûte en base.** Rien pour le dégraissage : tout ce qui reste à l'écran est déjà lu.
+Trois objets nouveaux ensuite, chacun `security_invoker` et couvert par `tests/unit/rls.test.ts`
+(règle 2) : la file élargie aux documents et aux pièces (`boat_todo_queue` gagne deux `kind`), la
+vue d'activité qui alimente « ce qui a bougé », la vue d'état par bateau qui alimente la flotte. Le
+troisième étage demande ce que le schéma porte déjà sans UI : `organizations`,
+`organization_members`, `boats.organization_id` — aujourd'hui réservés à l'admin plateforme (§5 de
+`DATA-MODEL.md`), donc à ouvrir par politiques, jamais par confiance côté écran.
+
+**Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
+(E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
+comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.

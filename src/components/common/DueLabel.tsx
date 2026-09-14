@@ -2,6 +2,7 @@ import { GaugeIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { ChecklistState } from "@/components/common/ChecklistStateBadge";
+import { drivenByHours } from "@/components/dashboard/next-due";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,8 +44,8 @@ export function DueLabel({
     );
   }
 
-  // The tightest of the two deadlines drives the label.
-  const useHours = days === null || (hours !== null && hours * 1.2 < days);
+  // The tightest of the two deadlines drives the label — the rule the queue's groups read too.
+  const useHours = drivenByHours(days, hours);
   const value = useHours ? hours : days;
   const unit = useHours ? "h" : "j";
   if (value === null || !Number.isFinite(value)) return null;
