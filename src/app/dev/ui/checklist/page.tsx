@@ -99,6 +99,21 @@ const ROWS: ChecklistRow[] = [
     daysRemaining: 0,
     sortOrder: 2,
   }),
+  // Born from the library (E17-5): the rule names the job, the equipment names the line. It is the
+  // longest label the app can produce — « règle — nom de l'équipement » — so the audit measures it.
+  // « Jamais fait » is what a boat really sees the day it files its equipment under a family.
+  row({
+    id: "s-rule",
+    label: "Remplacer la turbine de pompe à eau de mer — Chauffage Wallas 30DT",
+    status: "never",
+    hasCompletion: false,
+    lastCompletedAt: null,
+    lastCompletedByName: null,
+    intervalMonths: 12,
+    dueAt: "2027-09-14",
+    daysRemaining: 365,
+    sortOrder: 2,
+  }),
   row({
     id: "s3",
     label: "Winch GV SB — démontage, nettoyage, graissage",
