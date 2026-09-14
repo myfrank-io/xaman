@@ -384,7 +384,7 @@ export function InboxItemCard({
                     {[
                       line.name,
                       line.brand,
-                      // The same reading as the maquette (D122): « 88 m² · Hydranet », never
+                      // The same reading as the maquette (D125): « 88 m² · Hydranet », never
                       // « surface_m2: 88 ». The person checks what was understood, not the keys.
                       ...specFacts(
                         Object.fromEntries(line.specs.map((spec) => [spec.key, spec.value])),
