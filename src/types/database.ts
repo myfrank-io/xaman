@@ -634,12 +634,14 @@ export type Database = {
           created_by: string | null
           description: string | null
           engine_id: string | null
+          equipment_id: string | null
           external_ref: string | null
           id: string
           interval_hours: number | null
           interval_months: number | null
           is_active: boolean
           label: string
+          rule_id: string | null
           sort_order: number
           source: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id: string | null
@@ -656,12 +658,14 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           engine_id?: string | null
+          equipment_id?: string | null
           external_ref?: string | null
           id?: string
           interval_hours?: number | null
           interval_months?: number | null
           is_active?: boolean
           label: string
+          rule_id?: string | null
           sort_order?: number
           source?: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id?: string | null
@@ -678,12 +682,14 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           engine_id?: string | null
+          equipment_id?: string | null
           external_ref?: string | null
           id?: string
           interval_hours?: number | null
           interval_months?: number | null
           is_active?: boolean
           label?: string
+          rule_id?: string | null
           sort_order?: number
           source?: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id?: string | null
@@ -731,6 +737,20 @@ export type Database = {
             columns: ["engine_id"]
             isOneToOne: false
             referencedRelation: "engines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_rules"
             referencedColumns: ["id"]
           },
           {
@@ -1646,6 +1666,13 @@ export type Database = {
             foreignKeyName: "maintenance_log_categories_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -1655,6 +1682,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "maintenance_log_categories_created_by_fkey"
@@ -1668,6 +1702,13 @@ export type Database = {
             columns: ["log_id"]
             isOneToOne: false
             referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_trash_view"
             referencedColumns: ["id"]
           },
           {
@@ -2738,6 +2779,10 @@ export type Database = {
         Args: { p_boat_id: string; p_engine_id?: string; p_template_id: string }
         Returns: undefined
       }
+      apply_maintenance_rules: {
+        Args: { p_boat_id: string; p_equipment_id?: string }
+        Returns: number
+      }
       apply_template_categories: {
         Args: { p_boat_id: string; p_template_id: string }
         Returns: number
@@ -2804,6 +2849,10 @@ export type Database = {
         }
         Returns: Record<string, unknown>
       }
+      compose_maintenance_rules: {
+        Args: { p_boat_id: string; p_equipment_id?: string }
+        Returns: number
+      }
       create_boat: {
         Args: {
           p_boat_id: string
@@ -2863,6 +2912,7 @@ export type Database = {
         Args: { p_hours_override?: Json; p_log_id: string }
         Returns: undefined
       }
+      normalise_for_match: { Args: { p_value: string }; Returns: string }
       purge_trash: { Args: Record<PropertyKey, never>; Returns: number }
       shares_boat_with: { Args: { p_user_id: string }; Returns: boolean }
       suggest_checklist_items: {
@@ -2915,7 +2965,7 @@ export type Database = {
         | "motor"
         | "rib"
         | "other"
-      checklist_item_source: "template" | "custom"
+      checklist_item_source: "template" | "custom" | "rule"
       checklist_state: "never" | "ok" | "soon" | "overdue"
       engine_position: "port" | "starboard" | "center" | "outboard"
       engine_propulsion:
@@ -3086,7 +3136,7 @@ export const Constants = {
         "rib",
         "other",
       ],
-      checklist_item_source: ["template", "custom"],
+      checklist_item_source: ["template", "custom", "rule"],
       checklist_state: ["never", "ok", "soon", "overdue"],
       engine_position: ["port", "starboard", "center", "outboard"],
       engine_propulsion: [
