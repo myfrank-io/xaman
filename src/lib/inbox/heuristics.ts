@@ -1190,6 +1190,9 @@ export function heuristicSuggestion(
     documentFamily: "unknown",
     batch: [],
     title,
+    // The local reader (D92) never proposes an inventory: reading a builder's specification
+    // needs a model, and half an inventory is worse than none.
+    inventory: [],
     date: date?.date ?? null,
     amount: total?.amount ?? null,
     currency: total ? (total.currency ?? currency ?? "EUR") : null,

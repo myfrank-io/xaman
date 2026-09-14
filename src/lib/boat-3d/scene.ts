@@ -9,13 +9,38 @@ import type { ZoneKey } from "@/lib/boat-3d/zones";
  */
 export type Vec3 = readonly [number, number, number];
 
+/**
+ * What a face is made of. A boat is not one colour in fifteen shades of grey: it is white
+ * topsides, a copper bottom, a black boot stripe, cream cloth, carbon spars and dark glass.
+ * Giving each face a material rather than a lightness is what stops the drawing looking like an
+ * untextured CAD viewport.
+ */
+export type Material =
+  | "hull"
+  | "bottom"
+  | "boot"
+  | "deck"
+  | "sole"
+  | "roof"
+  | "glass"
+  | "sail"
+  | "carbon"
+  | "solar"
+  | "tramp"
+  | "metal"
+  | "foil";
+
 export type MeshFace = {
   /** Index into `parts`: what this face belongs to, and therefore which zone it selects. */
   part: number;
   /** Indices into the vertex buffer, wound around the face. */
   indices: readonly number[];
-  /** Base lightness, 0 (dark bottom) to 1 (white topsides), before the light is applied. */
-  tone: number;
+  material: Material;
+  /**
+   * Local darkening, 0.55 to 1: the cheap ambient occlusion that keeps the underside of a box
+   * from reading as bright as its lid even when the light says otherwise.
+   */
+  shade: number;
 };
 
 export type MeshPart = {
@@ -59,16 +84,24 @@ export class MeshBuilder {
     return this.vertex(v[0], v[1], v[2]);
   }
 
-  face(part: number, indices: readonly number[], tone: number): void {
-    this.faceList.push({ part, indices, tone });
+  face(part: number, indices: readonly number[], material: Material, shade = 1): void {
+    this.faceList.push({ part, indices, material, shade });
   }
 
-  quad(part: number, a: number, b: number, c: number, d: number, tone: number): void {
-    this.face(part, [a, b, c, d], tone);
+  quad(
+    part: number,
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    material: Material,
+    shade = 1,
+  ): void {
+    this.face(part, [a, b, c, d], material, shade);
   }
 
   /** A rectangular box, axis-aligned, six faces. The workhorse of beams, pods and legs. */
-  box(part: number, min: Vec3, max: Vec3, tone: number): void {
+  box(part: number, min: Vec3, max: Vec3, material: Material): void {
     const [x0, y0, z0] = min;
     const [x1, y1, z1] = max;
     const aftBottomPort = this.vertex(x0, y0, z0);
@@ -79,19 +112,25 @@ export class MeshBuilder {
     const fwdBottomStb = this.vertex(x1, y0, z1);
     const fwdTopStb = this.vertex(x1, y1, z1);
     const fwdTopPort = this.vertex(x0, y1, z1);
-    this.quad(part, aftBottomPort, aftBottomStb, aftTopStb, aftTopPort, tone * 0.9);
-    this.quad(part, fwdBottomStb, fwdBottomPort, fwdTopPort, fwdTopStb, tone * 0.9);
-    this.quad(part, fwdBottomPort, aftBottomPort, aftTopPort, fwdTopPort, tone * 0.82);
-    this.quad(part, aftBottomStb, fwdBottomStb, fwdTopStb, aftTopStb, tone * 0.82);
-    this.quad(part, aftTopPort, aftTopStb, fwdTopStb, fwdTopPort, tone);
-    this.quad(part, fwdBottomPort, fwdBottomStb, aftBottomStb, aftBottomPort, tone * 0.6);
+    this.quad(part, aftBottomPort, aftBottomStb, aftTopStb, aftTopPort, material, 0.9);
+    this.quad(part, fwdBottomStb, fwdBottomPort, fwdTopPort, fwdTopStb, material, 0.9);
+    this.quad(part, fwdBottomPort, aftBottomPort, aftTopPort, fwdTopPort, material, 0.84);
+    this.quad(part, aftBottomStb, fwdBottomStb, fwdTopStb, aftTopStb, material, 0.84);
+    this.quad(part, aftTopPort, aftTopStb, fwdTopStb, fwdTopPort, material, 1);
+    this.quad(part, fwdBottomPort, fwdBottomStb, aftBottomStb, aftBottomPort, material, 0.62);
   }
 
   /**
    * Skins two parallel rows of vertices with quads — a strake of a hull, a panel of a sail, a
    * segment of a spar. Every lofted surface of the model goes through here.
    */
-  strip(part: number, a: readonly number[], c: readonly number[], tone: number): void {
+  strip(
+    part: number,
+    a: readonly number[],
+    c: readonly number[],
+    material: Material,
+    shade = 1,
+  ): void {
     const count = Math.min(a.length, c.length) - 1;
     for (let i = 0; i < count; i += 1) {
       const a0 = a[i];
@@ -99,7 +138,7 @@ export class MeshBuilder {
       const c0 = c[i];
       const c1 = c[i + 1];
       if (a0 === undefined || a1 === undefined || c0 === undefined || c1 === undefined) continue;
-      this.quad(part, a0, a1, c1, c0, tone);
+      this.quad(part, a0, a1, c1, c0, material, shade);
     }
   }
 
@@ -325,7 +364,7 @@ export class Projector {
     const a = indices[0];
     const b = indices[1];
     const c = indices[2];
-    if (a === undefined || b === undefined || c === undefined) return 0.7;
+    if (a === undefined || b === undefined || c === undefined) return 0.82;
     const ux = (this.cx[b] ?? 0) - (this.cx[a] ?? 0);
     const uy = (this.cy[b] ?? 0) - (this.cy[a] ?? 0);
     const uz = (this.cz[b] ?? 0) - (this.cz[a] ?? 0);
@@ -336,9 +375,9 @@ export class Projector {
     const ny = uz * vx - ux * vz;
     const nz = ux * vy - uy * vx;
     const length = Math.hypot(nx, ny, nz) * LIGHT_LENGTH;
-    if (length < 1e-6) return 0.7;
+    if (length < 1e-6) return 0.82;
     const dot = Math.abs((nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]) / length);
-    return 0.46 + 0.54 * dot;
+    return 0.62 + 0.38 * dot;
   }
 
   /** The face under a point, nearest first — what a tap on the canvas selects. */

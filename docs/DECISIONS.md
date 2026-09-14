@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D127.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D130.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3067,3 +3067,118 @@ l'application garde ses routes anglaises.
   `mailto:` fait déjà.
 - *Une page de tarifs.* Il n'y a rien à y écrire tant que les prix de D125 ne sont pas tranchés ;
   une grille avec des « à partir de » inventés est exactement ce que la règle 3 interdit.
+
+## 2026-09-14 — D127 : la maquette est faite de matières, et elle dit qu'on peut la toucher
+
+**Question.** Retour de Joseph sur la maquette livrée le matin même : « la modélisation est
+horriblissime, c'est vraiment très laid » et « on ne comprend pas qu'on peut cliquer ». Deux
+défauts distincts : ce qu'on voit, et ce qu'on comprend.
+
+**Décision — ce qu'on voit.** Une face ne porte plus une *clarté* mais une **matière**
+(`Material` dans `src/lib/boat-3d/scene.ts`) : coque, carène, ligne de flottaison, pont, sole,
+roof, vitrage, toile, carbone, panneau solaire, trampoline, métal, appendice. Chacune a son jeton
+dans `globals.css` (`--model-<matière>`, clair et sombre) et **son propre contraste** : la toile
+ne s'assombrit presque pas — une voile est translucide, son côté sous le vent reste clair — là où
+un bordé prend toute la lumière. S'y ajoutent un fond de studio (clair sous le bateau, plus dense
+aux bords) et une ombre portée en dégradé.
+
+**Raison.** Le premier jet déclinait une seule couleur, du navy au blanc, en quinze gris : un
+bateau blanc sur un fond blanc cassé, sans une couleur pour l'accrocher. Les matières coûtent le
+même nombre de faces et donnent le mât en carbone noir, la toile en écru, la carène en Coppercoat
+— qui est la vraie couleur de Xaman, notée dans son inventaire. Le contraste par matière est ce
+qui empêche les facettes de lire comme une mosaïque : le coefficient n'est pas décoratif, il dit
+comment le matériau se comporte à la lumière.
+
+**Décision — ce qu'on comprend.** Quatre ajouts, aucun texte d'aide :
+1. Une **pastille sur la maquette** qui dit « Touchez un élément du bateau », et qui **nomme la
+   zone survolée** dès qu'une souris passe dessus. Elle disparaît quand quelque chose est choisi.
+2. Le **survol teinte la zone** sous le pointeur (souris uniquement : un doigt ne survole pas).
+3. Une **ligne d'invite au-dessus de la liste** — celle sous la maquette est hors écran dès qu'on
+   a déroulé — et des lignes qui se comportent en boutons.
+4. **Toutes les zones sont marquées, à deux voix.** Ce qui est en retard ou bientôt dû garde sa
+   pastille — icône, compte, et c'est un bouton. Tout le reste reçoit un **plot** : un petit
+   disque neutre qui n'est *pas* une cible (la coque dessous en est une, la liste à côté aussi) et
+   dont le seul métier est de dire « il y a quelque chose ici ».
+
+**Raison.** Une maquette qui tourne toute seule ressemble à une illustration ; rien ne disait
+qu'elle répondait. Et la première version ne marquait que les retards : le retour est tombé le
+jour même — « on voit bien où cliquer quand c'est en retard », et nulle part ailleurs. Deux voix
+gardent la hiérarchie et suppriment l'angle mort ; deux rangs de boutons de 44 px se seraient
+chevauchés sur un cadre de 340 px et se seraient volé les touches.
+
+**Décision — ce que la maquette sert.** Elle ne sert pas qu'à la checklist. Un propriétaire
+l'ouvre pour **connaître son bateau** et aller y chercher une information. Donc une zone ouverte
+commence par **ce qu'elle est** — « Code 0 (J0) · Incidence PX Black · 87,5 m² », « Batteries
+Lithium · Victron · 210 Ah · 12 V » — lus dans `equipment.specs` par `src/lib/boat-3d/specs.ts`,
+qui met l'unité que la clé annonce et laisse parler les valeurs qui se nomment elles-mêmes. « À
+faire » ne passe devant que si quelque chose est dû. Et quand rien n'est en retard, le titre de la
+carte annonce ce que le bateau porte, pas « rien » : « rien en retard » n'apprend rien sur un
+bateau.
+
+
+## 2026-09-14 — D128 : un document de chantier verse l'inventaire dans l'import qui existe déjà
+
+**Question.** La maquette (D117, D127) se précise avec ce que le carnet sait du bateau : elle lit
+les `specs` des équipements pour dire « 88 m² · Hydranet » et en déduit dérives, jupes, bout-dehors
+ou panneaux. Or ces `specs` n'arrivaient par aucun chemin en masse : le chantier envoie une liste
+d'équipements — un PDF de livraison, un tableau d'inventaire — et il fallait la ressaisir fiche par
+fiche. Fallait-il un écran de revue dédié pour les inventaires lus sur un document ?
+
+**Décision.** Non : la lecture **verse dans l'import qui existe**. Trois pièces, aucune nouvelle
+surface.
+
+1. L'import d'équipements gagne une colonne **« Caractéristiques »** (`cellSpecs`,
+   `src/lib/import/entities.ts`) : `surface_m2: 88 ; tissu: Hydranet`, séparateurs `;` ou retour à
+   la ligne, clé et valeur sur `:` ou `=`, clé repliée en `snake_case`, 20 paires au plus, une
+   demi-paire est ignorée. C'est la forme que `src/lib/boat-3d/specs.ts` relit.
+2. La boîte de réception apprend un genre **`inventory`** : le modèle qui lit un document renvoie
+   des lignes d'équipement (nom, catégorie, marque, modèle, n° de série, quantité, date de pose,
+   caractéristiques), 80 au plus. La carte de l'élément montre les premières et propose
+   **« Importer ces équipements »**, qui ouvre l'import **pré-rempli** — `inventoryToTable`
+   (`src/lib/inbox/inventory.ts`) rend un tableau tabulé dont l'en-tête porte les libellés que
+   l'import déclare, donc `guessMapping` place toutes les colonnes seule.
+3. Sur l'écriture, **les `specs` déjà en base gagnent** : l'import fusionne les paires proposées
+   sous celles qui existent (`{ ...proposées, ...existantes }`) et n'écrit que si la fiche y gagne
+   quelque chose.
+
+La carte d'un inventaire ne ressemble donc pas aux autres : elle montre les premières lignes **en
+clair** — `specFacts` les lit comme la maquette, « Grand-voile · Incidence · 88 m² · Hydranet » et
+jamais `surface_m2: 88` —, pose « Remplir l'inventaire » en action principale, et **replie** le
+formulaire de rangement derrière « Ranger aussi ce document ». Un inventaire est enfin retiré de
+**« Tout valider »** (`isConfidentItem`) : une liste ne se range jamais à l'aveugle, et sans cette
+garde un inventaire à qui le modèle a donné une catégorie serait écrit comme une intervention.
+
+**Raison.** Importer une liste d'équipements est un problème déjà résolu ici : le `ImportWizard`
+mappe les colonnes, dit ce qui est nouveau et ce qui est reconnu, refuse ce que l'écriture
+refuserait, et n'écrit qu'ensuite. Un deuxième écran de revue aurait refait tout cela en moins bien
+et aurait divergé au premier champ ajouté ; le document n'avait pas besoin d'une surface, il avait
+besoin d'arriver dans la forme que la surface lit déjà. Et la règle de fusion est celle de D113 :
+**un document propose, il n'écrase jamais** — une fiche renseignée à la main par Xav ne se fait pas
+récrire par un PDF de chantier, elle se fait compléter.
+
+## 2026-09-14 — D129 : `batch` et `inventory` cohabitent, E17-2 tranchera
+
+**Question.** E17-1 (D124) fait rendre à la lecture un **`batch`** : ce qu'un document de bateau
+propose, ligne à ligne, en quatre sortes — équipement, prestataire, identité, échéance. E2-10
+(D128) fait rendre à la même lecture un **`inventory`** : les équipements qu'un document liste,
+versés dans l'import. Les deux décrivent la même chose — un document qui dit ce qu'il y a à bord —
+et sont arrivés sur `main` à une heure d'intervalle. Faut-il les réunir tout de suite ?
+
+**Décision.** Non : **on garde les deux, et on tranchera en faisant E17-2** (Joseph, ce jour).
+Aucun code à écrire pour cela — c'est déjà l'état de la fusion. Ce qui change, c'est que la
+réconciliation est **inscrite dans E17-2** au lieu de rester un doublon que personne ne réclame.
+
+**Raison.** Les deux ne se marchent pas dessus aujourd'hui, et chacun a ce que l'autre n'a pas :
+
+- `inventory` **fonctionne de bout en bout** et porte les **`specs`** (`surface_m2: 88`,
+  `tissu: Hydranet`). C'est la raison d'être de E2-10 : ces paires sont ce que la maquette relit
+  pour dire « 88 m² · Hydranet » (D127). Le `batch` de E17-1 n'en porte pas.
+- `batch` est un **contrat de lecture plus riche** — statut lu sur le document (monté, retenu,
+  proposé, annulé, déposé), date portée par la ligne, référence chantier gardée à part du libellé
+  — mais son écran, E17-2, n'existe pas encore, et rien n'écrit.
+
+Réunir maintenant, ce serait rebrancher du travail fini et testé sur un contrat dont le
+consommateur n'existe pas, en perdant au passage les `specs`. Les réunir quand E17-2 existe, ce
+sera une décision informée par un écran réel : soit `batch` gagne les `specs` et E2-10 s'y
+rebranche, soit les deux restent — un document qui **est** un inventaire prend le chemin court de
+l'import, un document qui **décrit** un bateau prend l'écran de revue.

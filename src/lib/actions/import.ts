@@ -6,6 +6,7 @@ import { dbErrorKey, fail, ok, type ActionResult } from "@/lib/actions/result";
 import { loadImportCatalog } from "@/lib/import/catalog";
 import {
   buildDatabaseRow,
+  cellSpecs,
   cellText,
   createMatcher,
   descriptorOf,
@@ -98,6 +99,13 @@ export async function importRows(input: {
   const match = createMatcher(catalog);
 
   const rejected: RejectedRow[] = [];
+  /**
+   * The free pairs a line proposes, kept aside from the batches (E2-8). They are never written
+   * with the rest: `specs` is a jsonb the carnet already holds, and a column missing from one
+   * object of a bulk write becomes NULL for every other — so a sheet without the column would
+   * wipe what a previous import, or a person, had put there.
+   */
+  const proposedSpecs = new Map<string, { name: string; specs: Record<string, string> }>();
   // Two batches, never one: a new row carries created_by and an update must not overwrite it,
   // and PostgREST turns a key missing from one object of a bulk insert into a NULL.
   const creations: Record<string, unknown>[] = [];
@@ -129,6 +137,11 @@ export async function importRows(input: {
       }),
     );
 
+    if (entity === "equipment") {
+      const specs = cellSpecs(row.specs);
+      if (Object.keys(specs).length > 0) proposedSpecs.set(id, { name, specs });
+    }
+
     // Two lines of the file naming the same thing: the second updates the first, never a
     // duplicate — and the id is now known.
     byKey.set(key, id);
@@ -141,6 +154,58 @@ export async function importRows(input: {
       .from(descriptor.table)
       .upsert(batch as never, { onConflict: "id" });
     if (error) return fail(dbErrorKey(error));
+  }
+
+  /**
+   * The free pairs, merged last and never overwritten (D113): **what the carnet already holds
+   * wins**. A document proposes what is missing — 88 m² of mainsail, « Sur bossoirs » — and stays
+   * silent on what a person has already written. One read and one write for the whole file.
+   */
+  if (proposedSpecs.size > 0) {
+    const ids = [...proposedSpecs.keys()];
+    const { data: current, error: specsReadError } = await supabase
+      .from("equipment")
+      .select("id, specs")
+      .eq("boat_id", boatId)
+      .in("id", ids);
+    if (specsReadError) return fail(dbErrorKey(specsReadError));
+    const held = new Map(
+      (current ?? []).map((row) => [
+        row.id,
+        (row.specs && typeof row.specs === "object" && !Array.isArray(row.specs)
+          ? (row.specs as Record<string, unknown>)
+          : {}) as Record<string, unknown>,
+      ]),
+    );
+    // `name` rides along because the row type requires it on an upsert; it is the very name
+    // the batch above just wrote, so it changes nothing.
+    const merged: {
+      id: string;
+      boat_id: string;
+      name: string;
+      specs: Record<string, unknown>;
+      updated_by: string;
+    }[] = [];
+    for (const [id, proposed] of proposedSpecs) {
+      const existing = held.get(id) ?? {};
+      const next = { ...proposed.specs, ...existing };
+      if (Object.keys(next).length === Object.keys(existing).length) continue;
+      merged.push({
+        id,
+        boat_id: boatId,
+        name: proposed.name,
+        specs: next,
+        updated_by: userId,
+      });
+    }
+    if (merged.length > 0) {
+      const { error: specsError } = await supabase
+        .from("equipment")
+        // Same cast as the batches above: `specs` is a `Json` column and the generated row type
+        // asks for every required column of an insert, though the conflict always fires here.
+        .upsert(merged as never, { onConflict: "id" });
+      if (specsError) return fail(dbErrorKey(specsError));
+    }
   }
 
   // "layout": what lands on a screen shows on the screens below it too — a completion changes

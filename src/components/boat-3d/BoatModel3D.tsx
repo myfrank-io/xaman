@@ -76,7 +76,9 @@ export function BoatModel3D({
             ? t("headlineOverdue", { count: overdue })
             : soon > 0
               ? t("headlineSoon", { count: soon })
-              : t("headlineClear")}
+              : // Nothing due: say what is aboard rather than « rien ». The maquette is how an
+                // owner learns his boat, and « rien en retard » teaches nothing about it.
+                t("headlineAboard", { count: data.equipment.length })}
         </span>
       }
       bare
