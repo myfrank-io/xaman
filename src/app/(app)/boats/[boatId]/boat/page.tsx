@@ -5,8 +5,8 @@ import { BoatTabs } from "@/components/boat/BoatTabs";
 import { isBoatTab, type BoatTab } from "@/components/boat/tabs";
 import { EnginesTab, type EngineSummary } from "@/components/engines/EnginesTab";
 import type { BoatModelData } from "@/components/boat-3d/BoatModel3D";
+import { specsRecord, toBoatModelData } from "@/lib/boat-3d/data";
 import { EquipmentTab } from "@/components/equipment/EquipmentTab";
-import type { ChecklistState } from "@/lib/checklist-status";
 import { applyStockFilter, countLowStock, type StockFilter } from "@/lib/parts";
 import { can, type BoatRole } from "@/lib/permissions";
 import { inboundDomain } from "@/lib/inbox/receive";
@@ -20,12 +20,6 @@ import { createClient } from "@/lib/supabase/server";
  * Boat screen (tab 4, D34, D37): the identity is the heading, then two lists — the engines
  * and, with the equipment, the spare-parts stock. The tab is kept in the URL.
  */
-/** `equipment.specs` is jsonb: anything could be in there, so only a plain object survives. */
-function specsRecord(specs: unknown): Record<string, unknown> | null {
-  if (!specs || typeof specs !== "object" || Array.isArray(specs)) return null;
-  return specs as Record<string, unknown>;
-}
-
 export default async function BoatPage({
   params,
   searchParams,
@@ -148,45 +142,18 @@ export default async function BoatPage({
 
   const stockFilter: StockFilter = low === "1" ? "low" : "all";
 
-  // The 3D model (E2-8, D117): the boat's own shape, its systems and what each of them owes.
-  const model: BoatModelData = {
-    shape: {
-      type: boat.type,
-      lengthM: boat.length_m,
-      beamM: boat.beam_m,
-      draftM: boat.draft_m,
-      engines: engineRows
-        .filter((engine) => engine.isActive)
-        .map((engine) => ({ id: engine.id, position: engine.position })),
-    },
-    categories: (categories ?? []).map((category) => ({
-      id: category.id,
-      externalRef: category.external_ref,
-    })),
-    equipment: equipmentRows
-      .filter((item) => !item.removedAt)
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        brand: item.brand,
-        model: item.model,
-        quantity: item.quantity,
-        categoryId: item.categoryId,
-        externalRef: item.externalRef,
-        specs: item.specs,
-      })),
-    points: (statuses ?? []).map((row) => ({
-      id: row.id ?? "",
-      label: row.label ?? "",
-      state: (row.status ?? "never") as ChecklistState,
-      daysRemaining: row.days_remaining,
-      hoursRemaining: row.hours_remaining,
-      hasCounter: row.engine_tracks_hours ?? true,
-      categoryId: row.category_id,
-      engineId: row.engine_id,
-    })),
-    engines: engineRows.map((engine) => ({ id: engine.id, label: engine.label })),
-  };
+  /**
+   * The 3D model (E2-8, D117): the boat's own shape, its systems and what each of them owes.
+   * The assembly is shared with « À bord », which shows the same model (D133) — two mappings
+   * would have drawn two different boats from one carnet.
+   */
+  const model: BoatModelData = toBoatModelData({
+    boat,
+    engines: engines ?? [],
+    categories: categories ?? [],
+    equipment: equipment ?? [],
+    points: statuses ?? [],
+  });
 
   // `?tab=identity` still arrives from an old link: it now lands on the default list, with
   // the identity right above it (D37).

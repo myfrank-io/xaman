@@ -608,7 +608,7 @@ Index : `(checklist_item_id, completed_at desc)`.
 
 Index : `parts_boat_live_idx (boat_id, category_id) where deleted_at is null` (la liste du stock), `parts_trash_idx (boat_id, deleted_at desc) where deleted_at is not null` (la corbeille).
 
-Suppression : mise à la corbeille (`deleted_at`), restaurable 30 jours. `adjust_part_quantity()` refuse une ligne à la corbeille (`part_not_found`), et `boat_dashboard_stats.low_stock_parts` ne la compte plus.
+Suppression : mise à la corbeille (`deleted_at`), restaurable 30 jours. `adjust_part_quantity()` refuse une ligne à la corbeille (`part_not_found`), et la file (`boat_todo_queue`, rang 5) ne la demande plus.
 
 ### 3.18 `haul_outs` (sorties de l'eau)
 
@@ -787,7 +787,45 @@ create function purge_trash() returns int ...;
 --                                    equipment, haul_outs, checklist_completions) — supprime les lignes
 --                                    attachments. Les objets Storage sont retirés par l'app (Server Action
 --                                    de suppression définitive) : SQL ne sait pas effacer le blob.
+--
+--  text_haystack(variadic text[])  : le texte cherchable d'une ligne, plié en une seule chaîne
+--                                    (minuscules, sans accents) au-dessus de text_fold (0005).
+--                                    IMMUTABLE : c'est ce qui lui permet de porter une colonne
+--                                    générée. E18-4, `0039`.
+--  search_boat(boat, q, limit)     : chercher dans le carnet — sept familles d'un coup (log,
+--                                    item, purchase, equipment, part, contact, document), une
+--                                    ligne par résultat (kind, id, title, subtitle, happened_at,
+--                                    amount, parent_id, score). security invoker : la RLS de
+--                                    chaque table décide. Deux caractères minimum, corbeille et
+--                                    points inactifs exclus, documents déjà validés exclus (ils
+--                                    se trouvent sous leur nouveau nom). Le téléphone, l'e-mail
+--                                    et l'adresse d'un intervenant ne sont jamais cherchés
+--                                    (D134). E18-4, `0039`.
 ```
+
+### 4.1 `search_text` — le texte cherchable, plié une fois (E18-4, D134, `0039`)
+
+Sept tables — `maintenance_logs`, `checklist_items`, `purchases`, `equipment`, `parts`,
+`contacts`, `inbox_items` — portent une colonne **générée** `search_text`, la concaténation pliée
+de leurs colonnes cherchables, avec son index GIN `gin_trgm_ops` :
+
+| table | colonnes pliées |
+| --- | --- |
+| `maintenance_logs` | `title`, `notes` |
+| `checklist_items` | `label`, `description` |
+| `purchases` | `designation`, `supplier_name`, `notes` |
+| `equipment` | `name`, `brand`, `model`, `serial` |
+| `parts` | `name`, `reference`, `location`, `notes` |
+| `contacts` | `name`, `company`, `specialty` — **jamais** `phone`, `email`, `address` (D134) |
+| `inbox_items` | `subject`, `file_name`, `sender_name` |
+
+La colonne ne porte **aucune information nouvelle** : tout ce qu'elle contient est déjà lisible
+par qui peut lire la ligne. Elle n'a donc ni politique ni privilège propres.
+
+Écrite en *expression* d'index plutôt que stockée, le pliage restait évalué ligne à ligne dès que
+le planificateur entrait par `boat_id` — ce qu'il fait toujours, puisque toute requête filtre par
+bateau (règle 4) : **161 ms** sur un carnet de dix ans, contre **0,6 ms** une fois stocké. C'est
+la raison pour laquelle `0039` touche sept tables.
 
 ## 5. Politiques RLS (résumé)
 
@@ -856,7 +894,22 @@ La même logique est implémentée en TypeScript dans `src/lib/checklist-status.
 Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `purchase_kind = null`), `purchases` (`amount`, `date = purchased_at`, `source = 'purchase'`, `purchase_kind = kind`), `haul_outs` (`cost`, `date = started_at`, `source = 'haul_out'`, `purchase_kind = null`), non supprimés, montant non null. Colonnes : `boat_id`, `category_id` (null → « Non catégorisé »), `category_name`, `source`, `purchase_kind`, `date`, `amount`, `currency`, `entity_id`. Agrégation par période côté requête ; le tableau E5-5 croise `category_name` × (`source`, `purchase_kind`).
 
 ### 6.6 `boat_dashboard_stats`
-Par bateau : `overdue_items`, `soon_items`, `planned_logs`, `in_progress_logs`, `urgent_logs`, `ytd_expenses`, `last_haul_out_at`, `months_since_haul_out`, `low_stock_parts` (pièces à la corbeille exclues depuis `0012`).
+Par bateau : `review_pending_logs`, `review_pending_purchases` — et rien d'autre depuis `0037`. La vue portait onze sous-requêtes corrélées (états des points, interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau, stock bas, moteurs sans relevé) ; E18-1 a retiré de l'écran les blocs qui les lisaient, et ce qu'il reste à demander à la base est le compte du bandeau « lignes importées à vérifier ». Ce que les autres colonnes disaient se lit là où il se montre : la file (`boat_todo_queue`) pour ce qui attend, `checklist_category_progress` pour les points, `expenses_by_category` pour l'argent, les tables elles-mêmes pour la sortie de l'eau et les compteurs.
+
+### 6.6 bis `boat_activity` (le fil du carnet — D132, `0038`)
+Union de cinq faits, `security_invoker` (chaque table source décide, comme sur son propre écran) :
+cochages (`checklist_completions`), interventions **terminées** non supprimées, achats non
+supprimés, relevés d'heures **saisis à la main** (`source = 'manual'` : ceux que l'app dérive d'une
+intervention ou d'un cochage sont déjà dits par leur ligne, D5), sorties de l'eau non supprimées.
+
+Colonnes : `boat_id`, `kind ('completion'|'log'|'purchase'|'reading'|'haul_out')`, `id`,
+`happened_at` (le jour du fait, pas celui de la saisie), `title`, `who`, `category_name`,
+`category_color`, `amount`, `hours`, `recorded_at`. `who` prend le **nom figé** d'un cochage
+(`completed_by_name`, D31) avant le profil, et l'intervenant avant l'auteur sur une intervention,
+un achat ou une sortie de l'eau. Tri de lecture : `happened_at desc, recorded_at desc`.
+
+Ce que la vue **ne porte pas** : les lignes à la corbeille et les modifications (D132). Le fil dit
+ce que le bateau a vécu, pas ce qui a été défait.
 
 ### 6.7 `checklist_template_catalog`
 Le **registre des modèles** tel que le lit le sélecteur de création d'un bateau (D64) : une ligne par modèle lisible, avec son nombre de catégories et de points (« 8 systèmes · 70 points »). `security_invoker`, donc `checklist_templates_select` (`is_public or is_platform_admin()`) décide seul de ce qui est visible.
@@ -936,10 +989,12 @@ Fonction `stable`, **security invoker** (la RLS de l'appelant s'applique : un é
 |---|---|---|
 | 0 | interventions `urgent` | `performed_at` (la plus ancienne d'abord) |
 | 1 | points `overdue` | `-severity` — **retard relatif** `greatest((today − due_at)/max(interval_months×30, 30), (current_hours − due_hours)/max(interval_hours, 25))` |
-| 2 | interventions `in_progress` puis `planned` dont `performed_at ≤ today + 30 j` | `+1 000 000` pour `planned`, puis `performed_at` |
-| 3 | points `soon` | `least(days_remaining, hours_remaining × 1,2)` — 1 h moteur ≈ 1,2 jour (seuils 30 j / 25 h) |
+| 2 | documents `received` / `analysing` / `ready` de « À valider » (D131) | `received_at` (le plus ancien d'abord) |
+| 3 | interventions `in_progress` puis `planned` dont `performed_at ≤ today + 30 j` | `+1 000 000` pour `planned`, puis `performed_at` |
+| 4 | points `soon` | `least(days_remaining, hours_remaining × 1,2)` — 1 h moteur ≈ 1,2 jour (seuils 30 j / 25 h) |
+| 5 | pièces sous leur seuil, corbeille exclue (D10, D131) | `-severity` — ce qui manque (`min_quantity − quantity`), le stock le plus court d'abord |
 
-Colonnes : `rank, kind ('log'|'item'), id, title, category_id, category_name, category_color, engine_id, engine_label, status, due_at, due_hours, days_remaining, hours_remaining, severity, sort_key`. Pour une intervention, `due_at = performed_at` et `days_remaining = performed_at − current_date`. **Les points `never` sont exclus** : au lancement les ~90 points de la checklist ORC 50 sont tous « jamais faits » et noieraient la file.
+Colonnes : `rank, kind ('log'|'item'|'inbox'|'part'), id, title, category_id, category_name, category_color, engine_id, engine_label, status, due_at, due_hours, days_remaining, hours_remaining, severity, sort_key`. Pour une intervention, `due_at = performed_at` et `days_remaining = performed_at − current_date`. Pour un document, `due_at` porte le **jour d'arrivée** et `days_remaining` reste nul : un papier n'est pas en retard, il est sans réponse. Pour une pièce, tout ce qui est daté est nul et `severity` dit ce qui manque. **Les points `never` sont exclus** : au lancement les ~90 points de la checklist ORC 50 sont tous « jamais faits » et noieraient la file.
 
 ### 12.6 Triggers et politiques
 - **Corbeille et relevés (D5)** — `sync_log_readings_trash` (`after update of deleted_at on maintenance_logs`, `security definer`) : à la mise à la corbeille, les `engine_hour_readings` de l'intervention sont fusionnés dans `pending_engine_hours` (`{engine_id: hours}`) puis supprimés ; à la restauration, si `needs_review = false`, ils sont recréés (source `maintenance_log`) et la colonne est vidée. Une intervention encore `needs_review` garde ses heures pour `mark_log_reviewed`. Le compteur ne change donc plus une seconde fois lors du `purge_trash()` 30 jours plus tard, et plus aucun relevé n'est orphelin.
@@ -967,6 +1022,11 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
+- **0039** (D134) : `search_boat()` et `text_haystack()`, la recherche du carnet — sept familles, `security invoker`, aucune table ni politique nouvelle. Ajoute la colonne générée `search_text` et son index trigramme sur sept tables (§4.1), et **remplace** `maintenance_logs_search_idx` de `0001` : l'ancien portait sur `title || ' ' || coalesce(notes, '')` brut, qu'aucune requête ne pouvait emprunter (vérifié à l'`EXPLAIN`).
+- **0038** (D132) : vue `boat_activity`, le fil partagé du carnet — cinq faits, aucune table,
+  aucune politique (`security_invoker`). Les tests RLS couvrent les trois choses qu'une union peut
+  rater : un membre lit, un étranger ne lit rien, une ligne mise à la corbeille sort du fil.
+- **0037** (D131) : `boat_todo_queue` passe à six rangs — les documents qui attendent une décision et les pièces sous leur seuil entrent dans la file, avec `kind = 'inbox'` et `kind = 'part'` —, et `boat_dashboard_stats` est refaite à deux colonnes (drop + create : la liste change). Aucune table, aucune politique : les deux objets sont `security_invoker`, donc la RLS de `inbox_items` et de `parts` décide comme avant.
 - **0034** (D118) : table `maintenance_log_categories` (les systèmes d'une intervention) avec ses politiques et son trigger de cohérence de bateau, reprise des lignes existantes depuis `maintenance_logs.category_id`, et `maintenance_logs_view` qui gagne `category_ids` — **en dernière colonne**, parce qu'un `create or replace view` ne sait qu'ajouter à la fin. `category_id` ne change ni de sens ni de valeur : c'est le système principal, et tout ce qui le lisait continue.
 - **0036** (D130, E17-12) : `normalise_for_match()` (`0035`) devient une enveloppe de `text_fold()` — `trim(regexp_replace(text_fold(v), '[^a-z0-9&]+', ' ', 'g'))` — au lieu de porter sa propre table d'accents, plus faible que celle de `0005` : `Œ œ Æ æ Ø ø` en étaient absents, donc `œ` survivait au `translate` puis était avalé comme une ponctuation (`'Cœur'` → `c ur`). Même signature, même `immutable`, même `search_path` vide, mêmes privilèges (`authenticated`, `service_role`) ; la jumelle TypeScript replie les mêmes ligatures avant son `normalize("NFD")`. Aucune table, aucune politique, aucune donnée touchée.
 

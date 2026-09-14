@@ -1,6 +1,7 @@
 import type { NavKey } from "@/components/layout/nav";
 import { isImportEntity, type ImportEntity } from "@/lib/import/entities";
 import {
+  activityPath,
   BOAT_ROUTES,
   boatPath,
   boatTabPath,
@@ -23,6 +24,7 @@ const CRUMB_STEPS = [
   "parts",
   "report",
   "profile",
+  "activity",
 ] as const;
 type CrumbStep = (typeof CRUMB_STEPS)[number];
 
@@ -84,6 +86,10 @@ function sectionOf(segment: string, boatId: string, entity?: string | null): Sec
     return { crumb: { key: nav, href: boatPath(boatId, nav) }, nav, parent: "logs" };
   }
   if (nav) return { crumb: { key: nav, href: boatPath(boatId, nav) }, nav };
+  // Le fil entier s'ouvre depuis le tableau de bord, qui en porte les dix premières lignes (D132).
+  if (segment === "activity") {
+    return { crumb: { key: "crumbs.activity", href: activityPath(boatId) }, parent: "dashboard" };
+  }
   // Two screens live outside the menu. The report opens from « Paramètres »…
   if (segment === "report") {
     return { crumb: { key: "crumbs.report", href: reportPath(boatId) }, parent: "settings" };

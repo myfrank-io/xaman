@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, PrinterIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ChecklistItemRow } from "@/components/checklist/ChecklistItemRow";
@@ -21,8 +21,17 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { NextActionCard } from "@/components/dashboard/NextActionCard";
 import { entryKey, groupQueue, type UpcomingEntry } from "@/components/dashboard/queue";
 import { LogDueLabel } from "@/components/logs/LogDueLabel";
+import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
-import { categoryPath, checklistPath, logPath, logsPath } from "@/lib/queries/boat-routes";
+import {
+  categoryPath,
+  checklistPath,
+  inboxPath,
+  logPath,
+  logsPath,
+  queueReportPath,
+  stockPath,
+} from "@/lib/queries/boat-routes";
 
 /**
  * Le plan de travail (D121, E18-1) : toute la file de `boat_todo_queue`, rangée par palier.
@@ -95,6 +104,48 @@ export function UpcomingList({
   const groups = useMemo(() => groupQueue(rest, today), [rest, today]);
 
   function renderEntry(entry: UpcomingEntry) {
+    // Un document attend une décision, pas une date : sa ligne dit depuis quand il est là, et
+    // mène à l'écran qui sait le classer (D131).
+    if (entry.kind === "inbox") {
+      return (
+        <ListRow
+          key={entryKey(entry)}
+          lead={
+            <Badge size="sm" variant="secondary" className="w-26 justify-center">
+              {t("inbox.badge")}
+            </Badge>
+          }
+          title={entry.title}
+          meta={
+            entry.receivedAt ? t("inbox.received", { date: formatDate(entry.receivedAt) }) : null
+          }
+          href={inboxPath(boatId)}
+        />
+      );
+    }
+    // Une pièce sous son seuil tombe quand on ira l'acheter : ce qui manque, et rien de daté.
+    if (entry.kind === "part") {
+      return (
+        <ListRow
+          key={entryKey(entry)}
+          lead={
+            <Badge size="sm" variant="secondary" className="w-26 justify-center">
+              {t("part.badge")}
+            </Badge>
+          }
+          title={entry.title}
+          meta={
+            <>
+              {entry.categoryColor ? <CategoryDot color={entry.categoryColor} /> : null}
+              {entry.categoryName ? <span className="truncate">{entry.categoryName}</span> : null}
+              <span className="num">{t("part.missing", { count: entry.missing })}</span>
+            </>
+          }
+          categoryColor={entry.categoryColor ?? undefined}
+          href={stockPath(boatId, { filter: "low" })}
+        />
+      );
+    }
     return entry.kind === "item" ? (
       <ChecklistItemRow
         key={entryKey(entry)}
@@ -174,6 +225,14 @@ export function UpcomingList({
         >
           {t("allLogs")}
           <ChevronRightIcon className="size-4" aria-hidden />
+        </Link>
+        {/* La même file, sur une feuille (E18-5) : au ponton l'iPad reste dans le sac. */}
+        <Link
+          href={queueReportPath(boatId) as Route}
+          className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
+        >
+          <PrinterIcon className="size-4" aria-hidden />
+          {t("takeAway")}
         </Link>
       </div>
       <CompleteItemDialog
