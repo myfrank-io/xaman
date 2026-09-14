@@ -109,7 +109,9 @@ export function UpcomingList({
     ) : (
       <ListRow
         key={entryKey(entry)}
-        lead={<StatusBadge status={entry.status} className="w-28 justify-center" />}
+        // Même largeur que la puce d'un point de checklist (`ChecklistItemRow`) : la file
+        // mélange les deux, et deux colonnes d'états larges de 8 px d'écart se voient.
+        lead={<StatusBadge status={entry.status} className="min-w-30" />}
         title={entry.title}
         meta={
           <>

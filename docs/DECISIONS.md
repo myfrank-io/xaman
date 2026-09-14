@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D122.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D123.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2800,3 +2800,41 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+
+
+## 2026-09-14 — D122 : une colonne de liste large de ce qu'elle porte, et une valeur jamais plafonnée
+
+**Question.** La ligne de liste partagée (`ListRow`) donne deux colonnes latérales de largeur
+fixe : l'état à gauche, la valeur à droite. Aucune des deux ne rogne son contenu, et sur une ligne
+**en retard** les deux sont trop étroites — « EN RETARD » demande 115 px dans 104, « 105 j de
+retard » 117 px dans 112. Élargir, laisser la colonne se dimensionner, ou raccourcir la phrase ?
+
+**Décision.** Élargir la gauche, déplafonner la droite.
+
+- **Colonne d'état : 120 px** (`sm:min-w-30`), au lieu de 104. C'est la largeur de la plus large
+  des puces que l'application écrit — « EN RETARD », icône et capitales comprises — plus sa marge.
+  La puce d'un point de checklist et celle d'une intervention de la file la remplissent
+  exactement (`min-w-30` sur la puce) ; celles qui se dimensionnent d'elles-mêmes, comme sur la
+  fiche d'un moteur, s'y rangent à gauche. Les titres continuent de s'aligner d'une ligne à
+  l'autre, ce pour quoi la colonne est fixe (D88).
+- **Colonne de valeur : plus de plafond.** Un `max-width` ne rognait rien — une échéance est
+  `whitespace-nowrap` — donc il ne faisait que laisser le texte sortir : « 105 j de retard »
+  (117 px) et « 426 h de retard » (123 px) dépassaient les 112 px du plafond, et « compteur
+  inconnu » les aurait dépassés de 40. La colonne qui cède est le titre, la seule qui porte
+  `min-w-0` : il se tronque, ce qui est son métier.
+
+**`min-w` et non `w`.** Une largeur fixe recrée la panne le jour où un libellé dépasse la mesure
+d'aujourd'hui. Avec un minimum, un libellé imprévu **pousse** son titre vers la droite au lieu de
+lui passer dessus : une ligne désalignée se voit et se corrige, un mot coupé en deux se lit faux.
+
+**Ce qui n'est pas retenu.** *Raccourcir la phrase* (« 105 j » au lieu de « 105 j de retard »,
+comme le fait déjà la file du tableau de bord en `compact`) : la Checklist est l'écran où l'on
+compare des retards entre eux, et le mot qui les nomme y vaut ses 40 px. *Rogner la colonne*
+(`truncate`) : un nombre coupé est pire qu'un nombre absent. *Réduire la puce à la taille `sm`* :
+elle porte le seul signal rouge de la liste, on ne l'affaiblit pas pour gagner 25 px.
+
+**Pourquoi l'audit ne l'avait pas vu.** La recette `/dev/ui/checklist` n'a porté une ligne en
+retard que récemment, et jamais avec un retard à trois chiffres ; `/dev/ui` montrait ses lignes de
+référence avec des puces en taille `sm`, que l'application n'écrit nulle part ; et la fiche d'un
+moteur ne listait que des interventions **terminées**. Les trois recettes portent désormais la
+forme qui casse, donc `tests/e2e/touch-audit.spec.ts` la mesure sur les cinq viewports.

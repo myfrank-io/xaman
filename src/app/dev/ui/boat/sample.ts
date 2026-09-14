@@ -424,6 +424,16 @@ export const SAMPLE_ENGINE_READINGS: EngineReadingRow[] = [
 ];
 
 export const SAMPLE_ENGINE_LOGS: EngineLogRow[] = [
+  // Une ligne ouverte et urgente : sans elle la colonne d'état de cette liste ne montrait que
+  // « TERMINÉ », et l'audit tactile n'y mesurait jamais la puce rouge, la plus large des quatre.
+  {
+    id: "l0",
+    title: "Alarme de température au ralenti — à diagnostiquer",
+    performedAt: "2026-09-04",
+    status: "urgent",
+    cost: null,
+    contactName: null,
+  },
   {
     id: "l1",
     title: "Vidange + entretien complet (2 moteurs)",

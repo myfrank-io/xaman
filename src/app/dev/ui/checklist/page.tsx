@@ -77,7 +77,7 @@ const ROWS: ChecklistRow[] = [
     lastCompletedAt: "2025-06-15",
     lastCompletedByName: "Xavier",
     dueAt: "2026-06-15",
-    daysRemaining: -79,
+    daysRemaining: -105,
     sortOrder: 1,
   }),
   row({
