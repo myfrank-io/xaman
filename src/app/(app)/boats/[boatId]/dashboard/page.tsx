@@ -8,6 +8,8 @@ import { getTranslations } from "next-intl/server";
 import type { EngineReadDates } from "@/components/checklist/completable";
 import { toChecklistRow, type StatusViewRow } from "@/components/checklist/rows";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SectionCard } from "@/components/common/SectionCard";
+import { ActivityList } from "@/components/dashboard/ActivityList";
 import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
 import { OutboxCard } from "@/components/offline/OutboxCard";
 import { DashboardBanner } from "@/components/dashboard/DashboardBanner";
@@ -18,8 +20,9 @@ import { UpcomingList } from "@/components/dashboard/UpcomingList";
 import { WEEK_DAYS } from "@/lib/attention";
 import { toDateString, todayString } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadActivity } from "@/lib/queries/activity";
 import { loadItemAttention, loadWeekActivity, pickNames } from "@/lib/queries/attention";
-import { newLogPath } from "@/lib/queries/boat-routes";
+import { activityPath, newLogPath } from "@/lib/queries/boat-routes";
 import { Button } from "@/components/ui/button";
 import { completionContext } from "@/lib/queries/completion-context";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
@@ -36,6 +39,11 @@ import type { Database } from "@/types/database";
  * mènent aux listes complètes, qui savent filtrer.
  */
 const QUEUE_LIMIT = 200;
+/**
+ * Dix lignes de fil : de quoi voir ce qui a bougé depuis la dernière visite sans transformer
+ * l'écran en journal. Le reste est à un tap, sur son propre écran (E18-3).
+ */
+const ACTIVITY_PREVIEW = 10;
 /** Combien de points « ok » on regarde pour nommer la prochaine échéance de l'état vide. */
 const NEXT_DUE_SAMPLE = 20;
 const FALLBACK_COLOR = "#63748A";
@@ -119,6 +127,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     { data: progress },
     attention,
     week,
+    activity,
   ] = await Promise.all([
     readBoatRow(boatId),
     readBoatRole(boatId),
@@ -148,6 +157,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     loadItemAttention(supabase, boatId),
     // Ce qui a été réglé sur sept jours : la moitié gauche de la phrase d'état.
     loadWeekActivity(supabase, boatId, weekSince),
+    // Ce qui a bougé, avec les noms : la zone « savoir » de l'écran (D123).
+    loadActivity(supabase, boatId, ACTIVITY_PREVIEW),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -382,6 +393,19 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
           description={nextDueText}
         />
       )}
+
+      {/* 5 — savoir : ce qui a bougé, avec les noms. Le bloc n'existe que s'il a quelque chose à
+          dire : sur un carnet neuf, la mise en route parle déjà (D123). */}
+      {activity.length > 0 ? (
+        <SectionCard
+          title={t("activity.title")}
+          actionHref={activityPath(boatId)}
+          actionLabel={t("activity.all")}
+          bare
+        >
+          <ActivityList rows={activity} />
+        </SectionCard>
+      ) : null}
     </div>
   );
 }

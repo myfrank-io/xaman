@@ -795,6 +795,21 @@ Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `p
 ### 6.6 `boat_dashboard_stats`
 Par bateau : `review_pending_logs`, `review_pending_purchases` — et rien d'autre depuis `0035`. La vue portait onze sous-requêtes corrélées (états des points, interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau, stock bas, moteurs sans relevé) ; E18-1 a retiré de l'écran les blocs qui les lisaient, et ce qu'il reste à demander à la base est le compte du bandeau « lignes importées à vérifier ». Ce que les autres colonnes disaient se lit là où il se montre : la file (`boat_todo_queue`) pour ce qui attend, `checklist_category_progress` pour les points, `expenses_by_category` pour l'argent, les tables elles-mêmes pour la sortie de l'eau et les compteurs.
 
+### 6.6 bis `boat_activity` (le fil du carnet — D123, `0036`)
+Union de cinq faits, `security_invoker` (chaque table source décide, comme sur son propre écran) :
+cochages (`checklist_completions`), interventions **terminées** non supprimées, achats non
+supprimés, relevés d'heures **saisis à la main** (`source = 'manual'` : ceux que l'app dérive d'une
+intervention ou d'un cochage sont déjà dits par leur ligne, D5), sorties de l'eau non supprimées.
+
+Colonnes : `boat_id`, `kind ('completion'|'log'|'purchase'|'reading'|'haul_out')`, `id`,
+`happened_at` (le jour du fait, pas celui de la saisie), `title`, `who`, `category_name`,
+`category_color`, `amount`, `hours`, `recorded_at`. `who` prend le **nom figé** d'un cochage
+(`completed_by_name`, D31) avant le profil, et l'intervenant avant l'auteur sur une intervention,
+un achat ou une sortie de l'eau. Tri de lecture : `happened_at desc, recorded_at desc`.
+
+Ce que la vue **ne porte pas** : les lignes à la corbeille et les modifications (D123). Le fil dit
+ce que le bateau a vécu, pas ce qui a été défait.
+
 ### 6.7 `checklist_template_catalog`
 Le **registre des modèles** tel que le lit le sélecteur de création d'un bateau (D64) : une ligne par modèle lisible, avec son nombre de catégories et de points (« 8 systèmes · 70 points »). `security_invoker`, donc `checklist_templates_select` (`is_public or is_platform_admin()`) décide seul de ce qui est visible.
 
@@ -906,6 +921,9 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
+- **0036** (D123) : vue `boat_activity`, le fil partagé du carnet — cinq faits, aucune table,
+  aucune politique (`security_invoker`). Les tests RLS couvrent les trois choses qu'une union peut
+  rater : un membre lit, un étranger ne lit rien, une ligne mise à la corbeille sort du fil.
 - **0035** (D122) : `boat_todo_queue` passe à six rangs — les documents qui attendent une décision et les pièces sous leur seuil entrent dans la file, avec `kind = 'inbox'` et `kind = 'part'` —, et `boat_dashboard_stats` est refaite à deux colonnes (drop + create : la liste change). Aucune table, aucune politique : les deux objets sont `security_invoker`, donc la RLS de `inbox_items` et de `parts` décide comme avant.
 - **0034** (D118) : table `maintenance_log_categories` (les systèmes d'une intervention) avec ses politiques et son trigger de cohérence de bateau, reprise des lignes existantes depuis `maintenance_logs.category_id`, et `maintenance_logs_view` qui gagne `category_ids` — **en dernière colonne**, parce qu'un `create or replace view` ne sait qu'ajouter à la fin. `category_id` ne change ni de sens ni de valeur : c'est le système principal, et tout ce qui le lisait continue.
 

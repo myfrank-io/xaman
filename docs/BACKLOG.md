@@ -368,12 +368,21 @@ indépendants dans cet ordre : le premier se livre seul.
   maintenant ce que l'écran lit vraiment (les moteurs sans relevé sur leurs tables, le stock bas
   sur la file). **Vérifié** : `pnpm db:types` commité, 153 tests RLS verts sur la base reconstruite
   (dont le rang des quatre genres), 13 cas sur les paliers, lint/format/typecheck/build verts.
-- [ ] **E18-3 (M, 2)** **« Ce qui a bougé ».** Le bloc qui remplace les trois résumés : le fil
-  partagé du carnet — cochages, interventions, achats, relevés d'heures, documents validés, sorties
-  de l'eau — avec **qui** et **quand**, dix lignes puis « tout voir ». C'est la seule chose que le
-  papier ne sait pas faire et qu'aucun écran ne montre. Vue `boat_activity` (`security_invoker`),
-  auteur lu sur le nom figé quand le compte n'existe plus (D31). **DoD** : matrice RLS sur la vue,
-  temps réel branché sur ce que l'écran montre déjà, pas de pagination infinie.
+- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D123). Le bloc qui remplace les trois résumés :
+  le fil partagé du carnet — points cochés, interventions terminées, achats, relevés d'heures
+  saisis à la main, sorties de l'eau — avec **qui** et **quand**. Vue `boat_activity` (`0036`),
+  `security_invoker`, sans table ni politique nouvelle : chaque table source décide comme sur son
+  propre écran. `who` lit le **nom figé** avant le profil (D31), l'intervenant avant l'auteur. Ce
+  que le fil ne montre pas est une décision, pas un oubli : ni corbeille ni modification — un
+  carnet qui dirait « X a supprimé… » deviendrait une surveillance entre associés. Les relevés
+  dérivés d'une intervention (D5) n'y sont pas non plus : leur ligne est déjà au-dessus. Dix
+  lignes sur l'écran d'arrivée, le reste sur `/activity` par pages de cinquante (jamais de
+  défilement infini) ; les lignes ne sont pas cliquables — un fait n'est pas une porte, et une
+  moitié de lignes cliquables aurait fait croire l'autre cassée. Le temps réel existait déjà :
+  les cinq tables sont publiées et le tableau de bord est dans leurs sections
+  (`use-boat-realtime.ts`). **Vérifié** : 3 cas RLS (un membre lit, un étranger non, la corbeille
+  sort du fil), 4 cas unitaires sur la ligne rendue sûre, `/dev/ui/dashboard` porte le bloc et
+  l'audit tactile passe aux cinq viewports.
 - [ ] **E18-4 (S, 3)** **Chercher dans le carnet.** « C'était quand, la dernière courroie ? Combien ?
   Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien, et la recherche
   n'existe qu'à l'intérieur du Journal, sur titre et notes. Un champ dans la barre du haut, une page

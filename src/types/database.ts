@@ -2282,6 +2282,22 @@ export type Database = {
       }
     }
     Views: {
+      boat_activity: {
+        Row: {
+          amount: number | null
+          boat_id: string | null
+          category_color: string | null
+          category_name: string | null
+          happened_at: string | null
+          hours: number | null
+          id: string | null
+          kind: string | null
+          recorded_at: string | null
+          title: string | null
+          who: string | null
+        }
+        Relationships: []
+      }
       boat_dashboard_stats: {
         Row: {
           boat_id: string | null

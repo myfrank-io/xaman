@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D123.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D124.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2840,3 +2840,38 @@ interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau
 sans relevé) : elles étaient recalculées à chaque rendu de l'écran d'arrivée pour personne. Deux
 tests qui s'en servaient comme sonde interrogent maintenant ce que l'écran lit vraiment — les
 moteurs sans relevé sur leurs tables, le stock bas sur la file elle-même.
+
+
+## 2026-09-14 — D123 : le fil dit ce qui a eu lieu, jamais ce qui a été défait
+
+**Question.** E18-1 a retiré de l'écran d'arrivée les trois blocs qui résumaient d'autres onglets.
+À leur place vient « Ce qui a bougé » — le fil partagé du carnet. Que met-on dedans, et que n'y
+met-on pas ?
+
+**Décision.** Le fil montre **les faits du carnet** : un point coché, une intervention terminée, un
+achat, un relevé d'heures saisi à la main, une sortie de l'eau — avec **qui** l'a fait et **quand**.
+Une vue, `boat_activity` (`0036`), unit ces cinq tables ; elle est `security_invoker`, donc chaque
+table décide de ce qui est lisible exactement comme sur l'écran où le fait se montre déjà.
+
+**Ce qu'il ne montre pas.** Les mises à la corbeille et les modifications. Ce n'est pas un journal
+d'audit, c'est ce que le bateau a vécu : une ligne à la corbeille sort du fil comme elle sort des
+listes, et c'est vérifié. Un carnet qui afficherait « Xavier a supprimé… » changerait de nature —
+il deviendrait une surveillance entre associés, et la confiance qu'on lui demande est l'inverse.
+
+**Les relevés dérivés n'y sont pas non plus.** Une vidange notée avec ses heures écrit un relevé
+(D5) : il est déjà dit par la ligne de l'intervention. Seuls les relevés saisis à la main
+(`source = 'manual'`) sont un acte de plus, donc une ligne de plus.
+
+**Le nom d'abord, le compte jamais.** Une ligne nomme la personne — le nom figé (D31) quand le
+compte a disparu, l'intervenant quand il y en a un, sinon celui qui a noté. C'est ce que le papier
+ne sait pas faire et que personne d'autre ne dit : *ce que l'autre a fait depuis ma dernière
+visite*. La vignette « Réglés cette semaine » qui comptait ces actes est partie avec E18-1 ; un
+compte n'a jamais dit qui.
+
+**Les lignes du fil ne mènent nulle part, et c'est voulu.** Un fait n'est pas une porte. Un relevé
+d'heures n'a pas d'écran à lui, et rendre cliquable une moitié des lignes aurait fait croire que
+l'autre moitié est cassée. Les écrans sont à un tap dans la barre ; le fil, lui, se lit.
+
+**Dix lignes, puis un écran.** L'écran d'arrivée en montre dix : de quoi voir ce qui a bougé depuis
+la dernière visite sans se transformer en journal. Le reste est sur `/activity`, qui charge par
+pages de cinquante — jamais de défilement infini sur une liste qu'on lit à l'envers (E3-2).

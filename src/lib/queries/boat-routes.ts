@@ -69,6 +69,17 @@ export function newLogPath(
   return withQuery(`${boatPath(boatId, "logs")}/new`, query);
 }
 
+/**
+ * « Ce qui a bougé », en entier (E18-3). L'écran n'est pas dans la barre : il s'ouvre depuis le
+ * fil du tableau de bord, qui en montre les dix premières lignes.
+ */
+export function activityPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`/boats/${boatId}/activity`, query);
+}
+
 export function logsPath(
   boatId: string,
   query?: Record<string, string | number | undefined>,

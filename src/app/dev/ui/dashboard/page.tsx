@@ -6,6 +6,7 @@ import { PlusIcon, TriangleAlertIcon } from "lucide-react";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { SectionCard } from "@/components/common/SectionCard";
+import { ActivityList } from "@/components/dashboard/ActivityList";
 import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
 import { EngineStrip } from "@/components/dashboard/EngineStrip";
 import type { UpcomingEntry } from "@/components/dashboard/queue";
@@ -23,6 +24,7 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { todayString } from "@/lib/format";
+import type { ActivityRow } from "@/lib/queries/activity";
 
 import { SAMPLE_CATEGORIES } from "../sample-data";
 import { devUiEnabled } from "@/lib/dev-ui";
@@ -181,6 +183,65 @@ const UPCOMING: UpcomingEntry[] = [
   },
 ];
 
+/** Le fil du carnet (D123) : cinq faits, cinq genres, et les noms qui vont avec. */
+const ACTIVITY: ActivityRow[] = [
+  {
+    kind: "completion",
+    id: "a1",
+    happenedAt: "2026-09-13",
+    title: "Pompes de cale (test auto/manuel)",
+    who: "Emmanuel Lesaffre",
+    categoryName: SAMPLE_CATEGORIES[6].name,
+    categoryColor: SAMPLE_CATEGORIES[6].color,
+    amount: null,
+    hours: null,
+  },
+  {
+    kind: "log",
+    id: "a2",
+    happenedAt: "2026-09-12",
+    title: "Vidange + entretien complet (2 moteurs)",
+    who: "Chantier du Port",
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+    amount: 620,
+    hours: null,
+  },
+  {
+    kind: "reading",
+    id: "a3",
+    happenedAt: "2026-09-11",
+    title: "Moteur SB",
+    who: "Xavier Marin",
+    categoryName: null,
+    categoryColor: null,
+    amount: null,
+    hours: 1256,
+  },
+  {
+    kind: "purchase",
+    id: "a4",
+    happenedAt: "2026-09-08",
+    title: "Bouteille de gaz",
+    who: "Xavier Marin",
+    categoryName: SAMPLE_CATEGORIES[5].name,
+    categoryColor: SAMPLE_CATEGORIES[5].color,
+    amount: 35,
+    hours: null,
+  },
+  {
+    kind: "haul_out",
+    id: "a5",
+    happenedAt: "2026-01-10",
+    title: "Chantier Naval de Méditerranée",
+    who: "Chantier Naval de Méditerranée",
+    categoryName: null,
+    categoryColor: null,
+    amount: 2400,
+    hours: null,
+  },
+];
+
 /** Ce qui a été réglé cette semaine : la phrase d'état lit cet objet. */
 const WEEK = { completions: 3, logs: 1, total: 4, people: ["Xavier", "Emmanuel"] };
 
@@ -278,6 +339,16 @@ export default async function DevDashboardPage() {
           canContribute
           today={todayString()}
         />
+
+        {/* 5 — savoir : ce qui a bougé, avec les noms (D123) */}
+        <SectionCard
+          title={t("activity.title")}
+          actionHref="/dev/ui/dashboard"
+          actionLabel={t("activity.all")}
+          bare
+        >
+          <ActivityList rows={ACTIVITY} />
+        </SectionCard>
 
         {/* 4b — day-one state of the same block */}
         <SectionCard title={td("dashboard.brandNew")} bare>

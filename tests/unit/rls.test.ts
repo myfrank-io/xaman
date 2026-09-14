@@ -2051,6 +2051,67 @@ describeWithDb("boat_expense_totals (0030)", () => {
   });
 });
 
+/**
+ * Le fil du carnet (D123). La vue unit cinq tables sans politique à elle : `security_invoker`
+ * veut dire que chacune décide comme sur son propre écran. Ce qui est vérifié ici est donc ce
+ * qu'aucune relecture ne garantit — qu'un étranger n'y lit rien, et qu'une ligne mise à la
+ * corbeille en sort, parce qu'un fil qui garderait ce que les listes ont jeté serait un journal
+ * d'audit que personne n'a demandé.
+ */
+describeWithDb("boat_activity", () => {
+  const feedOf = (u: User) =>
+    as(u, async (c) => {
+      const res = await c.query(
+        "select kind, title, who from public.boat_activity where boat_id = $1 order by happened_at desc",
+        [BOAT],
+      );
+      return res.rows as { kind: string; title: string; who: string | null }[];
+    });
+
+  it("shows every member what the carnet lived, and who did it", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const rows = await feedOf(U[role]);
+      expect(rows.length, role).toBeGreaterThan(0);
+      expect(
+        rows.every((r) =>
+          ["completion", "log", "purchase", "reading", "haul_out"].includes(r.kind),
+        ),
+        role,
+      ).toBe(true);
+      expect(
+        rows.some((r) => r.kind === "log" && r.who !== null),
+        role,
+      ).toBe(true);
+    }
+  });
+
+  it("says nothing at all to an outsider", async () => {
+    expect(await feedOf(U.stranger)).toEqual([]);
+  });
+
+  it("drops a line the moment it goes to the trash", async () => {
+    const counts = await as(U.owner, async (c) => {
+      const logs = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as n from public.boat_activity where boat_id = $1 and kind = 'log'",
+              [BOAT],
+            )
+          ).rows[0].n,
+        );
+      const before = await logs();
+      await c.query(
+        "update public.maintenance_logs set deleted_at = now() where boat_id = $1 and status = 'done'",
+        [BOAT],
+      );
+      return { before, after: await logs() };
+    });
+    expect(counts.before).toBeGreaterThan(0);
+    expect(counts.after).toBe(0);
+  });
+});
+
 describeWithDb("boat_todo_queue", () => {
   const seedQueue = async (c: PoolClient) => {
     await c.query("set local role service_role");

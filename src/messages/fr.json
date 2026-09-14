@@ -95,6 +95,7 @@
       "equipment": "Équipements",
       "parts": "Stock",
       "report": "Rapport",
+      "activity": "Ce qui a bougé",
       "profile": "Profil"
     },
     "newBoat": "Ajouter un bateau"
@@ -685,6 +686,22 @@
         "badge": "Sous le seuil",
         "missing": "il en manque {count}"
       }
+    },
+    "activity": {
+      "title": "Ce qui a bougé",
+      "all": "Tout voir",
+      "empty": "Rien n'a encore été noté sur ce carnet.",
+      "by": "par {name}",
+      "kind": {
+        "completion": "Point coché",
+        "log": "Intervention",
+        "purchase": "Achat",
+        "reading": "Relevé d'heures",
+        "haulOut": "Sortie de l'eau"
+      },
+      "screenTitle": "Ce qui a bougé",
+      "screenSubtitle": "Tout ce qui a été noté sur ce carnet, le plus récent d'abord.",
+      "more": "Charger plus"
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
