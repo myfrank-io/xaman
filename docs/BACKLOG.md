@@ -31,6 +31,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-13 |
 | E16 | E16-10 |
 | E17 | E17-12 |
+| E18 | E18-13 |
 
 ---
 
@@ -66,9 +67,9 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 - [x] **E2-4 (M, 1)** Catégories (dans Paramètres) : renommer, couleur (nuancier des 8 valeurs harmonisées + avertissement < 3:1), ordre, archiver avec dialogue d'impact (« archiver aussi les N points » / « les déplacer vers … », §4.6), réactiver.
 - [x] **E2-5 (M, 1)** Paramètres du bateau : catégories, export (E9-2), rapport (E9-2b), « Recaler ma checklist » (E4-9), « Reprise du carnet » (E3-7), transfert (E1-8), suppression du bateau (saisie du nom).
 - [x] **E2-6 (M, 2)** Script `pnpm seed:xaman` idempotent + test (deux exécutions = mêmes comptes). Ancrage renseigné à l'instanciation par `0004`.
-- [x] **E2-9 (S, 2)** Matières et affordance de la maquette (D121) : une matière par face (coque, carène, flottaison, pont, sole, roof, vitrage, toile, carbone, solaire, trampoline, métal, appendice) avec son jeton `--model-*` et son contraste propre, fond de studio, ombre en dégradé ; pastille « Touchez un élément », survol qui teinte la zone et la nomme, invite au-dessus de la liste, lignes qui se comportent en boutons, **toutes les zones marquées** (pastille pour ce qui est dû, plot discret pour le reste). Une zone ouverte commence par **ce qu'elle est** : les `specs` de ses équipements lues en clair (`src/lib/boat-3d/specs.ts`), « À faire » ensuite. **DoD** : `tests/unit/boat-3d.test.ts` couvre les rampes et les matières, audit tactile vert.
+- [x] **E2-9 (S, 2)** Matières et affordance de la maquette (D122) : une matière par face (coque, carène, flottaison, pont, sole, roof, vitrage, toile, carbone, solaire, trampoline, métal, appendice) avec son jeton `--model-*` et son contraste propre, fond de studio, ombre en dégradé ; pastille « Touchez un élément », survol qui teinte la zone et la nomme, invite au-dessus de la liste, lignes qui se comportent en boutons, **toutes les zones marquées** (pastille pour ce qui est dû, plot discret pour le reste). Une zone ouverte commence par **ce qu'elle est** : les `specs` de ses équipements lues en clair (`src/lib/boat-3d/specs.ts`), « À faire » ensuite. **DoD** : `tests/unit/boat-3d.test.ts` couvre les rampes et les matières, audit tactile vert.
 - [x] **E2-8 (S, 3)** Maquette 3D du bateau en tête de l'onglet Équipements (D117) : coque paramétrique construite dans le navigateur à partir du type et des dimensions du carnet **et de son inventaire** (dérives, safrans suspendus, jupes allongées, bout-dehors, panneaux sur bossoirs, surfaces de voiles, winch de mât, radeau, dôme — `src/lib/boat-3d/features.ts`), rotation continue, glisser pour tourner, toucher une zone pour l'ouvrir, ligne « Dessinée d'après le carnet : … » sous la maquette. Équipements et points de checklist routés vers une zone physique par les mots puis par l'`external_ref` de la catégorie ; pastilles sur les seules zones en retard ou bientôt dues ; liste de toutes les zones à côté de la maquette (clavier, lecteur d'écran, doigt qui rate). Pas de dépendance 3D (`src/lib/boat-3d/`, `<canvas>` 2D). `prefers-reduced-motion` arrête la rotation et laisse les boutons de rotation. **DoD** : routage testé (`tests/unit/boat-3d.test.ts`), maquette `/dev/ui/boat/model-3d`, vérifié en 1024×768 et 768×1024.
-- [x] **E2-10 (S, 2)** L'inventaire d'un document verse dans l'import (D122) : colonne **« Caractéristiques »** de l'import d'équipements (`cellSpecs` — `clé: valeur` séparés par `;` ou retour à la ligne, clé repliée en `snake_case`, 20 paires au plus), genre **`inventory`** dans la boîte de réception (jusqu'à 80 lignes lues sur un document : nom, catégorie, marque, modèle, n° de série, quantité, date de pose, caractéristiques), carte qui les montre et bouton **« Importer ces équipements »** ouvrant l'import pré-rempli (`inventoryToTable` rend un tableau tabulé dont l'en-tête porte les libellés de l'import, donc `guessMapping` mappe seul). À l'écriture, les `specs` en base **gagnent** sur celles du document (D113). La carte lit les caractéristiques en clair (`specFacts`, comme la maquette), replie le formulaire de rangement derrière « Ranger aussi ce document », et un inventaire sort de « Tout valider ». **DoD** : `tests/unit/inbox-inventory.test.ts` couvre la lecture de la colonne, le pont, la garde de « Tout valider » et la compatibilité des suggestions antérieures ; carte visible sur `/dev/ui/inbox`, audit tactile vert.
+- [x] **E2-10 (S, 2)** L'inventaire d'un document verse dans l'import (D123) : colonne **« Caractéristiques »** de l'import d'équipements (`cellSpecs` — `clé: valeur` séparés par `;` ou retour à la ligne, clé repliée en `snake_case`, 20 paires au plus), genre **`inventory`** dans la boîte de réception (jusqu'à 80 lignes lues sur un document : nom, catégorie, marque, modèle, n° de série, quantité, date de pose, caractéristiques), carte qui les montre et bouton **« Importer ces équipements »** ouvrant l'import pré-rempli (`inventoryToTable` rend un tableau tabulé dont l'en-tête porte les libellés de l'import, donc `guessMapping` mappe seul). À l'écriture, les `specs` en base **gagnent** sur celles du document (D113). La carte lit les caractéristiques en clair (`specFacts`, comme la maquette), replie le formulaire de rangement derrière « Ranger aussi ce document », et un inventaire sort de « Tout valider ». **DoD** : `tests/unit/inbox-inventory.test.ts` couvre la lecture de la colonne, le pont, la garde de « Tout valider » et la compatibilité des suggestions antérieures ; carte visible sur `/dev/ui/inbox`, audit tactile vert.
 
 ## L3 — Le suivi vit ⭐
 
@@ -315,3 +316,110 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
 - [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
 - [ ] **E17-10 (C, 2)** L'e-mail hebdomadaire (E9-6) devient contextuel : avant une sortie de l'eau, à J-30 d'une péremption, à l'entrée de l'hiver.
+
+## E18 — Le premier écran est un plan de travail (D121)
+
+Ouverte le 2026-09-14. Constat : sur six blocs du tableau de bord, quatre sont des copies tronquées
+d'un onglet déjà à un tap — les vignettes redisent les pastilles de la navigation, la grille des
+huit systèmes **est** la racine de la Checklist, les dernières interventions sont le haut du
+Journal, le récapitulatif est trois liens vers trois onglets. L'écran répond à « est-ce que tout va
+bien », la question la plus rare, et sert de sommaire aux cinq autres moments — dont deux,
+*chercher* et *suivre ce qu'ont fait les autres*, n'ont aucun écran.
+
+Principe (D121) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
+le carnet, la flotte (2 à 10 bateaux), l'organisation (jusqu'à 3 000, un constructeur qui vend du
+service à ses acheteurs). Un compte n'est affiché que s'il est un **filtre** qui se résout en
+lignes ; aucun cadran, aucun score de conformité, aucun graphique (règle 10). Les trois lots sont
+indépendants dans cet ordre : le premier se livre seul.
+
+### Lot 1 — Le carnet (V1)
+
+- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D121). Les quatre vignettes, la
+  grille des huit systèmes, les trois dernières interventions et le récapitulatif quittent
+  l'écran : quatre blocs qui étaient des copies tronquées d'un onglet à un tap. La file cesse
+  d'être un aperçu de six lignes — elle prend la hauteur de l'écran et se range par palier,
+  **Aujourd'hui · Cette semaine · Ce mois-ci · Aux heures moteur** (`queue.ts`, testé), avec
+  `NextActionCard` toujours promue en tête et « Fait » toujours en ligne. Les trois premiers
+  paliers ne réinventent aucune règle : le point rouge (D88) décide d'« Aujourd'hui », `WEEK_DAYS`
+  de « Cette semaine ». Le quatrième est à part parce qu'une échéance en heures **ne tombe pas un
+  jour** : la ranger sous « Cette semaine » aurait affiché la conversion (1 h ≈ 1,2 j) comme un
+  fait. Deux règles sortent de leur copie pour que l'étiquette d'une ligne et son palier ne
+  puissent pas diverger : « laquelle des deux échéances déclenche » (`drivenByHours`, tirée de
+  `DueLabel`) et `hasCounter` (qui était écrite deux fois). L'onglet prend le nom **« À bord »**,
+  et les deux liens de pied perdent leur compte — la liste au-dessus *est* le compte. **Aucune
+  migration** : `boat_dashboard_stats` n'est plus lu que pour les deux comptes du bandeau (la vue
+  est dégraissée par E18-2), `checklist_category_progress` passe de `*` à deux colonnes, et la
+  lecture des interventions ouvertes disparaît de l'écran avec la vignette qui la demandait.
+  `fr.json` perd **36 clés** et en gagne 4 (les paliers) ; `loading.tsx` annonce la forme d'une
+  liste au lieu de vignettes ; `/dev/ui/dashboard` porte de quoi peupler les quatre paliers.
+  **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
+  `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
+  390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
+- [ ] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un.** Un document « À valider »
+  (D91) et une pièce sous son seuil (D84) attendent une personne exactement comme un point en
+  retard, mais le premier est un bandeau et la seconde une carte de la Checklist. `boat_todo_queue`
+  gagne deux `kind` (`inbox`, `part`) et leur rang ; le bandeau perd son cas « documents », une
+  ligne valant mieux qu'une bannière. La même migration retire de `boat_dashboard_stats` les
+  colonnes qu'E18-1 laisse sans lecteur (dépenses 12 mois, sortie de l'eau, stock bas), chacune
+  ayant son écran. **DoD** : fonction `security invoker` (RLS inchangée), test de tri et de rang,
+  `tests/unit/rls.test.ts` étendu à la vue réécrite, `pnpm db:types` commité.
+- [ ] **E18-3 (M, 2)** **« Ce qui a bougé ».** Le bloc qui remplace les trois résumés : le fil
+  partagé du carnet — cochages, interventions, achats, relevés d'heures, documents validés, sorties
+  de l'eau — avec **qui** et **quand**, dix lignes puis « tout voir ». C'est la seule chose que le
+  papier ne sait pas faire et qu'aucun écran ne montre. Vue `boat_activity` (`security_invoker`),
+  auteur lu sur le nom figé quand le compte n'existe plus (D31). **DoD** : matrice RLS sur la vue,
+  temps réel branché sur ce que l'écran montre déjà, pas de pagination infinie.
+- [ ] **E18-4 (S, 3)** **Chercher dans le carnet.** « C'était quand, la dernière courroie ? Combien ?
+  Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien, et la recherche
+  n'existe qu'à l'intérieur du Journal, sur titre et notes. Un champ dans la barre du haut, une page
+  de résultats groupés par famille (interventions, points, dépenses, équipements, pièces,
+  intervenants, documents). `search_boat(p_boat_id, q)` sur `pg_trgm` (déjà là, D3) et `unaccent`.
+  **DoD** : la recherche ne rend que ce que la RLS laisse lire (test avec un `pro` et un étranger),
+  requête mesurée sur le carnet de Xaman et budget écrit dans le ticket, clavier iPad (champ ≥ 16 px, annulation d'un tap).
+- [ ] **E18-5 (C, 1)** **La file s'emporte.** Ce qui est dû et ce qu'il faut racheter, en une page
+  imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
+  le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
+
+### Lot 2 — La flotte, de 2 à 10 bateaux
+
+- [ ] **E18-6 (M, 3)** **`/boats` cesse d'être une salle d'attente.** Aujourd'hui, un propriétaire
+  de deux bateaux atterrit sur un sélecteur de noms qui ne dit rien de leur état (`BoatPicker`).
+  Il devient la **file des bateaux** : une ligne par bateau, portant sa pire raison datée
+  (« 3 points en retard, le plus ancien depuis 21 j »), la même pastille qu'ailleurs
+  (`AttentionDot`), et un geste. Vue `fleet_boat_status` (`security_invoker`) qui agrège par bateau
+  ce que `checklist_item_status` et `maintenance_logs_view` disent déjà. La redirection à un seul
+  bateau reste (E1-3). **DoD** : matrice RLS (on ne voit que ses bateaux), tri identique à celui de
+  la file d'un carnet, viewports iPad.
+- [ ] **E18-7 (S, 2)** **La flotte se cherche et se filtre.** Recherche (nom, immatriculation,
+  modèle, port d'attache) et filtres qui sont des questions réelles : en retard aujourd'hui · sans
+  relevé d'heures depuis 60 j · carnet neuf jamais calé · garantie qui expire dans 3 mois.
+  Pagination en base. **Tout compte affiché est celui de la sélection, jamais celui de la page**
+  (D111).
+- [ ] **E18-8 (S, 2)** **Un geste depuis la flotte.** « Noter une intervention » et « Relever les
+  heures » sans ouvrir le carnet : le formulaire arrive avec le bateau déjà choisi. C'est le
+  quotidien de quelqu'un qui gère cinq bateaux et ne veut pas naviguer dans cinq carnets.
+
+### Lot 3 — L'organisation, jusqu'à 3 000 bateaux — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E18-9 (M, 3)** **L'organisation sort de la V2.** `organizations`, `organization_members` et
+  `boats.organization_id` existent depuis `0001` mais ne sont lisibles que par l'admin plateforme
+  (`DATA-MODEL.md §5`). Politiques RLS par appartenance, écran `/orgs/[orgId]`, appartenance lue à
+  la connexion pour choisir l'écran d'arrivée. **DoD** : matrice RLS complète (membre, admin,
+  étranger), aucun droit accordé côté écran qui ne le soit en base (règle 2).
+- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D121). Deux
+  accès séparés, rien entre les deux. **Concédé** : le carnet invite l'organisation comme il invite
+  un professionnel — rôle contraint, accès daté, retirable (D28, D29) ; la file de l'organisation
+  est la somme exacte de ses accès. **Agrégé** : sur les carnets instanciés depuis un plan dont
+  l'organisation est propriétaire (`checklist_templates.owner_organization_id`), des statistiques
+  sans ligne et sans nom, **jamais en dessous de cinq carnets** dans la maille, retirables d'un
+  réglage du carnet. **DoD** : un constructeur sans invitation ne lit aucune ligne d'un carnet
+  (test RLS) ; une maille de quatre carnets ne rend rien (test) ; le réglage de retrait est visible
+  par le propriétaire.
+- [ ] **E18-11 (S, 3)** **La file à trois mille.** Classement, filtrage et pagination en base ;
+  agrégats **cliquables** qui se résolvent en lignes, jamais un cadran ; index vérifiés sur un seed
+  de charge de 3 000 carnets. **DoD** : budget de requête mesuré et écrit dans le ticket, aucun
+  compte qui compte la page (D111).
+- [ ] **E18-12 (C, 3)** **Le constructeur publie son plan, et ses bulletins.** `owner_organization_id`
+  prend son sens : le chantier maintient le plan de son modèle, une version suivante se **propose**
+  aux carnets déjà instanciés — affichée, décochée, jamais écrite sans un tap (D113) — et un
+  bulletin de service est un point de checklist poussé à un modèle, pas un message.

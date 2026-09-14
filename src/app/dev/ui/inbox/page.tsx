@@ -11,7 +11,7 @@ import { SAMPLE_CATEGORIES } from "../sample-data";
  * « À valider » (D91) under the touch audit: a document being read, one read with something to
  * check (which opens on the full form), one the reading could not handle, two read without a
  * single reserve (which open on one line, and together bring out « Tout valider »), two already
- * filed, and an inventory read off a builder's list (D122), whose card sends its lines to the
+ * filed, and an inventory read off a builder's list (D123), whose card sends its lines to the
  * equipment import — every state of a card on one screen.
  */
 const NOW = "2026-09-08T10:00:00.000Z";

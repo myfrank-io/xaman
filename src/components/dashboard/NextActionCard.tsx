@@ -6,12 +6,12 @@ import type { Route } from "next";
 import { useTranslations } from "next-intl";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
-import { isDueToday } from "@/components/checklist/rows";
+import { hasCounter, isDueToday } from "@/components/checklist/rows";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ChecklistStateBadge } from "@/components/common/ChecklistStateBadge";
 import { DueLabel } from "@/components/common/DueLabel";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import type { UpcomingEntry } from "@/components/dashboard/UpcomingList";
+import type { UpcomingEntry } from "@/components/dashboard/queue";
 import { LogDueLabel } from "@/components/logs/LogDueLabel";
 import { Button } from "@/components/ui/button";
 import { categoryPath, logPath } from "@/lib/queries/boat-routes";
@@ -86,7 +86,7 @@ export function NextActionCard({
               status={row.status}
               daysRemaining={row.daysRemaining}
               hoursRemaining={row.hoursRemaining}
-              hasCounter={row.engineId === null || row.currentHours !== null}
+              hasCounter={hasCounter(row)}
             />
             <CategoryDot color={row.categoryColor} />
             <span className="truncate">{row.categoryName}</span>

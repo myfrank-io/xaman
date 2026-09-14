@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { ChevronRightIcon } from "lucide-react";
@@ -14,45 +14,27 @@ import {
   type SavedCompletion,
 } from "@/components/checklist/CompleteItemDialog";
 import { toCompletable, type EngineReadDates } from "@/components/checklist/completable";
-import { applyCompletion, isTodo, type ChecklistRow } from "@/components/checklist/rows";
+import { applyCompletion, isTodo } from "@/components/checklist/rows";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { NextActionCard } from "@/components/dashboard/NextActionCard";
+import { entryKey, groupQueue, type UpcomingEntry } from "@/components/dashboard/queue";
 import { LogDueLabel } from "@/components/logs/LogDueLabel";
 import { formatDate } from "@/lib/format";
 import { categoryPath, checklistPath, logPath, logsPath } from "@/lib/queries/boat-routes";
-import type { Database } from "@/types/database";
-
-type LogStatus = Database["public"]["Enums"]["log_status"];
-
-export type UpcomingEntry =
-  | { kind: "item"; row: ChecklistRow }
-  | {
-      kind: "log";
-      id: string;
-      title: string;
-      status: LogStatus;
-      dueAt: string | null;
-      categoryName: string;
-      categoryColor: string;
-    };
-
-function entryKey(entry: UpcomingEntry): string {
-  return entry.kind === "item" ? `item:${entry.row.id}` : `log:${entry.id}`;
-}
 
 /**
- * « À faire prochainement » (ux-flows §2.4): the ranked queue of `boat_todo_queue`, with
- * « Fait » inline. A completed item is re-evaluated through the TS mirror and slides out
- * when it is no longer due; the undo of the toast puts it back.
+ * Le plan de travail (D121, E18-1) : toute la file de `boat_todo_queue`, rangée par palier.
  *
- * The first entry is promoted into a named block above the list (`NextActionCard`): the
- * screen offered four doors to the same list before offering a single act. It is the same
- * entry, never a copy — the list below starts at the second.
+ * Ce bloc était un aperçu de six lignes sous un titre, au-dessus de trois résumés d'autres
+ * onglets. Il est maintenant l'écran : la première ligne est promue en carte nommée
+ * (`NextActionCard` — c'est la même ligne, jamais une copie, la liste commence à la deuxième),
+ * et le reste se range sous « Aujourd'hui · Cette semaine · Ce mois-ci · Aux heures moteur »
+ * (`queue.ts`). Un palier vide n'a pas de titre.
  *
- * `todoCount` counts what the destination shows, and nothing else: « en retard » + « bientôt »,
- * exactly the two states the queue ranks and the « À traiter » tab lists.
+ * Le « Fait » reste en ligne : un point coché est réévalué par le miroir TS et sort de la liste
+ * quand il n'est plus dû ; l'annulation du toast le remet à son rang, donc dans son palier.
  */
 export function UpcomingList({
   boatId,
@@ -61,8 +43,6 @@ export function UpcomingList({
   currentUserId,
   currentUserName,
   canContribute,
-  todoCount,
-  openLogs,
   today,
   engineReadDates,
 }: {
@@ -72,9 +52,7 @@ export function UpcomingList({
   currentUserId: string;
   currentUserName: string;
   canContribute: boolean;
-  todoCount: number;
-  openLogs: number;
-  /** Le jour tel que le serveur l'a lu, pour la puce « aujourd'hui / N j de retard ». */
+  /** Le jour tel que le serveur l'a lu : les paliers et la puce « aujourd'hui » le partagent. */
   today: string;
   /** When each engine was last read, so a fresh reading fills the hours by itself. */
   engineReadDates?: EngineReadDates;
@@ -114,9 +92,45 @@ export function UpcomingList({
   }
 
   const [next, ...rest] = entries;
+  const groups = useMemo(() => groupQueue(rest, today), [rest, today]);
+
+  function renderEntry(entry: UpcomingEntry) {
+    return entry.kind === "item" ? (
+      <ChecklistItemRow
+        key={entryKey(entry)}
+        row={entry.row}
+        withCategory
+        compact
+        href={categoryPath(boatId, entry.row.categoryId)}
+        onDone={
+          canContribute ? (row) => setCompleting(toCompletable(row, engineReadDates)) : undefined
+        }
+      />
+    ) : (
+      <ListRow
+        key={entryKey(entry)}
+        lead={<StatusBadge status={entry.status} className="w-28 justify-center" />}
+        title={entry.title}
+        meta={
+          <>
+            <CategoryDot color={entry.categoryColor} />
+            <span className="truncate">{entry.categoryName}</span>
+            <LogDueLabel status={entry.status} performedAt={entry.dueAt} today={today} />
+          </>
+        }
+        trailing={
+          entry.dueAt ? (
+            <span className="num text-caption text-ink-2">{formatDate(entry.dueAt)}</span>
+          ) : null
+        }
+        categoryColor={entry.categoryColor}
+        href={logPath(boatId, entry.id)}
+      />
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       {next ? (
         <NextActionCard
           boatId={boatId}
@@ -128,61 +142,35 @@ export function UpcomingList({
           }
         />
       ) : null}
-      {rest.length > 0 ? (
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-          {rest.map((entry) =>
-            entry.kind === "item" ? (
-              <ChecklistItemRow
-                key={entryKey(entry)}
-                row={entry.row}
-                withCategory
-                compact
-                href={categoryPath(boatId, entry.row.categoryId)}
-                onDone={
-                  canContribute
-                    ? (row) => setCompleting(toCompletable(row, engineReadDates))
-                    : undefined
-                }
-              />
-            ) : (
-              <ListRow
-                key={entryKey(entry)}
-                lead={<StatusBadge status={entry.status} className="w-28 justify-center" />}
-                title={entry.title}
-                meta={
-                  <>
-                    <CategoryDot color={entry.categoryColor} />
-                    <span className="truncate">{entry.categoryName}</span>
-                    <LogDueLabel status={entry.status} performedAt={entry.dueAt} today={today} />
-                  </>
-                }
-                trailing={
-                  entry.dueAt ? (
-                    <span className="num text-caption text-ink-2">{formatDate(entry.dueAt)}</span>
-                  ) : null
-                }
-                categoryColor={entry.categoryColor}
-                href={logPath(boatId, entry.id)}
-              />
-            ),
-          )}
-        </div>
-      ) : null}
+      {groups.map((group) => (
+        <section key={group.key} className="flex flex-col gap-2">
+          {/* Le compte est celui des lignes juste dessous : il se résout en lignes, il n'est
+              pas un cadran (D121). */}
+          <h3 className="flex items-baseline gap-2 text-overline text-ink-2 uppercase">
+            {t(`groups.${group.key}`)}
+            <span className="num text-ink-3">{group.entries.length}</span>
+          </h3>
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+            {group.entries.map(renderEntry)}
+          </div>
+        </section>
+      ))}
+      {/* Les deux portes de ce que la file ne porte pas : les points jamais renseignés et les
+          interventions prévues au-delà de trente jours. Sans compte — la liste au-dessus est
+          déjà le compte, et un nombre qui redit ce qu'on vient de lire est du décor. */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
         <Link
           href={checklistPath(boatId, { view: "todo" }) as Route}
           className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
         >
-          {t("allChecklistCount", { count: todoCount })}
+          {t("allChecklist")}
           <ChevronRightIcon className="size-4" aria-hidden />
         </Link>
-        {/* Vers l'onglet « Prévu », pas vers l'historique : le compte du lien est celui des
-            interventions ouvertes, et un lien doit mener à ce qu'il compte. */}
         <Link
           href={logsPath(boatId, { tab: "planned" }) as Route}
           className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
         >
-          {t("allLogsCount", { count: openLogs })}
+          {t("allLogs")}
           <ChevronRightIcon className="size-4" aria-hidden />
         </Link>
       </div>

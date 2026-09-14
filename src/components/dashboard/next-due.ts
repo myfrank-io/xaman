@@ -38,3 +38,15 @@ export function pickNextDue(rows: readonly NextDueRow[]): NextDue | null {
   }
   return best;
 }
+
+/**
+ * Laquelle des deux échéances déclenche : celle que la ligne affiche.
+ *
+ * Une seule règle pour l'étiquette (« dans 40 h » plutôt que « dans 120 j », `DueLabel`) et pour
+ * le palier où la file range la ligne (`queue.ts`). Deux copies auraient fini par afficher les
+ * heures sous un titre de semaine.
+ */
+export function drivenByHours(days: number | null, hours: number | null): boolean {
+  if (hours === null) return false;
+  return days === null || hours * HOURS_TO_DAYS < days;
+}
