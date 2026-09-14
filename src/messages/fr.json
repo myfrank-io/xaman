@@ -2047,14 +2047,16 @@
     "nav": {
       "login": "Se connecter",
       "signup": "Créer un compte",
-      "home": "Xaman, accueil"
+      "home": "Xaman, accueil",
+      "builders": "Constructeurs",
+      "owners": "Propriétaires"
     },
     "hero": {
       "eyebrow": "Carnet d'entretien pour bateaux",
-      "title": "Le carnet d'entretien de votre bateau, partagé et toujours à jour.",
-      "subtitle": "Notez ce que vous faites à bord, suivez les échéances, retrouvez les factures. Vous, votre équipage et votre chantier voyez la même chose.",
-      "primary": "Créer un compte",
-      "secondary": "Se connecter",
+      "title": "Vous achetez un bateau, et le lendemain vous êtes seul avec.",
+      "subtitle": "Xaman est le carnet du bateau : ce qui a été fait, ce qui arrive à échéance, ce qu'il a coûté. Gratuit pour les propriétaires. Vendu comme option de service par les chantiers qui veulent rester au bout du fil.",
+      "primary": "Créer mon carnet — gratuit",
+      "secondary": "Je construis des bateaux",
       "note": "Utilisable depuis Safari sur iPad, installable sur l'écran d'accueil."
     },
     "preview": {
@@ -2071,8 +2073,8 @@
       "lineThreeMeta": "Faite le 14 juin"
     },
     "problem": {
-      "title": "Le carnet papier reste au bateau. Sa mémoire aussi.",
-      "body": "Une vidange notée sur un carnet resté à bord, une facture perdue dans une boîte mail, une échéance dont personne ne se souvient : l'entretien d'un bateau se joue sur des détails que personne ne peut retenir seul."
+      "title": "Le bateau sort du hangar, et plus personne ne suit.",
+      "body": "Le propriétaire tient un carnet papier resté à bord, cherche une facture dans une boîte mail et découvre une échéance le jour de la panne. Le chantier qui a construit la coque, lui, n'apprend rien : ni ce qui a été changé, ni ce qui casse deux fois, ni quand son client aurait eu besoin de lui."
     },
     "features": {
       "title": "Ce que fait Xaman",
@@ -2101,6 +2103,31 @@
         "body": "Un tableur, un carnet d'adresses, vos factures : tout s'importe. Rien à retaper à la main."
       }
     },
+    "paths": {
+      "title": "Deux façons d'avoir un carnet à jour",
+      "subtitle": "La même application, les mêmes écrans. Ce qui change, c'est qui le remplit le premier jour, et qui répond quand ça coince.",
+      "free": {
+        "badge": "Gratuit",
+        "title": "Vous vous en occupez",
+        "body": "Vous ouvrez le carnet, vous décrivez le bateau, vous notez au fil de l'eau. Aucune carte bancaire, aucune limite de temps.",
+        "one": "Invitez qui vous voulez : associé, skipper, mécanicien, chantier, acheteur.",
+        "two": "Chacun ses droits : le professionnel écrit ses interventions et n'efface rien.",
+        "three": "Vos données s'exportent en un clic, toujours, gratuitement.",
+        "foot": "Payant une seule fois : le jour où vous vendez et où vous passez le carnet vivant à l'acheteur.",
+        "cta": "Créer mon carnet"
+      },
+      "service": {
+        "badge": "Option de service du chantier",
+        "title": "Votre constructeur s'en occupe",
+        "body": "Le chantier vend l'option avec le bateau, au prix qu'il fixe. Le carnet arrive rempli le jour de la livraison.",
+        "one": "Votre modèle exact, vos moteurs, vos garanties : rien à saisir.",
+        "two": "Le plan d'entretien du chantier, et ses bulletins de service qui arrivent tout seuls.",
+        "three": "Quelqu'un au bout du fil qui connaît votre bateau — et dont vous coupez l'accès d'un geste.",
+        "foot": "Le carnet reste le vôtre si l'option s'arrête : c'est le bateau qui le porte, pas l'abonnement.",
+        "soon": "En construction avec nos premiers chantiers partenaires.",
+        "cta": "En parler à mon chantier"
+      }
+    },
     "how": {
       "title": "Comment ça marche",
       "one": {
@@ -2116,6 +2143,12 @@
         "body": "Chaque intervention, chaque achat. Le carnet se construit tout seul et se partage."
       }
     },
+    "builderCard": {
+      "eyebrow": "Vous êtes de l'autre côté",
+      "title": "Vous livrez le bateau. Ensuite, vous ne savez plus rien.",
+      "body": "Quinze ans d'entretien sur une coque que vous avez construite, et pas une ligne pour vous. Xaman est le carnet que vous livrez avec le bateau, et l'option de service que vous vendez avec.",
+      "cta": "Voir l'offre constructeur"
+    },
     "cta": {
       "title": "Ouvrez le carnet de votre bateau",
       "body": "Quelques minutes pour le mettre en route, et la mémoire du bateau cesse de dépendre d'une seule personne.",
@@ -2125,6 +2158,116 @@
     "footer": {
       "tagline": "Carnet d'entretien numérique et partagé pour bateaux.",
       "rights": "Xaman"
+    },
+    "builders": {
+      "meta": {
+        "title": "Xaman pour les constructeurs",
+        "description": "Le carnet d'entretien que vous livrez avec le bateau, et l'option de service que vous vendez avec."
+      },
+      "hero": {
+        "eyebrow": "Pour les constructeurs et les chantiers",
+        "title": "Vous livrez le bateau. Ensuite, vous ne savez plus rien.",
+        "subtitle": "Xaman est le carnet d'entretien que vous livrez avec la coque, et l'option de service que vous vendez avec. Votre acheteur n'est plus lâché dans la nature, vos garanties arrivent documentées, et l'entretien de vos modèles cesse d'être une rumeur de forum.",
+        "primary": "Parler à l'équipe",
+        "secondary": "Voir le carnet côté propriétaire",
+        "note": "Vous fixez le prix de l'option. Nous facturons le chantier, jamais son client."
+      },
+      "preview": {
+        "caption": "Une file de flotte, dessinée : un compte n'est affiché que s'il rend ses lignes.",
+        "fleet": "Votre chantier · 312 coques suivies",
+        "lineOne": "14 coques du même modèle en retard de vidange",
+        "lineOneMeta": "Millésimes 2021 à 2024 · la plus ancienne depuis 63 jours",
+        "lineTwo": "9 réclamations de garantie ouvertes",
+        "lineTwoMeta": "Dont 6 sur le même passe-coque",
+        "lineThree": "Bulletin « serrage des cadènes » : 38 coques l'ont coché",
+        "lineThreeMeta": "Sur 52 concernées · poussé le 3 mars"
+      },
+      "losses": {
+        "title": "Ce que la poignée de main vous coûte",
+        "link": {
+          "title": "Le lien s'arrête à la remise des clés",
+          "body": "Dix-huit mois passés avec cet acheteur, et le jour de la livraison il devient le client de son port et de son mécanicien."
+        },
+        "revenue": {
+          "title": "Le service part ailleurs",
+          "body": "Vidanges, hivernage, carénage, gréement : quinze ans d'entretien sur une coque que vous avez construite, et pas une ligne pour vous."
+        },
+        "warranty": {
+          "title": "La garantie arrive par téléphone",
+          "body": "Une panne, un appel, aucune date, aucune heure moteur, aucune photo. Vous arbitrez à l'aveugle et vous payez le doute."
+        },
+        "blind": {
+          "title": "Vous apprenez vos défauts sur les forums",
+          "body": "Le même point faible sur trente coques, et personne au chantier ne l'a vu venir : chaque propriétaire croit être seul."
+        }
+      },
+      "gains": {
+        "title": "Ce que Xaman met dans vos mains",
+        "delivery": {
+          "title": "Le carnet part avec le bateau",
+          "body": "Modèle exact, moteurs, numéros de série, dates de mise en service, garanties, plan d'entretien du chantier : le carnet est rempli avant la remise des clés. L'acheteur n'a rien à saisir."
+        },
+        "plan": {
+          "title": "Votre plan d'entretien devient le vôtre",
+          "body": "Vous maintenez le plan de votre modèle. Une révision d'intervalle se propose aux carnets déjà ouverts ; un bulletin de service devient un point à cocher, pas un e-mail qui se perd."
+        },
+        "fleet": {
+          "title": "La file de vos coques",
+          "body": "Les bateaux qui vous ont donné accès, dans une seule liste : ce qui est en retard, sur quel modèle, depuis combien de temps. Aucun cadran, aucun score : un chiffre n'est affiché que s'il rend ses lignes quand on le touche."
+        },
+        "claims": {
+          "title": "Des garanties documentées",
+          "body": "Une réclamation arrive avec sa date, ses heures moteur, sa photo et sa facture. Vous arbitrez sur des faits, et vous répondez une fois."
+        },
+        "stats": {
+          "title": "Ce que vos modèles endurent vraiment",
+          "body": "Sur les carnets ouverts depuis votre plan : quel point est tenu, à quel âge, lequel ne l'est jamais. Jamais un nom, jamais un montant, jamais en dessous de cinq carnets."
+        },
+        "offer": {
+          "title": "Une option de service à vendre",
+          "body": "Vous la présentez au bon de commande, au prix que vous fixez, comme un constructeur automobile vend son contrat d'entretien. Nous facturons le chantier ; votre client ne voit qu'une ligne de votre offre."
+        }
+      },
+      "sale": {
+        "title": "Comment l'option se vend",
+        "one": {
+          "title": "Au bon de commande",
+          "body": "Deux cases : l'option de service du chantier, ou rien. C'est le moment où l'acheteur se projette dans son bateau — c'est là que la question se pose."
+        },
+        "two": {
+          "title": "À la livraison",
+          "body": "Le carnet est déjà rempli. Vous le remettez avec les clés : l'acheteur ouvre un compte et son bateau est déjà dedans."
+        },
+        "three": {
+          "title": "Chaque année",
+          "body": "L'option se renouvelle avec l'entretien. Si elle s'arrête, le carnet reste au propriétaire : c'est le bateau qui le porte, pas l'abonnement."
+        }
+      },
+      "privacy": {
+        "title": "Ce que vous ne verrez jamais",
+        "body": "C'est la clause qui fait accepter l'option. Un chantier qui lirait les carnets de ses clients parce qu'il a vendu les coques n'aurait aucun client.",
+        "one": {
+          "title": "Rien sans invitation",
+          "body": "L'accès au carnet d'un bateau se donne comme à un professionnel : un rôle contraint, une durée, et un geste du propriétaire pour le retirer. Aucun contrat n'ouvre de porte dérobée."
+        },
+        "two": {
+          "title": "Jamais un nom dans les statistiques",
+          "body": "Les chiffres agrégés ne descendent jamais en dessous de cinq carnets, et ne portent ni nom de bateau, ni nom de personne, ni montant."
+        },
+        "three": {
+          "title": "Le propriétaire garde la main",
+          "body": "Il voit qui regarde et jusqu'à quand. Il coupe l'accès en un geste, sans perdre une ligne de son carnet."
+        }
+      },
+      "cta": {
+        "eyebrow": "Programme pilote",
+        "title": "Nous cherchons deux ou trois chantiers pour construire ça avec eux.",
+        "body": "Le carnet du propriétaire existe et tourne. L'étage constructeur — la flotte, les garanties, les bulletins, la livraison du carnet avec le bateau — se construit maintenant, avec les chantiers qui le vendront.",
+        "button": "Parler à l'équipe",
+        "secondary": "Voir le carnet côté propriétaire",
+        "email": "constructeurs@xaman.boats",
+        "subject": "Xaman — programme pilote constructeurs"
+      }
     }
   },
   "attachments": {

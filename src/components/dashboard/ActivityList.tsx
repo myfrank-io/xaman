@@ -15,7 +15,7 @@ const KIND_KEY = {
 } as const satisfies Record<ActivityKind, string>;
 
 /**
- * « Ce qui a bougé » (E18-3, D126) : le fil partagé du carnet.
+ * « Ce qui a bougé » (E18-3, D128) : le fil partagé du carnet.
  *
  * C'est la seule chose que le papier ne sait pas faire — dire ce que l'autre a fait depuis la
  * dernière fois — et c'est ce qui remplace les trois résumés d'autres onglets qu'E18-1 a retirés.

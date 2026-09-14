@@ -2105,7 +2105,7 @@ describeWithDb("boat_expense_totals (0030)", () => {
 });
 
 /**
- * Le fil du carnet (D126). La vue unit cinq tables sans politique à elle : `security_invoker`
+ * Le fil du carnet (D128). La vue unit cinq tables sans politique à elle : `security_invoker`
  * veut dire que chacune décide comme sur son propre écran. Ce qui est vérifié ici est donc ce
  * qu'aucune relecture ne garantit — qu'un étranger n'y lit rien, et qu'une ligne mise à la
  * corbeille en sort, parce qu'un fil qui garderait ce que les listes ont jeté serait un journal
@@ -2201,7 +2201,7 @@ describeWithDb("boat_todo_queue", () => {
       ).toEqual([
         [0, "log", "Fuite bâbord"],
         [1, "item", "Point en retard"],
-        // Ce qui attend sans date entre dans la file à son tour (D125) : le document du seed,
+        // Ce qui attend sans date entre dans la file à son tour (D127) : le document du seed,
         // puis la pièce sous son seuil, toujours en dernier.
         [2, "inbox", "Facture 118"],
         [5, "part", "Filtre à huile"],

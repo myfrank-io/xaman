@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { toActivityRow } from "@/lib/queries/activity";
 
 /**
- * Le fil du carnet (D126).
+ * Le fil du carnet (D128).
  *
  * La vue unit cinq tables ; cette fonction est la seule couche entre elle et une liste. Ce qu'on
  * vérifie ici est ce qu'une union SQL peut laisser passer et qu'un écran ne doit pas montrer :

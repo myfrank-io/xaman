@@ -173,7 +173,7 @@ const UPCOMING: UpcomingEntry[] = [
       hoursRemaining: 18,
     }),
   },
-  // Ce qui attend sans date (D125) : un document arrivé tout seul, une pièce sous son seuil.
+  // Ce qui attend sans date (D127) : un document arrivé tout seul, une pièce sous son seuil.
   { kind: "inbox", id: "u9", title: "Facture Nautic Service", receivedAt: "2026-09-12" },
   {
     kind: "part",
@@ -185,7 +185,7 @@ const UPCOMING: UpcomingEntry[] = [
   },
 ];
 
-/** Le fil du carnet (D126) : cinq faits, cinq genres, et les noms qui vont avec. */
+/** Le fil du carnet (D128) : cinq faits, cinq genres, et les noms qui vont avec. */
 const ACTIVITY: ActivityRow[] = [
   {
     kind: "completion",
@@ -306,7 +306,7 @@ export default async function DevDashboardPage() {
           <EngineStrip boatId={DEV_BOAT_ID} engines={ENGINES} canContribute canWrite />
         </header>
 
-        {/* 2 — écrire : deux actes, séparés par le temps du verbe (D127) */}
+        {/* 2 — écrire : deux actes, séparés par le temps du verbe (D129) */}
         <WriteActions boatId={DEV_BOAT_ID} />
 
         {/* 3 — contextual banner (a single one, by priority) */}
@@ -334,7 +334,7 @@ export default async function DevDashboardPage() {
           today={todayString()}
         />
 
-        {/* 5 — savoir : ce qui a bougé, avec les noms (D126) */}
+        {/* 5 — savoir : ce qui a bougé, avec les noms (D128) */}
         <SectionCard
           title={t("activity.title")}
           actionHref="/dev/ui/dashboard"
@@ -344,10 +344,10 @@ export default async function DevDashboardPage() {
           <ActivityList rows={ACTIVITY} />
         </SectionCard>
 
-        {/* 6 — consulter mon bateau : la maquette d'E2-8 (D127) */}
+        {/* 6 — consulter mon bateau : la maquette d'E2-8 (D129) */}
         <BoatModel3D boatId={DEV_BOAT_ID} boatName={SAMPLE_BOAT.name} data={SAMPLE_MODEL} />
 
-        {/* 7 — découvrir ses dépenses (D127) */}
+        {/* 7 — découvrir ses dépenses (D129) */}
         <ExpensesTeaser
           boatId={DEV_BOAT_ID}
           total={4321.5}

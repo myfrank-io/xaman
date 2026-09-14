@@ -104,7 +104,7 @@ export function UpcomingList({
 
   function renderEntry(entry: UpcomingEntry) {
     // Un document attend une décision, pas une date : sa ligne dit depuis quand il est là, et
-    // mène à l'écran qui sait le classer (D125).
+    // mène à l'écran qui sait le classer (D127).
     if (entry.kind === "inbox") {
       return (
         <ListRow

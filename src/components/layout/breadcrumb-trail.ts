@@ -86,7 +86,7 @@ function sectionOf(segment: string, boatId: string, entity?: string | null): Sec
     return { crumb: { key: nav, href: boatPath(boatId, nav) }, nav, parent: "logs" };
   }
   if (nav) return { crumb: { key: nav, href: boatPath(boatId, nav) }, nav };
-  // Le fil entier s'ouvre depuis le tableau de bord, qui en porte les dix premières lignes (D126).
+  // Le fil entier s'ouvre depuis le tableau de bord, qui en porte les dix premières lignes (D128).
   if (segment === "activity") {
     return { crumb: { key: "crumbs.activity", href: activityPath(boatId) }, parent: "dashboard" };
   }

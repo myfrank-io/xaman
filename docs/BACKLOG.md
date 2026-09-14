@@ -32,6 +32,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E16 | E16-10 |
 | E17 | E17-12 |
 | E18 | E18-14 |
+| E19 | E19-10 |
 
 ---
 
@@ -353,7 +354,7 @@ indépendants dans cet ordre : le premier se livre seul.
   **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
   `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
   390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
-- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D125). Un document « À
+- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D127). Un document « À
   valider » (D91) et une pièce sous son seuil (D84) attendaient une personne exactement comme un
   point en retard — mais le premier criait depuis un bandeau et la seconde depuis un écran qu'on
   n'ouvre pas avant de partir. `boat_todo_queue` passe à **six rangs** (`0036`) et gagne
@@ -368,7 +369,7 @@ indépendants dans cet ordre : le premier se livre seul.
   maintenant ce que l'écran lit vraiment (les moteurs sans relevé sur leurs tables, le stock bas
   sur la file). **Vérifié** : `pnpm db:types` commité, 153 tests RLS verts sur la base reconstruite
   (dont le rang des quatre genres), 13 cas sur les paliers, lint/format/typecheck/build verts.
-- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D126). Le bloc qui remplace les trois résumés :
+- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D128). Le bloc qui remplace les trois résumés :
   le fil partagé du carnet — points cochés, interventions terminées, achats, relevés d'heures
   saisis à la main, sorties de l'eau — avec **qui** et **quand**. Vue `boat_activity` (`0037`),
   `security_invoker`, sans table ni politique nouvelle : chaque table source décide comme sur son
@@ -394,7 +395,7 @@ indépendants dans cet ordre : le premier se livre seul.
   imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
   le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
 
-- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D127) — signalé à
+- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D129) — signalé à
   l'usage sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à
   faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
   consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses de
@@ -451,7 +452,103 @@ indépendants dans cet ordre : le premier se livre seul.
   agrégats **cliquables** qui se résolvent en lignes, jamais un cadran ; index vérifiés sur un seed
   de charge de 3 000 carnets. **DoD** : budget de requête mesuré et écrit dans le ticket, aucun
   compte qui compte la page (D111).
-- [ ] **E18-12 (C, 3)** **Le constructeur publie son plan, et ses bulletins.** `owner_organization_id`
+- [ ] **E18-12 (M, 3)** **Le constructeur publie son plan, et ses bulletins.** *(« Could » jusqu'à
+  D125 : c'est ce que l'option de service vend, donc un Must d'E19.)* `owner_organization_id`
   prend son sens : le chantier maintient le plan de son modèle, une version suivante se **propose**
   aux carnets déjà instanciés — affichée, décochée, jamais écrite sans un tap (D113) — et un
   bulletin de service est un point de checklist poussé à un modèle, pas un message.
+
+---
+
+## E19 — Le constructeur vend du service (D125, D126)
+
+Ouverte le 2026-09-14. **Bascule de marché** (D125) : deux acheteurs, un seul produit. Le
+propriétaire ne paie pas — carnet complet, partage illimité, export toujours gratuit — et le
+**constructeur** est le cœur de cible : il livre le carnet avec le bateau et en vend l'option de
+service, au prix qu'il fixe, comme un constructeur automobile vend son contrat d'entretien. Xaman
+facture le chantier, jamais son client. Seul encaissement côté propriétaire : la **passation** à la
+vente, et jamais l'export.
+
+Trois raisons, toutes déjà écrites ailleurs dans ce dépôt : le coût d'amorçage est le premier tueur
+du secteur (`SPEC.md §3.3.1`) et seul le chantier peut remplir le carnet avant le propriétaire ; le
+jour de la livraison, l'acheteur **et** le constructeur perdent quelque chose en même temps
+(`SPEC.md §4.4`) ; et une option présentée au bon de commande se vend, là où un abonnement à 60 €/an
+s'arrache un par un.
+
+**Dépendances.** Le socle est E18 lot 3 (E18-9 à E18-12) : sans `organizations` ouvertes et sans les
+deux accès de D121, rien de ce qui suit ne tient en base. **E18-12 cesse d'être un « Could »** : le
+plan officiel et les bulletins sont ce que l'option vend. Aucun ticket de cette épique ne se démarre
+sans validation explicite, à l'exception d'E19-1, qui ne touche que le site public.
+
+**Ce qui ne changera pas, quoi qu'il arrive.** L'export reste gratuit et affiché ; le partage n'est
+jamais facturé ; un contrat n'ouvre jamais un carnet — seul le propriétaire le fait, pour une durée,
+et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l'option s'arrête.
+
+### Lot 1 — Le site public (V1, livrable seul)
+
+- [x] **E19-1 (M, 2)** **La page d'accueil porte les deux lectures, et le chantier a la sienne**
+  (D126). `/` garde le propriétaire, gagne « Deux façons d'avoir un carnet à jour » (gratuit /
+  option du chantier, même hauteur, même vocabulaire : ce qui change est **qui remplit le carnet le
+  premier jour**) et une carte constructeur. `/constructeurs` est la page du chantier : ce que la
+  poignée de main lui coûte, ce qu'il obtient, comment l'option se vend, **ce qu'il ne verra
+  jamais** (la clause de D121, écrite du côté de celui qui doit pouvoir la dire à haute voix).
+  En-tête et pied partagés (`MarketingHeader`, `MarketingFooter`), aperçu de flotte dessiné
+  (`FleetPreview`) dont la légende dit qu'il est un dessin, route publique dans `src/proxy.ts` et
+  absente de `SIGNED_IN_ELSEWHERE`. Page annoncée comme **programme pilote** : l'étage constructeur
+  n'existe pas encore, et un chantier qui l'apprend à la démo ne revient pas.
+
+### Lot 2 — Ce qui manque au carnet avant qu'un chantier puisse le vendre — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E19-2 (M, 3)** **Les garanties n'existent pas.** Ni date de mise en service, ni durée, ni
+  pièce couverte, ni réclamation : premier levier du chantier, première douleur de l'acheteur, et un
+  domaine entier à créer. Table `warranties` (`boat_id`, portée : bateau, moteur ou équipement,
+  début, fin en date **et/ou** en heures — « premier atteint », comme les échéances (D1), garant :
+  contact ou organisation, conditions, documents) et affichage là où la question se pose : « sous
+  garantie jusqu'au … » sur la fiche moteur et la fiche équipement, et dans la file quand la
+  garantie expire avant l'échéance suivante. **DoD** : RLS et privilèges de colonnes dans la même
+  migration (règle 2), `pnpm db:types` commité, parité avec `DATA-MODEL.md`, vérifié en 1024×768.
+- [ ] **E19-3 (M, 2)** **Une réclamation part avec sa preuve.** Depuis une ligne du journal :
+  « Ouvrir une réclamation » attache la date, les heures moteur du jour, les photos et la facture
+  déjà présentes, et l'envoie au garant. Le chantier arbitre sur des faits au lieu d'un appel
+  téléphonique. Table `warranty_claims` (état, garantie, intervention d'origine, réponse), jamais de
+  suppression physique (règle 9).
+- [ ] **E19-4 (M, 3)** **Le carnet livré avec le bateau.** Un chantier prépare une coque — modèle
+  exact, moteurs et numéros de série, équipements, garanties, plan d'entretien — puis la **remet** :
+  l'acheteur ouvre un compte et trouve son bateau dedans, `owner` dès la première seconde. C'est le
+  parcours d'entrée que D64/D65/D67 ne couvrent pas (ils supposent un propriétaire qui saisit).
+  Remise par invitation datée comme toutes les autres (D28, D29) ; tant qu'elle n'est pas acceptée,
+  le carnet appartient à l'organisation et non à une personne.
+- [ ] **E19-5 (S, 2)** **L'option de service se voit, et se coupe.** Un contrat (`boat_id`,
+  organisation, début, fin, état) affiché en clair dans le carnet : qui regarde, jusqu'à quand,
+  et « Retirer l'accès » à côté. Le contrat **ne donne aucun droit par lui-même** — il propose
+  l'invitation que le propriétaire accepte (D121). À l'échéance, l'accès tombe ; le carnet, lui, ne
+  bouge pas. **DoD** : un test RLS prouve qu'un contrat sans invitation acceptée ne lit rien.
+
+### Lot 3 — Les deux moments payants — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E19-6 (M, 3)** **La passation à la vente.** Le carnet se sépare en deux — le technique d'un
+  côté, l'argent et le privé de l'autre, ligne à ligne, **décoché par défaut** —, le vendeur garde
+  une **copie archivée en lecture**, l'acheteur reçoit un carnet dont il est propriétaire dès le
+  premier jour, garanties comprises, et un **certificat de passation** imprimable (le moteur de
+  `/report` existe déjà). À côté de D30, pas à sa place : inviter l'acheteur en `owner` puis quitter
+  le bateau reste gratuit, et reste du tout-ou-rien. **DoD** : aucune donnée du vendeur ne franchit
+  la passation sans une case cochée par lui (test), l'export reste gratuit et accessible des deux
+  côtés.
+- [ ] **E19-7 (S, 3)** **Encaisser.** Paiement unique pour la passation ; contrat facturé pour le
+  chantier, hors application (pas de self-service B2B). `SPEC.md §5.4` excluait la facturation :
+  D125 la requalifie. **Aucun mur de paiement dans le carnet du propriétaire** — un seul écran
+  payant, celui de la passation, et il annonce son prix avant de demander quoi que ce soit.
+- [ ] **E19-8 (M, 1)** **Ce qu'un contrat oblige à écrire.** Le chantier voit des données
+  personnelles de ses clients : mentions légales, CGU/CGV, sous-traitance RGPD, et la trace du
+  consentement — qui a ouvert l'accès, quand, jusqu'à quand, et qui l'a retiré. Sans cela, l'option
+  ne se signe pas. **DoD** : la trace est en base, pas dans un journal applicatif.
+
+### Lot 4 — Ce qui reste à trancher avant d'écrire une ligne de prix
+
+- [ ] **E19-9 (M, 1)** **Les trois prix, et une boîte aux lettres.** (1) Prix de la passation et qui
+  la paie — vendeur (argument de vente) ou acheteur (exigence d'expert). (2) Prix payé par le
+  chantier et son unité : par coque sous contrat, par coque livrée, par an. (3) Existence de
+  `constructeurs@xaman.boats`, citée par `/constructeurs` et **à créer avant la mise en ligne** :
+  le domaine existe (il envoie déjà `noreply@`), la boîte non. Tant que les deux premiers points
+  sont ouverts, aucune page de tarifs n'est écrite (D126) : une grille avec des « à partir de »
+  inventés est exactement ce que la règle interdit.

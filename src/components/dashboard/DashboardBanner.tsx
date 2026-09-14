@@ -13,7 +13,7 @@ import { hourReadingPath, logsPath, onboardingPath } from "@/lib/queries/boat-ro
  * pending drafts arrive with E9-1; here: an unfinished onboarding › rows to review › engines
  * never read › install.
  *
- * Les documents qui attendent n'y sont plus (D125) : ils ont chacun leur ligne dans la file,
+ * Les documents qui attendent n'y sont plus (D127) : ils ont chacun leur ligne dans la file,
  * avec le geste qui va avec. Une bannière qui compte n'est pas un plan de travail.
  */
 export async function DashboardBanner({

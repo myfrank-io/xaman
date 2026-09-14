@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
 
-/** Les cinq faits que le carnet garde (D126) ; l'ordre est celui de la vue, jamais du client. */
+/** Les cinq faits que le carnet garde (D128) ; l'ordre est celui de la vue, jamais du client. */
 export const ACTIVITY_KINDS = ["completion", "log", "purchase", "reading", "haul_out"] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
