@@ -394,27 +394,23 @@ indépendants dans cet ordre : le premier se livre seul.
   imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
   le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
 
-- [ ] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** — signalé à l'usage
-  sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à faire :
-  checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
+- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D124) — signalé à
+  l'usage sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à
+  faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
   consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses de
-  maintenance ». Un carnet à jour n'a rien dans sa file — et l'écran devient alors un en-tête
-  suivi d'un état vide, ce qui est exactement le moment où il doit proposer quelque chose.
-  **(1) Écrire se scinde en deux, par le temps du verbe** : « Ajouter une tâche à faire » ouvre la
-  création d'un point de checklist (`/checklist/new`), « Noter une intervention » ouvre le
-  formulaire d'intervention. C'est la suite directe de l'audit §7 (nommer l'acte, pas l'entité) :
-  il manquait la porte de ce qui n'est **pas encore** fait — aujourd'hui, se souvenir de « changer
-  l'anode au printemps » demande de passer par la Checklist et de trouver « Ajouter un point ».
-  **(2) « Consulter mon bateau »**, un bloc large sous la file, qui montre le bateau lui-même —
-  la maquette d'E2-8 est déjà cet objet — et qui deviendra « mes bateaux » à l'altitude flotte
-  (E18-6, D121). **(3) « Découvrir mes dépenses de maintenance »**, un bloc qui donne envie
-  d'ouvrir Dépenses : ce que le carnet a coûté sur douze mois et par système. Ce troisième bloc
-  **rétablit sciemment** ce qu'E18-1 avait retiré du récapitulatif, mais comme une découverte et
-  non comme une ligne de sommaire : un chiffre qui se regarde, pas un lien qui se lit. **DoD** :
-  la file reste le premier contenu quand elle n'est pas vide ; les trois blocs ne poussent jamais
-  « À faire maintenant » sous la ligne de flottaison ; textes dans `fr.json` ; `/dev/ui/dashboard`
-  porte l'état plein **et** l'état vide ; audit tactile aux cinq viewports ; décision journalisée
-  (le retour de la dépense sur l'écran).
+  maintenance ». **(1)** Écrire se scinde par le temps du verbe : deux cartes, « Ajouter une tâche
+  à faire » (un point de checklist) et « Noter une intervention » (le journal). Le carnet n'avait
+  que la seconde porte, et la note la plus fréquente à bord est l'autre — « il faudra changer
+  l'anode au printemps » demandait de connaître le rangement de l'app avant de pouvoir s'en servir.
+  **(2)** « Consulter mon bateau » est la **maquette d'E2-8**, remontée telle quelle ; son
+  assemblage sort de l'onglet Bateau dans `src/lib/boat-3d/data.ts` (`toBoatModelData`, testé) pour
+  que deux écrans ne dessinent pas deux bateaux du même carnet. La tranche i18n du tableau de bord
+  gagne `boat3d`. **(3)** « Ce que le bateau a coûté » : le total sur douze mois et ses trois
+  premiers systèmes, comptés par `boat_expense_totals` (D111), trois barres de part, aucun
+  graphique (règle 10) — un renversement assumé du dégraissage d'E18-1, en découverte et non en
+  ligne de sommaire. **Aucune migration.** **Vérifié** : 5 cas sur l'assemblage partagé, tranche
+  i18n verte, lint/format/typecheck/tests/build verts, audit tactile aux cinq viewports sur
+  `/dev/ui/dashboard`, qui porte les trois blocs.
 
 ### Lot 2 — La flotte, de 2 à 10 bateaux
 

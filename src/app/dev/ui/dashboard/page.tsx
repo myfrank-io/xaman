@@ -1,12 +1,13 @@
-import Link from "next/link";
-import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { PlusIcon, TriangleAlertIcon } from "lucide-react";
+import { TriangleAlertIcon } from "lucide-react";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { SectionCard } from "@/components/common/SectionCard";
+import { BoatModel3D } from "@/components/boat-3d/BoatModel3D";
 import { ActivityList } from "@/components/dashboard/ActivityList";
+import { ExpensesTeaser } from "@/components/dashboard/ExpensesTeaser";
+import { WriteActions } from "@/components/dashboard/WriteActions";
 import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
 import { EngineStrip } from "@/components/dashboard/EngineStrip";
 import type { UpcomingEntry } from "@/components/dashboard/queue";
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { todayString } from "@/lib/format";
 import type { ActivityRow } from "@/lib/queries/activity";
 
+import { SAMPLE_BOAT, SAMPLE_MODEL } from "../boat/sample";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 import { devUiEnabled } from "@/lib/dev-ui";
 
@@ -252,7 +254,6 @@ export default async function DevDashboardPage() {
   const t = await getTranslations("dashboard");
   const tn = await getTranslations("nav");
   const td = await getTranslations("dev");
-  const tcreate = await getTranslations("create");
 
   // Same assembly as the real screen: two clauses joined by the locale, never by a hard « et ».
   const list = new Intl.ListFormat("fr-FR", { style: "long", type: "conjunction" });
@@ -305,15 +306,8 @@ export default async function DevDashboardPage() {
           <EngineStrip boatId={DEV_BOAT_ID} engines={ENGINES} canContribute canWrite />
         </header>
 
-        {/* 2 — écrire : the dominant act, named, below `lg` (D35) */}
-        <div className="lg:hidden">
-          <Button asChild size="xl" className="w-full sm:w-auto">
-            <Link href={`/boats/${DEV_BOAT_ID}/logs/new` as Route}>
-              <PlusIcon />
-              {tcreate("primary")}
-            </Link>
-          </Button>
-        </div>
+        {/* 2 — écrire : deux actes, séparés par le temps du verbe (D124) */}
+        <WriteActions boatId={DEV_BOAT_ID} />
 
         {/* 3 — contextual banner (a single one, by priority) */}
         <Alert variant="warning" className="items-center">
@@ -349,6 +343,38 @@ export default async function DevDashboardPage() {
         >
           <ActivityList rows={ACTIVITY} />
         </SectionCard>
+
+        {/* 6 — consulter mon bateau : la maquette d'E2-8 (D124) */}
+        <BoatModel3D boatId={DEV_BOAT_ID} boatName={SAMPLE_BOAT.name} data={SAMPLE_MODEL} />
+
+        {/* 7 — découvrir ses dépenses (D124) */}
+        <ExpensesTeaser
+          boatId={DEV_BOAT_ID}
+          total={4321.5}
+          categories={[
+            {
+              id: "c1",
+              name: SAMPLE_CATEGORIES[0].name,
+              color: SAMPLE_CATEGORIES[0].color,
+              amount: 2480,
+              count: 6,
+            },
+            {
+              id: "c2",
+              name: SAMPLE_CATEGORIES[3].name,
+              color: SAMPLE_CATEGORIES[3].color,
+              amount: 1210.5,
+              count: 3,
+            },
+            {
+              id: "c3",
+              name: SAMPLE_CATEGORIES[7].name,
+              color: SAMPLE_CATEGORIES[7].color,
+              amount: 631,
+              count: 4,
+            },
+          ]}
+        />
 
         {/* 4b — day-one state of the same block */}
         <SectionCard title={td("dashboard.brandNew")} bare>

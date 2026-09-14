@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D124.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D125.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2875,3 +2875,46 @@ l'autre moitié est cassée. Les écrans sont à un tap dans la barre ; le fil, 
 **Dix lignes, puis un écran.** L'écran d'arrivée en montre dix : de quoi voir ce qui a bougé depuis
 la dernière visite sans se transformer en journal. Le reste est sur `/activity`, qui charge par
 pages de cinquante — jamais de défilement infini sur une liste qu'on lit à l'envers (E3-2).
+
+
+## 2026-09-14 — D124 : l'écran d'arrivée nomme deux actes, puis ouvre deux portes
+
+**Question.** Capture de production, carnet de Xaman, file vide : l'écran est un en-tête suivi de
+« Rien à faire dans les 30 prochains jours ». Joseph : « ici on peut scinder en 2 : Ajouter une
+tâche à faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en
+mode : consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses
+de maintenance ».
+
+**Décision.**
+
+**1. Écrire se scinde en deux, par le temps du verbe.** « Ajouter une tâche à faire » ouvre la
+création d'un point de checklist ; « Noter une intervention » ouvre le journal. Le carnet n'avait
+qu'une porte, celle de ce qui est **déjà fait** — et la note qu'on prend le plus souvent à bord est
+l'autre : « il faudra changer l'anode au printemps ». Elle obligeait à ouvrir la Checklist et à y
+trouver « Ajouter un point », c'est-à-dire à connaître le rangement de l'app avant de pouvoir s'en
+servir. Deux cartes, dans l'ordre où on y pense, chacune disant son objet et où elle mène.
+
+**Ce que ça renverse.** L'audit §7.3 avait posé « un contrôle nommé par viewport » pour tuer les
+deux primaires concurrents qui menaient au **même** endroit. Ici les deux ne mènent pas au même
+endroit : ils nomment deux temps. La règle tenait contre la redondance, pas contre le choix — et
+c'est bien parce qu'elles ne sont pas deux boutons primaires, mais deux cartes, que l'écran ne
+redemande pas le geste que la sidebar porte déjà.
+
+**2. « Consulter mon bateau » est la maquette.** Le bloc large sous la file est le modèle 3D d'E2-8,
+qui est déjà exactement cet objet : le bateau lui-même, ses zones, ce qu'il y a à y faire. Il
+deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). L'assemblage des lignes est **partagé**
+avec l'onglet Bateau (`toBoatModelData`) : deux assemblages auraient fini par dessiner deux bateaux
+différents du même carnet.
+
+**3. « Ce que le bateau a coûté » revient, autrement.** E18-1 avait retiré la ligne « Dépenses,
+12 derniers mois » du récapitulatif, avec les trois liens de sommaire. Elle revient comme une
+**découverte** : un montant qu'on regarde, et les trois systèmes qui le composent. C'est un
+renversement assumé de mon propre dégraissage — et il est juste : un écran qui n'a rien à faire doit
+proposer autre chose que du vide, et « où part l'argent » est la question qu'un propriétaire se pose
+sans jamais penser à ouvrir un onglet pour ça. Total et répartition comptés par la base
+(`boat_expense_totals`, D111), trois barres de part, aucun graphique (règle 10).
+
+**Ce que l'ordre de l'écran devient.** Écrire (les deux actes) · le bandeau · faire (la file) ·
+savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu dès qu'elle n'est pas
+vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
+flottaison.

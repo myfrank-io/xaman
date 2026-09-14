@@ -687,6 +687,18 @@
         "missing": "il en manque {count}"
       }
     },
+    "write": {
+      "todoTitle": "Ajouter une tâche à faire",
+      "todoHint": "Un point de checklist, qui reviendra tout seul",
+      "doneTitle": "Noter une intervention",
+      "doneHint": "Ce qui vient d'être fait, dans le journal"
+    },
+    "expenses": {
+      "title": "Ce que le bateau a coûté",
+      "window": "sur douze mois",
+      "all": "Voir les dépenses",
+      "empty": "Aucune dépense notée sur les douze derniers mois."
+    },
     "activity": {
       "title": "Ce qui a bougé",
       "all": "Tout voir",
