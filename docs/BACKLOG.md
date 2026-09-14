@@ -31,7 +31,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-13 |
 | E16 | E16-10 |
 | E17 | E17-12 |
-| E18 | E18-13 |
+| E18 | E18-14 |
 
 ---
 
@@ -393,6 +393,28 @@ indépendants dans cet ordre : le premier se livre seul.
 - [ ] **E18-5 (C, 1)** **La file s'emporte.** Ce qui est dû et ce qu'il faut racheter, en une page
   imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
   le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
+
+- [ ] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** — signalé à l'usage
+  sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à faire :
+  checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
+  consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses de
+  maintenance ». Un carnet à jour n'a rien dans sa file — et l'écran devient alors un en-tête
+  suivi d'un état vide, ce qui est exactement le moment où il doit proposer quelque chose.
+  **(1) Écrire se scinde en deux, par le temps du verbe** : « Ajouter une tâche à faire » ouvre la
+  création d'un point de checklist (`/checklist/new`), « Noter une intervention » ouvre le
+  formulaire d'intervention. C'est la suite directe de l'audit §7 (nommer l'acte, pas l'entité) :
+  il manquait la porte de ce qui n'est **pas encore** fait — aujourd'hui, se souvenir de « changer
+  l'anode au printemps » demande de passer par la Checklist et de trouver « Ajouter un point ».
+  **(2) « Consulter mon bateau »**, un bloc large sous la file, qui montre le bateau lui-même —
+  la maquette d'E2-8 est déjà cet objet — et qui deviendra « mes bateaux » à l'altitude flotte
+  (E18-6, D121). **(3) « Découvrir mes dépenses de maintenance »**, un bloc qui donne envie
+  d'ouvrir Dépenses : ce que le carnet a coûté sur douze mois et par système. Ce troisième bloc
+  **rétablit sciemment** ce qu'E18-1 avait retiré du récapitulatif, mais comme une découverte et
+  non comme une ligne de sommaire : un chiffre qui se regarde, pas un lien qui se lit. **DoD** :
+  la file reste le premier contenu quand elle n'est pas vide ; les trois blocs ne poussent jamais
+  « À faire maintenant » sous la ligne de flottaison ; textes dans `fr.json` ; `/dev/ui/dashboard`
+  porte l'état plein **et** l'état vide ; audit tactile aux cinq viewports ; décision journalisée
+  (le retour de la dépense sur l'écran).
 
 ### Lot 2 — La flotte, de 2 à 10 bateaux
 
