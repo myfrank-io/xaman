@@ -380,6 +380,102 @@ describeWithDb("insert", () => {
     expect(seen.admin).toEqual(["bm-live", "bm-retired"]);
     expect(seen.stranger).toEqual(["bm-live"]);
   });
+
+  /**
+   * Equipment families (E17-3, migration 0032). The same shape of thing as the model catalogue —
+   * platform data, no boat_id — and the same rule: everyone signed in reads what is active, the
+   * platform admin alone decides what the list contains. `equipment.kind_id` points at it and is
+   * written by the boat's own people, under the equipment table's own policies.
+   */
+  it("equipment kinds: written by the platform admin only", async () => {
+    const sql = "insert into public.equipment_kinds (external_ref, label) values ($1, $2)";
+    expect((await run(U.admin, sql, ["ek-admin", "Famille admin"])).ok, "admin").toBe(true);
+    expect((await run(U.owner, sql, ["ek-owner", "Famille owner"])).ok, "owner").toBe(false);
+    expect((await run(U.viewer, sql, ["ek-viewer", "Famille viewer"])).ok, "viewer").toBe(false);
+    expect((await run(U.stranger, sql, ["ek-stranger", "Famille étrangère"])).ok, "stranger").toBe(
+      false,
+    );
+    expect(await count(null, "equipment_kinds")).toBe(-1);
+  });
+
+  it("equipment kinds: active rows are public, deactivated ones are the admin's alone", async () => {
+    const seen = await as(U.admin, async (c) => {
+      await c.query(
+        `insert into public.equipment_kinds (external_ref, label, is_active) values
+           ('ek-live', 'Famille publiée', true),
+           ('ek-retired', 'Famille retirée', false)`,
+      );
+      const refs = async () => {
+        const res = await c.query(
+          "select external_ref from public.equipment_kinds where external_ref like 'ek-%' order by external_ref",
+        );
+        return res.rows.map((r) => (r as { external_ref: string }).external_ref);
+      };
+      const admin = await refs();
+      await c.query("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: U.stranger.id, email: U.stranger.email, role: "authenticated" }),
+      ]);
+      return { admin, stranger: await refs() };
+    });
+
+    expect(seen.admin).toEqual(["ek-live", "ek-retired"]);
+    expect(seen.stranger).toEqual(["ek-live"]);
+  });
+
+  /** The catalogue seeded by the migration is the same list for every boat, and it is not empty. */
+  it("equipment kinds: the seeded families are readable by anyone signed in", async () => {
+    const rows = await as(U.viewer, (c) =>
+      c.query(
+        "select count(*)::int as n from public.equipment_kinds where external_ref in ('heater-forced-air','watermaker','liferaft')",
+      ),
+    );
+    expect(Number((rows.rows[0] as { n: number }).n)).toBe(3);
+  });
+
+  /**
+   * The maintenance rules (E17-4, migration 0033). Third table of the same shape, and the one with
+   * the most at stake: it is what will put points on people's boats (E17-5). Everyone signed in
+   * reads it — a boat cannot get a plan from a library it cannot see — and the platform admin
+   * alone writes it, because a wrong interval published here lands on every boat that carries the
+   * family.
+   */
+  it("maintenance rules: written by the platform admin only", async () => {
+    const sql =
+      "insert into public.maintenance_rules (external_ref, kind_id, label) select $1, id, $2 from public.equipment_kinds where external_ref = 'winch'";
+    expect((await run(U.admin, sql, ["mr-admin", "Règle admin"])).ok, "admin").toBe(true);
+    expect((await run(U.owner, sql, ["mr-owner", "Règle owner"])).ok, "owner").toBe(false);
+    expect((await run(U.viewer, sql, ["mr-viewer", "Règle viewer"])).ok, "viewer").toBe(false);
+    expect((await run(U.stranger, sql, ["mr-stranger", "Règle étrangère"])).ok, "stranger").toBe(
+      false,
+    );
+    expect(await count(null, "maintenance_rules")).toBe(-1);
+  });
+
+  it("maintenance rules: active rows are public, deactivated ones are the admin's alone", async () => {
+    const seen = await as(U.admin, async (c) => {
+      await c.query(
+        `insert into public.maintenance_rules (external_ref, kind_id, label, is_active)
+         select v.ref, k.id, v.label, v.active
+         from (values ('mr-live', 'Règle publiée', true), ('mr-retired', 'Règle retirée', false))
+              as v (ref, label, active)
+         join public.equipment_kinds k on k.external_ref = 'winch'`,
+      );
+      const refs = async () => {
+        const res = await c.query(
+          "select external_ref from public.maintenance_rules where external_ref like 'mr-%' order by external_ref",
+        );
+        return res.rows.map((r) => (r as { external_ref: string }).external_ref);
+      };
+      const admin = await refs();
+      await c.query("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: U.stranger.id, email: U.stranger.email, role: "authenticated" }),
+      ]);
+      return { admin, stranger: await refs() };
+    });
+
+    expect(seen.admin).toEqual(["mr-live", "mr-retired"]);
+    expect(seen.stranger).toEqual(["mr-live"]);
+  });
 });
 
 /**

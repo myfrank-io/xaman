@@ -1230,6 +1230,7 @@ export type Database = {
           external_ref: string | null
           id: string
           installed_at: string | null
+          kind_id: string | null
           model: string | null
           name: string
           notes: string | null
@@ -1251,6 +1252,7 @@ export type Database = {
           external_ref?: string | null
           id?: string
           installed_at?: string | null
+          kind_id?: string | null
           model?: string | null
           name: string
           notes?: string | null
@@ -1272,6 +1274,7 @@ export type Database = {
           external_ref?: string | null
           id?: string
           installed_at?: string | null
+          kind_id?: string | null
           model?: string | null
           name?: string
           notes?: string | null
@@ -1320,6 +1323,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_kind_id_fkey"
+            columns: ["kind_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_kinds"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "equipment_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
@@ -1327,6 +1337,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      equipment_kinds: {
+        Row: {
+          category_ref: string | null
+          created_at: string
+          external_ref: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          synonyms: string[]
+          updated_at: string
+        }
+        Insert: {
+          category_ref?: string | null
+          created_at?: string
+          external_ref: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          synonyms?: string[]
+          updated_at?: string
+        }
+        Update: {
+          category_ref?: string | null
+          created_at?: string
+          external_ref?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          synonyms?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       haul_outs: {
         Row: {
@@ -1702,6 +1748,80 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_rules: {
+        Row: {
+          actions: NonNullable<Json>
+          brand: string | null
+          consumables: NonNullable<Json>
+          created_at: string
+          description: string | null
+          engine_scope: string
+          external_ref: string
+          id: string
+          interval_hours: number | null
+          interval_months: number | null
+          is_active: boolean
+          kind_id: string
+          label: string
+          model: string | null
+          sort_order: number
+          source: string
+          source_ref: string | null
+          updated_at: string
+          zone_scope: string
+        }
+        Insert: {
+          actions?: NonNullable<Json>
+          brand?: string | null
+          consumables?: NonNullable<Json>
+          created_at?: string
+          description?: string | null
+          engine_scope?: string
+          external_ref: string
+          id?: string
+          interval_hours?: number | null
+          interval_months?: number | null
+          is_active?: boolean
+          kind_id: string
+          label: string
+          model?: string | null
+          sort_order?: number
+          source?: string
+          source_ref?: string | null
+          updated_at?: string
+          zone_scope?: string
+        }
+        Update: {
+          actions?: NonNullable<Json>
+          brand?: string | null
+          consumables?: NonNullable<Json>
+          created_at?: string
+          description?: string | null
+          engine_scope?: string
+          external_ref?: string
+          id?: string
+          interval_hours?: number | null
+          interval_months?: number | null
+          is_active?: boolean
+          kind_id?: string
+          label?: string
+          model?: string | null
+          sort_order?: number
+          source?: string
+          source_ref?: string | null
+          updated_at?: string
+          zone_scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_rules_kind_id_fkey"
+            columns: ["kind_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_kinds"
             referencedColumns: ["id"]
           },
         ]
@@ -2673,6 +2793,10 @@ export type Database = {
           occurrences: number
           title: string
         }[]
+      }
+      maintenance_rule_consumables_valid: {
+        Args: { p_consumables: Json }
+        Returns: boolean
       }
       mark_log_reviewed: {
         Args: { p_hours_override?: Json; p_log_id: string }

@@ -20,6 +20,9 @@ const PAGES = [
   "/dev/ui/boat/engine",
   "/dev/ui/boat/engine-form",
   "/dev/ui/boat/equipment-form",
+  // The empty form (E17-3): the only state where the family proposes itself, since a row that
+  // already carries one is left alone.
+  "/dev/ui/boat/equipment-form?new=1",
   "/dev/ui/boat/settings",
   "/dev/ui/supplies",
   "/dev/ui/haul-outs",

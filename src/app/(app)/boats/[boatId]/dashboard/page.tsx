@@ -85,7 +85,7 @@ async function loadNextDue(supabase: Client, boatId: string): Promise<NextDue | 
 }
 
 /**
- * « À bord » (E18-1, D115) : un plan de travail, pas un résumé.
+ * « À bord » (E18-1, D117) : un plan de travail, pas un résumé.
  *
  * Trois zones. **Écrire** : l'acte nommé, au-dessus de la ligne de flottaison (D35). **Faire** :
  * la file entière, rangée par palier, avec « Fait » en ligne. **Savoir** : la phrase d'état et la

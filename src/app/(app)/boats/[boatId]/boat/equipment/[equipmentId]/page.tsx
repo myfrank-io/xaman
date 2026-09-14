@@ -26,7 +26,7 @@ export default async function EquipmentPage({
   const [{ data: item }, { data: role }, { data: logs }] = await Promise.all([
     supabase
       .from("equipment")
-      .select("*, boat_categories(id, name, color)")
+      .select("*, boat_categories(id, name, color), equipment_kinds(label)")
       .eq("id", equipmentId)
       .eq("boat_id", boatId)
       .is("deleted_at", null)
@@ -75,6 +75,7 @@ export default async function EquipmentPage({
                 color: item.boat_categories.color,
               }
             : null,
+          kindLabel: item.equipment_kinds?.label ?? null,
         }}
         logs={logRows}
         canWrite={can(boatRole, "write")}

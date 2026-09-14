@@ -302,15 +302,15 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
   la même règle : proposé, décoché, jamais écrit sans un tap.
 - [ ] **E17-1 (M, 3)** Lire un document de bateau : reconnaissance de la famille (`AUTOPILOT.md §2.1`), sortie en **lot**, statut et date portés ligne à ligne.
 - [ ] **E17-2 (M, 3)** L'écran « ce que j'ai lu » : lot groupé par système, contradiction avec le carnet affichée **et décochée** (D113), « Tout ajouter » idempotent, rapport au format E12-1.
-- [ ] **E17-3 (M, 2)** Familles d'équipement : référentiel `equipment_kinds` (sans `boat_id`, comme `boat_models`), `equipment.kind_id`, rapprochement à la lecture et modifiable à la main.
-- [ ] **E17-4 (M, 3)** Bibliothèque `maintenance_rules` : famille, marque/modèle facultatifs, intervalles, `engine_scope`, `zone_scope`, actions, **consommables**, **source**. Seed de ~25 familles.
+- [x] **E17-3 (M, 2)** **Familles d'équipement** (D115). `equipment_kinds` (`0032`) : table de référence sans `boat_id` — comme `boat_models` —, 41 familles semées d'après ce que le carnet porte réellement, RLS calquée sur le catalogue de modèles (lecture par tout compte connecté quand `is_active`, écriture par le seul admin plateforme), plus `equipment.kind_id`. Le rapprochement (`src/lib/equipment-kinds.ts`) cherche libellé et synonymes en **mots entiers** dans « nom marque modèle » et garde le terme le plus long ; il **propose** dans le formulaire et se tait dès que quelqu'un touche au champ. La fiche équipement dit la famille à côté du système. Aperçu : `/dev/ui/boat/equipment-form?new=1` monte le formulaire vide, seul état où la famille se propose. Tests : neuf cas pour le rapprochement, trois pour la RLS de la nouvelle table (règle 2), audit tactile sur les deux états.
+- [x] **E17-4 (M, 3)** **Bibliothèque `maintenance_rules`** (D116, `0033`). Table de référence sans `boat_id` comme `equipment_kinds` : une règle s'accroche à une **famille**, restreint éventuellement à une marque ou un modèle, et porte ce qu'un point de modèle porte — libellé, intervalle en mois et/ou en heures, `engine_scope` et `zone_scope` du **même vocabulaire** que `checklist_template_items` (D90), actions pas à pas — plus ses **consommables** (dans la forme que `parts` stocke, pour E17-8) et sa **source**. 49 règles sur 36 familles ; cinq familles sans aucune règle, volontairement. Trois contraintes en base : une source autre que `proposal` doit nommer sa référence (`AUTOPILOT.md §6`), une heure exige un moteur, un consommable a un nom. **Ne compose aucun plan** — c'est E17-5. Tests : onze cas sur le catalogue et ses refus, deux pour la RLS de la nouvelle table (règle 2).
 - [ ] **E17-5 (M, 3)** Le plan se compose : modèle de coque + règles des équipements présents ; `checklist_items.equipment_id` ; recalcul à l'ajout et au dépôt d'un équipement.
 - [ ] **E17-7 (S, 2)** Dégraisser `orc50-v1` de ses douze marques (`AUTOPILOT.md §1.4`) vers les règles ; migration des bateaux déjà instanciés.
 - [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
 - [ ] **E17-10 (C, 2)** L'e-mail hebdomadaire (E9-6) devient contextuel : avant une sortie de l'eau, à J-30 d'une péremption, à l'entrée de l'hiver.
 
-## E18 — Le premier écran est un plan de travail (D115)
+## E18 — Le premier écran est un plan de travail (D117)
 
 Ouverte le 2026-09-14. Constat : sur six blocs du tableau de bord, quatre sont des copies tronquées
 d'un onglet déjà à un tap — les vignettes redisent les pastilles de la navigation, la grille des
@@ -319,7 +319,7 @@ Journal, le récapitulatif est trois liens vers trois onglets. L'écran répond 
 bien », la question la plus rare, et sert de sommaire aux cinq autres moments — dont deux,
 *chercher* et *suivre ce qu'ont fait les autres*, n'ont aucun écran.
 
-Principe (D115) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
+Principe (D117) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
 le carnet, la flotte (2 à 10 bateaux), l'organisation (jusqu'à 3 000, un constructeur qui vend du
 service à ses acheteurs). Un compte n'est affiché que s'il est un **filtre** qui se résout en
 lignes ; aucun cadran, aucun score de conformité, aucun graphique (règle 10). Les trois lots sont
@@ -327,7 +327,7 @@ indépendants dans cet ordre : le premier se livre seul.
 
 ### Lot 1 — Le carnet (V1)
 
-- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D115). Les quatre vignettes, la
+- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D117). Les quatre vignettes, la
   grille des huit systèmes, les trois dernières interventions et le récapitulatif quittent
   l'écran : quatre blocs qui étaient des copies tronquées d'un onglet à un tap. La file cesse
   d'être un aperçu de six lignes — elle prend la hauteur de l'écran et se range par palier,
@@ -399,7 +399,7 @@ indépendants dans cet ordre : le premier se livre seul.
   (`DATA-MODEL.md §5`). Politiques RLS par appartenance, écran `/orgs/[orgId]`, appartenance lue à
   la connexion pour choisir l'écran d'arrivée. **DoD** : matrice RLS complète (membre, admin,
   étranger), aucun droit accordé côté écran qui ne le soit en base (règle 2).
-- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D115). Deux
+- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D117). Deux
   accès séparés, rien entre les deux. **Concédé** : le carnet invite l'organisation comme il invite
   un professionnel — rôle contraint, accès daté, retirable (D28, D29) ; la file de l'organisation
   est la somme exacte de ses accès. **Agrégé** : sur les carnets instanciés depuis un plan dont

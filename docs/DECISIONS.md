@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D116.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D118.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2494,8 +2494,77 @@ porte une catégorie de conception, qui se lit dans `boats.navigation_zone` et *
 quand elle change. Ce n'est pas une échéance mais une lecture d'identité, et elle appartient au lot
 de la lecture d'inventaire.
 
+## 2026-09-14 — D115 : le plan suit l'équipement, et la famille se propose sans s'imposer
 
-## 2026-09-14 — D115 : le premier écran est un plan de travail, à trois altitudes
+**Question.** Sur quelle clé accrocher les règles d'entretien ? Le modèle de coque, comme
+aujourd'hui, ou autre chose ?
+
+**Décision.** Sur la **famille d'équipement**. `equipment_kinds` (`0032`) est une table de
+référence sans `boat_id` — publiée par la plateforme, lue par tout compte connecté, écrite par le
+seul admin — et `equipment.kind_id` y rattache la ligne d'un bateau. C'est la première des deux
+couches de `docs/AUTOPILOT.md §4` : E17-4 accrochera les règles sur les familles, E17-5 composera
+le plan « modèle de coque + règles des équipements présents ».
+
+La famille se **propose** : `matchEquipmentKind` cherche le libellé et les synonymes en mots
+entiers dans « nom marque modèle » et retient le terme le plus long, si bien que « chauffage à air
+pulsé » l'emporte sur « chauffage ». Le formulaire montre ce qu'il a trouvé et **cesse de proposer
+dès que quelqu'un touche au champ** ; une ligne qui a déjà une famille arrive « déjà choisie ».
+
+**Raison.** Ce qui décide de ce qu'un bateau doit entretenir n'est pas sa coque, c'est ce qu'il
+porte : deux ORC 50 diffèrent par leurs options, et deux bateaux quelconques qui portent le même
+chauffage à air pulsé demandent les mêmes trois gestes. `seed/orc50-checklist.json` montre où mène
+l'autre clé — un modèle publié à tous les ORC 50 qui nomme le Starlink, le Garmin et les Super B
+d'un seul exemplaire (`AUTOPILOT.md §1.4`). Et c'est la seule clé dont la valeur **grandit** : une
+règle écrite une fois pour un Wallas sert tous les bateaux qui en portent un.
+
+**Pourquoi les synonymes portent des marques.** Personne n'écrit « chauffage à air pulsé » : on
+écrit « Wallas 30DT », « Webasto », « chauffage fuel ». Sur ce matériel, la marque *est* le nom de
+la famille. Les synonymes sont donc ce que les gens et les documents écrivent, pas une taxonomie.
+
+**Ne rien trouver est une réponse.** Ranger un chauffage sous les règles du dessalinisateur
+donnerait au bateau trois points faux et en cacherait trois justes ; `kind_id` à null ne lui donne
+rien du tout. Le rapprochement se tait donc plutôt que de deviner, et le champ reste à « Aucune
+famille ».
+
+**Ce qui est semé, et ce qui ne l'est pas.** Les familles qu'un bateau réel du carnet porte
+aujourd'hui, plus ce que tout bateau a. Une famille entre quand un bateau l'apporte, jamais « au
+cas où » : une famille inutilisée est une ligne de plus dans un menu, qui rend la bonne plus dure à
+trouver.
+
+## 2026-09-14 — D116 : la bibliothèque de règles est semée en « proposition », et elle l'assume
+
+**Question.** Les 49 règles d'entretien semées avec `maintenance_rules` (E17-4, `0033`) portent des
+intervalles — vidange à 250 h, turbine tous les ans, soufflet de saildrive à sept ans. Sous quelle
+`source` les publier ?
+
+**Décision.** **Toutes en `proposal`, aucune avec `source_ref`.** Et la contrainte
+`source = 'proposal' or coalesce(source_ref,'') <> ''` met la règle en base : ce qui revendique une
+autorité — `manual`, `builder`, `regulation` — doit nommer où on va la vérifier.
+
+**Raison.** `AUTOPILOT.md §6` : *un intervalle n'est jamais inventé ; une règle porte sa source,
+sinon le point arrive marqué « proposé »*. Les intervalles semés sont ceux de la pratique courante,
+et c'est exactement la définition d'une proposition — bon à montrer à quelqu'un, pas à lui imposer.
+Écrire « Manuel Wallas 30DT, p. 14 » sans avoir ouvert ce manuel serait précisément la faute que
+cette table existe pour empêcher : une fausse autorité ne se distingue plus d'une vraie une fois
+écrite, et c'est elle qu'on croit. Le précédent est déjà dans le dépôt : les 93 points de l'ORC 50
+sont semés `source: proposal`.
+
+Les sources réelles arrivent par le seul chemin qui les produit : un bateau dépose son manuel, on
+le lit (E17-1, E17-2), la règle gagne sa référence.
+
+**Cinq familles ne reçoivent aucune règle** — congélateur, lave-linge, traceur, AIS, liaison
+satellite. Il n'y a pas de geste périodique qu'on remercierait quelqu'un d'avoir rappelé, et
+« contrôler que ça marche » est une ligne qu'on coche sans la lire : elle coûte la crédibilité des
+quarante-neuf qui disent quelque chose. Une famille reçoit une règle quand quelqu'un peut dire quoi
+lui faire (`AUTOPILOT.md §10`).
+
+**Ce qui est vérifié plutôt que promis.** Trois contraintes, testées des deux côtés
+(`tests/unit/maintenance-rules.test.ts`) : une source sans référence est refusée ; un intervalle en
+heures sans `engine_scope` est refusé — une heure se lit sur un moteur ; un consommable sans nom est
+refusé, parce que c'est le stock d'E17-8 qu'il irait remplir de lignes anonymes.
+
+
+## 2026-09-14 — D117 : le premier écran est un plan de travail, à trois altitudes
 
 **Question.** Le tableau de bord récapitule tout et n'approfondit rien : « est-ce qu'il ne perd pas
 juste les utilisateurs ? ». Et la question se repose une échelle plus haut, maintenant que le
