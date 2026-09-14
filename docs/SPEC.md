@@ -24,6 +24,7 @@ Le premier bateau est **Xaman**, un catamaran Marsaudon Composites ORC 50 (#25),
 | Offline | V1 : app consultable sans réseau (cache de lecture), écritures en ligne uniquement. Offline-first en V2 |
 | Livrable | Pack prêt pour Claude Code : CLAUDE.md, SPEC.md, DATA-MODEL.md, BACKLOG.md, seeds JSON |
 | Langue | UI en français (structure i18n prête pour l'anglais) ; code, schéma et commits en anglais |
+| Marché (D125) | **Deux acheteurs, un seul produit** : le propriétaire ne paie pas (partage illimité, export toujours gratuit), le **constructeur** vend une option de service avec le bateau et est le cœur de cible ; seul moment payant côté propriétaire, la passation à la vente. Le site public (`/` et `/constructeurs`) porte les deux lectures (D126) |
 
 ---
 
@@ -46,6 +47,8 @@ Trois convictions qui structurent le produit :
 1. **Checklists par modèle de bateau.** Un ORC 50 n'a pas les mêmes points de contrôle qu'un First 36. Xaman fournit des checklists pré-remplies par constructeur/modèle, avec les actions détaillées pas à pas, que l'utilisateur complète avec ses propres points. C'est le principal différenciateur face aux concurrents : ceux qui pré-remplissent le font par type de bateau ou par équipement générique, jamais au modèle exact avec les gestes détaillés (voir §3).
 2. **Multi-acteurs natif.** Un pro invité voit ce qu'il doit voir et enregistre ses interventions directement dans le journal du bateau. Demain : un loueur gère sa flotte, un locataire coche la checklist de départ, un club suit ses bateaux, un chantier publie la checklist officielle de son modèle.
 3. **Utilisable à bord.** iPad en plein soleil, doigts mouillés, connexion Starlink intermittente : gros boutons, contraste élevé, saisie en moins de 30 secondes, lecture possible sans réseau.
+
+**Depuis D125, une quatrième, qui décide de qui paie.** Le coût d'amorçage est le premier tueur du secteur (§3.3.1), et la seule chose qui le supprime est que **quelqu'un d'autre ait rempli le carnet avant le propriétaire**. Cette personne existe : c'est le chantier qui a construit le bateau — qui, le jour de la livraison, perd lui aussi la relation client, quinze ans de revenu de service et toute vérité sur ses propres défauts. Le carnet reste **gratuit pour le propriétaire** ; le **constructeur** en vend l'option de service avec le bateau, au prix qu'il fixe, et c'est lui que Xaman facture. Ce que le chantier vend n'est pas une autre application : c'est **le premier jour**.
 
 ## 3. Positionnement concurrentiel
 
@@ -91,7 +94,7 @@ VesselFile (US) et BoatMatey (UK) restent des références solides sur le journa
 4. **Le multi-acteurs existe partout** (BoatOn a trois rôles, Nauticoncept relie technicien / concession / propriétaire). Ce qui n'existe pas en grand public : un **propriétaire auteur principal** (BoatOn le met en lecture seule), un **pro invité vraiment contraint** (lit tout, écrit ses lignes, ne supprime rien, ne voit pas les membres) et une **révocation qui laisse l'intervention dans le journal**. C'est un argument de confiance, à énoncer comme une promesse.
 5. **Ne jamais se positionner sur « l'état du bateau »** (terrain de Seanapps et de la télémétrie), mais sur **« la mémoire des interventions et le partage entre ceux qui entretiennent »**.
 6. **La dispersion fonctionnelle est le piège documenté du secteur** (Ready4Sea couvre désormais les piscines). Xaman occupe la place laissée libre : **un bateau, à bord, à deux.**
-7. **Les prix du marché plafonnent l'ambition tarifaire** : < 30 €/an (Ready4Sea), 49 €/an (Boatwise), 60 €/an (BoatOn). Toute offre payante future doit se situer dans cette fourchette et ne jamais faire payer le partage.
+7. **Les prix du marché plafonnent l'ambition tarifaire côté plaisancier** : < 30 €/an (Ready4Sea), 49 €/an (Boatwise), 60 €/an (BoatOn). **D125 en tire la conséquence inverse de celle attendue** : plutôt que de se glisser dans cette fourchette, Xaman n'y vend rien. Le propriétaire ne paie pas, le partage n'est jamais facturé, et la valeur se facture là où un bon de commande est déjà ouvert — chez le constructeur. Le seul encaissement côté propriétaire est la **passation** à la vente (le carnet vivant remis à l'acheteur, le privé du vendeur filtré, un certificat de passation), jamais l'export, qui reste gratuit et affiché.
 
 **Pitch.** Xaman est le carnet d'entretien partagé des voiliers de voyage : le bateau arrive déjà rempli avec son modèle exact, une intervention se saisit en moins de trente secondes sur un iPad mouillé, l'associé voit la ligne apparaître en direct, le mécano invité ne peut rien effacer, et les données s'exportent en un clic, toujours.
 
@@ -118,7 +121,7 @@ Ces rôles sont réservés dans l'énumération `boat_role` et dans la table `or
 | Loueur / société de charter | Gérer une flotte, checklists départ/retour, coûts par bateau | `organizations` (type `charter`) possédant N bateaux |
 | Locataire | Accès temporaire à la checklist de départ/retour et aux consignes | Rôle `renter` avec `valid_from` / `valid_until` sur `boat_members` |
 | Club de voile | Flotte, membres, planning d'entretien mutualisé | `organizations` (type `club`) |
-| Constructeur / chantier | Publier la checklist officielle d'un modèle, voir l'état de la flotte de ses clients (avec consentement) | `checklist_templates` avec `owner_organization_id` et `is_public` |
+| Constructeur / chantier | **Promu cœur de cible par D125** — voir §4.4 | `organizations` (type `builder`), `checklist_templates.owner_organization_id`, `boats.organization_id` |
 | Mécanicien / prestataire multi-bateaux | Voir tous les bateaux sur lesquels il intervient | Un utilisateur `pro` membre de N bateaux (déjà possible en V1) |
 
 ### 4.3 Matrice de droits V1
@@ -137,6 +140,19 @@ Ces rôles sont réservés dans l'énumération `boat_role` et dans la table `or
 | Supprimer le bateau | ✔ | ✘ | ✘ | ✘ |
 
 Toutes ces règles sont appliquées **en base par RLS** (voir `DATA-MODEL.md`), jamais uniquement côté client. L'admin plateforme est traité en base comme un `owner` virtuel de tous les bateaux (`boat_role()` renvoie `owner`), ce qui lui permet de créer le premier bateau et ses membres.
+
+### 4.4 Le constructeur (cœur de cible, D125 — hors V1, épique E19)
+
+Ni un persona V1 ni un persona « futur » parmi d'autres : l'acheteur du produit. Il n'utilise pas le carnet à la place du propriétaire, il le **livre avec le bateau** et en **vend l'option de service**.
+
+| | |
+|---|---|
+| Ce qu'il perd aujourd'hui | La relation client le jour de la livraison ; quinze ans d'entretien sur une coque qu'il a construite ; l'arbitrage de ses garanties, fait au téléphone sans date ni heures moteur ; la connaissance de ses propres défauts, apprise sur les forums |
+| Ce qu'il vend | Une option de service, au bon de commande, au prix qu'il fixe — le contrat d'entretien automobile appliqué au bateau. **Xaman facture le chantier**, jamais son client |
+| Ce qu'il livre | Un carnet déjà rempli le jour de la remise des clés : modèle exact, moteurs, numéros de série, dates de mise en service, garanties, plan d'entretien du chantier |
+| Ce qu'il voit | **Deux accès séparés, rien entre les deux** (D121) : *concédé* — le carnet l'invite comme il invite un professionnel, rôle contraint, accès daté, révocable en un geste ; *agrégé* — sur les carnets instanciés depuis son plan, des statistiques sans ligne et sans nom, jamais en dessous de cinq carnets |
+| Ce qu'il ne voit jamais | Un carnet qui ne l'a pas invité. Un nom, un montant, un titre d'intervention dans un agrégat. Une porte ouverte par le contrat plutôt que par le propriétaire |
+| Ce qui reste au propriétaire | Le carnet, **même quand l'option s'arrête** : c'est le bateau qui le porte, pas l'abonnement |
 
 ## 5. Périmètre fonctionnel
 
@@ -239,9 +255,10 @@ Modèle de checklist :
 
 - Offline-first avec écriture hors réseau et synchronisation (V2 ; le modèle de données est compatible : identifiants UUID générés côté client, horodatages, pas de compteurs auto-incrémentés).
 - Applications natives iOS / Android (la PWA couvre le besoin).
-- UI organisations / flottes / loueurs / locataires / clubs / constructeurs (modèle prévu, voir §4.2).
+- UI organisations / flottes / loueurs / locataires / clubs (modèle prévu, voir §4.2). **L'étage constructeur en sort** (D125) : il n'entre pas en V1 non plus, mais il cesse d'être un « un jour peut-être » — il est l'épique **E19**, et E18-9 à E18-12 en sont le socle.
 - Inventaire avancé de pièces (emplacements multiples, codes-barres, décrément automatique).
-- Facturation / abonnement / paiement.
+- ~~Facturation / abonnement / paiement.~~ **Requalifié par D125** : hors V1, mais dans le périmètre du produit — contrat facturé pour le chantier, paiement unique pour la passation à la vente (E19). Le carnet du propriétaire, lui, ne rencontre jamais de mur de paiement.
+- **Garanties** : absentes du modèle (ni mise en service, ni durée, ni pièce couverte, ni réclamation). Premier levier du chantier et première douleur de l'acheteur, donc premier lot d'E19 — pas de la V1.
 - Intégration des instruments (B&G, Victron, NMEA) — piste V3 intéressante (relevé d'heures automatique).
 - Marketplace de modèles de checklists communautaires.
 

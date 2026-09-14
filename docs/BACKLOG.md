@@ -32,6 +32,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E16 | E16-10 |
 | E17 | E17-13 |
 | E18 | E18-13 |
+| E19 | E19-10 |
 
 ---
 
@@ -310,7 +311,7 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
 - [x] **E17-3 (M, 2)** **Familles d'équipement** (D115). `equipment_kinds` (`0032`) : table de référence sans `boat_id` — comme `boat_models` —, 41 familles semées d'après ce que le carnet porte réellement, RLS calquée sur le catalogue de modèles (lecture par tout compte connecté quand `is_active`, écriture par le seul admin plateforme), plus `equipment.kind_id`. Le rapprochement (`src/lib/equipment-kinds.ts`) cherche libellé et synonymes en **mots entiers** dans « nom marque modèle » et garde le terme le plus long ; il **propose** dans le formulaire et se tait dès que quelqu'un touche au champ. La fiche équipement dit la famille à côté du système. Aperçu : `/dev/ui/boat/equipment-form?new=1` monte le formulaire vide, seul état où la famille se propose. Tests : neuf cas pour le rapprochement, trois pour la RLS de la nouvelle table (règle 2), audit tactile sur les deux états.
 - [x] **E17-4 (M, 3)** **Bibliothèque `maintenance_rules`** (D116, `0033`). Table de référence sans `boat_id` comme `equipment_kinds` : une règle s'accroche à une **famille**, restreint éventuellement à une marque ou un modèle, et porte ce qu'un point de modèle porte — libellé, intervalle en mois et/ou en heures, `engine_scope` et `zone_scope` du **même vocabulaire** que `checklist_template_items` (D90), actions pas à pas — plus ses **consommables** (dans la forme que `parts` stocke, pour E17-8) et sa **source**. 49 règles sur 36 familles ; cinq familles sans aucune règle, volontairement. Trois contraintes en base : une source autre que `proposal` doit nommer sa référence (`AUTOPILOT.md §6`), une heure exige un moteur, un consommable a un nom. **Ne compose aucun plan** — c'est E17-5. Tests : onze cas sur le catalogue et ses refus, deux pour la RLS de la nouvelle table (règle 2).
 - [x] **E17-5 (M, 3)** **Le plan se compose** (D122, D123, `0035`). Les deux couches d'`AUTOPILOT.md §4` deviennent un plan : `apply_maintenance_rules(boat, equipment?) returns int` (vérifie `can_write_boat`, idempotente) au-dessus de `compose_maintenance_rules` (le corps que seul le trigger appelle). `checklist_items.equipment_id` dit **ce que le point entretient** et `rule_id` **d'où il vient** — le frère de `template_item_id`, dont E17-7 aura besoin. Le système vient de l'équipement, sinon de `category_ref` de sa famille, sinon **rien n'est proposé** ; le libellé est suffixé par l'équipement, ou par le moteur quand la règle se duplique (D90) ; les règles hauturières sautent un bateau côtier. Trigger `equipment_plan_sync` : compose à l'entrée, **désactive** au dépôt et à la corbeille, réactive au retour — jamais de suppression, `checklist_completions` étant en cascade. `normalise_for_match()` en base, jumelle de `normaliseForMatch`, tenue à parité. **Au passage (D123)** : `can_write_boat`, `can_contribute_boat` et `is_boat_owner` renvoyaient `null` pour un non-membre, donc les six gardes `if not …` du dépôt ne se déclenchaient pas pour un étranger — corrigé à la racine. Tests : treize cas sur la composition et le cycle de vie, cinq sur les aides de rôle et la garde.
-- [x] **E17-12 (M, 1)** **Une seule table d'accents** (D125, `0036`). `normalise_for_match()` portait depuis `0035` une table d'accents à elle, plus faible que `text_fold()` (`0005`) : `Œ œ Æ æ Ø ø` en étaient absents, donc `œ` survivait au `translate` et l'étape `[^a-z0-9&]` l'avalait comme une ponctuation — `normalise_for_match('Cœur')` rendait `c ur` au lieu de `coeur`. Elle devient une enveloppe de `text_fold()` (même signature, `immutable`, `search_path` vide, privilèges inchangés) et la jumelle TypeScript replie les mêmes ligatures avant son `normalize("NFD")`, qui ne décompose pas une lettre à part entière : les deux côtés étaient **d'accord sur la mauvaise réponse**, et le test de parité, qui ne vérifiait que leur accord, le certifiait. Parité garantie sur le latin-1, pas au delà (D125). Tests : les ligatures entrent dans les échantillons de parité, la réponse elle-même est piquée des deux côtés, et une famille écrite « Œil de pont » se rapproche comme « Oeil de pont ».
+- [x] **E17-12 (M, 1)** **Une seule table d'accents** (D127, `0036`). `normalise_for_match()` portait depuis `0035` une table d'accents à elle, plus faible que `text_fold()` (`0005`) : `Œ œ Æ æ Ø ø` en étaient absents, donc `œ` survivait au `translate` et l'étape `[^a-z0-9&]` l'avalait comme une ponctuation — `normalise_for_match('Cœur')` rendait `c ur` au lieu de `coeur`. Elle devient une enveloppe de `text_fold()` (même signature, `immutable`, `search_path` vide, privilèges inchangés) et la jumelle TypeScript replie les mêmes ligatures avant son `normalize("NFD")`, qui ne décompose pas une lettre à part entière : les deux côtés étaient **d'accord sur la mauvaise réponse**, et le test de parité, qui ne vérifiait que leur accord, le certifiait. Parité garantie sur le latin-1, pas au delà (D127). Tests : les ligatures entrent dans les échantillons de parité, la réponse elle-même est piquée des deux côtés, et une famille écrite « Œil de pont » se rapproche comme « Oeil de pont ».
 - [ ] **E17-7 (S, 2)** Dégraisser `orc50-v1` de ses douze marques (`AUTOPILOT.md §1.4`) vers les règles ; migration des bateaux déjà instanciés.
 - [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
@@ -418,7 +419,103 @@ indépendants dans cet ordre : le premier se livre seul.
   agrégats **cliquables** qui se résolvent en lignes, jamais un cadran ; index vérifiés sur un seed
   de charge de 3 000 carnets. **DoD** : budget de requête mesuré et écrit dans le ticket, aucun
   compte qui compte la page (D111).
-- [ ] **E18-12 (C, 3)** **Le constructeur publie son plan, et ses bulletins.** `owner_organization_id`
+- [ ] **E18-12 (M, 3)** **Le constructeur publie son plan, et ses bulletins.** *(« Could » jusqu'à
+  D125 : c'est ce que l'option de service vend, donc un Must d'E19.)* `owner_organization_id`
   prend son sens : le chantier maintient le plan de son modèle, une version suivante se **propose**
   aux carnets déjà instanciés — affichée, décochée, jamais écrite sans un tap (D113) — et un
   bulletin de service est un point de checklist poussé à un modèle, pas un message.
+
+---
+
+## E19 — Le constructeur vend du service (D125, D126)
+
+Ouverte le 2026-09-14. **Bascule de marché** (D125) : deux acheteurs, un seul produit. Le
+propriétaire ne paie pas — carnet complet, partage illimité, export toujours gratuit — et le
+**constructeur** est le cœur de cible : il livre le carnet avec le bateau et en vend l'option de
+service, au prix qu'il fixe, comme un constructeur automobile vend son contrat d'entretien. Xaman
+facture le chantier, jamais son client. Seul encaissement côté propriétaire : la **passation** à la
+vente, et jamais l'export.
+
+Trois raisons, toutes déjà écrites ailleurs dans ce dépôt : le coût d'amorçage est le premier tueur
+du secteur (`SPEC.md §3.3.1`) et seul le chantier peut remplir le carnet avant le propriétaire ; le
+jour de la livraison, l'acheteur **et** le constructeur perdent quelque chose en même temps
+(`SPEC.md §4.4`) ; et une option présentée au bon de commande se vend, là où un abonnement à 60 €/an
+s'arrache un par un.
+
+**Dépendances.** Le socle est E18 lot 3 (E18-9 à E18-12) : sans `organizations` ouvertes et sans les
+deux accès de D121, rien de ce qui suit ne tient en base. **E18-12 cesse d'être un « Could »** : le
+plan officiel et les bulletins sont ce que l'option vend. Aucun ticket de cette épique ne se démarre
+sans validation explicite, à l'exception d'E19-1, qui ne touche que le site public.
+
+**Ce qui ne changera pas, quoi qu'il arrive.** L'export reste gratuit et affiché ; le partage n'est
+jamais facturé ; un contrat n'ouvre jamais un carnet — seul le propriétaire le fait, pour une durée,
+et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l'option s'arrête.
+
+### Lot 1 — Le site public (V1, livrable seul)
+
+- [x] **E19-1 (M, 2)** **La page d'accueil porte les deux lectures, et le chantier a la sienne**
+  (D126). `/` garde le propriétaire, gagne « Deux façons d'avoir un carnet à jour » (gratuit /
+  option du chantier, même hauteur, même vocabulaire : ce qui change est **qui remplit le carnet le
+  premier jour**) et une carte constructeur. `/constructeurs` est la page du chantier : ce que la
+  poignée de main lui coûte, ce qu'il obtient, comment l'option se vend, **ce qu'il ne verra
+  jamais** (la clause de D121, écrite du côté de celui qui doit pouvoir la dire à haute voix).
+  En-tête et pied partagés (`MarketingHeader`, `MarketingFooter`), aperçu de flotte dessiné
+  (`FleetPreview`) dont la légende dit qu'il est un dessin, route publique dans `src/proxy.ts` et
+  absente de `SIGNED_IN_ELSEWHERE`. Page annoncée comme **programme pilote** : l'étage constructeur
+  n'existe pas encore, et un chantier qui l'apprend à la démo ne revient pas.
+
+### Lot 2 — Ce qui manque au carnet avant qu'un chantier puisse le vendre — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E19-2 (M, 3)** **Les garanties n'existent pas.** Ni date de mise en service, ni durée, ni
+  pièce couverte, ni réclamation : premier levier du chantier, première douleur de l'acheteur, et un
+  domaine entier à créer. Table `warranties` (`boat_id`, portée : bateau, moteur ou équipement,
+  début, fin en date **et/ou** en heures — « premier atteint », comme les échéances (D1), garant :
+  contact ou organisation, conditions, documents) et affichage là où la question se pose : « sous
+  garantie jusqu'au … » sur la fiche moteur et la fiche équipement, et dans la file quand la
+  garantie expire avant l'échéance suivante. **DoD** : RLS et privilèges de colonnes dans la même
+  migration (règle 2), `pnpm db:types` commité, parité avec `DATA-MODEL.md`, vérifié en 1024×768.
+- [ ] **E19-3 (M, 2)** **Une réclamation part avec sa preuve.** Depuis une ligne du journal :
+  « Ouvrir une réclamation » attache la date, les heures moteur du jour, les photos et la facture
+  déjà présentes, et l'envoie au garant. Le chantier arbitre sur des faits au lieu d'un appel
+  téléphonique. Table `warranty_claims` (état, garantie, intervention d'origine, réponse), jamais de
+  suppression physique (règle 9).
+- [ ] **E19-4 (M, 3)** **Le carnet livré avec le bateau.** Un chantier prépare une coque — modèle
+  exact, moteurs et numéros de série, équipements, garanties, plan d'entretien — puis la **remet** :
+  l'acheteur ouvre un compte et trouve son bateau dedans, `owner` dès la première seconde. C'est le
+  parcours d'entrée que D64/D65/D67 ne couvrent pas (ils supposent un propriétaire qui saisit).
+  Remise par invitation datée comme toutes les autres (D28, D29) ; tant qu'elle n'est pas acceptée,
+  le carnet appartient à l'organisation et non à une personne.
+- [ ] **E19-5 (S, 2)** **L'option de service se voit, et se coupe.** Un contrat (`boat_id`,
+  organisation, début, fin, état) affiché en clair dans le carnet : qui regarde, jusqu'à quand,
+  et « Retirer l'accès » à côté. Le contrat **ne donne aucun droit par lui-même** — il propose
+  l'invitation que le propriétaire accepte (D121). À l'échéance, l'accès tombe ; le carnet, lui, ne
+  bouge pas. **DoD** : un test RLS prouve qu'un contrat sans invitation acceptée ne lit rien.
+
+### Lot 3 — Les deux moments payants — *à ne pas démarrer sans validation explicite*
+
+- [ ] **E19-6 (M, 3)** **La passation à la vente.** Le carnet se sépare en deux — le technique d'un
+  côté, l'argent et le privé de l'autre, ligne à ligne, **décoché par défaut** —, le vendeur garde
+  une **copie archivée en lecture**, l'acheteur reçoit un carnet dont il est propriétaire dès le
+  premier jour, garanties comprises, et un **certificat de passation** imprimable (le moteur de
+  `/report` existe déjà). À côté de D30, pas à sa place : inviter l'acheteur en `owner` puis quitter
+  le bateau reste gratuit, et reste du tout-ou-rien. **DoD** : aucune donnée du vendeur ne franchit
+  la passation sans une case cochée par lui (test), l'export reste gratuit et accessible des deux
+  côtés.
+- [ ] **E19-7 (S, 3)** **Encaisser.** Paiement unique pour la passation ; contrat facturé pour le
+  chantier, hors application (pas de self-service B2B). `SPEC.md §5.4` excluait la facturation :
+  D125 la requalifie. **Aucun mur de paiement dans le carnet du propriétaire** — un seul écran
+  payant, celui de la passation, et il annonce son prix avant de demander quoi que ce soit.
+- [ ] **E19-8 (M, 1)** **Ce qu'un contrat oblige à écrire.** Le chantier voit des données
+  personnelles de ses clients : mentions légales, CGU/CGV, sous-traitance RGPD, et la trace du
+  consentement — qui a ouvert l'accès, quand, jusqu'à quand, et qui l'a retiré. Sans cela, l'option
+  ne se signe pas. **DoD** : la trace est en base, pas dans un journal applicatif.
+
+### Lot 4 — Ce qui reste à trancher avant d'écrire une ligne de prix
+
+- [ ] **E19-9 (M, 1)** **Les trois prix, et une boîte aux lettres.** (1) Prix de la passation et qui
+  la paie — vendeur (argument de vente) ou acheteur (exigence d'expert). (2) Prix payé par le
+  chantier et son unité : par coque sous contrat, par coque livrée, par an. (3) Existence de
+  `constructeurs@xaman.boats`, citée par `/constructeurs` et **à créer avant la mise en ligne** :
+  le domaine existe (il envoie déjà `noreply@`), la boîte non. Tant que les deux premiers points
+  sont ouverts, aucune page de tarifs n'est écrite (D126) : une grille avec des « à partir de »
+  inventés est exactement ce que la règle interdit.
