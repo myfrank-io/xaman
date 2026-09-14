@@ -572,6 +572,59 @@ describeWithDb("inbox_items", () => {
  * has to a boat of their own, so what it refuses matters as much as what it creates — and since
  * D65 what it deliberately does NOT create matters too.
  */
+/**
+ * The role helpers never answer « maybe » (E17-5, `0035`).
+ *
+ * `can_write_boat` used to read `boat_role(id) in ('owner','editor')`, and `boat_role` is null for
+ * someone who is not a member at all — so the helper answered **null**, and every guard written
+ * `if not public.can_write_boat(…) then raise 'forbidden'` evaluated `not null` → null, skipped the
+ * branch, and let the caller through. Six functions in the repo carry that guard and all are
+ * `security definer`, so RLS was not there to catch what the guard waved past.
+ *
+ * The policies were never exposed — a null `using` clause is false to RLS — which is exactly why
+ * this hid for so long. These cases are the fence: a helper that answers null again fails here
+ * before it reaches a guard.
+ */
+describeWithDb("the role helpers answer yes or no, never null", () => {
+  const HELPERS = ["can_write_boat", "can_contribute_boat", "is_boat_owner", "is_boat_member"];
+
+  it("answers false for a stranger, on every one of them", async () => {
+    for (const helper of HELPERS) {
+      const rows = await as(U.stranger, (c) =>
+        c.query(`select public.${helper}($1::uuid) as answer`, [BOAT]),
+      );
+      expect((rows.rows[0] as { answer: boolean | null }).answer, helper).toBe(false);
+    }
+  });
+
+  it("still answers true for the people it always did", async () => {
+    for (const [role, expected] of [
+      ["owner", { can_write_boat: true, can_contribute_boat: true, is_boat_owner: true }],
+      ["editor", { can_write_boat: true, can_contribute_boat: true, is_boat_owner: false }],
+      ["pro", { can_write_boat: false, can_contribute_boat: true, is_boat_owner: false }],
+      ["viewer", { can_write_boat: false, can_contribute_boat: false, is_boat_owner: false }],
+    ] as [Role, Record<string, boolean>][]) {
+      for (const [helper, answer] of Object.entries(expected)) {
+        const rows = await as(U[role], (c) =>
+          c.query(`select public.${helper}($1::uuid) as answer`, [BOAT]),
+        );
+        expect((rows.rows[0] as { answer: boolean }).answer, `${role}.${helper}`).toBe(answer);
+      }
+    }
+  });
+
+  /** And the guard itself: what the null was letting through is now refused. */
+  it("makes « if not can_write_boat » fire for a stranger", async () => {
+    const outcome = await run(U.stranger, "select public.apply_checklist_template($1, $2)", [
+      BOAT,
+      // Any valid uuid: the guard fires before the template is ever looked up.
+      "11111111-1111-1111-1111-111111111111",
+    ]);
+    expect(outcome.ok).toBe(false);
+    if (!outcome.ok) expect(outcome.message).toMatch(/forbidden/);
+  });
+});
+
 describeWithDb("create_boat", () => {
   const NEW_BOAT = "00000000-0000-0000-0000-00000000b0f1";
   const ORC50 = "00000000-0000-0000-0000-0000000000a0";
