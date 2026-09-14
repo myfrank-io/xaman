@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D121.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D122.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2690,3 +2690,37 @@ retaper est exactement le travail que cet écran existe pour supprimer. Sans rap
 facture reposait une question déjà répondue dix fois et la réponse finissait en texte libre à côté
 de la fiche qui existait déjà ; sans pré-remplissage, la fiche créée à la volée n'avait qu'un nom,
 et quelqu'un la complétait à la main plus tard — ou jamais.
+
+## 2026-09-14 — D121 : la maquette est faite de matières, et elle dit qu'on peut la toucher
+
+**Question.** Retour de Joseph sur la maquette livrée le matin même : « la modélisation est
+horriblissime, c'est vraiment très laid » et « on ne comprend pas qu'on peut cliquer ». Deux
+défauts distincts : ce qu'on voit, et ce qu'on comprend.
+
+**Décision — ce qu'on voit.** Une face ne porte plus une *clarté* mais une **matière**
+(`Material` dans `src/lib/boat-3d/scene.ts`) : coque, carène, ligne de flottaison, pont, sole,
+roof, vitrage, toile, carbone, panneau solaire, trampoline, métal, appendice. Chacune a son jeton
+dans `globals.css` (`--model-<matière>`, clair et sombre) et **son propre contraste** : la toile
+ne s'assombrit presque pas — une voile est translucide, son côté sous le vent reste clair — là où
+un bordé prend toute la lumière. S'y ajoutent un fond de studio (clair sous le bateau, plus dense
+aux bords) et une ombre portée en dégradé.
+
+**Raison.** Le premier jet déclinait une seule couleur, du navy au blanc, en quinze gris : un
+bateau blanc sur un fond blanc cassé, sans une couleur pour l'accrocher. Les matières coûtent le
+même nombre de faces et donnent le mât en carbone noir, la toile en écru, la carène en Coppercoat
+— qui est la vraie couleur de Xaman, notée dans son inventaire. Le contraste par matière est ce
+qui empêche les facettes de lire comme une mosaïque : le coefficient n'est pas décoratif, il dit
+comment le matériau se comporte à la lumière.
+
+**Décision — ce qu'on comprend.** Trois ajouts, aucun texte d'aide :
+1. Une **pastille sur la maquette** qui dit « Touchez un élément du bateau », et qui **nomme la
+   zone survolée** dès qu'une souris passe dessus. Elle disparaît quand quelque chose est choisi.
+2. Le **survol teinte la zone** sous le pointeur (souris uniquement : un doigt ne survole pas).
+3. Une **ligne d'invite au-dessus de la liste** — celle sous la maquette est hors écran dès qu'on
+   a déroulé — et des lignes qui se comportent en boutons : fond au survol, barre d'accent à
+   gauche quand elles sont ouvertes, chevron plus franc.
+
+**Raison.** Une maquette qui tourne toute seule ressemble à une illustration ; rien ne disait
+qu'elle répondait. La pastille est le seul endroit où l'affordance ne coûte rien : elle est sur
+l'objet, elle sert de survol sur ordinateur, et elle s'efface dès qu'elle a été comprise.
+

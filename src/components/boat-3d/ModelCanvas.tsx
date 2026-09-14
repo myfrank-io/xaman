@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  PointerIcon,
   PauseIcon,
   PlayIcon,
   TriangleAlertIcon,
@@ -13,7 +14,7 @@ import {
 
 import { useReducedMotion } from "@/components/common/use-reduced-motion";
 import { ZONE_LABELS } from "@/components/boat-3d/zone-labels";
-import { buildRamp, drawScene, type Ramp } from "@/lib/boat-3d/renderer";
+import { buildRamp, drawScene, MATERIALS, type Palette, type Ramp } from "@/lib/boat-3d/renderer";
 import { fitCamera, Projector, type BoatMesh, type Camera, type Fit } from "@/lib/boat-3d/scene";
 import type { ZoneSummary } from "@/lib/boat-3d/summary";
 import type { ZoneKey } from "@/lib/boat-3d/zones";
@@ -70,7 +71,10 @@ export function ModelCanvas({
     visible: true,
     /** Set by anything that changes the picture without moving the boat. */
     needsDraw: true,
+    /** The part under a mouse pointer, on the devices that have one. */
+    hovered: null as number | null,
   });
+  const [hoveredZone, setHoveredZone] = React.useState<ZoneKey | null>(null);
 
   // The pins only exist for what is late or due soon — plus whatever is selected. A pin on every
   // zone at once would bury the two that matter under eleven that do not.
@@ -128,12 +132,14 @@ export function ModelCanvas({
 
     const readPalette = () => {
       const style = getComputedStyle(canvas);
+      const read = (name: string) => style.getPropertyValue(`--model-${name}`);
       stateRef.current.ramp = buildRamp({
-        hull: style.getPropertyValue("--model-hull"),
-        light: style.getPropertyValue("--model-light"),
-        sea: style.getPropertyValue("--model-sea"),
-        pick: style.getPropertyValue("--model-pick"),
-      });
+        ...Object.fromEntries(MATERIALS.map((material) => [material, read(material)])),
+        sea: read("sea"),
+        pick: read("pick"),
+        backdrop: read("backdrop"),
+        backdropEdge: read("backdrop-edge"),
+      } as Palette);
     };
 
     const resize = () => {
@@ -223,6 +229,7 @@ export function ModelCanvas({
       drawScene(ctx, mesh, projector, camera, {
         ramp: state.ramp,
         selected: partOf(mesh, state.selected),
+        hovered: state.hovered,
       });
 
       // The pins ride along, one DOM write each: a React render per frame would cost more than
@@ -258,7 +265,20 @@ export function ModelCanvas({
 
   const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const drag = dragRef.current;
-    if (!drag.active) return;
+    if (!drag.active) {
+      // Not dragging: light up whatever is under the pointer, so a mouse discovers that the
+      // boat answers before anyone has clicked anything.
+      if (event.pointerType !== "mouse") return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const face = projector.hit(event.clientX - rect.left, event.clientY - rect.top);
+      const part = face === null ? null : (mesh.faces[face]?.part ?? null);
+      if (part !== stateRef.current.hovered) {
+        stateRef.current.hovered = part;
+        stateRef.current.needsDraw = true;
+        setHoveredZone(part === null ? null : (mesh.parts[part]?.zone ?? null));
+      }
+      return;
+    }
     const dx = event.clientX - drag.lastX;
     drag.lastX = event.clientX;
     drag.moved += Math.abs(dx);
@@ -300,14 +320,38 @@ export function ModelCanvas({
           aria-label={t("canvasLabel", { name: boatName })}
           // Horizontal drags turn the boat; vertical ones stay the page's, so a full-width
           // model never traps the scroll on an iPad.
-          className="absolute inset-0 touch-pan-y"
+          className="absolute inset-0 cursor-pointer touch-pan-y"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={() => {
             dragRef.current.active = false;
           }}
+          onPointerLeave={() => {
+            if (stateRef.current.hovered === null) return;
+            stateRef.current.hovered = null;
+            stateRef.current.needsDraw = true;
+            setHoveredZone(null);
+          }}
         />
+        {/* The one thing the first version never said: that the boat answers. It names what the
+            pointer is over, invites a touch when nothing is chosen, and gets out of the way once
+            something is. */}
+        {selected === null ? (
+          <span className="pointer-events-none absolute bottom-2 left-2 inline-flex max-w-[85%] items-center gap-1.5 rounded-full border border-border bg-surface/90 px-2.5 py-1 text-caption font-medium text-ink-2 shadow-sm backdrop-blur-sm">
+            <PointerIcon className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate">
+              {hoveredZone === null
+                ? t("invite")
+                : (zones.find((zone) => zone.key === hoveredZone)?.name ??
+                  t(
+                    ZONE_LABELS[
+                      zones.find((zone) => zone.key === hoveredZone)?.labelKey ?? "hulls"
+                    ],
+                  ))}
+            </span>
+          </span>
+        ) : null}
         {pinned.map((zone) => (
           <ZonePin
             key={zone.key}

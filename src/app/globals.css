@@ -169,15 +169,30 @@
   --success-border: #b9e3c9;
 
   /* ---------------------------------------- the 3D model of the boat (D117)
-     Read by the canvas through getComputedStyle, never by Tailwind: the painter
-     mixes `--model-hull` into `--model-light` face by face, so these two are the
-     ends of one ramp and not two independent colours. The brass stays out of it
-     (règle 12) and the pick is the focus azure, so the selected zone reads as
-     « chosen » rather than as a state. */
-  --model-hull: #1e3a5f; /* darkest end: bottom paint, shadowed panels      */
-  --model-light: #ffffff; /* lightest end: topsides, sails, lit deck        */
-  --model-sea: #d8e2ec; /* the disc the boat floats on                      */
-  --model-pick: #1b5e96; /* the selected zone = --ring                      */
+     Read by the canvas through getComputedStyle, never by Tailwind. One entry
+     per **material**, not per tint: a boat is white topsides over a copper
+     bottom, a black boot stripe, cream cloth, carbon spars and dark glass — and
+     a single navy ramp in fifteen greys is exactly what made it read as an
+     untextured CAD viewport. The light multiplies these; nothing else tints
+     them. The brass stays out of it (règle 12), and the pick is the focus azure
+     so a selected zone reads as « chosen » rather than as a state. */
+  --model-hull: #f2f4f7; /* topsides, gelcoat blanc                           */
+  --model-bottom: #9a6b46; /* carène — Coppercoat, la vraie couleur de Xaman  */
+  --model-boot: #101c2e; /* ligne de flottaison                              */
+  --model-deck: #ccd5de; /* ponts et roufs moulés                            */
+  --model-sole: #4d5864; /* sole de cockpit, panneaux de pont                */
+  --model-roof: #e7ecf2; /* roof                                             */
+  --model-glass: #1a2635; /* vitrages                                        */
+  --model-sail: #ece8de; /* toile — crème, jamais grise                      */
+  --model-carbon: #2b3138; /* mât, bôme, bout-dehors, bossoirs               */
+  --model-solar: #14203a; /* panneaux solaires                               */
+  --model-tramp: #a4adb8; /* trampoline                                      */
+  --model-metal: #b8bec6; /* guindeau, winchs, ancre, hélices                */
+  --model-foil: #3a4450; /* dérives, safrans, embases                        */
+  --model-sea: #d2dce8; /* l'ombre portée sur l'eau                          */
+  --model-backdrop: #ffffff; /* fond derrière le bateau, au centre           */
+  --model-backdrop-edge: #e7e9e4; /* … et sur les bords                      */
+  --model-pick: #1b5e96; /* la zone choisie = --ring                          */
 
   /* ------------------------------- categories: seed reference values */
   --cat-engines: #d97706; /* Moteurs                     - 3.19:1          */
@@ -273,10 +288,23 @@
   --sidebar-border: #27394f;
   --sidebar-ring: #8ab4ff;
 
-  /* The model at night: a lighter hull on a darker sea, same ramp. */
-  --model-hull: #16283f;
-  --model-light: #cfdae8;
-  --model-sea: #16263f;
+  /* The model at night: the same materials, dimmed, on a darker sea. */
+  --model-hull: #b9c3cf;
+  --model-bottom: #6d4c33;
+  --model-boot: #0a1220;
+  --model-deck: #93a0af;
+  --model-sole: #39434f;
+  --model-roof: #a7b3c0;
+  --model-glass: #121b27;
+  --model-sail: #a9a496;
+  --model-carbon: #1d2228;
+  --model-solar: #0d1526;
+  --model-tramp: #6f7885;
+  --model-metal: #7e868f;
+  --model-foil: #2a323c;
+  --model-sea: #18283f;
+  --model-backdrop: #16253c;
+  --model-backdrop-edge: #0e1c31;
   --model-pick: #8ab4ff;
 
   /* In dark mode `-fg` takes the `-on-dark` value: one single set of calls. */

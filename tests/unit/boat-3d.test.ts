@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readFeatures, NO_FEATURES } from "../../src/lib/boat-3d/features";
 import { buildBoatMesh, meshZones, type BoatShape } from "../../src/lib/boat-3d/model";
 import { buildZoneSummaries } from "../../src/lib/boat-3d/summary";
+import { buildRamp, MATERIALS, parseColour, type Palette } from "../../src/lib/boat-3d/renderer";
 import { fitCamera, Projector } from "../../src/lib/boat-3d/scene";
 import {
   normalise,
@@ -471,5 +472,43 @@ describe("le maillage suit l'inventaire", () => {
       return aft;
     };
     expect(boom(120)).toBeLessThan(boom(60));
+  });
+});
+
+describe("matières", () => {
+  const palette = {
+    ...Object.fromEntries(MATERIALS.map((material) => [material, "#808080"])),
+    sea: "#d2dce8",
+    pick: "#1b5e96",
+    backdrop: "#ffffff",
+    backdropEdge: "#e7e9e4",
+  } as Palette;
+
+  it("donne une rampe complète à chaque matière", () => {
+    const ramp = buildRamp(palette);
+    for (const material of MATERIALS) {
+      expect(ramp.base[material]).toHaveLength(16);
+      expect(ramp.selected[material]).toHaveLength(16);
+      expect(ramp.hovered[material]).toHaveLength(16);
+      // Darkest first: a ramp read backwards would light the underside of the hull.
+      expect(ramp.base[material][0]).not.toBe(ramp.base[material][15]);
+    }
+  });
+
+  it("n'utilise que des matières déclarées", () => {
+    const mesh = buildBoatMesh({ ...CAT, features: readFeatures(XAMAN) });
+    const known = new Set<string>(MATERIALS);
+    for (const face of mesh.faces) {
+      expect(known.has(face.material), face.material).toBe(true);
+      expect(face.shade).toBeGreaterThan(0.3);
+      expect(face.shade).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("survit à un jeton de couleur absent ou illisible", () => {
+    expect(parseColour("")).toHaveLength(3);
+    expect(parseColour("   #fff  ")).toEqual([255, 255, 255]);
+    expect(parseColour("rgb(12, 34, 56)")).toEqual([12, 34, 56]);
+    expect(() => buildRamp({ ...palette, hull: "" })).not.toThrow();
   });
 });

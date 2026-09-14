@@ -1239,7 +1239,9 @@
     },
     "rowMetaThings": "{count, plural, one {# équipement} other {# équipements}}",
     "rowMetaPoints": "{count, plural, one {# point} other {# points}}",
-    "rowMetaEmpty": "Rien de noté ici"
+    "rowMetaEmpty": "Rien de noté ici",
+    "invite": "Touchez un élément du bateau",
+    "listHint": "Touchez un élément pour voir ce qu’il y a à y faire"
   },
   "engines": {
     "title": "Moteurs",
