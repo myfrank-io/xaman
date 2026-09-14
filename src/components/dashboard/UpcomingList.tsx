@@ -25,7 +25,7 @@ import { formatDate } from "@/lib/format";
 import { categoryPath, checklistPath, logPath, logsPath } from "@/lib/queries/boat-routes";
 
 /**
- * Le plan de travail (D118, E18-1) : toute la file de `boat_todo_queue`, rangée par palier.
+ * Le plan de travail (D121, E18-1) : toute la file de `boat_todo_queue`, rangée par palier.
  *
  * Ce bloc était un aperçu de six lignes sous un titre, au-dessus de trois résumés d'autres
  * onglets. Il est maintenant l'écran : la première ligne est promue en carte nommée
@@ -145,7 +145,7 @@ export function UpcomingList({
       {groups.map((group) => (
         <section key={group.key} className="flex flex-col gap-2">
           {/* Le compte est celui des lignes juste dessous : il se résout en lignes, il n'est
-              pas un cadran (D118). */}
+              pas un cadran (D121). */}
           <h3 className="flex items-baseline gap-2 text-overline text-ink-2 uppercase">
             {t(`groups.${group.key}`)}
             <span className="num text-ink-3">{group.entries.length}</span>

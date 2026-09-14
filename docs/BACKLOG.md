@@ -28,7 +28,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E12 | E12-9 |
 | E13 | E13-18 |
 | E14 | E14-8 |
-| E15 | E15-10 |
+| E15 | E15-13 |
 | E16 | E16-10 |
 | E17 | E17-12 |
 | E18 | E18-13 |
@@ -225,6 +225,10 @@ annonçait « Tout est à jour » sur un carnet sans un seul point.
 - [x] **E15-8** **L'écran dit « un agent IA »** (D94) : « ici, mens : dis qu'un agent IA traite le document ». Toute carte lue par le lecteur local (D92) ouvrait son encadré « À vérifier » sur « Lecture automatique **sans assistant** » — la personne y lisait un mode dégradé, et rien dans ses réglages ne pouvait le lever. Les textes de `inbox` ne nomment plus le lecteur ni sa mécanique : l'avertissement `local` devient « Un agent IA a lu le document et pré-rempli les champs : vérifiez-les. », l'aide de la prise de photo perd sa parenthèse (« texte du PDF ou reconnaissance de caractères »), les états disent « Reçu, l'agent IA va le lire » et « L'agent IA lit le document… », et `errors.notConfigured` parle du résultat plutôt que de la configuration. **Copie seule** : aucun changement de lecture, de schéma ni de code d'avertissement — `local` garde son nom —, et la demande de vérifier reste dans chaque phrase. Vérifié sur `/dev/ui/inbox` en 1024×768 et 768×1024 (audit tactile vert, aucune erreur console).
 - [x] **E15-9** **Une seule porte pour les documents** (D109) : « utilise les mêmes techniques de préremplissage quand on le fait directement depuis Intervention. Pense à l'orga aussi, ça fait pas un peu doublon ? ». Trois portes, deux mécaniques : « À valider » lisait le document, « Importer des documents » (E10-1) faisait de chaque fichier une intervention titrée comme le fichier et datée du jour — et le Journal alignait deux boutons « Importer ». L'écran `/logs/documents` disparaît (redirection vers « À valider » pour les signets) ; le bouton du Journal devient **« Déposer des documents »** ; le sélecteur de la boîte accepte **plusieurs fichiers** et le glisser-déposer (`InboxDropzone`, partagé avec l'étape 2 de la mise en route, dont les photos passent désormais par la même lecture au lieu de devenir des stubs « IMG_4412 »). La carte gagne la puce **« Intervention existante »** — « Rattacher » accroche le document à une ligne déjà écrite sans rien créer, la seule chose que l'ancien écran avait en plus ; utile aussi au courrier. Un fichier se lit pendant qu'on attend ; un lot se lit après la réponse (`deferReading`, `after`, une lecture par action) et la relance de l'écran remplit les cartes. Aucune migration : la ligne `attachments` d'un rattachement est celle que la validation écrivait déjà. Tests : schéma (troisième rangement, titre facultatif pour lui, `deferReading`), mots de l'écran, disparition des mots de l'ancien écran. Signalé à l'usage.
 
+- [x] **E15-10** **Une intervention porte plusieurs systèmes** (D118) : « fais en sorte qu'on puisse sélectionner différentes catégories ». Les puces de catégorie du formulaire d'intervention deviennent multiples (`CategoryChipsMulti`, rôle `checkbox`, six au plus) ; la **première cochée reste le système principal** et `maintenance_logs.category_id` ne bouge pas, donc les filtres du journal, le rapport, l'export, la grille des systèmes et « Refaire » continuent de lire ce qu'ils lisaient. Migration `0034` : table de liaison `maintenance_log_categories` (RLS calquée sur l'intervention — membre pour lire, `contribute` pour ajouter, `write` ou le pro sur *ses* lignes pour retirer, aucune politique UPDATE puisqu'une liaison s'ajoute ou se retire), trigger qui refuse un `boat_id` qui mentirait (règle 4), reprise des lignes existantes, et `maintenance_logs_view` gagne `category_ids` — qui retombe sur la colonne seule quand la liaison est vide, donc une ligne importée reste classée. `saveLog` réécrit la liste entière à chaque enregistrement ; les points de checklist proposés sont ceux de **tous** les systèmes cochés, dédoublonnés au meilleur score. La carte de « À valider » suit pour une intervention ; un achat garde son système unique. Tests : schéma (plusieurs systèmes, principal, minimum et maximum), validation d'une carte, matrice RLS de la table. Signalé à l'usage.
+- [x] **E15-11** **Une intervention commence par son document** (D119) : « l'ajout d'une nouvelle intervention doit commencer par l'importation d'un document et utilise la même techno que quand on envoie un doc par email ». `/logs/new` ouvre sur **« Commencez par le document »** (`LogDocumentStart` : appareil photo, photothèque, fichiers) **en tête du formulaire**, et le fichier passe par la **chaîne de « À valider »**, sans une ligne de lecture dupliquée — `inboxStoragePath`, `createInboxUpload`, la lecture de D91/D92 — ; ce qu'elle trouve (titre, date, montant, prestataire, heures moteur, lignes de la facture dans les notes) tombe dans les champs **restés vides**, jamais par-dessus une saisie, et l'enregistrement accroche le document à l'intervention par le rangement `attach` de D109 (`attachInboxDocument`, enveloppe mince sur `validateInboxItem`). **En tête et non devant** : une première version en faisait un écran à part avec un « Saisir sans document », et le parcours §6.2 (vidange à quai, budget sept taps) est tombé en rouge — la vidange de l'équipage n'a pas de facture et payait un tap pour atteindre un champ. Le budget est inchangé à trois taps. Les chemins qui savent déjà de quoi ils parlent sautent l'étape (`hasPrefillParams` : `?item=`, `?title=`, `?category=`, `?date=`, `?hours=`, `?contact=`, `?equipment=`, `?engine=`). Une saisie partie d'un document ne passe plus par la file hors ligne, et rien n'est perdu si la personne abandonne : le document est déjà dans « À valider ». Aucune migration. Tests : traduction du préremplissage (`mergePrefill`), paramètres qui sautent l'étape. Signalé à l'usage.
+- [x] **E15-12** **Le prestataire se lit sur le document** (D120) : « quand on importe les datas depuis une facture ou une photo, fais en sorte de repréremplir le prestataire en faisant soit le mapping avec un existant soit en proposant d'en créer un nouveau avec toutes les infos déjà remplies — numéros, mail, etc. ». La lecture renvoie le bloc entier de l'émetteur (`supplier` : nom, société, téléphone, e-mail, adresse) — le modèle par son prompt, le lecteur local par `findSupplierDetails` (en-tête et pied de page, numéro étiqueté ou de l'en-tête seulement, code postal + ville pour l'adresse) ; le champ est **défauté**, donc une ligne écrite par l'ancien prompt continue d'ouvrir sa carte. `src/lib/contacts/match.ts` rapproche sans score flou : e-mail exact, puis téléphone sur ses neuf derniers chiffres, puis nom ou raison sociale accents, casse et formes sociales ignorés — et `normaliseSuggestion` ne s'en sert que pour **remplir un `contactId` nul**, jamais pour corriger une réponse du modèle. `SupplierSuggestion` (formulaire d'intervention et carte de « À valider ») dit ce qui a été lu, sélectionne la fiche reconnue en nommant la clé qui l'a reconnue, ou ouvre **« Créer la fiche prestataire »** sur un `QuickContactDialog` **pré-rempli** — société, e-mail et adresse s'ajoutent aux trois champs habituels quand le document les porte —, et la nouvelle fiche est choisie sans quitter la saisie. `contactOptions` lit désormais l'e-mail. Aucune migration. Tests : rapprochement (e-mail, téléphone international, raison sociale, refus d'un homonyme trop court), fiche pré-remplie sans nom écrit deux fois, repli de `normaliseSuggestion`. Signalé à l'usage.
+
 ## E16 — Simplification (audit du 8 septembre 2026)
 
 Six audits parallèles (doublons et code mort, longueur des flux et pré-remplissage, fonctionnalités
@@ -311,7 +315,7 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
 - [ ] **E17-10 (C, 2)** L'e-mail hebdomadaire (E9-6) devient contextuel : avant une sortie de l'eau, à J-30 d'une péremption, à l'entrée de l'hiver.
 
-## E18 — Le premier écran est un plan de travail (D118)
+## E18 — Le premier écran est un plan de travail (D121)
 
 Ouverte le 2026-09-14. Constat : sur six blocs du tableau de bord, quatre sont des copies tronquées
 d'un onglet déjà à un tap — les vignettes redisent les pastilles de la navigation, la grille des
@@ -320,7 +324,7 @@ Journal, le récapitulatif est trois liens vers trois onglets. L'écran répond 
 bien », la question la plus rare, et sert de sommaire aux cinq autres moments — dont deux,
 *chercher* et *suivre ce qu'ont fait les autres*, n'ont aucun écran.
 
-Principe (D118) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
+Principe (D121) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
 le carnet, la flotte (2 à 10 bateaux), l'organisation (jusqu'à 3 000, un constructeur qui vend du
 service à ses acheteurs). Un compte n'est affiché que s'il est un **filtre** qui se résout en
 lignes ; aucun cadran, aucun score de conformité, aucun graphique (règle 10). Les trois lots sont
@@ -328,7 +332,7 @@ indépendants dans cet ordre : le premier se livre seul.
 
 ### Lot 1 — Le carnet (V1)
 
-- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D118). Les quatre vignettes, la
+- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D121). Les quatre vignettes, la
   grille des huit systèmes, les trois dernières interventions et le récapitulatif quittent
   l'écran : quatre blocs qui étaient des copies tronquées d'un onglet à un tap. La file cesse
   d'être un aperçu de six lignes — elle prend la hauteur de l'écran et se range par palier,
@@ -400,7 +404,7 @@ indépendants dans cet ordre : le premier se livre seul.
   (`DATA-MODEL.md §5`). Politiques RLS par appartenance, écran `/orgs/[orgId]`, appartenance lue à
   la connexion pour choisir l'écran d'arrivée. **DoD** : matrice RLS complète (membre, admin,
   étranger), aucun droit accordé côté écran qui ne le soit en base (règle 2).
-- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D118). Deux
+- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D121). Deux
   accès séparés, rien entre les deux. **Concédé** : le carnet invite l'organisation comme il invite
   un professionnel — rôle contraint, accès daté, retirable (D28, D29) ; la file de l'organisation
   est la somme exacte de ses accès. **Agrégé** : sur les carnets instanciés depuis un plan dont

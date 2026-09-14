@@ -1619,6 +1619,66 @@ export type Database = {
           },
         ]
       }
+      maintenance_log_categories: {
+        Row: {
+          boat_id: string
+          category_id: string
+          created_at: string
+          created_by: string | null
+          log_id: string
+        }
+        Insert: {
+          boat_id: string
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          log_id: string
+        }
+        Update: {
+          boat_id?: string
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          log_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_log_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "boat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_logs: {
         Row: {
           boat_id: string
@@ -2574,6 +2634,7 @@ export type Database = {
           boat_id: string | null
           category_color: string | null
           category_id: string | null
+          category_ids: string[] | null
           category_is_active: boolean | null
           category_name: string | null
           completions_count: number | null

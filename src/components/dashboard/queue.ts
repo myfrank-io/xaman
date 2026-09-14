@@ -25,7 +25,7 @@ export function entryKey(entry: UpcomingEntry): string {
 }
 
 /**
- * Les paliers de la file (D118, E18-1).
+ * Les paliers de la file (D121, E18-1).
  *
  * L'écran ne montre plus six lignes suivies d'un lien : il montre tout ce qui attend quelqu'un.
  * Quarante lignes d'affilée ne se lisent pas, donc elles se rangent — par ce que la personne

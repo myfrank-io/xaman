@@ -852,7 +852,9 @@
       "titlePlaceholder": "Vidange moteur SB, changement d'anode…",
       "categoryHelp": "Le système concerné : il classe l'intervention et propose les points de checklist correspondants.",
       "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}",
-      "saveAndNew": "Enregistrer et en saisir une autre"
+      "saveAndNew": "Enregistrer et en saisir une autre",
+      "categoryMultiHelp": "Plusieurs systèmes possibles : une visite qui touche le moteur et le gréement en coche deux.",
+      "fromDocument": "D'après {name}"
     },
     "detail": {
       "fields": {
@@ -905,6 +907,13 @@
     "due": {
       "today": "Aujourd'hui",
       "late": "{count, plural, one {# j de retard} other {# j de retard}}"
+    },
+    "document": {
+      "title": "Commencez par le document",
+      "help": "Facture, devis, ticket : photographiez-le ou choisissez le fichier, un agent IA le lit et remplit les champs ci-dessous. Sans document, saisissez directement.",
+      "reading": "Lecture du document…",
+      "replace": "Un autre document ?",
+      "readHelp": "Les champs ci-dessous ont été remplis par la lecture : vérifiez-les. Vous pouvez en choisir un autre."
     }
   },
   "checklist": {
@@ -1512,7 +1521,8 @@
       "add": "Nouvel intervenant",
       "quickTitle": "Nouvel intervenant",
       "quickHelp": "Nom, spécialité, téléphone : le reste se complète plus tard dans l'annuaire.",
-      "recents": "Récents"
+      "recents": "Récents",
+      "fromDocumentHelp": "Ce que le document indique est déjà rempli : vérifiez et enregistrez."
     },
     "references": {
       "logs": "Interventions",
@@ -1526,6 +1536,16 @@
       "done": "Intervenant mis à la corbeille",
       "restored": "Intervenant restauré",
       "kept": "{logs, plural, =0 {Aucune intervention} one {# intervention} other {# interventions}}, {purchases, plural, =0 {aucun achat} one {# achat} other {# achats}} et {haulOuts, plural, =0 {aucune sortie de l'eau} one {# sortie de l'eau} other {# sorties de l'eau}} gardent leur historique et leur lien vers {name}."
+    },
+    "supplier": {
+      "read": "Prestataire lu sur le document : {name}",
+      "matched": {
+        "email": "Reconnu à son e-mail : {name}, déjà dans l'annuaire.",
+        "phone": "Reconnu à son téléphone : {name}, déjà dans l'annuaire.",
+        "name": "Reconnu à son nom : {name}, déjà dans l'annuaire."
+      },
+      "useExisting": "Choisir {name}",
+      "create": "Créer la fiche prestataire"
     }
   },
   "report": {
@@ -2247,7 +2267,10 @@
       "result": "{filed, plural, =0 {Aucun document classé} one {# classé} other {# classés}}{refused, plural, =0 {} one { · # refusé} other { · # refusés}}",
       "failed": "Restés à valider : {files}"
     },
-    "deadlineDone": "Échéance posée : {title}"
+    "looksLikePurchase": "Ce document ressemble plutôt à un achat : vous pourrez le reclasser depuis « À valider ».",
+    "attachFailed": "L'intervention est enregistrée. Le document n'a pas pu y être rattaché : il reste dans « À valider ».",
+    "deadlineDone": "Échéance posée : {title}",
+    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider »."
   },
   "parts": {
     "title": "Stock",

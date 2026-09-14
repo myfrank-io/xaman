@@ -23,11 +23,8 @@ export type LogDetailData = {
   title: string;
   performedAt: string;
   status: LogStatus;
-  categoryId: string | null;
-  categoryName: string | null;
-  categoryColor: string | null;
-  categoryIcon: string | null;
-  categoryArchived: boolean;
+  /** The systems it touches, the principal first (D118). */
+  categories: LogDetailCategory[];
   cost: number | null;
   notes: string | null;
   equipmentName: string | null;
@@ -36,6 +33,15 @@ export type LogDetailData = {
   createdAt: string;
   updatedByName: string | null;
   updatedAt: string;
+};
+
+/** One system of the intervention, as its badge needs it. */
+export type LogDetailCategory = {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  archived: boolean;
 };
 
 export type LogDetailCompletion = {
@@ -130,15 +136,22 @@ export function LogDetail({
         <Fact label={t("fields.status")}>
           <StatusBadge status={log.status} />
         </Fact>
+        {/* Tous les systèmes que l'intervention touche (D118), le principal en tête : une visite
+            qui a fait la vidange *et* l'anode se relit sous les deux. */}
         <Fact label={t("fields.category")}>
-          {log.categoryName && log.categoryColor ? (
-            <CategoryBadge
-              name={log.categoryName}
-              color={log.categoryColor}
-              icon={log.categoryIcon}
-              withIcon
-              archived={log.categoryArchived}
-            />
+          {log.categories.length > 0 ? (
+            <span className="flex flex-wrap items-center gap-2">
+              {log.categories.map((category) => (
+                <CategoryBadge
+                  key={category.id}
+                  name={category.name}
+                  color={category.color}
+                  icon={category.icon}
+                  withIcon
+                  archived={category.archived}
+                />
+              ))}
+            </span>
           ) : (
             tc("none")
           )}

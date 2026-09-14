@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { boatPath } from "@/lib/queries/boat-routes";
 import {
+  primaryCategoryId,
   recurringFromLogSchema,
   saveLogSchema,
   suggestItemsSchema,
@@ -35,7 +36,8 @@ export type SavedLog = {
 export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
   const parsed = parseInput(saveLogSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { id, boatId, expectedUpdatedAt, engineHours, checklistItemIds, ...values } = parsed.data;
+  const { id, boatId, expectedUpdatedAt, engineHours, checklistItemIds, categoryIds, ...values } =
+    parsed.data;
 
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
@@ -100,7 +102,9 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     id,
     boat_id: boatId,
     title: values.title,
-    category_id: values.categoryId,
+    // The principal stays in its own column (D118): every filter, the report and the export
+    // read it, and the link rows below carry the whole list — this one included.
+    category_id: primaryCategoryId(categoryIds),
     status: values.status,
     performed_at: values.performedAt,
     cost: values.cost,
@@ -124,6 +128,29 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
         .from("maintenance_logs")
         .upsert({ ...row, created_by: userId }, { onConflict: "id" });
   if (error) return fail(dbErrorKey(error));
+
+  // ---- the systems it touches (D118) -----------------------------------------------------
+  // Rewritten whole at every save: the form always sends the complete list, so what is no
+  // longer ticked goes, and what is ticked stays on the row it already had (`ignoreDuplicates`),
+  // which keeps who first filed it under which system.
+  const { error: unlinkError } = await supabase
+    .from("maintenance_log_categories")
+    .delete()
+    .eq("log_id", id)
+    .eq("boat_id", boatId)
+    .not("category_id", "in", `(${categoryIds.join(",")})`);
+  if (unlinkError) return fail(dbErrorKey(unlinkError));
+
+  const { error: linkError } = await supabase.from("maintenance_log_categories").upsert(
+    categoryIds.map((categoryId) => ({
+      log_id: id,
+      category_id: categoryId,
+      boat_id: boatId,
+      created_by: userId,
+    })),
+    { onConflict: "log_id,category_id", ignoreDuplicates: true },
+  );
+  if (linkError) return fail(dbErrorKey(linkError));
 
   // ---- engine readings ------------------------------------------------------------------
   if (filled.length > 0) {
@@ -260,28 +287,42 @@ export async function suggestChecklistItems(
   if (!parsed.ok) return parsed.result;
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("suggest_checklist_items", {
-    p_boat_id: parsed.data.boatId,
-    p_category_id: parsed.data.categoryId,
-    p_title: parsed.data.title,
-  });
-  if (error) return fail(dbErrorKey(error));
-
-  return ok(
-    (data ?? []).map((row) => ({
-      id: row.id,
-      label: row.label,
-      engineId: row.engine_id,
-      engineLabel: row.engine_label,
-      intervalMonths: row.interval_months,
-      intervalHours: row.interval_hours,
-      status: row.status,
-      daysRemaining: row.days_remaining,
-      hoursRemaining: row.hours_remaining,
-      currentHours: row.current_hours,
-      score: row.score,
-    })),
+  // One call per system (D118): the function answers for one, and an intervention that carries
+  // three must propose the points of the three. Six at most, asked in one wave, merged on the
+  // point's id — a point named by two systems is one line, kept at its best score.
+  const answers = await Promise.all(
+    parsed.data.categoryIds.map((categoryId) =>
+      supabase.rpc("suggest_checklist_items", {
+        p_boat_id: parsed.data.boatId,
+        p_category_id: categoryId,
+        p_title: parsed.data.title,
+      }),
+    ),
   );
+  const failed = answers.find((answer) => answer.error);
+  if (failed?.error) return fail(dbErrorKey(failed.error));
+
+  const best = new Map<string, ItemSuggestion>();
+  for (const answer of answers) {
+    for (const row of answer.data ?? []) {
+      const suggestion: ItemSuggestion = {
+        id: row.id,
+        label: row.label,
+        engineId: row.engine_id,
+        engineLabel: row.engine_label,
+        intervalMonths: row.interval_months,
+        intervalHours: row.interval_hours,
+        status: row.status,
+        daysRemaining: row.days_remaining,
+        hoursRemaining: row.hours_remaining,
+        currentHours: row.current_hours,
+        score: row.score,
+      };
+      const kept = best.get(row.id);
+      if (!kept || kept.score < suggestion.score) best.set(row.id, suggestion);
+    }
+  }
+  return ok([...best.values()].sort((a, b) => b.score - a.score));
 }
 
 /**

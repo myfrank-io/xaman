@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseHoursParam, firstParam } from "@/components/logs/log-form-values";
 import { shortEngineLabel } from "@/components/logs/rows";
 import { addDays, toIsoDate } from "@/lib/numbers";
-import { saveLogSchema } from "@/lib/schemas/logs";
+import { LOG_CATEGORIES_MAX, primaryCategoryId, saveLogSchema } from "@/lib/schemas/logs";
 
 const BOAT = "11111111-1111-4111-8111-111111111111";
 const CATEGORY = "22222222-2222-4222-8222-222222222222";
@@ -15,7 +15,7 @@ function input(over: Record<string, unknown> = {}) {
     id: LOG,
     boatId: BOAT,
     title: "Vidange moteur SB",
-    categoryId: CATEGORY,
+    categoryIds: [CATEGORY],
     status: "done",
     performedAt: toIsoDate(),
     cost: "",
@@ -72,7 +72,7 @@ describe("saveLogSchema", () => {
 
   it("requires a title and a category (the column is nullable for the import only)", () => {
     expect(saveLogSchema.safeParse(input({ title: "   " })).success).toBe(false);
-    expect(saveLogSchema.safeParse(input({ categoryId: "" })).success).toBe(false);
+    expect(saveLogSchema.safeParse(input({ categoryIds: [] })).success).toBe(false);
   });
 
   it("turns an emptied optional link back into null", () => {
@@ -104,5 +104,28 @@ describe("shortEngineLabel()", () => {
     expect(shortEngineLabel("Moteur SB")).toBe("SB");
     expect(shortEngineLabel("Annexe")).toBe("Annexe");
     expect(shortEngineLabel("  ")).toBe("  ");
+  });
+});
+
+/**
+ * D118: a mechanic's visit touches the moteur, la coque et le gréement at once, and the row
+ * keeps the first as its own — that is the column every filter, the report and the export read.
+ */
+describe("les systèmes d'une intervention (D118)", () => {
+  const OTHER = "55555555-5555-4555-8555-555555555555";
+
+  it("en accepte plusieurs et garde le premier comme principal", () => {
+    const parsed = saveLogSchema.parse(input({ categoryIds: [CATEGORY, OTHER] }));
+    expect(parsed.categoryIds).toEqual([CATEGORY, OTHER]);
+    expect(primaryCategoryId(parsed.categoryIds)).toBe(CATEGORY);
+  });
+
+  it("en exige au moins un, et pas plus que la poignée qu'un écran tactile tient", () => {
+    expect(saveLogSchema.safeParse(input({ categoryIds: [] })).success).toBe(false);
+    const many = Array.from(
+      { length: LOG_CATEGORIES_MAX + 1 },
+      (_, i) => `5555555${i}-5555-4555-8555-555555555555`,
+    );
+    expect(saveLogSchema.safeParse(input({ categoryIds: many })).success).toBe(false);
   });
 });

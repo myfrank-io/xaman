@@ -116,16 +116,24 @@ export default async function DevLogsPage() {
 
         <Section
           title="Formulaire"
-          description="Catégorie Moteurs sélectionnée : le bloc des heures est déplié, les champs restent vides."
+          description="Le document en tête (D119) — appareil photo, photothèque, fichiers — puis les champs, déjà là : aucun tap n'est dépensé pour les atteindre. Deux systèmes cochés (D118) et le prestataire lu sur le document (D120), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
         >
           <LogForm
             boatId={DEV_BOAT_ID}
             log={null}
             prefill={{
               title: "Vidange moteur SB",
-              categoryId: CATEGORIES[0]?.id,
+              categoryIds: [CATEGORIES[0]?.id ?? "", CATEGORIES[1]?.id ?? ""],
               expandHours: true,
+              supplier: {
+                name: "Chantier Naval du Golfe",
+                company: null,
+                phone: "02 97 55 12 34",
+                email: "contact@cn-golfe.fr",
+                address: "12 quai des Voiliers, 56000 Vannes",
+              },
             }}
+            askForDocument
             categories={CATEGORIES}
             engines={DEV_ENGINES}
             engineCategoryIds={[CATEGORIES[0]?.id ?? ""]}
@@ -160,7 +168,7 @@ export default async function DevLogsPage() {
                 log={{
                   id: DEV_LOG_DETAIL.id,
                   title: DEV_LOG_DETAIL.title,
-                  categoryId: DEV_LOG_DETAIL.categoryId,
+                  categoryIds: DEV_LOG_DETAIL.categories.map((category) => category.id),
                   contactId: "contact-engine",
                   equipmentId: "equip-1",
                   engineHours: [

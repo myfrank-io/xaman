@@ -4,7 +4,7 @@ import type { ChecklistRow } from "@/components/checklist/rows";
 import { groupOf, groupQueue, type UpcomingEntry } from "@/components/dashboard/queue";
 
 /**
- * Les paliers de la file (D118, E18-1).
+ * Les paliers de la file (D121, E18-1).
  *
  * L'écran montre maintenant tout ce qui attend quelqu'un, donc il le range. Deux choses sont
  * vérifiées ici, et ce sont les deux qui peuvent mentir : qu'« Aujourd'hui » dise exactement ce
