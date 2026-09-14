@@ -2868,6 +2868,56 @@ d'`apply_checklist_template` se déclenche bien pour un étranger.
 **Raison.** Une correction par garde en oublierait une, et la prochaine garde écrite reprendrait la
 forme dangereuse. Une aide qui répond « on ne sait pas » à « a-t-il le droit ? » est le vrai défaut.
 
+## 2026-09-14 — D124 : un document de bateau rend un lot, et chaque ligne dit d'où elle tient son droit
+
+**Question.** « À valider » sait lire une facture, un ticket et un papier daté : trois documents qui
+produisent **une** ligne. Un bon de livraison, un devis, une expertise ou une fiche de courtier
+n'en produisent pas une — ils décrivent un bateau. Que doit rendre la lecture, et avec quelles
+garanties ?
+
+**Décision — un lot, et la famille avant le contenu.** La lecture gagne deux champs :
+`documentFamily`, parmi les seize familles de `AUTOPILOT.md §2.1`, **reconnue avant de lire le
+contenu** ; et `batch`, jusqu'à 80 lignes, chacune d'un des quatre types — équipement,
+fournisseur, identité, échéance.
+
+**Raison.** `§2.3` règle 1 : un devis, un bon de livraison et une expertise ne produisent ni les
+mêmes lignes ni la même confiance. Un bon de livraison referme la question de l'inventaire ; un
+devis dit seulement ce que quelqu'un a voulu un an plus tôt (D113). L'écran d'E17-2 ne peut
+expliquer pourquoi une ligne arrive cochée que s'il sait de quelle famille elle vient.
+
+**Décision — le statut décide de la case, pas la lecture.** Chaque ligne porte un `status` lu sur
+le document : `fitted`, `retained`, `optional`, `cancelled`, `removed`, `unknown`. Seuls `fitted`
+et `retained` arrivent **cochés** (`INBOX_CHECKED_STATUSES`). `unknown` est délibérément dehors.
+
+**Raison.** `§2.3` règle 4. Lire la colonne des statuts est la différence entre un inventaire et
+une liste de souhaits : un devis imprime des options retenues, des options écartées et des lignes
+barrées, et les écrire toutes donnerait au bateau un équipement qu'il n'a jamais porté. Et une
+ligne dont personne n'a pu lire le statut n'est pas une raison d'écrire dans le carnet de
+quelqu'un.
+
+**Décision — la date voyage avec la ligne.** `documentDate` est porté **par ligne**, et une ligne
+sans date propre hérite de celle du document.
+
+**Raison.** `§2.3` règle 2. Un bon de livraison date tout son inventaire d'un coup ; une expertise
+date ses réserves une par une. C'est la date qui justifie la ligne, donc elle doit être à côté
+d'elle quand quelqu'un décide de la cocher — pas en haut de l'écran.
+
+**Décision — ce qui ne tient pas est jeté, pas affiché.** Une référence de famille ou de système
+que le bateau n'a pas devient `null` ; une ligne qui ne dit pas ce que son propre type exige — une
+échéance sans date de fin, une identité sans champ, un fournisseur sans nom — est **retirée du
+lot**.
+
+**Raison.** Une ligne vide sur l'écran « ce que j'ai lu » est pire qu'une ligne de moins : elle
+demande une décision sur rien.
+
+**Le lecteur local ne joue pas** (D92). Il ne nomme aucune famille et ne rend aucun lot.
+Reconnaître un bon de livraison d'un devis est un jugement sur une page, pas un motif dans son
+texte, et une famille fausse expliquerait une ligne avec la mauvaise autorité — précisément ce que
+la famille existe pour bien dire. `unknown` est sa réponse honnête.
+
+**Ce ticket n'écrit rien.** E17-1 est le contrat de lecture ; l'écran, la contradiction affichée
+côte à côte et « Tout ajouter » sont E17-2.
+
 ## 2026-09-14 — D125 : la maquette est faite de matières, et elle dit qu'on peut la toucher
 
 **Question.** Retour de Joseph sur la maquette livrée le matin même : « la modélisation est

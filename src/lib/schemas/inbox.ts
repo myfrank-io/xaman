@@ -193,6 +193,113 @@ export const INBOX_DOCUMENT_TYPES = [
 ] as const;
 export const INBOX_CONFIDENCES = ["high", "medium", "low"] as const;
 
+/**
+ * Which of the sixteen families of `docs/AUTOPILOT.md §2.1` a document belongs to (E17-1).
+ *
+ * §2.3 rule 1: **recognise the family before reading the content**, and say so on screen. A quote,
+ * a delivery note and a survey report do not produce the same lines, and above all they do not
+ * deserve the same trust — a delivery note closes the inventory question, a quote only says what
+ * somebody intended a year earlier (D113). The family is what the screen shows to explain why a
+ * line arrives checked or unchecked.
+ *
+ * `maintenance_invoice`, `paper_logbook` and `hour_meter_photo` are the three the app already
+ * handled before this ticket; they are named here so a reading can say « this is one of those »
+ * rather than fall into `unknown`.
+ */
+export const INBOX_DOCUMENT_FAMILIES = [
+  /** D1 — devis, bon de commande, spécification technique de besoin. Des intentions datées. */
+  "quote_order",
+  /** D2 — bon de livraison, PV de réception. L'inventaire tel que livré ; il fait foi. */
+  "delivery_note",
+  /** D3 — descriptif technique du modèle : coque, moteurs exacts, réservoirs. */
+  "technical_spec",
+  /** D4 — certificat CE, plaque constructeur : la catégorie de conception (E17-11). */
+  "ce_certificate",
+  /** D5 — carnet de garantie : des dates de départ par ensemble. */
+  "warranty",
+  /** D6 — fiche de vente ou inventaire de courtier. Commercial, donc à vérifier. */
+  "broker_listing",
+  /** D7 — rapport d'expertise : le plus riche sur une occasion, et le seul daté par réserve. */
+  "survey",
+  /** D8 — acte de francisation, titre de navigation. */
+  "registration",
+  /** D9 — attestation d'assurance : des dates de validité et une zone couverte. */
+  "insurance",
+  /** D10 — licence MMSI / ANFR : le matériel radio avec ses numéros de série. */
+  "mmsi_licence",
+  /** D11 — certificats de révision : radeau, extincteurs, balise, pyrotechnie, gilets. */
+  "inspection_certificate",
+  /** D12 — manuel constructeur : les intervalles réels, qui nourrissent la bibliothèque (E17-4). */
+  "manual",
+  /** D13 — facture d'entretien. Déjà couvert par « À valider ». */
+  "maintenance_invoice",
+  /** D14 — carnet d'entretien papier. Déjà couvert par l'import (E3-7). */
+  "paper_logbook",
+  /** D15 — photo du compteur d'heures. Déjà couvert (E17-9 en fera un classement). */
+  "hour_meter_photo",
+  /** D16 — plans : rien d'automatique, le document reste une pièce jointe. */
+  "plans",
+  /** Rien de reconnaissable : la lecture ne devine pas une famille pour en avoir une. */
+  "unknown",
+] as const;
+export const inboxDocumentFamilySchema = z.enum(INBOX_DOCUMENT_FAMILIES);
+export type InboxDocumentFamily = z.infer<typeof inboxDocumentFamilySchema>;
+
+/**
+ * What a document says about one line of its batch (E17-1, `AUTOPILOT.md §2.3` rule 4).
+ *
+ * A quote prints options that were **retained**, **optional** or **struck out**, and a delivery
+ * note prints what was actually **fitted**. Reading the column and keeping it is the difference
+ * between an inventory and a wish list: only `fitted` and `retained` arrive checked, the rest
+ * arrive visible and unchecked so a person decides.
+ */
+export const INBOX_LINE_STATUSES = [
+  /** Monté, livré, constaté à bord. Le seul statut qu'un bon de livraison produit. */
+  "fitted",
+  /** Retenu sur un devis : voulu à la commande, pas encore constaté. */
+  "retained",
+  /** Proposé en option, non retenu. */
+  "optional",
+  /** Barré, annulé, remplacé par autre chose. */
+  "cancelled",
+  /** Déposé, retiré du bateau. */
+  "removed",
+  /** Le document ne dit rien de son statut — le cas le plus courant. */
+  "unknown",
+] as const;
+export const inboxLineStatusSchema = z.enum(INBOX_LINE_STATUSES);
+export type InboxLineStatus = z.infer<typeof inboxLineStatusSchema>;
+
+/**
+ * The statuses that arrive **checked** on the « ce que j'ai lu » screen (E17-2).
+ *
+ * Everything else is shown and left for a person to tick. `unknown` is deliberately outside: a
+ * line whose status nobody could read is not a line to write into someone's carnet by default.
+ */
+export const INBOX_CHECKED_STATUSES: readonly InboxLineStatus[] = ["fitted", "retained"];
+
+/** What a batch line proposes to create (E17-1, `AUTOPILOT.md §5A`). */
+export const INBOX_BATCH_TYPES = ["equipment", "provider", "identity", "deadline"] as const;
+export const inboxBatchTypeSchema = z.enum(INBOX_BATCH_TYPES);
+export type InboxBatchType = z.infer<typeof inboxBatchTypeSchema>;
+
+/** The identity fields a document may state about the boat itself. */
+export const INBOX_IDENTITY_FIELDS = [
+  "builder",
+  "model",
+  "hullNumber",
+  "year",
+  "registration",
+  "flag",
+  "homePort",
+  "navigationZone",
+] as const;
+export const inboxIdentityFieldSchema = z.enum(INBOX_IDENTITY_FIELDS);
+export type InboxIdentityField = z.infer<typeof inboxIdentityFieldSchema>;
+
+/** How many lines one document may propose. Past this, the screen stops being readable. */
+export const INBOX_BATCH_MAX = 80;
+
 /** The provider block of a document, every field optional and nothing invented (D120). */
 export const supplierReadSchema = z.object({
   name: z.string().trim().max(120).nullable(),
@@ -236,6 +343,87 @@ export const inventoryLineSchema = z.object({
     .max(INVENTORY_SPECS_MAX),
 });
 export type InventoryLine = z.infer<typeof inventoryLineSchema>;
+
+/**
+ * One line of what a document proposes (E17-1). Every field is optional except what identifies
+ * the line, because one shape has to hold four sorts of thing — an equipment, a provider, a fact
+ * about the boat, a date that expires — and a model fills one flat object far more reliably than
+ * a union. What each sort actually requires is checked below, by `superRefine`, so a malformed
+ * line is dropped rather than shown as an empty row.
+ */
+export const inboxBatchLineSchema = z
+  .object({
+    type: inboxBatchTypeSchema,
+    /** What the line says, as the document writes it — never the internal reference (rule 8). */
+    label: z.string().trim().min(1).max(160),
+    /**
+     * The document's own date, carried **on the line** (`AUTOPILOT.md §2.3` rule 2). The screen
+     * needs it per line rather than per document: a survey report dates its reserves one by one,
+     * and a line with no date of its own inherits the document's.
+     */
+    documentDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .nullable()
+      .default(null),
+    /** What the document says about this line (rule 4). */
+    status: inboxLineStatusSchema.default("unknown"),
+
+    // --- equipment -------------------------------------------------------------------------
+    /** The family, by `equipment_kinds.external_ref` — matched by family, not by label (rule 5). */
+    kindRef: z.string().trim().max(60).nullable().default(null),
+    brand: z.string().trim().max(80).nullable().default(null),
+    model: z.string().trim().max(80).nullable().default(null),
+    serial: z.string().trim().max(80).nullable().default(null),
+    /** « 2 » on a heater's line means two appliances, one per hull (rule 6). */
+    quantity: z.number().int().min(1).max(99).default(1),
+    /** The boat's system, by `boat_categories.external_ref`. */
+    categoryRef: z.string().trim().max(60).nullable().default(null),
+    /**
+     * The yard's own option reference (« GREM19 »), kept so a part can be ordered by it — and
+     * never shown as a name (rule 8).
+     */
+    ref: z.string().trim().max(40).nullable().default(null),
+
+    // --- provider --------------------------------------------------------------------------
+    provider: supplierReadSchema.nullable().default(null),
+
+    // --- identity --------------------------------------------------------------------------
+    identityField: inboxIdentityFieldSchema.nullable().default(null),
+    identityValue: z.string().trim().max(120).nullable().default(null),
+
+    // --- deadline --------------------------------------------------------------------------
+    validUntil: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .nullable()
+      .default(null),
+    /** The checklist point it lands on, when one of the boat's own clearly matches. */
+    checklistItemId: z.string().nullable().default(null),
+
+    /** A short French note worth keeping under the line, or null. */
+    notes: z.string().trim().max(500).nullable().default(null),
+  })
+  .superRefine((line, ctx) => {
+    const missing = (path: string, message: string) =>
+      ctx.addIssue({ code: "custom", path: [path], message });
+    if (line.type === "provider" && !line.provider?.name) {
+      missing("provider", "a provider line names the provider");
+    }
+    if (line.type === "identity" && (!line.identityField || !line.identityValue)) {
+      missing("identityField", "an identity line says which field, and what it says");
+    }
+    if (line.type === "deadline" && !line.validUntil) {
+      // A deadline with no expiry is not a deadline — it is a line with a label.
+      missing("validUntil", "a deadline line says until when");
+    }
+  });
+export type InboxBatchLine = z.infer<typeof inboxBatchLineSchema>;
+
+/** Whether a line arrives ticked on the « ce que j'ai lu » screen (E17-2). */
+export function isCheckedByDefault(line: InboxBatchLine): boolean {
+  return INBOX_CHECKED_STATUSES.includes(line.status);
+}
 
 export const inboxSuggestionSchema = z.object({
   documentType: z.enum(INBOX_DOCUMENT_TYPES),
@@ -292,6 +480,18 @@ export const inboxSuggestionSchema = z.object({
    * E2-10 — and every reading that is not an inventory — still parses.
    */
   inventory: z.array(inventoryLineSchema).max(INVENTORY_LINES_MAX).default([]),
+  /**
+   * Which of the sixteen families the document belongs to (E17-1), recognised before the content
+   * is read. Defaulted, so every row written before this ticket still parses — as `unknown`,
+   * which is the truth about them.
+   */
+  documentFamily: inboxDocumentFamilySchema.default("unknown"),
+  /**
+   * What the document proposes, as a **batch** (E17-1, `AUTOPILOT.md §5A`): equipment, providers,
+   * facts about the boat, dates that expire. Empty on the three kinds that produce a single line,
+   * and empty on anything the local reader produced — it never reads an inventory (D92).
+   */
+  batch: z.array(inboxBatchLineSchema).max(INBOX_BATCH_MAX).default([]),
   confidence: z.enum(INBOX_CONFIDENCES),
   /** What the person should double-check, in French — an illegible total, a guessed date… */
   warnings: z.array(z.string().max(200)).max(6),

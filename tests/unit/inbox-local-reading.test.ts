@@ -25,6 +25,17 @@ const context: InboxContext = {
   boatName: "Xaman",
   boatType: "catamaran",
   today: "2026-09-08",
+  // The families a reading is offered (E17-3); a batch line may name one of these and no other.
+  equipmentKinds: [
+    {
+      externalRef: "heater-forced-air",
+      label: "Chauffage à air pulsé",
+      categoryRef: "plumbing_systems",
+    },
+    { externalRef: "watermaker", label: "Dessalinisateur", categoryRef: "plumbing_systems" },
+    { externalRef: "winch", label: "Winch", categoryRef: "sails_rigging" },
+    { externalRef: "liferaft", label: "Radeau de survie", categoryRef: "safety" },
+  ],
   categories: [
     { id: "cat-engines", name: "Moteurs", externalRef: "engines" },
     { id: "cat-hull", name: "Coque & Pont", externalRef: "hull_deck" },

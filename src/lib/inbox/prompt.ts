@@ -2,12 +2,19 @@ import { z } from "zod";
 
 import { matchSupplierContact, type SupplierRead } from "@/lib/contacts/match";
 import {
+  inboxBatchLineSchema,
   inboxSuggestionSchema,
+  INBOX_BATCH_MAX,
+  INBOX_BATCH_TYPES,
+  INBOX_CONFIDENCES,
+  INBOX_DOCUMENT_FAMILIES,
+  INBOX_DOCUMENT_TYPES,
+  INBOX_IDENTITY_FIELDS,
+  INBOX_KINDS,
+  INBOX_LINE_STATUSES,
   INVENTORY_LINES_MAX,
   INVENTORY_SPECS_MAX,
-  INBOX_CONFIDENCES,
-  INBOX_DOCUMENT_TYPES,
-  INBOX_KINDS,
+  type InboxBatchLine,
   type InboxSuggestion,
 } from "@/lib/schemas/inbox";
 import { VISIBLE_PURCHASE_KINDS } from "@/lib/schemas/purchases";
@@ -37,6 +44,12 @@ export type InboxContext = {
    * plan has not been chosen yet — the reading then simply never proposes a deadline.
    */
   deadlineItems: { id: string; label: string; category: string }[];
+  /**
+   * The equipment families of `equipment_kinds` (E17-3), so an inventory document is read
+   * **by family** rather than by label (`AUTOPILOT.md §2.3` rule 5): « Chauffage Wallas 30DT »
+   * and « chauffage fuel à air pulsé » are the same thing, and only the family says so.
+   */
+  equipmentKinds: { externalRef: string; label: string; categoryRef: string | null }[];
 };
 
 /**
@@ -68,7 +81,39 @@ Rules:
 - "confidence" is your own reading: "high" when title, date and amount are all read cleanly, "low" when the document is hard to read or is not a maintenance document at all.
 - "purchaseKind" is one of gas, part, service, other — meaningful only for a purchase.
 - For an inventory: "inventory" holds one entry per piece of equipment the document names. "name" is what the thing is called aboard, in French and short ("Grand-voile (GV)", "Batteries Lithium", "Guindeau électrique"); "brand" and "model" as printed, null when they are not; "serial" only when a serial number is printed; "quantity" the number aboard, null when not stated; "categoryId" one of the boat's systems or null; "installedAt" yyyy-MM-dd or null. "specs" are the figures the document gives **about that entry**, as key/value pairs — prefer the keys the carnet already uses when they apply: surface_m2, puissance_w, capacite_ah, tension_v, volume_l, debit_l_h, poids_kg, longueur_m, diametre_mm, materiau, emplacement, tissu; otherwise a short snake_case key of your own. Never repeat the name in the specs, never invent a figure, and never list a consumable or a spare part here — those are purchases. A document that names fewer than three pieces of equipment is not an inventory: file it as an intervention or a purchase.
-- For a deadline: "checklistItemId" is the point it lands on, chosen only among the ids given for this boat, and "validUntil" is the date it stays valid until in yyyy-MM-dd. When no point clearly matches, or the document states no validity date, the document is not a deadline: file it as an intervention or a purchase instead. On a deadline, "date" is the date of the inspection or of issue, and "title" names the paper ("Révision du radeau de survie", "Attestation d'assurance 2026").`;
+- For a deadline: "checklistItemId" is the point it lands on, chosen only among the ids given for this boat, and "validUntil" is the date it stays valid until in yyyy-MM-dd. When no point clearly matches, or the document states no validity date, the document is not a deadline: file it as an intervention or a purchase instead. On a deadline, "date" is the date of the inspection or of issue, and "title" names the paper ("Révision du radeau de survie", "Attestation d'assurance 2026").
+
+Before reading the content, say which FAMILY of document this is, in "documentFamily". Recognise the family first: a quote, a delivery note and a survey report do not carry the same weight, and the screen says which one it read.
+- "quote_order": devis, bon de commande, spécification technique de besoin. Dated intentions, not an inventory.
+- "delivery_note": bon de livraison, PV de réception. What was actually fitted, with serial numbers. It settles the inventory.
+- "technical_spec": descriptif technique du modèle — hull, exact engines, tanks, dimensions.
+- "ce_certificate": certificat CE or the builder's plate. Carries a design category A/B/C.
+- "warranty": carnet de garantie — start dates per assembly.
+- "broker_listing": fiche de vente or broker inventory. Commercial, so to be checked.
+- "survey": rapport d'expertise. Carries dated reserves and recommendations.
+- "registration": acte de francisation, titre de navigation.
+- "insurance": attestation d'assurance — validity dates, covered zone.
+- "mmsi_licence": licence MMSI / ANFR — radio gear with serial numbers.
+- "inspection_certificate": certificat de révision — liferaft, extinguishers, beacon, flares, lifejackets.
+- "manual": manuel constructeur — the real maintenance intervals.
+- "maintenance_invoice": an invoice for work done. The ordinary case.
+- "paper_logbook": a page of a paper maintenance logbook.
+- "hour_meter_photo": a photo of an hour meter.
+- "plans": schémas électriques, plomberie, pont.
+- "unknown": nothing recognisable. Do not pick a family to have one.
+
+BATCH. Some families do not describe one line — they describe a boat. A delivery note, a quote, a survey report, a broker listing, an MMSI licence or an insurance certificate propose SEVERAL things at once. Put them in "batch", at most ${INBOX_BATCH_MAX} lines, each with "type":
+- "equipment": something aboard. "label" as the document writes it; "kindRef" the family, chosen only among the equipment families given for this boat; "brand", "model", "serial"; "quantity" (a "2" on a heater's line means two appliances, one per hull); "categoryRef" the system; "ref" the yard's own option reference (GREM19) when it prints one — never put that reference in "label".
+- "provider": a company the document names — the yard, the sailmaker, the insurer. Fill "provider" with what is printed.
+- "identity": a fact about the boat itself. "identityField" is one of ${INBOX_IDENTITY_FIELDS.join(", ")}, "identityValue" what the document says.
+- "deadline": something that expires. "validUntil" is required, and "checklistItemId" when one of the boat's points clearly matches.
+
+On every batch line:
+- "status" is what the document says about it: "fitted" (monté, livré, constaté), "retained" (retenu sur un devis), "optional" (proposé, non retenu), "cancelled" (barré, annulé), "removed" (déposé), "unknown" when the document says nothing. Read the status column when there is one — it is the difference between an inventory and a wish list.
+- "documentDate" is the date that line carries, in yyyy-MM-dd; null when the line carries none of its own.
+- "notes" is a short French note worth keeping, or null.
+
+Leave "batch" empty for an ordinary invoice, receipt or certificate — those are one line, and "kind" already says which. Never invent a price for a batch line and never put an acquisition price anywhere: a boat's purchase price is not a maintenance expense.`;
 
 /**
  * The shape the model fills. Enums, strings, numbers and nullables only — the reading is checked
@@ -109,6 +154,34 @@ export const inboxModelOutputSchema = z.object({
   ),
   checklistItemId: z.string().nullable(),
   validUntil: z.string().nullable(),
+  documentFamily: z.enum(INBOX_DOCUMENT_FAMILIES),
+  batch: z.array(
+    z.object({
+      type: z.enum(INBOX_BATCH_TYPES),
+      label: z.string(),
+      documentDate: z.string().nullable(),
+      status: z.enum(INBOX_LINE_STATUSES),
+      kindRef: z.string().nullable(),
+      brand: z.string().nullable(),
+      model: z.string().nullable(),
+      serial: z.string().nullable(),
+      quantity: z.number().nullable(),
+      categoryRef: z.string().nullable(),
+      ref: z.string().nullable(),
+      provider: z.object({
+        name: z.string().nullable(),
+        company: z.string().nullable(),
+        phone: z.string().nullable(),
+        email: z.string().nullable(),
+        address: z.string().nullable(),
+      }),
+      identityField: z.enum(INBOX_IDENTITY_FIELDS).nullable(),
+      identityValue: z.string().nullable(),
+      validUntil: z.string().nullable(),
+      checklistItemId: z.string().nullable(),
+      notes: z.string().nullable(),
+    }),
+  ),
   confidence: z.enum(INBOX_CONFIDENCES),
   warnings: z.array(z.string()),
 });
@@ -127,6 +200,13 @@ export function contextText(context: InboxContext, fileName: string): string {
         id: item.id,
         label: item.label,
         system: item.category,
+      })),
+    )}`,
+    `Equipment families (kindRef → label, usual system): ${JSON.stringify(
+      context.equipmentKinds.map((k) => ({
+        ref: k.externalRef,
+        label: k.label,
+        system: k.categoryRef,
       })),
     )}`,
     `File name: ${fileName}`,
@@ -160,6 +240,65 @@ export function normaliseSuggestion(
     // One line: the column is 300 and a screen is not a letterhead.
     address: clip(output.supplier.address?.replace(/\s*\n\s*/g, ", ") ?? null, 300),
   };
+
+  /**
+   * The batch, made safe for the screen (E17-1).
+   *
+   * Three things happen here and nowhere else. A `kindRef` or a `categoryRef` the boat does not
+   * have becomes null rather than a dangling reference nothing can resolve. Every line inherits
+   * the document's date when it carries none of its own (`AUTOPILOT.md §2.3` rule 2) — a delivery
+   * note dates its whole inventory once, a survey report dates each reserve. And a line that does
+   * not satisfy what its own type requires is **dropped**: an empty row on the « ce que j'ai lu »
+   * screen is worse than one line fewer.
+   */
+  const kindRefs = new Set(context.equipmentKinds.map((k) => k.externalRef));
+  const categoryRefs = new Set(
+    context.categories.map((c) => c.externalRef).filter((ref): ref is string => Boolean(ref)),
+  );
+  const documentDate = /^\d{4}-\d{2}-\d{2}$/.test(output.date ?? "") ? output.date : null;
+  const batch = output.batch
+    .slice(0, INBOX_BATCH_MAX)
+    .map((line): InboxBatchLine | null => {
+      const lineDate = /^\d{4}-\d{2}-\d{2}$/.test(line.documentDate ?? "")
+        ? line.documentDate
+        : documentDate;
+      const provider = {
+        name: clip(line.provider.name, 120),
+        company: clip(line.provider.company, 120),
+        phone: clip(line.provider.phone, 40),
+        email: clip(line.provider.email, 160),
+        address: clip(line.provider.address?.replace(/\s*\n\s*/g, ", ") ?? null, 300),
+      };
+      const parsed = inboxBatchLineSchema.safeParse({
+        type: line.type,
+        label: line.label.trim().slice(0, 160),
+        documentDate: lineDate,
+        status: line.status,
+        kindRef: line.kindRef && kindRefs.has(line.kindRef) ? line.kindRef : null,
+        brand: clip(line.brand, 80),
+        model: clip(line.model, 80),
+        serial: clip(line.serial, 80),
+        // « 2 » means two appliances (rule 6); anything unreadable is one.
+        quantity:
+          line.quantity !== null && Number.isFinite(line.quantity) && line.quantity >= 1
+            ? Math.min(99, Math.floor(line.quantity))
+            : 1,
+        categoryRef:
+          line.categoryRef && categoryRefs.has(line.categoryRef) ? line.categoryRef : null,
+        ref: clip(line.ref, 40),
+        provider: line.type === "provider" ? provider : null,
+        identityField: line.identityField,
+        identityValue: clip(line.identityValue, 120),
+        validUntil: /^\d{4}-\d{2}-\d{2}$/.test(line.validUntil ?? "") ? line.validUntil : null,
+        checklistItemId:
+          line.checklistItemId && deadlineItemIds.has(line.checklistItemId)
+            ? line.checklistItemId
+            : null,
+        notes: clip(line.notes, 500),
+      });
+      return parsed.success ? parsed.data : null;
+    })
+    .filter((line): line is InboxBatchLine => line !== null);
 
   const candidate = {
     documentType: output.documentType,
@@ -221,6 +360,8 @@ export function normaliseSuggestion(
         ? output.checklistItemId
         : null,
     validUntil: /^\d{4}-\d{2}-\d{2}$/.test(output.validUntil ?? "") ? output.validUntil : null,
+    documentFamily: output.documentFamily,
+    batch,
     confidence: output.confidence,
     warnings: output.warnings
       .map((w) => w.trim().slice(0, 200))
