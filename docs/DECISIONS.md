@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D130.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D131.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3182,3 +3182,60 @@ consommateur n'existe pas, en perdant au passage les `specs`. Les réunir quand 
 sera une décision informée par un écran réel : soit `batch` gagne les `specs` et E2-10 s'y
 rebranche, soit les deux restent — un document qui **est** un inventaire prend le chemin court de
 l'import, un document qui **décrit** un bateau prend l'écran de revue.
+
+## 2026-09-14 — D130 : une question par écran, et cocher coûte un geste
+
+**Question.** Joseph, sur la checklist : « on ne comprend rien du tout, c'est pas simple, trop de
+saisies et pas simple d'usage ». `docs/REFONTE-CHECKLIST.md` a listé les défauts dans le code ; le
+parcours refait sur la maquette les a confirmés, et en a montré un que le fichier ne disait pas.
+
+**Ce qu'on a vu.** Sur un iPad, l'onglet s'ouvre sur **quatre choses à la fois** : un bloc « À
+racheter », une grille de neuf systèmes, une liste plate « À traiter » à quatre onglets, et la
+même liste redite plus bas par système. Sur un téléphone, la ligne est pire que décrite : le badge
+d'état (112 px), l'échéance et le bouton « Fait » prennent leur pleine largeur, et le titre —
+le seul mot qui dit quoi faire — est coupé à trois syllabes : « Enrouleur… », « Bas-étai et… »,
+« Remplacer la… ». Les échéances lointaines s'écrivent **« dans 365 j »**, un nombre que personne
+ne lit sans le diviser par trente. Et cocher « j'ai changé l'impeller » ouvre un dialogue de cinq
+champs — date, réalisé par, heures moteur (obligatoire), valide jusqu'au, note — dont le bouton
+d'enregistrement est **sous la ligne de flottaison** : il faut faire défiler un formulaire pour
+confirmer un geste d'une seconde.
+
+**Décision — une question par écran.** Le tableau de bord est devenu le plan de travail (D121) :
+toute la file, rangée par palier, c'est lui qui répond à « qu'est-ce que je fais aujourd'hui ».
+La Checklist répond donc à l'autre question, et à elle seule : **« qu'est-ce qu'on suit sur ce
+bateau »** — les systèmes, ce qu'ils portent, leur avancement. La liste plate « À traiter » et ses
+quatre onglets **disparaissent** (`TodoList`, `ChecklistViewTabs` supprimés) : elle redisait depuis
+le second onglet ce que le premier dit mieux. Ce qui renverse **D21**, qui les avait institués.
+
+**Décision — une seule ligne, le titre d'abord.** `TodoRow` remplace `ChecklistItemRow` partout,
+checklist et tableau de bord compris : le titre prend toute la largeur sur deux lignes, l'état est
+porté par un trait de couleur **et** par une phrase (jamais par la couleur seule, règle 12), et la
+phrase se dit en français de marin — « En retard de 79 jours », « À faire aujourd'hui », « Dans
+trois semaines », « Dans un an ». Les paliers de `due-sentence.ts` : les jours tant qu'ils se
+comptent (quinzaine), puis les semaines, les mois, les ans. Les heures restent des heures — un
+compteur tourne au rythme du moteur, pas du calendrier.
+
+**Décision — cocher coûte un geste.** Le dialogue posait cinq questions dont il connaissait déjà
+quatre réponses. `use-tick.ts` ne demande plus rien : la date est aujourd'hui, la personne est
+celle qui touche l'écran, les heures sont le compteur courant du moteur. Ce qui a été **supposé se
+lit dans la confirmation** (« Par Xavier, aujourd'hui, à 1482,5 h · Prochaine : 14/09/2027 »), et
+« Annuler » reste sous le pouce huit secondes. Le cochage hors ligne est conservé (E9-1b). Reste
+la seule question que l'app ne peut pas deviner : un intervalle en heures sur un moteur **jamais
+relevé** — la base l'exige (`check_completion_hours`), donc on la pose, et rien d'autre.
+
+**Décision — les mots du bord.** « Point », « intervalle », « ancrage », « recaler », « ponctuel »,
+« jamais fait », « valide jusqu'au » quittent l'interface : on suit des choses, on les a « notées »
+ou pas, elles se font « tous les six mois » ou « une seule fois », un papier est « à refaire avant
+le… ». Vingt-neuf libellés réécrits.
+
+**Raison.** Les trois portes ne se contredisaient pas, elles se **répétaient** — et une répétition
+sans autorité est exactement ce qui fait qu'« on ne sait jamais où on est ». Quant aux cinq
+champs : ils demandaient à une personne debout sur un pont mouillé de ressaisir ce que l'app avait
+déjà sous la main. Deviner en le montrant est plus juste que demander, parce que la supposition
+est vraie dans le cas de très loin le plus fréquent — on coche ce qu'on vient de faire — et parce
+qu'une supposition affichée se corrige, quand une question posée à chaque fois se subit.
+
+**Ce qui n'a pas bougé.** `checklist_item_status` et `checklist_compute_status` restent la source
+de vérité des états, et `src/lib/checklist-status.ts` leur miroir testé (règle 8). Le premier jour
+reste traité par la mise en route, pas par la porte : les 93 points de l'ORC 50 n'arrivent pas en
+93 lignes rouges.

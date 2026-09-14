@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 
 import { CategoryItems, type CompletionRow } from "@/components/checklist/CategoryItems";
 import { ChecklistGrid, type CategoryProgress } from "@/components/checklist/ChecklistGrid";
-import { TodoList } from "@/components/checklist/TodoList";
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
@@ -190,7 +189,7 @@ const COMPLETIONS: CompletionRow[] = [
   },
 ];
 
-/** Checklist screens with sample data: the grid, the flat queue and one category. */
+/** Les trois écrans de la checklist : la porte, le plan, un système ouvert (E20-1). */
 export default async function DevChecklistPage() {
   if (!devUiEnabled()) notFound();
   const t = await getTranslations("checklist");
@@ -198,32 +197,26 @@ export default async function DevChecklistPage() {
   const lowParts = toRestockList(SAMPLE_PARTS);
   return (
     <DevShell>
-      <div className="flex flex-col gap-10">
-        <PageHeader title={t("title")} />
-        <SectionCard
-          title={tr("title")}
-          action={<QuickRestockAdd boatId={DEV_BOAT_ID} />}
-          footer={tr("subtitle")}
-          bare
-        >
-          <RestockChecklist boatId={DEV_BOAT_ID} parts={lowParts} canWrite />
-        </SectionCard>
-        <ChecklistGrid
-          boatId={DEV_BOAT_ID}
-          categories={PROGRESS}
-          stock={{ total: SAMPLE_PARTS.length, low: lowParts.length }}
-        />
-        <SectionCard title={t("filters.todo")} bare>
-          <TodoList
+      <div className="flex flex-col gap-12">
+        {/* 1 — L'onglet Checklist : le plan du bateau, système par système, et le stock. */}
+        <section className="flex flex-col gap-6">
+          <PageHeader title={t("title")} subtitle={t("subtitle")} />
+          <SectionCard
+            title={tr("title")}
+            action={<QuickRestockAdd boatId={DEV_BOAT_ID} />}
+            footer={tr("subtitle")}
+            bare
+          >
+            <RestockChecklist boatId={DEV_BOAT_ID} parts={lowParts} canWrite />
+          </SectionCard>
+          <ChecklistGrid
             boatId={DEV_BOAT_ID}
-            rows={ROWS}
-            filter="all"
-            members={MEMBERS}
-            currentUserId="u-xav"
-            currentUserName="Xavier Marin"
-            canContribute
+            categories={PROGRESS}
+            stock={{ total: SAMPLE_PARTS.length, low: lowParts.length }}
           />
-        </SectionCard>
+        </section>
+
+        {/* 2 — Un système ouvert : la même ligne, le détail déplié sous le titre. */}
         <CategoryItems
           boatId={DEV_BOAT_ID}
           category={{ id: SAILS.id, name: SAILS.name, color: SAILS.color, icon: SAILS.icon }}

@@ -6,9 +6,14 @@ import { SEED, hasStack, skipReason } from "../support/stack";
 import { TapCounter } from "../support/taps";
 
 /**
- * SPEC.md §6.3 — "Check printanier des voiles", the navigation that the whole 4-tab layout
- * exists to serve: dashboard → a category → a point → done. The budget for ticking a point is
- * three taps (E9-3).
+ * SPEC.md §6.3 — « Check printanier des voiles », the navigation the whole 4-tab layout exists
+ * to serve: checklist → a system → the thing → done.
+ *
+ * The budget was three taps, and the refonte (E20-2) spends **one**: the date is today, the
+ * person is whoever is signed in, and the hours are the engine's current counter — none of the
+ * three is asked, all three are said back in the toast, and « Annuler » undoes it. The seeded
+ * point counts engine hours **and** its engine has a reading, which is precisely the case the
+ * old dialog made the most expensive and the new tick makes free.
  */
 test.describe("§6.3 spring check", () => {
   test.skip(!hasStack, skipReason);
@@ -17,9 +22,7 @@ test.describe("§6.3 spring check", () => {
     await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist`);
     await expect(page.getByRole("link", { name: new RegExp(SEED.category) }).first()).toBeVisible();
 
-    // Reaching the category is navigation, not the act of ticking: the budget of three is the
-    // ticking itself, and CompleteItemDialog states the same shape — "2 taps without hours, 3
-    // with". The seeded point counts engine hours, so this is the three-tap case.
+    // Reaching the system is navigation, not the act of ticking: the budget is the tick itself.
     await page
       .getByRole("link", { name: new RegExp(SEED.category) })
       .first()
@@ -28,30 +31,19 @@ test.describe("§6.3 spring check", () => {
 
     const taps = new TapCounter(page);
 
-    // 1 — "Fait" on the row opens the dialog, already on today and on the signed-in member.
-    await taps.tap(
-      // "Fait" is a substring of the "Jamais fait" filter, and Playwright matches an
-      // accessible name by substring unless told otherwise — without exact, .first()
-      // taps the filter chip and no dialog ever opens.
-      page.getByRole("button", { name: fr.checklist.markDone, exact: true }).first(),
-    );
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
+    // 1 — and only 1. The round check writes the completion: today, the signed-in member, and
+    // the engine's current counter. No dialog opens, and nothing is typed.
+    const tick = fr.checklist.tick.label.replace("{label}", SEED.item);
+    await taps.tap(page.getByRole("button", { name: tick, exact: true }).first());
+    await expect(page.getByRole("dialog")).toBeHidden();
 
-    // Hours are required for an item that counts them (zod + a database trigger). Typing into
-    // the field the dialog already opened is not a tap.
-    await dialog
-      .getByLabel(new RegExp(fr.checklist.complete.hours.replace("{engine}", ".*")))
-      .fill("700");
+    // What it wrote is read back rather than guessed at: the toast names the thing and carries
+    // the undo, which is the whole safety of spending a single tap.
+    await expect(
+      page.getByText(new RegExp(fr.checklist.complete.saved.replace("{label}", ".*"))).first(),
+    ).toBeVisible({ timeout: 15_000 });
 
-    // 2 — confirm. The label is « Enregistrer », or « Enregistrer quand même » when the point was
-    // already ticked today — which is exactly what happens here: the iPad project runs this same
-    // journey on the same seeded point minutes earlier. Anchored at the start, never a substring
-    // match, so the intervention form's « Enregistrer et en saisir une autre » could not qualify.
-    await taps.tap(dialog.getByRole("button", { name: new RegExp(`^${fr.common.save}`) }).first());
-    await expect(dialog).toBeHidden({ timeout: 15_000 });
-
-    taps.expectWithin(3, "§6.3 cochage");
+    taps.expectWithin(1, "§6.3 cochage");
   });
 
   test("adds a point to the boat's own checklist", async ({ page, request }) => {
