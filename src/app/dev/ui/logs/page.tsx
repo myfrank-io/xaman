@@ -11,7 +11,6 @@ import { LogDetail } from "@/components/logs/LogDetail";
 import { LogForm } from "@/components/logs/LogForm";
 import { LogsList } from "@/components/logs/LogsList";
 import { LogsToolbar } from "@/components/logs/LogsToolbar";
-import { NewLogScreen } from "@/components/logs/NewLogScreen";
 import { todayString } from "@/lib/format";
 
 import { DEV_ATTACHMENTS } from "../attachments/sample";
@@ -116,26 +115,8 @@ export default async function DevLogsPage() {
         </Section>
 
         <Section
-          title="Commencer par le document"
-          description="Première étape de « Noter une intervention » (D118) : appareil photo, photothèque, fichiers — et « Saisir sans document » sous les trois, qui ouvre le formulaire vide."
-        >
-          <NewLogScreen
-            boatId={DEV_BOAT_ID}
-            prefill={{}}
-            askForDocument
-            categories={CATEGORIES}
-            engines={DEV_ENGINES}
-            engineCategoryIds={[CATEGORIES[0]?.id ?? ""]}
-            contacts={DEV_CONTACTS}
-            equipment={DEV_EQUIPMENT}
-            haulOuts={DEV_HAUL_OUTS}
-            canCreateContact
-          />
-        </Section>
-
-        <Section
           title="Formulaire"
-          description="Catégorie Moteurs sélectionnée : le bloc des heures est déplié, les champs restent vides. Deux systèmes cochés (D117) et le prestataire lu sur le document (D119), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
+          description="Le document en tête (D118) — appareil photo, photothèque, fichiers — puis les champs, déjà là : aucun tap n'est dépensé pour les atteindre. Deux systèmes cochés (D117) et le prestataire lu sur le document (D119), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
         >
           <LogForm
             boatId={DEV_BOAT_ID}
@@ -152,11 +133,7 @@ export default async function DevLogsPage() {
                 address: "12 quai des Voiliers, 56000 Vannes",
               },
             }}
-            sourceDocument={{
-              itemId: "00000000-0000-4000-8000-0000000000d1",
-              fileName: "facture-2026-118.pdf",
-              kind: "log",
-            }}
+            askForDocument
             categories={CATEGORIES}
             engines={DEV_ENGINES}
             engineCategoryIds={[CATEGORIES[0]?.id ?? ""]}

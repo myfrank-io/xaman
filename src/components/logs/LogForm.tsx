@@ -29,17 +29,19 @@ import { useFieldError } from "@/components/forms/use-field-error";
 import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useUnsavedGuard } from "@/components/forms/use-unsaved-guard";
 import { ChecklistMatches } from "@/components/logs/ChecklistMatches";
+import { LogDocumentStart, type ReadDocument } from "@/components/logs/LogDocumentStart";
 import { useOutbox } from "@/components/offline/use-outbox";
 import { useOnline } from "@/components/common/use-online";
 import { EngineHoursSection } from "@/components/logs/EngineHoursSection";
 import { TitleSuggestions } from "@/components/logs/TitleSuggestions";
 import { useTitleSuggestions } from "@/components/logs/use-title-suggestions";
-import type {
-  LogFormChoice,
-  LogFormDocument,
-  LogFormEngine,
-  LogFormPrefill,
-  LogFormValues,
+import {
+  mergePrefill,
+  type LogFormChoice,
+  type LogFormDocument,
+  type LogFormEngine,
+  type LogFormPrefill,
+  type LogFormValues,
 } from "@/components/logs/log-form-values";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -104,7 +106,7 @@ export function LogForm({
   equipment,
   haulOuts,
   attachments = [],
-  sourceDocument,
+  askForDocument = false,
   canCreateContact,
 }: {
   boatId: string;
@@ -120,10 +122,11 @@ export function LogForm({
   /** Documents already stored on this intervention (E10-1); empty on a creation. */
   attachments?: AttachmentItem[];
   /**
-   * The document this intervention starts from (D118): already in the inbox, already read, and
-   * hung on the intervention the moment it is saved.
+   * Whether the form opens on its document (D118). False on an edit, and on every path that
+   * already says what the intervention is about — the checklist dialog, « Refaire », an engine
+   * sheet: they arrive with their subject named and have nothing to read.
    */
-  sourceDocument?: LogFormDocument;
+  askForDocument?: boolean;
   canCreateContact: boolean;
 }) {
   const t = useTranslations("logs.form");
@@ -212,6 +215,14 @@ export function LogForm({
     items: [],
   });
   const [serverError, setServerError] = useState<string | null>(null);
+  // The document the form opens on (D118), read in place: the fields below are already on
+  // screen, so nothing is traversed and no tap is spent to reach them.
+  const [read, setRead] = useState<ReadDocument | null>(null);
+  const sourceDocument: LogFormDocument | null = read
+    ? { itemId: read.itemId, fileName: read.fileName, kind: read.suggestion?.kind ?? "log" }
+    : null;
+  // Read on that document (D119); the URL never carries a provider block, only a contact id.
+  const [supplier, setSupplier] = useState(prefill?.supplier ?? null);
   // A fiche created from the document (D119) has to reach the picker of *this* form at once,
   // without a round trip to the server that would lose everything already typed.
   const [extraContacts, setExtraContacts] = useState<ContactOption[]>([]);
@@ -325,6 +336,46 @@ export function LogForm({
    * they are what the five lines share. Everything that belongs to one line — title, cost,
    * notes, hours, the points it ticks, its documents — starts empty.
    */
+  /**
+   * What the reading proposes, poured into the fields **that are still empty**. Never a remount
+   * and never an overwrite: someone may well type the title and *then* photograph the invoice,
+   * and a reading is a proposal (D91) — it fills a blank, it does not correct a person. The date
+   * is the one exception: it always carries a default (today), and a date printed on a document
+   * is better than a default.
+   */
+  function applyReading(document: ReadDocument) {
+    setRead(document);
+    const proposed = mergePrefill({}, document.suggestion, engines);
+    const dirty = { shouldDirty: true } as const;
+
+    if (proposed.title && form.getValues("title").trim() === "") {
+      form.setValue("title", proposed.title, dirty);
+    }
+    const systems = proposed.categoryIds ?? [];
+    if (systems.length > 0 && form.getValues("categoryIds").length === 0) {
+      form.setValue("categoryIds", systems, dirty);
+      if (systems.some((id) => engineCategoryIds.includes(id))) setHoursOpen(true);
+    }
+    if (proposed.performedAt) form.setValue("performedAt", proposed.performedAt, dirty);
+    if (proposed.cost && form.getValues("cost").trim() === "") {
+      form.setValue("cost", proposed.cost, dirty);
+    }
+    if (proposed.contactId && form.getValues("contactId") === null) {
+      form.setValue("contactId", proposed.contactId, dirty);
+    }
+    if (proposed.notes && form.getValues("notes").trim() === "") {
+      form.setValue("notes", proposed.notes, dirty);
+    }
+    engines.forEach((engine, index) => {
+      const hours = proposed.hours?.find((row) => row.engineId === engine.id)?.hours;
+      if (hours && form.getValues(`engineHours.${index}.hours`).trim() === "") {
+        form.setValue(`engineHours.${index}.hours`, hours, dirty);
+        setHoursOpen(true);
+      }
+    });
+    if (proposed.supplier) setSupplier(proposed.supplier);
+  }
+
   function resetForAnother(values: LogOutput) {
     const nextId = crypto.randomUUID();
     setNewId(nextId);
@@ -347,6 +398,10 @@ export function LogForm({
     decided.current = new Set();
     setSuggested({ key: "", items: [] });
     setPicked([]);
+    // The next line is its own: the document belongs to the one just written, and its provider
+    // block with it — what the five lines share is carried by the fields above, not by a paper.
+    setRead(null);
+    setSupplier(null);
     setFocusEngineId(null);
     setDetailsOpen(false);
     setHoursOpen(values.categoryIds.some((id) => engineCategoryIds.includes(id)));
@@ -463,9 +518,15 @@ export function LogForm({
     <form onSubmit={submitForm} noValidate className="flex flex-col gap-6">
       <PageHeader title={log ? t("editTitle") : t("newTitle")} />
 
-      {/* The document the intervention was started from (D118): it is already in « À valider »,
-          and joins this intervention's attachments the moment it is saved. Saying which one, and
-          saying when the reading proposed a purchase instead, is what keeps the screen honest. */}
+      {/* En tête du formulaire, jamais devant lui (D118) : le document d'abord pour qui l'a en
+          main, et pas un tap de plus pour qui n'en a pas — les champs sont déjà là. */}
+      {askForDocument && !log ? (
+        <LogDocumentStart boatId={boatId} read={read} onRead={applyReading} />
+      ) : null}
+
+      {/* Ce que le document est devenu : il est déjà dans « À valider » et rejoint les pièces
+          jointes de l'intervention à l'enregistrement. Le dire, et dire quand la lecture
+          proposait autre chose, est ce qui garde l'écran honnête. */}
       {sourceDocument ? (
         <Alert>
           <AlertDescription className="flex flex-col gap-1">
@@ -720,7 +781,7 @@ export function LogForm({
                     everything the invoice carries rather than retyped from it. */}
                 <SupplierSuggestion
                   boatId={boatId}
-                  supplier={prefill?.supplier}
+                  supplier={supplier}
                   contacts={knownContacts}
                   value={field.value}
                   onValueChange={field.onChange}

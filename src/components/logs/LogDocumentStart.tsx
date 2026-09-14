@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CameraIcon, FileTextIcon, ImageIcon, PencilLineIcon, UploadIcon } from "lucide-react";
+import { CameraIcon, FileTextIcon, ImageIcon, UploadIcon } from "lucide-react";
 
 import {
   STAGE_PROGRESS,
@@ -35,24 +35,29 @@ export type ReadDocument = {
  *
  * Une intervention naît presque toujours d'un papier — la facture du mécanicien, le devis du
  * chantier, le ticket de l'accastilleur — et le carnet le demandait en dernier, une fois les huit
- * champs saisis à la main à côté de la page qui les portait tous. L'écran les demande donc dans
- * l'ordre inverse : le document d'abord, lu par la **même** chaîne qu'un document envoyé par
- * e-mail (même envoi dans le bucket, même ligne de « À valider », même lecture), puis le
- * formulaire déjà rempli de ce qu'elle en a tiré.
+ * champs saisis à la main à côté de la page qui les portait tous. Le document passe donc **en
+ * tête du formulaire**, et il est lu par la **même** chaîne qu'un document envoyé par e-mail :
+ * même envoi dans le bucket, même ligne de « À valider », même lecture (D91, D92).
  *
- * Rien n'est obligatoire : « Saisir sans document » ouvre le formulaire vide, et c'est le chemin
- * de l'intervention faite par l'équipage, qui n'a pas de facture. Rien n'est perdu non plus si la
- * personne abandonne ensuite : le document est déjà dans « À valider », d'où il se classe d'un
- * tap.
+ * En tête, et non *avant* : c'est la moitié de la décision qui a coûté un aller-retour. Une
+ * première version en faisait un écran à part, avec un « Saisir sans document » pour le
+ * traverser — et le parcours §6.2 de SPEC.md, la vidange à quai, gagnait aussitôt un tap qu'il
+ * existe précisément pour refuser. Ici les champs sont déjà là : celui qui a la facture en main
+ * commence par elle, celui qui vient de faire le travail lui-même tape son titre et n'a rien à
+ * traverser. Le budget de taps ne bouge pas d'un seul.
+ *
+ * Rien n'est perdu si la personne abandonne ensuite : le document est déjà dans « À valider »,
+ * d'où il se classe d'un tap.
  */
 export function LogDocumentStart({
   boatId,
+  read,
   onRead,
-  onSkip,
 }: {
   boatId: string;
+  /** The document already read, when there is one: the block then says which. */
+  read: ReadDocument | null;
   onRead: (document: ReadDocument) => void;
-  onSkip: () => void;
 }) {
   const t = useTranslations("logs.document");
   const ta = useTranslations("attachments");
@@ -118,25 +123,24 @@ export function LogDocumentStart({
         toast.error(errorMessage(result.error));
         return;
       }
-      // A document nobody could read still opens the form — with its own name in hand and the
-      // file already filed. Nothing is ever lost between the upload and the saisie.
+      // A document nobody could read still fills nothing and loses nothing: it is already in
+      // « À valider », and the form below is the same form it always was.
       if (!result.data.suggestion) toast.info(ti("uploadedNoRead"));
-      onRead({
-        itemId,
-        fileName: uploaded.file.fileName,
-        suggestion: result.data.suggestion,
-      });
+      setStage(null);
+      onRead({ itemId, fileName: uploaded.file.fileName, suggestion: result.data.suggestion });
     } catch {
       setError("upload");
       setStage(null);
     }
   }
 
+  const label = read ? t("replace") : t("title");
+
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4 shadow-sm">
+    <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface-2 p-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-title">{t("title")}</h2>
-        <p className="text-body text-ink-2">{t("help")}</p>
+        <h2 className="text-body font-semibold">{label}</h2>
+        <p className="text-caption text-ink-2">{read ? t("readHelp") : t("help")}</p>
       </div>
 
       <input
@@ -174,7 +178,7 @@ export function LogDocumentStart({
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          size="lg"
+          variant="outline"
           disabled={busy}
           aria-busy={busy}
           onClick={() => cameraInput.current?.click()}
@@ -184,7 +188,6 @@ export function LogDocumentStart({
         </Button>
         <Button
           type="button"
-          size="lg"
           variant="outline"
           disabled={busy}
           onClick={() => galleryInput.current?.click()}
@@ -194,7 +197,6 @@ export function LogDocumentStart({
         </Button>
         <Button
           type="button"
-          size="lg"
           variant="outline"
           disabled={busy}
           onClick={() => fileInput.current?.click()}
@@ -225,15 +227,7 @@ export function LogDocumentStart({
             )}
           </div>
         </div>
-      ) : (
-        <p className="text-caption text-ink-3">{ta("hint")}</p>
-      )}
-
-      {/* The crew's own work has no invoice: this is its door, and it is never hidden. */}
-      <Button type="button" variant="ghost" className="self-start px-2" onClick={onSkip}>
-        <PencilLineIcon />
-        {t("skip")}
-      </Button>
+      ) : null}
     </section>
   );
 }

@@ -2592,14 +2592,15 @@ de l'écran, une fois tout saisi. Or l'intervention naît presque toujours d'un 
 mécanicien, le devis du chantier, le ticket de l'accastilleur — qui porte déjà le titre, la date, le
 montant et le prestataire. Par quoi l'écran doit-il commencer ?
 
-**Décision.** Par le document. `/logs/new` ouvre sur **« Commencez par le document »** — prendre une
-photo, la photothèque, un fichier — et c'est la **chaîne de « À valider » qui lit** : même envoi
-dans le bucket, même ligne d'`inbox_items`, même lecture (D91, D92), rien de dupliqué. Le formulaire
-s'ouvre ensuite pré-rempli de ce qu'elle a trouvé, et l'enregistrement accroche le document à
-l'intervention par le rangement `attach` que « Valider » emprunte déjà (D109). **« Saisir sans
-document » reste à portée de pouce** : le travail fait par l'équipage n'a pas de facture. Les
-chemins qui savent déjà de quoi ils parlent — le dialogue « Fait » de la checklist, « Refaire », la
-fiche moteur — sautent l'étape : leurs paramètres d'URL sont une intention explicite. Une saisie
+**Décision.** Par le document — **en tête du formulaire, et non devant lui**. `/logs/new` ouvre sur
+**« Commencez par le document »** (photo, photothèque, fichier) avec les champs déjà en dessous, et
+c'est la **chaîne de « À valider » qui lit** : même envoi dans le bucket, même ligne d'`inbox_items`,
+même lecture (D91, D92), rien de dupliqué. Ce que la lecture trouve tombe dans les champs **restés
+vides**, jamais par-dessus ce qui est saisi — on peut taper le titre puis photographier la facture,
+et une lecture est une proposition, pas une correction. L'enregistrement accroche le document à
+l'intervention par le rangement `attach` que « Valider » emprunte déjà (D109). Les chemins qui
+savent déjà de quoi ils parlent — le dialogue « Fait » de la checklist, « Refaire », la fiche
+moteur — n'affichent pas le bloc : leurs paramètres d'URL sont une intention explicite. Une saisie
 partie d'un document ne se met pas en file d'attente hors ligne : la lecture a déjà demandé le
 réseau, et une ligne gardée sur l'iPad laisserait son document derrière elle.
 
@@ -2607,6 +2608,15 @@ réseau, et une ligne gardée sur l'iPad laisserait son document derrière elle.
 en dernier faisait taper huit champs à côté de la page qui les portait tous, et un abandon en cours
 de route perdait tout. Ici rien ne se perd : le document est dans « À valider » dès qu'il est monté,
 même si personne ne finit le formulaire — il se classera d'un tap plus tard.
+
+**Pourquoi « en tête » et non « avant », en un aller-retour.** La première version en faisait un
+écran à part, traversé par un bouton « Saisir sans document ». Le parcours §6.2 de `SPEC.md` — la
+vidange à quai, budget sept taps, « le point de le mesurer ici est qu'un écran ne peut pas gagner
+un huitième tap en silence » — est tombé en rouge dans l'heure, et il avait raison : la vidange
+faite par l'équipage n'a pas de facture, et elle payait un tap pour atteindre un champ. Le bloc
+descend donc d'un cran, dans le formulaire. Celui qui a le papier commence par lui ; celui qui vient
+de faire le travail tape son titre et n'a rien à traverser. Le budget ne bouge pas d'un seul tap, et
+la demande — commencer par le document — est tenue à l'endroit où elle se voit : en haut de l'écran.
 
 ## 2026-09-14 — D119 : le prestataire se lit sur le document, et sa fiche s'ouvre remplie
 

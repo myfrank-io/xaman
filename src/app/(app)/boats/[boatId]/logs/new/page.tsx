@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { NewLogScreen } from "@/components/logs/NewLogScreen";
+import { LogForm } from "@/components/logs/LogForm";
 import {
   firstParam,
   hasPrefillParams,
@@ -117,8 +117,9 @@ export default async function NewLogPage({
   if (prefill.hours && prefill.hours.length > 0) prefill.expandHours = true;
 
   return (
-    <NewLogScreen
+    <LogForm
       boatId={boatId}
+      log={null}
       prefill={prefill}
       askForDocument={!hasPrefillParams(search)}
       categories={data.categories}

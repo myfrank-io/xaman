@@ -948,9 +948,10 @@
     },
     "document": {
       "title": "Commencez par le document",
-      "help": "Facture, devis, ticket : photographiez-le ou choisissez le fichier, un agent IA le lit et remplit l'intervention. Vous n'avez plus qu'à vérifier.",
+      "help": "Facture, devis, ticket : photographiez-le ou choisissez le fichier, un agent IA le lit et remplit les champs ci-dessous. Sans document, saisissez directement.",
       "reading": "Lecture du document…",
-      "skip": "Saisir sans document"
+      "replace": "Un autre document ?",
+      "readHelp": "Les champs ci-dessous ont été remplis par la lecture : vérifiez-les. Vous pouvez en choisir un autre."
     }
   },
   "checklist": {
