@@ -55,6 +55,7 @@ function output(over: Partial<InboxModelOutput> = {}): InboxModelOutput {
     engineHours: [],
     lineItems: [],
     notes: null,
+    inventory: [],
     checklistItemId: null,
     validUntil: null,
     documentFamily: "delivery_note",

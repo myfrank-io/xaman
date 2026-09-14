@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  PointerIcon,
   PauseIcon,
   PlayIcon,
   TriangleAlertIcon,
@@ -13,7 +14,7 @@ import {
 
 import { useReducedMotion } from "@/components/common/use-reduced-motion";
 import { ZONE_LABELS } from "@/components/boat-3d/zone-labels";
-import { buildRamp, drawScene, type Ramp } from "@/lib/boat-3d/renderer";
+import { buildRamp, drawScene, MATERIALS, type Palette, type Ramp } from "@/lib/boat-3d/renderer";
 import { fitCamera, Projector, type BoatMesh, type Camera, type Fit } from "@/lib/boat-3d/scene";
 import type { ZoneSummary } from "@/lib/boat-3d/summary";
 import type { ZoneKey } from "@/lib/boat-3d/zones";
@@ -55,7 +56,7 @@ export function ModelCanvas({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   // The pins that are on screen right now, by zone: the loop writes to them directly, and a
   // zone that stops being pinned removes itself here rather than leaving a hole in an array.
-  const pinsRef = React.useRef(new Map<ZoneKey, HTMLButtonElement>());
+  const pinsRef = React.useRef(new Map<ZoneKey, HTMLElement>());
 
   // Everything the animation loop reads lives in a ref: a frame must never re-render React.
   const stateRef = React.useRef({
@@ -70,12 +71,28 @@ export function ModelCanvas({
     visible: true,
     /** Set by anything that changes the picture without moving the boat. */
     needsDraw: true,
+    /** The part under a mouse pointer, on the devices that have one. */
+    hovered: null as number | null,
   });
+  const [hoveredZone, setHoveredZone] = React.useState<ZoneKey | null>(null);
 
-  // The pins only exist for what is late or due soon — plus whatever is selected. A pin on every
-  // zone at once would bury the two that matter under eleven that do not.
-  const pinned = React.useMemo(
-    () => zones.filter((zone) => zone.overdue > 0 || zone.soon > 0 || zone.key === selected),
+  /**
+   * Every zone is marked, in two voices. What is late or due soon gets a **pin**: a chip with its
+   * icon and its count, and it is a button. Everything else gets a **stud**: a small neutral disc
+   * that is not a target at all (the hull under it already is, and the list beside it too), and
+   * whose only job is to say « il y a quelque chose ici ».
+   *
+   * The first version pinned only what was late, and the answer came back the same day: « on voit
+   * bien où cliquer quand c'est en retard » — and nowhere else. Two voices keep the hierarchy and
+   * lose the blind spot; two ranks of 44 px buttons would have overlapped and stolen each other's
+   * taps.
+   */
+  const marks = React.useMemo(
+    () =>
+      zones.map((zone) => ({
+        zone,
+        loud: zone.overdue > 0 || zone.soon > 0 || zone.key === selected,
+      })),
     [zones, selected],
   );
 
@@ -128,12 +145,14 @@ export function ModelCanvas({
 
     const readPalette = () => {
       const style = getComputedStyle(canvas);
+      const read = (name: string) => style.getPropertyValue(`--model-${name}`);
       stateRef.current.ramp = buildRamp({
-        hull: style.getPropertyValue("--model-hull"),
-        light: style.getPropertyValue("--model-light"),
-        sea: style.getPropertyValue("--model-sea"),
-        pick: style.getPropertyValue("--model-pick"),
-      });
+        ...Object.fromEntries(MATERIALS.map((material) => [material, read(material)])),
+        sea: read("sea"),
+        pick: read("pick"),
+        backdrop: read("backdrop"),
+        backdropEdge: read("backdrop-edge"),
+      } as Palette);
     };
 
     const resize = () => {
@@ -223,6 +242,7 @@ export function ModelCanvas({
       drawScene(ctx, mesh, projector, camera, {
         ramp: state.ramp,
         selected: partOf(mesh, state.selected),
+        hovered: state.hovered,
       });
 
       // The pins ride along, one DOM write each: a React render per frame would cost more than
@@ -258,7 +278,20 @@ export function ModelCanvas({
 
   const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const drag = dragRef.current;
-    if (!drag.active) return;
+    if (!drag.active) {
+      // Not dragging: light up whatever is under the pointer, so a mouse discovers that the
+      // boat answers before anyone has clicked anything.
+      if (event.pointerType !== "mouse") return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const face = projector.hit(event.clientX - rect.left, event.clientY - rect.top);
+      const part = face === null ? null : (mesh.faces[face]?.part ?? null);
+      if (part !== stateRef.current.hovered) {
+        stateRef.current.hovered = part;
+        stateRef.current.needsDraw = true;
+        setHoveredZone(part === null ? null : (mesh.parts[part]?.zone ?? null));
+      }
+      return;
+    }
     const dx = event.clientX - drag.lastX;
     drag.lastX = event.clientX;
     drag.moved += Math.abs(dx);
@@ -300,18 +333,43 @@ export function ModelCanvas({
           aria-label={t("canvasLabel", { name: boatName })}
           // Horizontal drags turn the boat; vertical ones stay the page's, so a full-width
           // model never traps the scroll on an iPad.
-          className="absolute inset-0 touch-pan-y"
+          className="absolute inset-0 cursor-pointer touch-pan-y"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={() => {
             dragRef.current.active = false;
           }}
+          onPointerLeave={() => {
+            if (stateRef.current.hovered === null) return;
+            stateRef.current.hovered = null;
+            stateRef.current.needsDraw = true;
+            setHoveredZone(null);
+          }}
         />
-        {pinned.map((zone) => (
+        {/* The one thing the first version never said: that the boat answers. It names what the
+            pointer is over, invites a touch when nothing is chosen, and gets out of the way once
+            something is. */}
+        {selected === null ? (
+          <span className="pointer-events-none absolute bottom-2 left-2 inline-flex max-w-[85%] items-center gap-1.5 rounded-full border border-border bg-surface/90 px-2.5 py-1 text-caption font-medium text-ink-2 shadow-sm backdrop-blur-sm">
+            <PointerIcon className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate">
+              {hoveredZone === null
+                ? t("invite")
+                : (zones.find((zone) => zone.key === hoveredZone)?.name ??
+                  t(
+                    ZONE_LABELS[
+                      zones.find((zone) => zone.key === hoveredZone)?.labelKey ?? "hulls"
+                    ],
+                  ))}
+            </span>
+          </span>
+        ) : null}
+        {marks.map(({ zone, loud }) => (
           <ZonePin
             key={zone.key}
             zone={zone}
+            loud={loud}
             label={zone.name ?? t(ZONE_LABELS[zone.labelKey ?? "hulls"])}
             active={zone.key === selected}
             onSelect={() => select(zone.key === selected ? null : zone.key)}
@@ -373,22 +431,37 @@ function ControlButton({
 }
 
 const ZonePin = React.forwardRef<
-  HTMLButtonElement,
+  HTMLElement,
   {
     zone: ZoneSummary;
+    /** true = a chip with its count, and a button; false = a quiet stud, and scenery. */
+    loud: boolean;
     label: string;
     active: boolean;
     onSelect: () => void;
   }
->(function ZonePin({ zone, label, active, onSelect }, ref) {
+>(function ZonePin({ zone, loud, label, active, onSelect }, ref) {
   const t = useTranslations("boat3d");
   const overdue = zone.overdue > 0;
   const count = overdue ? zone.overdue : zone.soon;
   const Icon = overdue ? TriangleAlertIcon : ClockIcon;
 
+  if (!loud) {
+    // Not a target: the part of the hull under it is, and so is its row in the list. Two ranks
+    // of 44 px buttons on a 340 px canvas would overlap and steal each other's taps.
+    return (
+      <span
+        ref={ref as React.Ref<HTMLSpanElement>}
+        aria-hidden
+        className="pointer-events-none absolute top-0 left-0 block size-2.5 rounded-full border border-surface/70 bg-ink-3/70 shadow-sm"
+        style={{ transform: "translate3d(-100px, -100px, 0)" }}
+      />
+    );
+  }
+
   return (
     <button
-      ref={ref}
+      ref={ref as React.Ref<HTMLButtonElement>}
       type="button"
       onClick={onSelect}
       aria-pressed={active}

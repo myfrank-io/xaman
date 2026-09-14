@@ -8,6 +8,7 @@ import {
   type HullZone,
   type ZoneKey,
 } from "@/lib/boat-3d/zones";
+import { specFacts } from "@/lib/boat-3d/specs";
 import type { ChecklistState } from "@/lib/checklist-status";
 
 /**
@@ -31,8 +32,14 @@ export type ZonePoint = {
 export type ZoneThing = {
   id: string;
   name: string;
-  /** « Lorima · 24 m », or nothing. */
+  /** The make, when the carnet has one: « Lorima », « B&G NAC-3 ». */
   meta: string | null;
+  /**
+   * What the carnet knows about it, read off its `specs`: « 88 m² · Hydranet », « 990 W · Sur
+   * bossoirs ». This is what makes the maquette a way of knowing the boat and not only a list
+   * of chores.
+   */
+  facts: string[];
 };
 
 export type ZoneSummary = {
@@ -141,6 +148,7 @@ export function buildZoneSummaries(input: SummaryInput): ZoneSummary[] {
       id: item.id,
       name: item.name,
       meta: metaOf(item),
+      facts: specFacts(item.specs),
     });
   }
 

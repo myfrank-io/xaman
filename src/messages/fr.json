@@ -95,6 +95,7 @@
       "equipment": "Équipements",
       "parts": "Stock",
       "report": "Rapport",
+      "activity": "Ce qui a bougé",
       "profile": "Profil"
     },
     "newBoat": "Ajouter un bateau"
@@ -654,12 +655,13 @@
       "addReading": "Relevé d'heures"
     },
     "upcoming": {
-      "allChecklist": "Tous les points à traiter",
+      "allChecklist": "Tout ce qui est à faire",
       "allLogs": "Interventions ouvertes",
+      "takeAway": "Emporter la liste",
       "emptyTitle": "Rien à faire dans les 30 prochains jours",
       "emptyNext": "Prochaine échéance : {label}, dans {days} jours.",
-      "startTitle": "Votre carnet démarre avec {count} points",
-      "startIntro": "Aucun point n'a encore été réalisé. Trois étapes pour partir du bon pied :",
+      "startTitle": "Votre carnet démarre avec {count} lignes à suivre",
+      "startIntro": "Rien n'a encore été noté. Trois étapes pour partir du bon pied :",
       "startStep1": "Saisir les heures des moteurs",
       "startStep2": "Vérifier les {count} lignes importées du carnet papier",
       "startStep3": "Cocher ce qui est déjà fait dans la checklist",
@@ -668,37 +670,70 @@
       "startStep2Action": "Vérifier",
       "startStep3Action": "Ouvrir la checklist",
       "startDismiss": "Masquer",
-      "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}",
+      "startHidden": "{count, plural, one {# jamais noté} other {# jamais notés}}",
       "emptyNoDated": "Aucune échéance datée pour l'instant.",
       "groups": {
         "today": "Aujourd'hui",
         "week": "Cette semaine",
         "month": "Ce mois-ci",
-        "hours": "Aux heures moteur"
+        "hours": "Aux heures moteur",
+        "restock": "À racheter"
+      },
+      "inbox": {
+        "badge": "À valider",
+        "received": "reçu le {date}"
+      },
+      "part": {
+        "badge": "Sous le seuil",
+        "missing": "il en manque {count}"
       }
+    },
+    "write": {
+      "todoTitle": "Ajouter une tâche à faire",
+      "todoHint": "Un point de checklist, qui reviendra tout seul",
+      "doneTitle": "Noter une intervention",
+      "doneHint": "Ce qui vient d'être fait, dans le journal"
+    },
+    "expenses": {
+      "title": "Ce que le bateau a coûté",
+      "window": "sur douze mois",
+      "all": "Voir les dépenses",
+      "empty": "Aucune dépense notée sur les douze derniers mois."
+    },
+    "activity": {
+      "title": "Ce qui a bougé",
+      "all": "Tout voir",
+      "empty": "Rien n'a encore été noté sur ce carnet.",
+      "by": "par {name}",
+      "kind": {
+        "completion": "Point coché",
+        "log": "Intervention",
+        "purchase": "Achat",
+        "reading": "Relevé d'heures",
+        "haulOut": "Sortie de l'eau"
+      },
+      "screenTitle": "Ce qui a bougé",
+      "screenSubtitle": "Tout ce qui a été noté sur ce carnet, le plus récent d'abord.",
+      "more": "Charger plus"
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
       "action": "Vérifier"
     },
-    "inbox": {
-      "banner": "{count, plural, one {# document attend votre validation} other {# documents attendent votre validation}}",
-      "action": "Valider"
-    },
     "markDone": "Fait",
     "state": {
-      "overdue": "{count, plural, one {# point en retard} other {# points en retard}}",
-      "soon": "{count, plural, one {# point à faire bientôt} other {# points à faire bientôt}}",
+      "overdue": "{count, plural, one {# en retard} other {# en retard}}",
+      "soon": "{count, plural, one {# bientôt dû} other {# bientôt dus}}",
       "ok": "Tout est à jour",
-      "new": "Carnet neuf : {count, plural, one {# point à caler} other {# points à caler}}",
+      "new": "Carnet neuf : {count, plural, one {# ligne à dater} other {# lignes à dater}}",
       "empty": "Carnet neuf : la checklist attend son plan d'entretien",
-      "weekItems": "{count, plural, one {# point réglé} other {# points réglés}}",
+      "weekItems": "{count, plural, one {# chose réglée} other {# choses réglées}}",
       "weekLogs": "{count, plural, one {# intervention notée} other {# interventions notées}}",
       "week": "{activity} cette semaine",
       "weekBy": "{activity} cette semaine par {names}",
       "weekNone": "Rien de noté cette semaine",
       "weekNamesMore": "{names} et {count, plural, one {# autre} other {# autres}}",
-      "newOverdue": "{count, plural, one {# nouveau point en retard} other {# nouveaux points en retard}}",
+      "newOverdue": "{count, plural, one {# nouveau retard} other {# nouveaux retards}}",
       "noNewOverdue": "rien de nouveau en retard"
     },
     "banner": {
@@ -919,10 +954,10 @@
   "checklist": {
     "title": "Checklist",
     "markDone": "Fait",
-    "noActiveItems": "Aucun point actif",
-    "emptyTitle": "Aucun point dans cette catégorie",
-    "emptyDescription": "Ajoutez les points que vous suivez réellement sur ce bateau.",
-    "addItem": "Ajouter un point",
+    "noActiveItems": "Rien de suivi ici",
+    "emptyTitle": "Rien de suivi dans ce système",
+    "emptyDescription": "Ajoutez ce que vous entretenez vraiment sur ce bateau.",
+    "addItem": "Ajouter",
     "upToDateTitle": "Tout est à jour",
     "upToDateDescription": "Prochaine échéance : {label}, dans {days} jours.",
     "views": {
@@ -933,17 +968,17 @@
       "all": "Tout",
       "overdue": "En retard",
       "soon": "Bientôt",
-      "never": "Jamais fait",
+      "never": "Jamais noté",
       "todo": "À traiter"
     },
     "card": {
-      "points": "{count, plural, one {# point} other {# points}}",
+      "points": "{count, plural, one {# à suivre} other {# à suivre}}",
       "overdue": "{count, plural, one {# en retard} other {# en retard}}",
       "attention": "{count, plural, one {# à faire} other {# à faire}}",
       "dueToday": "{count, plural, one {# aujourd'hui} other {# aujourd'hui}}",
-      "neverDone": "jamais fait",
+      "neverDone": "jamais noté",
       "upToDate": "à jour",
-      "punctual": "{count, plural, one {# contrôle ponctuel} other {# contrôles ponctuels}}",
+      "punctual": "{count, plural, one {# à faire une fois} other {# à faire une fois}}",
       "stockTitle": "Stock",
       "stockParts": "{count, plural, =0 {aucune pièce} one {# pièce} other {# pièces}}",
       "stockLow": "{count, plural, one {# sous le seuil} other {# sous le seuil}}",
@@ -953,21 +988,21 @@
     },
     "todoEmpty": {
       "title": "Rien à traiter",
-      "description": "Tous les points suivis sont à jour."
+      "description": "Rien n'est en retard, rien n'arrive à échéance."
     },
-    "neverHint": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}",
+    "neverHint": "{count, plural, one {# jamais noté} other {# jamais notés}}",
     "setup": {
-      "banner": "Carnet neuf : aucun point n'a encore été renseigné. Trois étapes suffisent pour caler la file d'attente.",
-      "cta": "Recaler ma checklist"
+      "banner": "Carnet neuf : rien n'a encore été noté. Trois minutes suffisent pour savoir ce qui est dû.",
+      "cta": "Mettre le carnet à jour"
     },
     "item": {
       "done": "fait le {date}",
       "doneBy": "fait le {date} par {name}",
-      "never": "jamais fait",
+      "never": "jamais noté",
       "next": "prochain le {date}",
       "nextHours": "prochain à {hours}",
       "estimated": "estimé",
-      "validUntil": "valide jusqu'au {date}",
+      "validUntil": "à refaire avant le {date}",
       "atHours": "à {hours}",
       "steps": "Étapes",
       "stepsProgress": "{done} / {total} faites",
@@ -977,11 +1012,11 @@
       "history": "Historique",
       "noHistory": "aucune réalisation enregistrée",
       "showAll": "Voir les {count} réalisations",
-      "edit": "Modifier le point",
+      "edit": "Modifier",
       "disable": "Désactiver",
       "enable": "Réactiver",
-      "disabledCount": "{count, plural, one {# point désactivé} other {# points désactivés}}",
-      "punctualGroup": "Contrôles ponctuels",
+      "disabledCount": "{count, plural, one {# retiré du suivi} other {# retirés du suivi}}",
+      "punctualGroup": "À faire une seule fois",
       "redo": "Refaire",
       "overdueBy": "{count, plural, one {# j de retard} other {# j de retard}}"
     },
@@ -992,17 +1027,17 @@
       "me": "Moi",
       "otherName": "Nom",
       "hours": "Heures {engine}",
-      "hoursRequired": "Ce point se compte en heures moteur : saisissez le compteur.",
+      "hoursRequired": "Cette révision se compte en heures moteur : relevez le compteur.",
       "takeLast": "= reprendre",
-      "validUntil": "Valide jusqu'au",
+      "validUntil": "À refaire avant le",
       "validUntilHelp": "Date imprimée sur l'objet ou le document (radeau, fusées, extincteur, assurance).",
       "note": "Note",
       "lastDone": "Dernière réalisation : {date} par {name}",
       "lastDoneHours": "Dernière réalisation : {date} par {name} à {hours}",
       "firstTime": "Première réalisation enregistrée.",
-      "alreadyToday": "{name} a coché ce point aujourd'hui. Enregistrer quand même une seconde réalisation ?",
+      "alreadyToday": "{name} l'a déjà noté aujourd'hui. L'écrire une seconde fois ?",
       "saveAnyway": "Enregistrer quand même",
-      "saved": "Point coché · {label}",
+      "saved": "Fait · {label}",
       "undo": "Annuler",
       "undone": "Réalisation annulée",
       "deleteTitle": "Supprimer cette réalisation ?",
@@ -1010,22 +1045,22 @@
       "deleted": "Réalisation supprimée",
       "addDetails": "+ Ajouter les détails",
       "otherChip": "Autre",
-      "addValidUntil": "+ Valide jusqu'au…",
+      "addValidUntil": "+ À refaire avant le…",
       "plusOneYear": "+ 1 an",
       "plusTwoYears": "+ 2 ans",
       "nextDue": "Prochaine : {next}",
       "nextDueBoth": "{date} ou {hours}"
     },
     "form": {
-      "new": "Nouveau point",
-      "edit": "Modifier le point",
+      "new": "Nouvelle ligne à suivre",
+      "edit": "Modifier",
       "label": "Libellé",
       "category": "Catégorie",
       "interval": "À refaire tous les…",
       "monthsSuffix": "mois",
       "other": "Autre",
       "none": "Aucun",
-      "noneHelp": "Contrôle ponctuel : le point sera « À faire » puis « OK » définitivement.",
+      "noneHelp": "À faire une seule fois : la ligne reste à faire, puis fermée pour de bon.",
       "hours": "… ou toutes les",
       "hoursSuffix": "h moteur",
       "hoursNoCounter": "Ce moteur n'a pas de compteur d'heures : cette échéance ne se déclenchera pas.",
@@ -1040,12 +1075,12 @@
       "moveDown": "Descendre",
       "anchor": "Dernière réalisation connue",
       "anchorHelp": "Approximatif : sert à caler la première échéance.",
-      "duplicate": "Un point actif de cette catégorie porte déjà ce libellé.",
-      "saved": "Point enregistré",
+      "duplicate": "Ce système suit déjà quelque chose sous ce nom.",
+      "saved": "Enregistré",
       "disableTitle": "Désactiver {label} ?",
-      "disableDescription": "Le point sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}. Rien n'est supprimé : vous pourrez le réactiver.",
-      "disabled": "Point désactivé",
-      "enabled": "Point réactivé"
+      "disableDescription": "La ligne sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}. Rien n'est supprimé : vous pourrez le réactiver.",
+      "disabled": "Retiré du suivi",
+      "enabled": "Remis au suivi"
     },
     "wizard": {
       "title": "Mise en route",
@@ -1053,10 +1088,10 @@
       "stepOf": "Étape {step} / 3",
       "step1": "Compteurs des moteurs",
       "step1Help": "Le compteur actuel de chaque moteur. Laissez vide si vous ne le connaissez pas.",
-      "step2": "Points à suivre",
+      "step2": "Ce que vous suivez",
       "step2Help": "Tout est coché : retirez ce que vous ne suivez pas sur ce bateau.",
       "step3": "Dernière réalisation",
-      "step3Help": "Pour chaque catégorie, à quand remonte la dernière fois, en gros ? Vous affinerez point par point ensuite.",
+      "step3Help": "Pour chaque système, à quand remonte la dernière fois, en gros ? Vous affinerez ligne par ligne ensuite.",
       "ages": {
         "never": "Jamais",
         "recent": "< 6 mois",
@@ -1067,24 +1102,43 @@
       "back": "Précédent",
       "next": "Suivant",
       "finish": "Terminer",
-      "done": "Checklist recalée",
+      "done": "Carnet à jour",
       "later": "Plus tard",
-      "kept": "{kept} / {total} points suivis",
+      "kept": "{kept} / {total} suivis",
       "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
     },
-    "subtitle": "Ce qui doit être fait, et quand. Cocher un point écrit l'intervention.",
+    "subtitle": "Ce que vous suivez sur ce bateau, système par système.",
     "plan": {
       "title": "Choisissez un plan d'entretien",
-      "intro": "Les systèmes de votre bateau sont en place. Un modèle les remplit avec les points à suivre, leurs échéances et les gestes détaillés.",
+      "intro": "Les systèmes de votre bateau sont en place. Un modèle les remplit avec ce qu'il y a à suivre, les échéances et les gestes détaillés.",
       "label": "Modèle",
       "placeholder": "Choisir un modèle…",
       "groupExact": "Modèles de constructeurs",
       "groupGeneric": "Modèles génériques",
       "help": "Prenez le modèle générique correspondant à votre coque si le vôtre n'est pas dans la liste.",
-      "summary": "{categories, plural, one {# système} other {# systèmes}} · {items, plural, one {# point d'entretien} other {# points d'entretien}}",
+      "summary": "{categories, plural, one {# système} other {# systèmes}} · {items, plural, one {# ligne à suivre} other {# lignes à suivre}}",
       "submit": "Utiliser ce modèle",
       "applied": "Plan d'entretien ajouté",
-      "orBlank": "Vous pouvez aussi commencer sans modèle et ajouter vos points un par un — le bouton « Ajouter un point » est en haut de cet écran."
+      "orBlank": "Vous pouvez aussi commencer sans modèle et ajouter vos lignes une par une — le bouton « Ajouter » est en haut de cet écran."
+    },
+    "due": {
+      "overdueDays": "{count, plural, one {En retard d'un jour} other {En retard de # jours}}",
+      "overdueHours": "{count, plural, one {En retard d'une heure moteur} other {En retard de # heures moteur}}",
+      "today": "À faire aujourd'hui",
+      "tomorrow": "Demain",
+      "inDays": "Dans {count} jours",
+      "inWeeks": "{count, plural, one {Dans une semaine} other {Dans # semaines}}",
+      "inMonths": "{count, plural, one {Dans un mois} other {Dans # mois}}",
+      "inYears": "{count, plural, one {Dans un an} other {Dans # ans}}",
+      "inHours": "Dans {count} h moteur",
+      "never": "Jamais noté",
+      "unknownCounter": "Compteur jamais relevé",
+      "punctual": "Fait, une seule fois"
+    },
+    "tick": {
+      "label": "Marquer « {label} » comme fait",
+      "guessed": "Par {name}, aujourd'hui",
+      "guessedWithHours": "Par {name}, aujourd'hui, à {hours} h"
     }
   },
   "validation": {
@@ -1172,7 +1226,7 @@
     "zones": {
       "mast": "Mât & gréement",
       "mainsail": "Grand-voile & bôme",
-      "headsail": "Voiles d’avant",
+      "headsail": "Voiles d'avant",
       "bow": "Étrave & mouillage",
       "crossbeam": "Traverse",
       "trampoline": "Trampoline",
@@ -1185,8 +1239,8 @@
       "keel": "Quille",
       "rudders": "Safrans"
     },
-    "fromCarnet": "Dessinée d’après le carnet : {details}.",
-    "fromCarnetEmpty": "La maquette suit l’inventaire : chaque équipement noté affine le dessin.",
+    "fromCarnet": "Dessinée d'après le carnet : {details}.",
+    "fromCarnetEmpty": "La maquette suit l'inventaire : chaque équipement noté affine le dessin.",
     "detail": {
       "mainsail": "{area} m² de grand-voile",
       "daggerboards": "dérives",
@@ -1201,7 +1255,10 @@
     },
     "rowMetaThings": "{count, plural, one {# équipement} other {# équipements}}",
     "rowMetaPoints": "{count, plural, one {# point} other {# points}}",
-    "rowMetaEmpty": "Rien de noté ici"
+    "rowMetaEmpty": "Rien de noté ici",
+    "invite": "Touchez un élément du bateau",
+    "listHint": "Touchez un élément pour savoir ce qu'il est et ce qu'il y a à y faire",
+    "headlineAboard": "{count, plural, =0 {aucun équipement noté} one {# équipement à bord} other {# équipements à bord}}"
   },
   "engines": {
     "title": "Moteurs",
@@ -1617,7 +1674,29 @@
       "inProgress": "en cours",
       "none": "Aucune sortie de l'eau enregistrée."
     },
-    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}"
+    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}",
+    "queue": {
+      "title": "À faire et à racheter",
+      "link": "Emporter la liste",
+      "stateReport": "Rapport d'état",
+      "todo": "À faire",
+      "todoEmpty": "Rien n'est dû : la liste est vide.",
+      "restock": "À racheter",
+      "restockEmpty": "Aucune pièce sous son seuil.",
+      "what": "Quoi",
+      "system": "Système",
+      "why": "Pourquoi",
+      "quantity": "Manque",
+      "done": "Fait",
+      "bought": "Acheté",
+      "late": "{count, plural, one {en retard d''# jour} other {en retard de # jours}}",
+      "inDays": "{count, plural, =0 {aujourd'hui} one {dans # jour} other {dans # jours}}",
+      "lateHours": "en retard de {count}",
+      "inHours": "dans {count}",
+      "missing": "il manque {count}",
+      "noDate": "sans échéance",
+      "footer": "{todo, plural, =0 {rien à faire} one {# chose à faire} other {# choses à faire}} · {restock, plural, =0 {rien à racheter} one {# pièce à racheter} other {# pièces à racheter}} · Carnet tenu dans Xaman"
+    }
   },
   "purchaseKind": {
     "gas": "Gaz",
@@ -2315,7 +2394,8 @@
       "log": "Intervention",
       "purchase": "Achat",
       "attach": "Intervention existante",
-      "deadline": "Échéance"
+      "deadline": "Échéance",
+      "inventory": "Inventaire"
     },
     "confidence": {
       "high": "Lecture sûre",
@@ -2413,7 +2493,14 @@
     "looksLikePurchase": "Ce document ressemble plutôt à un achat : vous pourrez le reclasser depuis « À valider ».",
     "attachFailed": "L'intervention est enregistrée. Le document n'a pas pu y être rattaché : il reste dans « À valider ».",
     "deadlineDone": "Échéance posée : {title}",
-    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider »."
+    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider ».",
+    "inventory": {
+      "title": "{count, plural, one {# équipement lu sur ce document} other {# équipements lus sur ce document}}",
+      "description": "Ce document décrit ce qu'il y a à bord. Il ne devient pas une ligne du journal : il remplit l'inventaire, après que vous ayez vu ce qui sera écrit.",
+      "more": "et {count, plural, one {# autre} other {# autres}}…",
+      "action": "Remplir l'inventaire",
+      "fileToo": "Ranger aussi ce document"
+    }
   },
   "parts": {
     "title": "Stock",
@@ -2465,6 +2552,25 @@
       "action": "Mettre à la corbeille",
       "done": "Pièce mise à la corbeille",
       "restored": "Pièce restaurée"
+    }
+  },
+  "search": {
+    "label": "Chercher",
+    "placeholder": "Une courroie, un chantier, une facture…",
+    "title": "Chercher dans le carnet",
+    "subtitle": "Interventions, points, achats, équipements, pièces, intervenants et documents — d'un seul coup.",
+    "prompt": "Que cherchez-vous ?",
+    "promptDescription": "Deux lettres suffisent. Les accents et les majuscules n'ont pas d'importance.",
+    "empty": "Aucun résultat pour « {query} »",
+    "emptyDescription": "Essayez un mot plus court, ou une autre orthographe.",
+    "families": {
+      "logs": "{count, plural, one {# intervention} other {# interventions}}",
+      "items": "{count, plural, one {# point de checklist} other {# points de checklist}}",
+      "purchases": "{count, plural, one {# achat} other {# achats}}",
+      "equipment": "{count, plural, one {# équipement} other {# équipements}}",
+      "parts": "{count, plural, one {# pièce} other {# pièces}}",
+      "contacts": "{count, plural, one {# intervenant} other {# intervenants}}",
+      "documents": "{count, plural, one {# document} other {# documents}}"
     }
   }
 }

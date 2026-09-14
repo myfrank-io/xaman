@@ -16,7 +16,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 |---|---|
 | E0 | E0-9 |
 | E1 | E1-9 |
-| E2 | E2-9 |
+| E2 | E2-11 |
 | E3 | E3-9 |
 | E4 | E4-12 |
 | E5 | E5-6 |
@@ -28,11 +28,12 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E12 | E12-9 |
 | E13 | E13-18 |
 | E14 | E14-8 |
-| E15 | E15-13 |
+| E15 | E15-14 |
 | E16 | E16-10 |
-| E17 | E17-12 |
-| E18 | E18-13 |
+| E17 | E17-13 |
+| E18 | E18-14 |
 | E19 | E19-10 |
+| E20 | E20-4 |
 
 ---
 
@@ -68,7 +69,9 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 - [x] **E2-4 (M, 1)** Catégories (dans Paramètres) : renommer, couleur (nuancier des 8 valeurs harmonisées + avertissement < 3:1), ordre, archiver avec dialogue d'impact (« archiver aussi les N points » / « les déplacer vers … », §4.6), réactiver.
 - [x] **E2-5 (M, 1)** Paramètres du bateau : catégories, export (E9-2), rapport (E9-2b), « Recaler ma checklist » (E4-9), « Reprise du carnet » (E3-7), transfert (E1-8), suppression du bateau (saisie du nom).
 - [x] **E2-6 (M, 2)** Script `pnpm seed:xaman` idempotent + test (deux exécutions = mêmes comptes). Ancrage renseigné à l'instanciation par `0004`.
+- [x] **E2-9 (S, 2)** Matières et affordance de la maquette (D127) : une matière par face (coque, carène, flottaison, pont, sole, roof, vitrage, toile, carbone, solaire, trampoline, métal, appendice) avec son jeton `--model-*` et son contraste propre, fond de studio, ombre en dégradé ; pastille « Touchez un élément », survol qui teinte la zone et la nomme, invite au-dessus de la liste, lignes qui se comportent en boutons, **toutes les zones marquées** (pastille pour ce qui est dû, plot discret pour le reste). Une zone ouverte commence par **ce qu'elle est** : les `specs` de ses équipements lues en clair (`src/lib/boat-3d/specs.ts`), « À faire » ensuite. **DoD** : `tests/unit/boat-3d.test.ts` couvre les rampes et les matières, audit tactile vert.
 - [x] **E2-8 (S, 3)** Maquette 3D du bateau en tête de l'onglet Équipements (D117) : coque paramétrique construite dans le navigateur à partir du type et des dimensions du carnet **et de son inventaire** (dérives, safrans suspendus, jupes allongées, bout-dehors, panneaux sur bossoirs, surfaces de voiles, winch de mât, radeau, dôme — `src/lib/boat-3d/features.ts`), rotation continue, glisser pour tourner, toucher une zone pour l'ouvrir, ligne « Dessinée d'après le carnet : … » sous la maquette. Équipements et points de checklist routés vers une zone physique par les mots puis par l'`external_ref` de la catégorie ; pastilles sur les seules zones en retard ou bientôt dues ; liste de toutes les zones à côté de la maquette (clavier, lecteur d'écran, doigt qui rate). Pas de dépendance 3D (`src/lib/boat-3d/`, `<canvas>` 2D). `prefers-reduced-motion` arrête la rotation et laisse les boutons de rotation. **DoD** : routage testé (`tests/unit/boat-3d.test.ts`), maquette `/dev/ui/boat/model-3d`, vérifié en 1024×768 et 768×1024.
+- [x] **E2-10 (S, 2)** L'inventaire d'un document verse dans l'import (D128) : colonne **« Caractéristiques »** de l'import d'équipements (`cellSpecs` — `clé: valeur` séparés par `;` ou retour à la ligne, clé repliée en `snake_case`, 20 paires au plus), genre **`inventory`** dans la boîte de réception (jusqu'à 80 lignes lues sur un document : nom, catégorie, marque, modèle, n° de série, quantité, date de pose, caractéristiques), carte qui les montre et bouton **« Importer ces équipements »** ouvrant l'import pré-rempli (`inventoryToTable` rend un tableau tabulé dont l'en-tête porte les libellés de l'import, donc `guessMapping` mappe seul). À l'écriture, les `specs` en base **gagnent** sur celles du document (D113). La carte lit les caractéristiques en clair (`specFacts`, comme la maquette), replie le formulaire de rangement derrière « Ranger aussi ce document », et un inventaire sort de « Tout valider ». **DoD** : `tests/unit/inbox-inventory.test.ts` couvre la lecture de la colonne, le pont, la garde de « Tout valider » et la compatibilité des suggestions antérieures ; carte visible sur `/dev/ui/inbox`, audit tactile vert.
 
 ## L3 — Le suivi vit ⭐
 
@@ -229,6 +232,7 @@ annonçait « Tout est à jour » sur un carnet sans un seul point.
 - [x] **E15-10** **Une intervention porte plusieurs systèmes** (D118) : « fais en sorte qu'on puisse sélectionner différentes catégories ». Les puces de catégorie du formulaire d'intervention deviennent multiples (`CategoryChipsMulti`, rôle `checkbox`, six au plus) ; la **première cochée reste le système principal** et `maintenance_logs.category_id` ne bouge pas, donc les filtres du journal, le rapport, l'export, la grille des systèmes et « Refaire » continuent de lire ce qu'ils lisaient. Migration `0034` : table de liaison `maintenance_log_categories` (RLS calquée sur l'intervention — membre pour lire, `contribute` pour ajouter, `write` ou le pro sur *ses* lignes pour retirer, aucune politique UPDATE puisqu'une liaison s'ajoute ou se retire), trigger qui refuse un `boat_id` qui mentirait (règle 4), reprise des lignes existantes, et `maintenance_logs_view` gagne `category_ids` — qui retombe sur la colonne seule quand la liaison est vide, donc une ligne importée reste classée. `saveLog` réécrit la liste entière à chaque enregistrement ; les points de checklist proposés sont ceux de **tous** les systèmes cochés, dédoublonnés au meilleur score. La carte de « À valider » suit pour une intervention ; un achat garde son système unique. Tests : schéma (plusieurs systèmes, principal, minimum et maximum), validation d'une carte, matrice RLS de la table. Signalé à l'usage.
 - [x] **E15-11** **Une intervention commence par son document** (D119) : « l'ajout d'une nouvelle intervention doit commencer par l'importation d'un document et utilise la même techno que quand on envoie un doc par email ». `/logs/new` ouvre sur **« Commencez par le document »** (`LogDocumentStart` : appareil photo, photothèque, fichiers) **en tête du formulaire**, et le fichier passe par la **chaîne de « À valider »**, sans une ligne de lecture dupliquée — `inboxStoragePath`, `createInboxUpload`, la lecture de D91/D92 — ; ce qu'elle trouve (titre, date, montant, prestataire, heures moteur, lignes de la facture dans les notes) tombe dans les champs **restés vides**, jamais par-dessus une saisie, et l'enregistrement accroche le document à l'intervention par le rangement `attach` de D109 (`attachInboxDocument`, enveloppe mince sur `validateInboxItem`). **En tête et non devant** : une première version en faisait un écran à part avec un « Saisir sans document », et le parcours §6.2 (vidange à quai, budget sept taps) est tombé en rouge — la vidange de l'équipage n'a pas de facture et payait un tap pour atteindre un champ. Le budget est inchangé à trois taps. Les chemins qui savent déjà de quoi ils parlent sautent l'étape (`hasPrefillParams` : `?item=`, `?title=`, `?category=`, `?date=`, `?hours=`, `?contact=`, `?equipment=`, `?engine=`). Une saisie partie d'un document ne passe plus par la file hors ligne, et rien n'est perdu si la personne abandonne : le document est déjà dans « À valider ». Aucune migration. Tests : traduction du préremplissage (`mergePrefill`), paramètres qui sautent l'étape. Signalé à l'usage.
 - [x] **E15-12** **Le prestataire se lit sur le document** (D120) : « quand on importe les datas depuis une facture ou une photo, fais en sorte de repréremplir le prestataire en faisant soit le mapping avec un existant soit en proposant d'en créer un nouveau avec toutes les infos déjà remplies — numéros, mail, etc. ». La lecture renvoie le bloc entier de l'émetteur (`supplier` : nom, société, téléphone, e-mail, adresse) — le modèle par son prompt, le lecteur local par `findSupplierDetails` (en-tête et pied de page, numéro étiqueté ou de l'en-tête seulement, code postal + ville pour l'adresse) ; le champ est **défauté**, donc une ligne écrite par l'ancien prompt continue d'ouvrir sa carte. `src/lib/contacts/match.ts` rapproche sans score flou : e-mail exact, puis téléphone sur ses neuf derniers chiffres, puis nom ou raison sociale accents, casse et formes sociales ignorés — et `normaliseSuggestion` ne s'en sert que pour **remplir un `contactId` nul**, jamais pour corriger une réponse du modèle. `SupplierSuggestion` (formulaire d'intervention et carte de « À valider ») dit ce qui a été lu, sélectionne la fiche reconnue en nommant la clé qui l'a reconnue, ou ouvre **« Créer la fiche prestataire »** sur un `QuickContactDialog` **pré-rempli** — société, e-mail et adresse s'ajoutent aux trois champs habituels quand le document les porte —, et la nouvelle fiche est choisie sans quitter la saisie. `contactOptions` lit désormais l'e-mail. Aucune migration. Tests : rapprochement (e-mail, téléphone international, raison sociale, refus d'un homonyme trop court), fiche pré-remplie sans nom écrit deux fois, repli de `normaliseSuggestion`. Signalé à l'usage.
+- [x] **E15-13** **Une ligne en retard tient dans ses colonnes** (D131) : `ListRow`, la ligne partagée par tous les écrans de liste, donnait deux colonnes latérales de largeur fixe qui ne rognent rien — l'état à 104 px, la valeur plafonnée à 112 — pendant que « EN RETARD » en mesure **115** et « 105 j de retard » **117**. Sur une ligne en retard, la puce sortait de sa propre puce et l'échéance de la ligne : le bouton de la ligne rapportait un `scrollWidth` de 575 pour 570 px de large, ce que l'audit tactile appelle « un libellé plus large que son bouton » — la panne de la pastille « Sorties de l'eau » débordant de sa puce, signalée depuis le bateau. Colonne d'état à **120 px** (`sm:min-w-30`, la plus large des puces plus sa marge ; les puces de la Checklist et de la file la remplissent exactement), colonne de valeur **sans plafond** (un `max-width` ne rognait pas une échéance `whitespace-nowrap`, il la laissait sortir : « 426 h de retard » en demande 123 et « compteur inconnu » 150) ; `min-w` et non `w`, donc un libellé imprévu pousse son titre au lieu de lui passer dessus. Les titres restent alignés d'une ligne à l'autre, ce pour quoi la colonne est fixe (D88). **Pourquoi l'audit ne l'avait pas vu** : aucune recette ne montrait la forme — `/dev/ui/checklist` n'a une ligne en retard que depuis peu et jamais à trois chiffres, `/dev/ui` montrait ses lignes de référence avec des puces `sm` que l'application n'écrit nulle part, et la fiche d'un moteur ne listait que des interventions terminées. Les trois recettes portent désormais la forme qui casse (retard à 105 j, puces à la taille des listes, une intervention **urgente** sur le moteur) ; vérifié en échec sans le correctif sur les deux viewports iPad. Les autres écrans à `ListRow` sont sans colonne d'état (dates, quantités) ou déjà couverts — la fiche d'un équipement pose la même puce que celle d'un moteur. Aucune migration, aucun texte nouveau. `pnpm lint`, `typecheck`, `test` et l'audit tactile complet verts sur les cinq viewports.
 
 ## E16 — Simplification (audit du 8 septembre 2026)
 
@@ -307,10 +311,11 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
   le plan** (`updateBoat`). Cela appartient au lot de la lecture d'inventaire (E17-1, E17-2), avec
   la même règle : proposé, décoché, jamais écrit sans un tap.
 - [x] **E17-1 (M, 3)** **Lire un document de bateau** (D124). La lecture gagne `documentFamily` — les **seize familles** d'`AUTOPILOT.md §2.1`, reconnue **avant** le contenu — et `batch`, jusqu'à 80 lignes de quatre types : équipement, fournisseur, identité, échéance. Chaque ligne porte son **statut** lu sur le document (`fitted` / `retained` / `optional` / `cancelled` / `removed` / `unknown`) et **sa date**, héritée du document quand elle n'en a pas — seuls `fitted` et `retained` arriveront cochés (`INBOX_CHECKED_STATUSES`). La normalisation annule une famille ou un système que le bateau n'a pas, respecte les quantités (règle 6), garde la référence chantier hors du libellé (règle 8) et **retire** une ligne qui ne dit pas ce que son type exige. Le contexte de lecture reçoit le catalogue d'`equipment_kinds`, pour rapprocher par famille et non par libellé (règle 5). Le lecteur local (D92) ne nomme aucune famille et ne rend aucun lot. **N'écrit rien** : l'écran et « Tout ajouter » sont E17-2. Tests : treize cas sur le lot et les statuts.
-- [ ] **E17-2 (M, 3)** L'écran « ce que j'ai lu » : lot groupé par système, contradiction avec le carnet affichée **et décochée** (D113), « Tout ajouter » idempotent, rapport au format E12-1.
+- [ ] **E17-2 (M, 3)** L'écran « ce que j'ai lu » : lot groupé par système, contradiction avec le carnet affichée **et décochée** (D113), « Tout ajouter » idempotent, rapport au format E12-1. **Y trancher `batch` contre `inventory`** (D129) : les deux lectures décrivent un document qui dit ce qu'il y a à bord, et cohabitent jusqu'ici faute d'écran pour arbitrer. Soit `batch` gagne les `specs` que porte `inventory` — celles que la maquette relit (D127) — et E2-10 s'y rebranche, soit les deux restent, l'inventaire prenant le chemin court de l'import et le document de bateau cet écran. Ne pas livrer E17-2 sans avoir écrit laquelle des deux, et pourquoi.
 - [x] **E17-3 (M, 2)** **Familles d'équipement** (D115). `equipment_kinds` (`0032`) : table de référence sans `boat_id` — comme `boat_models` —, 41 familles semées d'après ce que le carnet porte réellement, RLS calquée sur le catalogue de modèles (lecture par tout compte connecté quand `is_active`, écriture par le seul admin plateforme), plus `equipment.kind_id`. Le rapprochement (`src/lib/equipment-kinds.ts`) cherche libellé et synonymes en **mots entiers** dans « nom marque modèle » et garde le terme le plus long ; il **propose** dans le formulaire et se tait dès que quelqu'un touche au champ. La fiche équipement dit la famille à côté du système. Aperçu : `/dev/ui/boat/equipment-form?new=1` monte le formulaire vide, seul état où la famille se propose. Tests : neuf cas pour le rapprochement, trois pour la RLS de la nouvelle table (règle 2), audit tactile sur les deux états.
 - [x] **E17-4 (M, 3)** **Bibliothèque `maintenance_rules`** (D116, `0033`). Table de référence sans `boat_id` comme `equipment_kinds` : une règle s'accroche à une **famille**, restreint éventuellement à une marque ou un modèle, et porte ce qu'un point de modèle porte — libellé, intervalle en mois et/ou en heures, `engine_scope` et `zone_scope` du **même vocabulaire** que `checklist_template_items` (D90), actions pas à pas — plus ses **consommables** (dans la forme que `parts` stocke, pour E17-8) et sa **source**. 49 règles sur 36 familles ; cinq familles sans aucune règle, volontairement. Trois contraintes en base : une source autre que `proposal` doit nommer sa référence (`AUTOPILOT.md §6`), une heure exige un moteur, un consommable a un nom. **Ne compose aucun plan** — c'est E17-5. Tests : onze cas sur le catalogue et ses refus, deux pour la RLS de la nouvelle table (règle 2).
 - [x] **E17-5 (M, 3)** **Le plan se compose** (D122, D123, `0035`). Les deux couches d'`AUTOPILOT.md §4` deviennent un plan : `apply_maintenance_rules(boat, equipment?) returns int` (vérifie `can_write_boat`, idempotente) au-dessus de `compose_maintenance_rules` (le corps que seul le trigger appelle). `checklist_items.equipment_id` dit **ce que le point entretient** et `rule_id` **d'où il vient** — le frère de `template_item_id`, dont E17-7 aura besoin. Le système vient de l'équipement, sinon de `category_ref` de sa famille, sinon **rien n'est proposé** ; le libellé est suffixé par l'équipement, ou par le moteur quand la règle se duplique (D90) ; les règles hauturières sautent un bateau côtier. Trigger `equipment_plan_sync` : compose à l'entrée, **désactive** au dépôt et à la corbeille, réactive au retour — jamais de suppression, `checklist_completions` étant en cascade. `normalise_for_match()` en base, jumelle de `normaliseForMatch`, tenue à parité. **Au passage (D123)** : `can_write_boat`, `can_contribute_boat` et `is_boat_owner` renvoyaient `null` pour un non-membre, donc les six gardes `if not …` du dépôt ne se déclenchaient pas pour un étranger — corrigé à la racine. Tests : treize cas sur la composition et le cycle de vie, cinq sur les aides de rôle et la garde.
+- [x] **E17-12 (M, 1)** **Une seule table d'accents** (D130, `0036`). `normalise_for_match()` portait depuis `0035` une table d'accents à elle, plus faible que `text_fold()` (`0005`) : `Œ œ Æ æ Ø ø` en étaient absents, donc `œ` survivait au `translate` et l'étape `[^a-z0-9&]` l'avalait comme une ponctuation — `normalise_for_match('Cœur')` rendait `c ur` au lieu de `coeur`. Elle devient une enveloppe de `text_fold()` (même signature, `immutable`, `search_path` vide, privilèges inchangés) et la jumelle TypeScript replie les mêmes ligatures avant son `normalize("NFD")`, qui ne décompose pas une lettre à part entière : les deux côtés étaient **d'accord sur la mauvaise réponse**, et le test de parité, qui ne vérifiait que leur accord, le certifiait. Parité garantie sur le latin-1, pas au delà (D130). Tests : les ligatures entrent dans les échantillons de parité, la réponse elle-même est piquée des deux côtés, et une famille écrite « Œil de pont » se rapproche comme « Oeil de pont ».
 - [ ] **E17-7 (S, 2)** Dégraisser `orc50-v1` de ses douze marques (`AUTOPILOT.md §1.4`) vers les règles ; migration des bateaux déjà instanciés.
 - [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
@@ -354,30 +359,90 @@ indépendants dans cet ordre : le premier se livre seul.
   **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
   `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
   390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
-- [ ] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un.** Un document « À valider »
-  (D91) et une pièce sous son seuil (D84) attendent une personne exactement comme un point en
-  retard, mais le premier est un bandeau et la seconde une carte de la Checklist. `boat_todo_queue`
-  gagne deux `kind` (`inbox`, `part`) et leur rang ; le bandeau perd son cas « documents », une
-  ligne valant mieux qu'une bannière. La même migration retire de `boat_dashboard_stats` les
-  colonnes qu'E18-1 laisse sans lecteur (dépenses 12 mois, sortie de l'eau, stock bas), chacune
-  ayant son écran. **DoD** : fonction `security invoker` (RLS inchangée), test de tri et de rang,
-  `tests/unit/rls.test.ts` étendu à la vue réécrite, `pnpm db:types` commité.
-- [ ] **E18-3 (M, 2)** **« Ce qui a bougé ».** Le bloc qui remplace les trois résumés : le fil
-  partagé du carnet — cochages, interventions, achats, relevés d'heures, documents validés, sorties
-  de l'eau — avec **qui** et **quand**, dix lignes puis « tout voir ». C'est la seule chose que le
-  papier ne sait pas faire et qu'aucun écran ne montre. Vue `boat_activity` (`security_invoker`),
-  auteur lu sur le nom figé quand le compte n'existe plus (D31). **DoD** : matrice RLS sur la vue,
-  temps réel branché sur ce que l'écran montre déjà, pas de pagination infinie.
-- [ ] **E18-4 (S, 3)** **Chercher dans le carnet.** « C'était quand, la dernière courroie ? Combien ?
-  Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien, et la recherche
-  n'existe qu'à l'intérieur du Journal, sur titre et notes. Un champ dans la barre du haut, une page
-  de résultats groupés par famille (interventions, points, dépenses, équipements, pièces,
-  intervenants, documents). `search_boat(p_boat_id, q)` sur `pg_trgm` (déjà là, D3) et `unaccent`.
-  **DoD** : la recherche ne rend que ce que la RLS laisse lire (test avec un `pro` et un étranger),
-  requête mesurée sur le carnet de Xaman et budget écrit dans le ticket, clavier iPad (champ ≥ 16 px, annulation d'un tap).
-- [ ] **E18-5 (C, 1)** **La file s'emporte.** Ce qui est dû et ce qu'il faut racheter, en une page
-  imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
-  le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
+- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D131). Un document « À
+  valider » (D91) et une pièce sous son seuil (D84) attendaient une personne exactement comme un
+  point en retard — mais le premier criait depuis un bandeau et la seconde depuis un écran qu'on
+  n'ouvre pas avant de partir. `boat_todo_queue` passe à **six rangs** (`0037`) et gagne
+  `kind = 'inbox'` et `kind = 'part'` : le document se range dans **« Aujourd'hui »** (sa raison
+  est *depuis quand* il attend, le plus ancien devant), la pièce ouvre le cinquième palier
+  **« À racheter »**, en bas avec « Aux heures moteur » — les deux qui ne tombent pas avec le
+  calendrier. La raison d'une pièce est ce qui manque (`severity = min_quantity − quantity`), et
+  le stock le plus court passe devant. Le bandeau perd son cas « documents » ; l'écran ne lit
+  plus `pendingInboxCount`. **`boat_dashboard_stats` est refaite à deux colonnes** : les onze
+  sous-requêtes que les vignettes et le récapitulatif faisaient tourner à chaque rendu n'avaient
+  plus de lecteur depuis E18-1. Les deux tests RLS qui s'en servaient comme sonde interrogent
+  maintenant ce que l'écran lit vraiment (les moteurs sans relevé sur leurs tables, le stock bas
+  sur la file). **Vérifié** : `pnpm db:types` commité, 153 tests RLS verts sur la base reconstruite
+  (dont le rang des quatre genres), 13 cas sur les paliers, lint/format/typecheck/build verts.
+- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D132). Le bloc qui remplace les trois résumés :
+  le fil partagé du carnet — points cochés, interventions terminées, achats, relevés d'heures
+  saisis à la main, sorties de l'eau — avec **qui** et **quand**. Vue `boat_activity` (`0038`),
+  `security_invoker`, sans table ni politique nouvelle : chaque table source décide comme sur son
+  propre écran. `who` lit le **nom figé** avant le profil (D31), l'intervenant avant l'auteur. Ce
+  que le fil ne montre pas est une décision, pas un oubli : ni corbeille ni modification — un
+  carnet qui dirait « X a supprimé… » deviendrait une surveillance entre associés. Les relevés
+  dérivés d'une intervention (D5) n'y sont pas non plus : leur ligne est déjà au-dessus. Dix
+  lignes sur l'écran d'arrivée, le reste sur `/activity` par pages de cinquante (jamais de
+  défilement infini) ; les lignes ne sont pas cliquables — un fait n'est pas une porte, et une
+  moitié de lignes cliquables aurait fait croire l'autre cassée. Le temps réel existait déjà :
+  les cinq tables sont publiées et le tableau de bord est dans leurs sections
+  (`use-boat-realtime.ts`). **Vérifié** : 3 cas RLS (un membre lit, un étranger non, la corbeille
+  sort du fil), 4 cas unitaires sur la ligne rendue sûre, `/dev/ui/dashboard` porte le bloc et
+  l'audit tactile passe aux cinq viewports.
+- [x] **E18-4 (S, 3)** **Chercher dans le carnet** (D134, `0039`). « C'était quand, la dernière
+  courroie ? Combien ? Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien,
+  et la recherche n'existait qu'à l'intérieur du Journal, sur titre et notes. `search_boat()`
+  interroge les **sept familles** d'un coup (interventions, points, achats, équipements, pièces,
+  intervenants, documents en attente), `security invoker` : la RLS décide de chaque ligne. La page
+  les **groupe** sans jamais les mélanger. Le cadre porte une **icône**, pas un champ — un champ
+  dans une barre de 56 px se dispute la place avec « ‹ Retour », le nom du bateau et le « + » dès
+  320 px (D134) —, et le champ de la page prend le clavier en arrivant, l'état vivant dans l'URL.
+  **`unaccent` n'est pas utilisé** : il n'est pas installé sur la pile locale et `0005` l'avait
+  déjà écarté au profit de `text_fold()`, qui est `IMMUTABLE` — donc indexable, ce que `unaccent`
+  (`STABLE`) n'aurait pas permis. Le téléphone, l'e-mail et l'adresse d'un intervenant ne sont
+  jamais cherchés. L'index mort de `0001` (`title || notes` brut, qu'aucune requête ne pouvait
+  emprunter — vérifié à l'`EXPLAIN`) est remplacé sous son nom.
+  **Budget mesuré** (base reconstruite, Postgres 16) : **1,5–1,8 ms** sur un carnet de la taille
+  de celui de Xaman, **8–22 ms** sur un carnet de dix ans (5 000 interventions, 4 000 achats,
+  2 000 points, 800 pièces, 500 équipements, 200 intervenants), **80 ms** au pire sur un mot que
+  porte un quart d'une famille. Budget écrit : **≤ 100 ms** à dix ans. Le pliage est stocké
+  (colonne générée `search_text`) et non recalculé : en expression d'index il coûtait **161 ms**
+  sur le même carnet, contre **0,6 ms** stocké (D134).
+  **Vérifié** : 8 cas RLS (un membre, un `pro` comparé au propriétaire, un étranger, `anon` qui ne
+  peut pas exécuter, un autre bateau, la corbeille, le plancher de deux caractères, et les trois
+  champs privés d'un intervenant), 11 cas sur la couche pure, lint/format/typecheck/tests/build
+  verts, audit tactile aux cinq viewports.
+- [x] **E18-5 (C, 1)** **La file s'emporte** (D135). Ce qui est dû et ce qu'il faut racheter, en
+  une page imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au
+  chantier. Réutilise le rapport d'état (E9-2b) : les quatre primitives d'impression sortent dans
+  `src/components/report/print.tsx`, que `ReportDocument` emprunte désormais, et la page vit sous
+  `/report/queue` — donc sous la tranche i18n du rapport. **Deux blocs, pas cinq paliers** : sur
+  papier « cette semaine » aura vieilli avant d'être lu, donc chaque ligne porte sa raison en
+  toutes lettres (« en retard de 41 jours », « dans 38 h », « il manque 2 ») et l'ordre d'urgence
+  de la file suffit. Une **case à cocher** dessinée, seule chose que le document ajoute à la file.
+  Les documents à valider n'y sont pas (D135). **Aucune migration** : la page lit
+  `boat_todo_queue` (E18-2) telle quelle, même plafond de 200 lignes que le tableau de bord.
+  Portes : « Emporter la liste » sous la file du tableau de bord, et depuis le rapport d'état.
+  **Vérifié** : lint/format/typecheck/tests/build verts, audit tactile aux cinq viewports sur
+  `/dev/ui/report/queue`, qui porte les cinq raisons et les deux blocs.
+
+- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D133) — signalé à
+  l'usage sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à
+  faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
+  consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses de
+  maintenance ». **(1)** Écrire se scinde par le temps du verbe : deux cartes, « Ajouter une tâche
+  à faire » (un point de checklist) et « Noter une intervention » (le journal). Le carnet n'avait
+  que la seconde porte, et la note la plus fréquente à bord est l'autre — « il faudra changer
+  l'anode au printemps » demandait de connaître le rangement de l'app avant de pouvoir s'en servir.
+  **(2)** « Consulter mon bateau » est la **maquette d'E2-8**, remontée telle quelle ; son
+  assemblage sort de l'onglet Bateau dans `src/lib/boat-3d/data.ts` (`toBoatModelData`, testé) pour
+  que deux écrans ne dessinent pas deux bateaux du même carnet. La tranche i18n du tableau de bord
+  gagne `boat3d`. **(3)** « Ce que le bateau a coûté » : le total sur douze mois et ses trois
+  premiers systèmes, comptés par `boat_expense_totals` (D111), trois barres de part, aucun
+  graphique (règle 10) — un renversement assumé du dégraissage d'E18-1, en découverte et non en
+  ligne de sommaire. **Aucune migration.** **Vérifié** : 5 cas sur l'assemblage partagé, tranche
+  i18n verte, lint/format/typecheck/tests/build verts, audit tactile aux cinq viewports sur
+  `/dev/ui/dashboard`, qui porte les trois blocs.
 
 ### Lot 2 — La flotte, de 2 à 10 bateaux
 
@@ -518,3 +583,13 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   le domaine existe (il envoie déjà `noreply@`), la boîte non. Tant que les deux premiers points
   sont ouverts, aucune page de tarifs n'est écrite (D126) : une grille avec des « à partir de »
   inventés est exactement ce que la règle interdit.
+
+## E20 — La checklist se comprend (refonte, D131)
+
+> Retour de Joseph : « on ne comprend rien du tout, c'est pas simple, trop de saisies et pas
+> simple d'usage ». Le brief est `docs/REFONTE-CHECKLIST.md`, le constat d'usage et les arbitrages
+> sont dans D131. Principe : **une question par écran**, et **cocher coûte un geste**.
+
+- [x] **E20-1 (M, 3)** **Une question par écran, une seule ligne** (D131). L'onglet Checklist cesse d'être trois portes : la liste plate « À traiter » et ses quatre onglets sont supprimées (`TodoList`, `ChecklistViewTabs`), et l'onglet répond à « qu'est-ce qu'on suit sur ce bateau » — le tableau de bord répondant depuis D121 à « qu'est-ce que je fais aujourd'hui ». `TodoRow` remplace `ChecklistItemRow` **partout**, tableau de bord compris : titre sur toute la largeur (deux lignes), état porté par un trait de couleur **et** par la phrase, case de 44 px. `due-sentence.ts` écrit l'échéance en français de marin — « En retard de 79 jours », « À faire aujourd'hui », « Dans trois semaines », « Dans un an » — au lieu de « dans 365 j » ; les heures restent des heures. **DoD** : `tests/unit/checklist-due-sentence.test.ts` couvre les paliers, le retard, les heures sans compteur et la parité clé ↔ `fr.json` ; maquette `/dev/ui/checklist` ; audit tactile vert.
+- [x] **E20-2 (M, 2)** **Cocher coûte un geste** (D131). `use-tick.ts` écrit la réalisation sans rien demander — aujourd'hui, la personne connectée, le compteur courant du moteur — et **dit ce qu'il a supposé** dans le toast, qui porte « Annuler » huit secondes. Le cochage hors ligne est conservé (E9-1b, `submitOrQueue`). `CompleteItemDialog` n'est plus le chemin par défaut : il ne s'ouvre que pour la seule chose indevinable, un intervalle en heures sur un moteur jamais relevé, que la base exige (`check_completion_hours`). **DoD** : `tests/e2e/journeys/checklist.spec.ts` réécrit sur le nouveau geste, budget **1 tap** au lieu de 3.
+- [x] **E20-3 (M, 1)** **Les mots du bord** (D131). « Point », « intervalle », « ancrage », « recaler », « ponctuel », « jamais fait », « valide jusqu'au » quittent l'interface : 29 libellés de `checklist.*` réécrits (« Jamais noté », « à refaire avant le… », « À faire une seule fois », « Mettre le carnet à jour », « Retiré du suivi »). Le tableau de bord suit, puisqu'il porte la même ligne : « Tout ce qui est à faire », « # en retard », « # choses réglées ». **DoD** : aucune de ces sept formes ne subsiste sous `checklist.*` ni sous `dashboard.upcoming.*` / `dashboard.state.*` dans `fr.json`.

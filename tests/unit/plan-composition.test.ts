@@ -387,6 +387,13 @@ describeWithDb("normalise_for_match is the twin of normaliseForMatch", () => {
     "Aqua Base",
     "Dérive bâbord — n° 2",
     "ÀÉÎÕÜÇ",
+    // The ligatures (E17-12). They are the drift the two accent tables were heading for: SQL went
+    // through a table of its own that had never heard of `œ`, and TypeScript folds with NFD, which
+    // does not decompose a letter that is not an accented one. Both said `c ur` for « Cœur ».
+    "Cœur",
+    "Sœur",
+    "Ærø",
+    "Nœud de chaise",
     "",
   ];
 
@@ -401,5 +408,30 @@ describeWithDb("normalise_for_match is the twin of normaliseForMatch", () => {
     for (const row of rows) {
       expect(row.sql, JSON.stringify(row.source)).toBe(normaliseForMatch(row.source));
     }
+  });
+
+  /**
+   * Agreeing is not enough — the two sides agreed on `c ur` for « Cœur » until E17-12, which is
+   * how the drift stayed invisible. So the SQL side is pinned to the answer itself, and the
+   * TypeScript side to the same one in `equipment-kinds.test.ts`.
+   */
+  it("folds the ligatures rather than dropping them", async () => {
+    const { rows } = await client.query<{ sql: string }>(
+      "select public.normalise_for_match('Cœur de Sœur — Ærø') as sql",
+    );
+    expect(first(rows, "row").sql).toBe("coeur de soeur aero");
+  });
+
+  /** Which is to say: it is `text_fold` and a punctuation step, nothing of its own. */
+  it("is text_fold with the punctuation turned into spaces", async () => {
+    const { rows } = await client.query<{ same: boolean }>(
+      `select bool_and(
+                public.normalise_for_match(v)
+                = trim(regexp_replace(public.text_fold(v), '[^a-z0-9&]+', ' ', 'g'))
+              ) as same
+       from unnest($1::text[]) as t(v)`,
+      [SAMPLES],
+    );
+    expect(first(rows, "row").same).toBe(true);
   });
 });

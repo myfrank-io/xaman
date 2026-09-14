@@ -88,7 +88,7 @@ const TRANSOM: readonly Station[] = [
 ];
 
 /** How many sections a hull is lofted from: enough for the sheer to read as a curve. */
-const SECTIONS = 16;
+const SECTIONS = 20;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -211,7 +211,7 @@ function addHull(
   },
 ): void {
   // Bottom, boot stripe, topsides, deck, and back down the other side.
-  const TONES = [0.32, 0.12, 0.97, 0.74, 0.97, 0.12, 0.32];
+  const STRAKES = ["bottom", "boot", "hull", "deck", "hull", "boot", "bottom"] as const;
   // The waterline is flat, so the top of the stripe is a constant height whatever the station.
   const boot = o.deck * 0.06;
   let previous: number[] | null = null;
@@ -238,15 +238,15 @@ function addHull(
     ];
     const closed = [...ring, ring[0] ?? 0];
     if (previous) {
-      for (let k = 0; k < TONES.length; k += 1) {
-        b.strip(part, previous.slice(k, k + 2), closed.slice(k, k + 2), TONES[k] ?? 0.7);
+      for (let k = 0; k < STRAKES.length; k += 1) {
+        b.strip(part, previous.slice(k, k + 2), closed.slice(k, k + 2), STRAKES[k] ?? "hull");
       }
     } else {
       transom = ring;
     }
     previous = closed;
   }
-  if (transom) b.face(part, transom, 0.45);
+  if (transom) b.face(part, transom, "hull", 0.78);
 }
 
 /**
@@ -296,7 +296,7 @@ function addSail(
       row.push(b.vertex(point[0] + belly, point[1], point[2]));
     }
     // The cloth darkens a little toward the foot, the way a sail does against the sky.
-    if (previous) b.strip(part, previous, row, 0.9 + 0.08 * u);
+    if (previous) b.strip(part, previous, row, "sail", 0.9 + 0.1 * u);
     previous = row;
   }
 }
@@ -323,11 +323,11 @@ function addSpar(
       b.vertex(o.x - hx, y, o.z + hz),
     ];
     const closed = [...ring, ring[0] ?? 0];
-    if (previous) b.strip(part, previous, closed, 0.74);
+    if (previous) b.strip(part, previous, closed, "carbon");
     previous = closed;
     top = ring;
   }
-  b.face(part, top, 0.9);
+  b.face(part, top, "carbon");
 }
 
 /** A foil — daggerboard, rudder blade, keel fin: a thin tapered plate hanging under a hull. */
@@ -352,8 +352,8 @@ function addFoil(
     b.vertex(o.x + half * 0.6, o.bottom, o.z + tipChord / 2 - rake),
     b.vertex(o.x - half * 0.6, o.bottom, o.z + tipChord / 2 - rake),
   ];
-  b.strip(part, [...top, top[0] ?? 0], [...bottom, bottom[0] ?? 0], 0.56);
-  b.face(part, bottom, 0.38);
+  b.strip(part, [...top, top[0] ?? 0], [...bottom, bottom[0] ?? 0], "foil");
+  b.face(part, bottom, "foil", 0.72);
 }
 
 /**
@@ -387,7 +387,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     const bottom = deck * 0.34;
     const aft = -L * 0.45;
     const forward = L * 0.28;
-    b.box(hulls, [inner, bottom, aft], [outer, deck, forward], 0.86);
+    b.box(hulls, [inner, bottom, aft], [outer, deck, forward], "deck");
   }
   if (p.tubes) {
     // A semi-rigid is read by its tubes: two long rolls along the sheer.
@@ -398,7 +398,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         hulls,
         [Math.min(inner, outer), deck * 0.5, -L * 0.46],
         [Math.max(inner, outer), deck * 1.15, L * 0.4],
-        0.88,
+        "hull",
       );
     }
   }
@@ -425,7 +425,8 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       b.vertex(x, deck, roofFwd),
       b.vertex(x, roofSill, roofFwd),
       b.vertex(x, roofSill, roofAft),
-      0.8,
+      "roof",
+      0.92,
     );
     b.quad(
       coachroof,
@@ -433,7 +434,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       b.vertex(x, roofSill, roofFwd),
       b.vertex(inb, roofTop, roofFwd - L * 0.03),
       b.vertex(inb, roofTop, roofAft),
-      0.07,
+      "glass",
     );
   }
   // Windscreen and after bulkhead.
@@ -443,7 +444,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     b.vertex(roofHalf, deck, roofFwd),
     b.vertex(roofHalf * 0.94, roofTop, roofFwd - L * 0.03),
     b.vertex(-roofHalf * 0.94, roofTop, roofFwd - L * 0.03),
-    0.1,
+    "glass",
   );
   b.quad(
     coachroof,
@@ -451,7 +452,8 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     b.vertex(roofHalf, deck, roofAft),
     b.vertex(roofHalf * 0.94, roofTop, roofAft),
     b.vertex(-roofHalf * 0.94, roofTop, roofAft),
-    0.62,
+    "roof",
+    0.8,
   );
   b.quad(
     coachroof,
@@ -459,7 +461,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     b.vertex(roofHalf * 0.94, roofTop, roofAft),
     b.vertex(roofHalf * 0.94, roofTop, roofFwd - L * 0.03),
     b.vertex(-roofHalf * 0.94, roofTop, roofFwd - L * 0.03),
-    0.9,
+    "roof",
   );
 
   const cockpitAft = p.bridgedeck ? -L * 0.42 : -L * 0.42;
@@ -470,7 +472,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     b.vertex(roofHalf, deck + 0.02, cockpitAft),
     b.vertex(roofHalf, deck + 0.02, roofAft),
     b.vertex(-roofHalf, deck + 0.02, roofAft),
-    0.44,
+    "sole",
   );
   if (p.bridgedeck) {
     // Two helms, one outboard on each hull: on this boat you steer from the side deck, looking
@@ -481,7 +483,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         cockpit,
         [Math.min(x, x - side * L * 0.022), deck, -L * 0.34],
         [Math.max(x, x - side * L * 0.022), deck + L * 0.03, -L * 0.29],
-        0.82,
+        "deck",
       );
       // The wheel: a plate on edge, which is enough to read as one at this size.
       b.quad(
@@ -490,7 +492,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         b.vertex(x - side * L * 0.011, deck + L * 0.03, -L * 0.295),
         b.vertex(x - side * L * 0.011, deck + L * 0.058, -L * 0.3),
         b.vertex(x - side * L * 0.011, deck + L * 0.058, -L * 0.32),
-        0.3,
+        "carbon",
       );
     }
   } else {
@@ -498,7 +500,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       cockpit,
       [roofHalf * 0.42, deck, -L * 0.3],
       [roofHalf * 0.86, deck + L * 0.035, -L * 0.24],
-      0.8,
+      "deck",
     );
   }
 
@@ -509,7 +511,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       safety,
       [roofHalf * 0.52, deck + 0.02, -L * 0.24],
       [roofHalf * 0.98, deck + L * 0.03, -L * 0.18],
-      0.5,
+      "deck",
     );
   }
   // A dome on the after edge of the roof: the carnet names Starlink and a B&G pack.
@@ -518,7 +520,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       coachroof,
       [-roofHalf * 0.18, roofTop, roofAft + L * 0.01],
       [roofHalf * 0.18, roofTop + L * 0.018, roofAft + L * 0.05],
-      0.52,
+      "metal",
     );
   }
 
@@ -530,7 +532,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     b.vertex(inner + p.hullHalfBeam * 0.5, deck + 0.03, -L * 0.2),
     b.vertex(inner + p.hullHalfBeam * 0.5, deck + 0.03, -L * 0.08),
     b.vertex(inner - p.hullHalfBeam * 0.5, deck + 0.03, -L * 0.08),
-    0.38,
+    "sole",
   );
 
   if (f.solar === "roof") {
@@ -542,7 +544,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         b.vertex(side * roofHalf * 0.86, roofTop + 0.02, roofAft + L * 0.02),
         b.vertex(side * roofHalf * 0.86, roofTop + 0.02, roofFwd - L * 0.06),
         b.vertex(side * roofHalf * 0.14, roofTop + 0.02, roofFwd - L * 0.06),
-        0.16,
+        "solar",
       );
     }
   }
@@ -561,7 +563,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         b.vertex(x, deck, archZ + L * 0.008),
         b.vertex(side * archHalf, archTop, archZ + L * 0.008),
         b.vertex(side * archHalf, archTop, archZ - L * 0.008),
-        0.7,
+        "carbon",
       );
     }
     b.quad(
@@ -570,7 +572,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       b.vertex(archHalf, archTop, archZ - L * 0.035),
       b.vertex(archHalf, archTop, archZ + L * 0.03),
       b.vertex(-archHalf, archTop, archZ + L * 0.03),
-      0.14,
+      "solar",
     );
   }
 
@@ -582,7 +584,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       crossbeam,
       [inner, deck - L * 0.012, beamZ - L * 0.018],
       [outer, deck + L * 0.022, beamZ + L * 0.018],
-      0.92,
+      "hull",
     );
 
     // The trampoline is part of the boat, not of its inventory — nobody writes « trampoline »
@@ -600,7 +602,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
           b.vertex(a + w, deck, beamZ + L * 0.02),
           b.vertex(a + w * 0.76, deck + L * 0.012, L * 0.46),
           b.vertex(a + w * 0.1, deck + L * 0.012, L * 0.46),
-          0.4,
+          "tramp",
         );
       }
     }
@@ -617,7 +619,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         bow,
         [-L * 0.011, deck + L * 0.004, bowZ],
         [L * 0.011, deck + L * 0.026, spritTip],
-        0.84,
+        "carbon",
       );
     }
     if (f.windlass) {
@@ -625,7 +627,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         bow,
         [-L * 0.019, deck, bowZ - L * 0.05],
         [L * 0.019, deck + L * 0.02, bowZ - L * 0.01],
-        0.66,
+        "metal",
       );
     }
     if (f.anchor) {
@@ -635,7 +637,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         bow,
         [-L * 0.016, deck - L * 0.016, at - L * 0.025],
         [L * 0.016, deck + L * 0.01, at],
-        0.36,
+        "metal",
       );
     }
   }
@@ -663,7 +665,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         mast,
         [Math.min(side * L * 0.016, side * L * 0.03), mastBase, mastZ - L * 0.012],
         [Math.max(side * L * 0.016, side * L * 0.03), mastBase + L * 0.016, mastZ + L * 0.012],
-        0.62,
+        "metal",
       );
     }
 
@@ -687,7 +689,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       mainsail,
       [-L * 0.007, boomY - L * 0.011, boomAft],
       [L * 0.007, boomY + L * 0.011, mastZ],
-      0.72,
+      "carbon",
     );
     addSail(b, mainsail, {
       tack: [0, boomY + L * 0.013, mastZ - L * 0.01],
@@ -753,7 +755,7 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
       keel,
       [-L * 0.014, -p.draft, -L * 0.09],
       [L * 0.014, -p.draft + L * 0.022, L * 0.06],
-      0.44,
+      "foil",
     );
   }
 
@@ -787,7 +789,12 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
     const top = outboard ? deck + L * 0.02 : -p.hullDepth * 0.5;
     const bottom = outboard ? -p.hullDepth * 0.9 : -p.hullDepth - L * 0.035;
     const part = b.part(engineZone(engine.id), [x, (top + bottom) / 2, z]);
-    b.box(part, [x - L * 0.012, bottom, z - L * 0.018], [x + L * 0.012, top, z + L * 0.018], 0.5);
+    b.box(
+      part,
+      [x - L * 0.012, bottom, z - L * 0.018],
+      [x + L * 0.012, top, z + L * 0.018],
+      "foil",
+    );
     // The propeller: a small disc on edge, so a saildrive is read as a drive and not as a fin.
     const blade = L * 0.022;
     b.face(
@@ -798,7 +805,8 @@ export function buildBoatMesh(shape: BoatShape): BoatMesh {
         b.vertex(x - L * 0.002, bottom + blade * 1.3, z + blade * 0.6),
         b.vertex(x + L * 0.002, bottom + blade * 0.3, z + blade * 0.3),
       ],
-      0.36,
+      "metal",
+      0.8,
     );
   }
 

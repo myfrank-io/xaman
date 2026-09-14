@@ -67,10 +67,11 @@ export function ChecklistItemRow({
         <ChecklistStateBadge
           state={row.status}
           dueToday={isDueToday(row)}
-          // 112 px et non 96 : « AUJOURD'HUI » est le plus long des états, et à 96 px il
-          // passait par-dessus le titre. La colonne du bandeau en fait 104, le reste tient
-          // dans sa gouttière — les titres, eux, ne bougent pas d'un pixel.
-          className="w-28 justify-center"
+          // Une largeur unique pour les cinq états, 120 px : les puces forment une colonne nette
+          // et les titres ne bougent pas d'un pixel. 112 px ne suffisait pas — « EN RETARD » en
+          // mesure 115 et sortait de sa propre puce, pendant que la puce, elle, sortait de sa
+          // colonne de 104. `min-w` et non `w` : un libellé plus long pousse, il ne déborde pas.
+          className="min-w-30"
         />
       }
       title={row.label}

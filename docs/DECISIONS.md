@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D127.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D132.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -530,6 +530,7 @@ l'objection au bouton mort ne s'y applique pas.
 Règle générale qui en sort : **le silence n'est pas une réponse acceptable pour une capacité
 absente.** Si l'application ne peut pas faire quelque chose sur cet appareil, elle le dit à
 l'endroit où on la cherche.
+
 ## 2026-09-03 — Rafraîchissement visuel (moins « vibe-code », plus premium)
 
 Passe de direction artistique sur l'app existante, sans toucher au fonctionnel ni au responsive
@@ -636,7 +637,6 @@ elle est désormais la référence unique. Aucune migration : tout reste dériv�
 La case à cocher « racheté » de la première version et son action serveur `restockPart` sont
 retirées : les +/− couvrent le même besoin plus précisément (on saisit la quantité réellement
 rachetée), et une pièce qui franchit son seuil disparaît de la liste comme avant.
-
 
 ## 2026-09-03 — D64 : un compte sans bateau ajoute le sien (renversement du 2026-09-02)
 
@@ -807,7 +807,6 @@ création échouait.
 **Reste ouvert.** La reconnaissance du carnet papier en texte (photo → saisie guidée, E11) : ici,
 la photo devient une pièce jointe sur une intervention à compléter, pas une ligne lue toute seule.
 
-
 ## 2026-09-04 — D67 : une seule mise en route, en trois étapes, et l'étape écrite en haut
 
 **Question.** « C'est un onboarding en 3 étapes : 1) le bateau, 2) l'upload du carnet actuel, 3) une
@@ -895,7 +894,6 @@ honnête de laisser la main.
 deux lecteurs, `import.fromNew`, `import.back.dashboard`, `attachments.import.dashboard`,
 `boats.new.submitImport`) : l'étape 2 fait mieux au même endroit, et deux façons de faire la même
 chose valent moins qu'une seule qui marche.
-
 
 ## 2026-09-04 — D68 : l'annexe est un moteur, et l'exemple suit la coque
 
@@ -1321,6 +1319,7 @@ comptent : une lettre, un espace au milieu, trop court, trop long.
 **Ce qui reste vrai.** `otp_length = 6` demeure dans `supabase/config.toml` — c'est le réglage
 local, et six chiffres restent le bon choix par défaut. Simplement, si le projet hébergé en dit
 autre chose un jour, l'application suit au lieu de casser.
+
 ## 2026-09-07 — D75 : l'invitation part de l'application, pas de Supabase
 
 **Question.** « Pourquoi quand j'ajoute un user depuis un compte il reçoit ça ? » — le gabarit du
@@ -1410,7 +1409,6 @@ modifiables sur l'écran Bateau, où l'on est déjà pour tout le reste. Écart�
 numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le groupe passe à deux
 lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
 sans avoir à remonter au libellé du champ.
-
 
 ## 2026-09-07 — D80 : l'e-mail de code ne contient aucun lien
 
@@ -1749,6 +1747,7 @@ deux tickets qui répondent au même nom.
 `scripts/check-numbering.mjs` et tient les cinq règles ; `tests/unit/decisions.test.ts` devient
 `tests/unit/numbering.test.ts`. Deux fichiers presque identiques auraient divergé au premier
 correctif (règle 10 : pas de poids sans raison).
+
 ## 2026-09-08 — D88 : le point rouge ne dit qu'une chose, et il la dit jusqu'au bout
 
 **Question.** « Gère mieux les points rouges des notifications pour guider les users : que sur
@@ -2429,7 +2428,6 @@ l'owner, écrits par la seule clé de service — `revoked_at` reste la seule co
 06/09/2026 ». C'est le fait qui met fin à l'attente : l'adresse est bonne, le message n'est lu par
 personne, il faut téléphoner.
 
-
 ## 2026-09-14 — D113 : le carnet fait foi, un document ne l'écrase jamais
 
 **Question.** Un propriétaire verse dans l'app un document qui décrit son bateau — dossier de
@@ -2458,7 +2456,6 @@ n'a jamais saisi et qui ne bouge pas : la référence d'option du chantier, le f
 le numéro de coque, les coordonnées du constructeur. C'est à ce titre que `seed/xaman-boat.json`
 gagne le contact Marsaudon Composites et six `specs.ref_chantier` — sans qu'aucune des cinq
 divergences ci-dessus n'ait été reportée dans le carnet.
-
 
 ## 2026-09-14 — D114 : un papier daté est une réalisation, pas une intervention
 
@@ -2691,7 +2688,6 @@ facture reposait une question déjà répondue dix fois et la réponse finissait
 de la fiche qui existait déjà ; sans pré-remplissage, la fiche créée à la volée n'avait qu'un nom,
 et quelqu'un la complétait à la main plus tard — ou jamais.
 
-
 ## 2026-09-14 — D121 : le premier écran est un plan de travail, à trois altitudes
 
 **Question.** Le tableau de bord récapitule tout et n'approfondit rien : « est-ce qu'il ne perd pas
@@ -2800,6 +2796,7 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+
 ## 2026-09-14 — D122 : le plan se compose par trigger, et un point ne se supprime jamais
 
 **Question.** E17-5 doit recomposer le plan « à l'ajout et au dépôt d'un équipement ». Où mettre ce
@@ -2917,6 +2914,7 @@ la famille existe pour bien dire. `unknown` est sa réponse honnête.
 
 **Ce ticket n'écrit rien.** E17-1 est le contrat de lecture ; l'écran, la contradiction affichée
 côte à côte et « Tout ajouter » sont E17-2.
+
 ## 2026-09-14 — D125 : deux acheteurs, un seul carnet — le propriétaire ne paie pas, le chantier vend du service
 
 **Question.** Le produit s'est écrit pour un propriétaire qui tient le carnet de son bateau, et
@@ -3067,3 +3065,273 @@ l'application garde ses routes anglaises.
   `mailto:` fait déjà.
 - *Une page de tarifs.* Il n'y a rien à y écrire tant que les prix de D125 ne sont pas tranchés ;
   une grille avec des « à partir de » inventés est exactement ce que la règle 3 interdit.
+
+## 2026-09-14 — D127 : la maquette est faite de matières, et elle dit qu'on peut la toucher
+
+**Question.** Retour de Joseph sur la maquette livrée le matin même : « la modélisation est
+horriblissime, c'est vraiment très laid » et « on ne comprend pas qu'on peut cliquer ». Deux
+défauts distincts : ce qu'on voit, et ce qu'on comprend.
+
+**Décision — ce qu'on voit.** Une face ne porte plus une *clarté* mais une **matière**
+(`Material` dans `src/lib/boat-3d/scene.ts`) : coque, carène, ligne de flottaison, pont, sole,
+roof, vitrage, toile, carbone, panneau solaire, trampoline, métal, appendice. Chacune a son jeton
+dans `globals.css` (`--model-<matière>`, clair et sombre) et **son propre contraste** : la toile
+ne s'assombrit presque pas — une voile est translucide, son côté sous le vent reste clair — là où
+un bordé prend toute la lumière. S'y ajoutent un fond de studio (clair sous le bateau, plus dense
+aux bords) et une ombre portée en dégradé.
+
+**Raison.** Le premier jet déclinait une seule couleur, du navy au blanc, en quinze gris : un
+bateau blanc sur un fond blanc cassé, sans une couleur pour l'accrocher. Les matières coûtent le
+même nombre de faces et donnent le mât en carbone noir, la toile en écru, la carène en Coppercoat
+— qui est la vraie couleur de Xaman, notée dans son inventaire. Le contraste par matière est ce
+qui empêche les facettes de lire comme une mosaïque : le coefficient n'est pas décoratif, il dit
+comment le matériau se comporte à la lumière.
+
+**Décision — ce qu'on comprend.** Quatre ajouts, aucun texte d'aide :
+1. Une **pastille sur la maquette** qui dit « Touchez un élément du bateau », et qui **nomme la
+   zone survolée** dès qu'une souris passe dessus. Elle disparaît quand quelque chose est choisi.
+2. Le **survol teinte la zone** sous le pointeur (souris uniquement : un doigt ne survole pas).
+3. Une **ligne d'invite au-dessus de la liste** — celle sous la maquette est hors écran dès qu'on
+   a déroulé — et des lignes qui se comportent en boutons.
+4. **Toutes les zones sont marquées, à deux voix.** Ce qui est en retard ou bientôt dû garde sa
+   pastille — icône, compte, et c'est un bouton. Tout le reste reçoit un **plot** : un petit
+   disque neutre qui n'est *pas* une cible (la coque dessous en est une, la liste à côté aussi) et
+   dont le seul métier est de dire « il y a quelque chose ici ».
+
+**Raison.** Une maquette qui tourne toute seule ressemble à une illustration ; rien ne disait
+qu'elle répondait. Et la première version ne marquait que les retards : le retour est tombé le
+jour même — « on voit bien où cliquer quand c'est en retard », et nulle part ailleurs. Deux voix
+gardent la hiérarchie et suppriment l'angle mort ; deux rangs de boutons de 44 px se seraient
+chevauchés sur un cadre de 340 px et se seraient volé les touches.
+
+**Décision — ce que la maquette sert.** Elle ne sert pas qu'à la checklist. Un propriétaire
+l'ouvre pour **connaître son bateau** et aller y chercher une information. Donc une zone ouverte
+commence par **ce qu'elle est** — « Code 0 (J0) · Incidence PX Black · 87,5 m² », « Batteries
+Lithium · Victron · 210 Ah · 12 V » — lus dans `equipment.specs` par `src/lib/boat-3d/specs.ts`,
+qui met l'unité que la clé annonce et laisse parler les valeurs qui se nomment elles-mêmes. « À
+faire » ne passe devant que si quelque chose est dû. Et quand rien n'est en retard, le titre de la
+carte annonce ce que le bateau porte, pas « rien » : « rien en retard » n'apprend rien sur un
+bateau.
+
+## 2026-09-14 — D128 : un document de chantier verse l'inventaire dans l'import qui existe déjà
+
+**Question.** La maquette (D117, D127) se précise avec ce que le carnet sait du bateau : elle lit
+les `specs` des équipements pour dire « 88 m² · Hydranet » et en déduit dérives, jupes, bout-dehors
+ou panneaux. Or ces `specs` n'arrivaient par aucun chemin en masse : le chantier envoie une liste
+d'équipements — un PDF de livraison, un tableau d'inventaire — et il fallait la ressaisir fiche par
+fiche. Fallait-il un écran de revue dédié pour les inventaires lus sur un document ?
+
+**Décision.** Non : la lecture **verse dans l'import qui existe**. Trois pièces, aucune nouvelle
+surface.
+
+1. L'import d'équipements gagne une colonne **« Caractéristiques »** (`cellSpecs`,
+   `src/lib/import/entities.ts`) : `surface_m2: 88 ; tissu: Hydranet`, séparateurs `;` ou retour à
+   la ligne, clé et valeur sur `:` ou `=`, clé repliée en `snake_case`, 20 paires au plus, une
+   demi-paire est ignorée. C'est la forme que `src/lib/boat-3d/specs.ts` relit.
+2. La boîte de réception apprend un genre **`inventory`** : le modèle qui lit un document renvoie
+   des lignes d'équipement (nom, catégorie, marque, modèle, n° de série, quantité, date de pose,
+   caractéristiques), 80 au plus. La carte de l'élément montre les premières et propose
+   **« Importer ces équipements »**, qui ouvre l'import **pré-rempli** — `inventoryToTable`
+   (`src/lib/inbox/inventory.ts`) rend un tableau tabulé dont l'en-tête porte les libellés que
+   l'import déclare, donc `guessMapping` place toutes les colonnes seule.
+3. Sur l'écriture, **les `specs` déjà en base gagnent** : l'import fusionne les paires proposées
+   sous celles qui existent (`{ ...proposées, ...existantes }`) et n'écrit que si la fiche y gagne
+   quelque chose.
+
+La carte d'un inventaire ne ressemble donc pas aux autres : elle montre les premières lignes **en
+clair** — `specFacts` les lit comme la maquette, « Grand-voile · Incidence · 88 m² · Hydranet » et
+jamais `surface_m2: 88` —, pose « Remplir l'inventaire » en action principale, et **replie** le
+formulaire de rangement derrière « Ranger aussi ce document ». Un inventaire est enfin retiré de
+**« Tout valider »** (`isConfidentItem`) : une liste ne se range jamais à l'aveugle, et sans cette
+garde un inventaire à qui le modèle a donné une catégorie serait écrit comme une intervention.
+
+**Raison.** Importer une liste d'équipements est un problème déjà résolu ici : le `ImportWizard`
+mappe les colonnes, dit ce qui est nouveau et ce qui est reconnu, refuse ce que l'écriture
+refuserait, et n'écrit qu'ensuite. Un deuxième écran de revue aurait refait tout cela en moins bien
+et aurait divergé au premier champ ajouté ; le document n'avait pas besoin d'une surface, il avait
+besoin d'arriver dans la forme que la surface lit déjà. Et la règle de fusion est celle de D113 :
+**un document propose, il n'écrase jamais** — une fiche renseignée à la main par Xav ne se fait pas
+récrire par un PDF de chantier, elle se fait compléter.
+
+## 2026-09-14 — D129 : `batch` et `inventory` cohabitent, E17-2 tranchera
+
+**Question.** E17-1 (D124) fait rendre à la lecture un **`batch`** : ce qu'un document de bateau
+propose, ligne à ligne, en quatre sortes — équipement, prestataire, identité, échéance. E2-10
+(D128) fait rendre à la même lecture un **`inventory`** : les équipements qu'un document liste,
+versés dans l'import. Les deux décrivent la même chose — un document qui dit ce qu'il y a à bord —
+et sont arrivés sur `main` à une heure d'intervalle. Faut-il les réunir tout de suite ?
+
+**Décision.** Non : **on garde les deux, et on tranchera en faisant E17-2** (Joseph, ce jour).
+Aucun code à écrire pour cela — c'est déjà l'état de la fusion. Ce qui change, c'est que la
+réconciliation est **inscrite dans E17-2** au lieu de rester un doublon que personne ne réclame.
+
+**Raison.** Les deux ne se marchent pas dessus aujourd'hui, et chacun a ce que l'autre n'a pas :
+
+- `inventory` **fonctionne de bout en bout** et porte les **`specs`** (`surface_m2: 88`,
+  `tissu: Hydranet`). C'est la raison d'être de E2-10 : ces paires sont ce que la maquette relit
+  pour dire « 88 m² · Hydranet » (D127). Le `batch` de E17-1 n'en porte pas.
+- `batch` est un **contrat de lecture plus riche** — statut lu sur le document (monté, retenu,
+  proposé, annulé, déposé), date portée par la ligne, référence chantier gardée à part du libellé
+  — mais son écran, E17-2, n'existe pas encore, et rien n'écrit.
+
+Réunir maintenant, ce serait rebrancher du travail fini et testé sur un contrat dont le
+consommateur n'existe pas, en perdant au passage les `specs`. Les réunir quand E17-2 existe, ce
+sera une décision informée par un écran réel : soit `batch` gagne les `specs` et E2-10 s'y
+rebranche, soit les deux restent — un document qui **est** un inventaire prend le chemin court de
+l'import, un document qui **décrit** un bateau prend l'écran de revue.
+
+## 2026-09-14 — D130 : une seule table d'accents, et c'est `text_fold`
+
+**Question.** `0035` a donné à `normalise_for_match()` une table d'accents à elle. `text_fold()`
+fait ce travail depuis `0005` — et mieux : elle replie `Œ œ Æ æ` en `OE oe AE ae` et connaît
+`Ø ø`, ce que la table neuve ignore. Le dépôt portait donc **deux** tables d'accents pour une
+seule question, et la dernière écrite était la plus faible. Laquelle garde-t-on, et jusqu'où la
+parité des jumelles s'étend-elle ?
+
+**Décision — `normalise_for_match` n'est que `text_fold` plus la ponctuation.**
+
+    select trim(regexp_replace(public.text_fold(p_value), '[^a-z0-9&]+', ' ', 'g'));
+
+Même signature, `immutable`, `search_path` vide et privilèges inchangés (`0036`). La jumelle
+TypeScript (`normaliseForMatch`, `src/lib/equipment-kinds.ts`) replie les trois mêmes ligatures
+**avant** son passage `normalize("NFD")`.
+
+**Raison.** L'écart n'était pas théorique. `œ` absent de la table de `0035` survivait au
+`translate`, puis l'étape `[^a-z0-9&]` l'avalait comme une ponctuation : `normalise_for_match('Cœur')`
+rendait `c ur`. Une règle restreinte à une marque écrite avec une ligature aurait comparé égale à
+n'importe quelle autre réduite au même moignon. Côté TypeScript, la cause était différente et le
+résultat identique : `normalize("NFD")` défait un accent posé sur une lettre, or `œ æ ø` sont des
+lettres à part entière. Les deux côtés étaient donc **d'accord sur la mauvaise réponse**, et
+`tests/unit/plan-composition.test.ts`, qui ne vérifiait que leur accord, le certifiait. Il pique
+désormais aussi la réponse elle-même.
+
+**Décision — la parité est garantie sur le latin-1, pas au delà.** `text_fold` couvre l'alphabet
+français ; `Ā Š Ž Ÿ`… ne sont repliés ni par elle ni, donc, par `normalise_for_match`, là où NFD
+les replierait côté navigateur.
+
+**Raison.** C'est la limite assumée du `translate()` choisi le 2026-09-02 contre l'extension
+`unaccent` (une extension de moins en production, et la fonction reste `immutable`, donc
+indexable). L'élargir demanderait une table de 190 entrées ou l'extension refusée, pour des noms
+qu'un carnet de bord français n'écrit pas. Le dire ici évite qu'on la rouvre à chaque ligature
+trouvée — et surtout qu'on réponde en recréant une seconde table, ce que `0036` vient de défaire.
+
+**Décision.**
+
+**1. Écrire se scinde en deux, par le temps du verbe.** « Ajouter une tâche à faire » ouvre la
+création d'un point de checklist ; « Noter une intervention » ouvre le journal. Le carnet n'avait
+qu'une porte, celle de ce qui est **déjà fait** — et la note qu'on prend le plus souvent à bord est
+l'autre : « il faudra changer l'anode au printemps ». Elle obligeait à ouvrir la Checklist et à y
+trouver « Ajouter un point », c'est-à-dire à connaître le rangement de l'app avant de pouvoir s'en
+servir. Deux cartes, dans l'ordre où on y pense, chacune disant son objet et où elle mène.
+
+**Ce que ça renverse.** L'audit §7.3 avait posé « un contrôle nommé par viewport » pour tuer les
+deux primaires concurrents qui menaient au **même** endroit. Ici les deux ne mènent pas au même
+endroit : ils nomment deux temps. La règle tenait contre la redondance, pas contre le choix — et
+c'est bien parce qu'elles ne sont pas deux boutons primaires, mais deux cartes, que l'écran ne
+redemande pas le geste que la sidebar porte déjà.
+
+**2. « Consulter mon bateau » est la maquette.** Le bloc large sous la file est le modèle 3D d'E2-8,
+qui est déjà exactement cet objet : le bateau lui-même, ses zones, ce qu'il y a à y faire. Il
+deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). L'assemblage des lignes est **partagé**
+avec l'onglet Bateau (`toBoatModelData`) : deux assemblages auraient fini par dessiner deux bateaux
+différents du même carnet.
+
+**3. « Ce que le bateau a coûté » revient, autrement.** E18-1 avait retiré la ligne « Dépenses,
+12 derniers mois » du récapitulatif, avec les trois liens de sommaire. Elle revient comme une
+**découverte** : un montant qu'on regarde, et les trois systèmes qui le composent. C'est un
+renversement assumé de mon propre dégraissage — et il est juste : un écran qui n'a rien à faire doit
+proposer autre chose que du vide, et « où part l'argent » est la question qu'un propriétaire se pose
+sans jamais penser à ouvrir un onglet pour ça. Total et répartition comptés par la base
+(`boat_expense_totals`, D111), trois barres de part, aucun graphique (règle 10).
+
+**Ce que l'ordre de l'écran devient.** Écrire (les deux actes) · le bandeau · faire (la file) ·
+savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu dès qu'elle n'est pas
+vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
+flottaison.
+
+## 2026-09-14 — D134 : chercher est une porte du carnet, et sept réponses à la même question
+
+**Question.** « C'était quand, la dernière courroie ? Combien ? Quelle référence ? » est la
+première raison d'ouvrir un carnet d'entretien. Jusqu'ici la recherche vivait **dans** le Journal,
+sur le titre et les notes d'une intervention : poser la question supposait de savoir déjà dans
+quel écran dormait la réponse — un achat, un équipement, une pièce, un intervenant, une facture.
+Une recherche qui demande de connaître le rangement de l'app n'est pas une recherche.
+
+**Décision.**
+
+1. **Sept familles, une question, un regroupement.** `search_boat()` interroge d'un coup les
+   interventions, les points du plan, les achats, les équipements, les pièces, les intervenants
+   et les documents en attente. La page **groupe** par famille et ne mélange jamais : « la
+   dernière courroie » et « la courroie qu'il faudra changer » sont deux réponses différentes à
+   la même frappe, et les fondre dans une liste unique obligerait à lire chaque ligne pour savoir
+   laquelle on tient. L'ordre des familles descend de ce qu'on a fait vers ce qui le porte.
+2. **Une porte dans le cadre, un champ sur la page.** La barre du haut et le rail portent une
+   **icône**, pas un champ. Un champ vivant dans une barre de 56 px se disputerait la place avec
+   « ‹ Retour », le nom du bateau et le « + » dès 320 px, et la page de résultats porte de toute
+   façon le sien. Un seul champ dans l'app, donc, qui prend le clavier en arrivant ; l'état vit
+   dans l'URL, de sorte qu'un résultat se partage et survit au retour arrière.
+3. **Le téléphone, l'e-mail et l'adresse d'un intervenant ne sont jamais cherchés.** Ils restent
+   lisibles sur sa fiche — la RLS ne change pas —, mais une page de résultats se montre à qui se
+   tient à côté, et taper « 06 » ne doit pas imprimer une liste de numéros. La colonne indexée le
+   dit aussi clairement que la fonction.
+4. **Un document validé ne se cherche pas comme document.** Il est devenu une intervention ou un
+   achat, et c'est sous ce nom qu'on le trouve : le montrer deux fois serait le montrer comme
+   deux choses. Seuls les documents encore en attente dans « À valider » ont une ligne.
+5. **Le pliage est stocké, pas recalculé.** Chaque famille gagne une colonne générée
+   `search_text` — la concaténation de ses colonnes cherchables, minuscules et sans accents
+   (`text_haystack`, au-dessus de `text_fold` de `0005`) — et son index trigramme. En expression
+   d'index, le pliage restait évalué **ligne à ligne** dès que le planificateur préférait entrer
+   par `boat_id`, ce qu'il fait toujours puisque toute requête filtre par bateau (règle 4) :
+   mesuré à **161 ms** sur un carnet de dix ans, passés à plier des lignes qui n'allaient pas
+   correspondre. Payé une fois à l'écriture, le même calcul tombe à **0,6 ms**. C'est la seule
+   raison pour laquelle cette migration touche sept tables.
+
+**Ce que cela remplace.** `0001` avait créé `maintenance_logs_search_idx` sur
+`title || ' ' || coalesce(notes, '')` brut. Aucune requête n'a jamais pu s'en servir : la seule
+qui le voulait est le filtre du Journal, qui demande `title ilike … or notes ilike …` — deux
+colonnes, pas leur concaténation. Vérifié au `EXPLAIN` avant de le supprimer ; il est remplacé,
+sous son nom, par l'index que cette même recherche peut enfin emprunter.
+
+**Ce que cela ne fait pas.** Le filtre du Journal (E3-2) reste tel quel. Le brancher sur
+`search_text` le rendrait insensible aux accents et servi par l'index, mais demanderait un jumeau
+TypeScript de `text_fold` à tenir à parité — une dette à ouvrir avec son ticket, pas en passant.
+
+**Budget.** Mesuré sur une base reconstruite (Postgres 16, sept familles remplies) : **1,5 à
+1,8 ms** sur un carnet de la taille de celui de Xaman, **8 à 22 ms** sur un carnet de dix ans
+(5 000 interventions, 4 000 achats, 2 000 points, 800 pièces, 500 équipements, 200 intervenants),
+**80 ms** au pire sur un mot que porte un quart d'une famille (« chantier », présent dans chaque
+nom de fournisseur du jeu d'essai). Le budget écrit est donc **≤ 100 ms** sur un carnet de dix
+ans, et il est tenu avec un ordre de grandeur de marge sur le carnet réel.
+
+## 2026-09-14 — D135 : la file s'emporte, et une feuille n'a pas de paliers
+
+**Question.** Le plan de travail vit sur l'écran d'arrivée (D121). Au ponton, l'iPad reste dans
+le sac : on a les mains prises, parfois mouillées, le réseau du port est mauvais, et ce qu'on
+voulait c'était la liste — celle qu'on emmène au bateau ou qu'on envoie au chantier. E18-5
+demandait de **réutiliser le rapport d'état** (E9-2b) plutôt que de dessiner une seconde mise en
+page.
+
+**Décision.**
+
+1. **Un second document, la même mise en page.** Le rapport d'état parle à un assureur, un
+   acheteur ou un expert ; la liste parle à soi-même ou au chantier. Contenus différents, lecteurs
+   différents — mais une seule colonne, les mêmes titres de section, les mêmes tableaux et le même
+   comportement à l'impression. Les quatre primitives partagées sortent dans
+   `src/components/report/print.tsx` ; `ReportDocument` les lui emprunte désormais. La page vit
+   sous `/report/queue`, donc sous la tranche i18n du rapport : le mot « rapport » couvre les deux.
+2. **Deux blocs, pas cinq paliers.** La file de l'écran range par *quand* — aujourd'hui, cette
+   semaine, ce mois-ci, aux heures, à racheter (D127). Sur papier, ces titres n'ont plus d'objet :
+   la feuille restera dans une poche jusqu'à ce que le travail soit fait, et « cette semaine » y
+   aura vieilli avant d'être lu. Ce qui compte alors est **pourquoi** chaque ligne est là — « en
+   retard de 41 jours », « dans 38 h », « il manque 2 » —, en toutes lettres et par ligne. Restent
+   donc **à faire** et **à racheter**, dans l'ordre d'urgence que la file donne déjà.
+3. **Une case à cocher, dessinée.** C'est la seule chose que le document ajoute à la file, et
+   c'est ce qui en fait une liste : on coche au stylo, on ressaisit au retour. `print-color-adjust`
+   garde le trait sur une imprimante qui « économiserait » les bordures claires.
+4. **Les documents à valider ne partent pas au bateau.** Le rang 2 de la file (« À valider »)
+   reste à l'écran : on ne valide pas une facture debout dans un coffre moteur, et une ligne qu'on
+   ne peut pas traiter là où on lit la feuille est une ligne qu'on raye sans l'avoir faite.
+
+**Ce que cela ne change pas.** Aucune migration : la page lit `boat_todo_queue` (E18-2) telle
+quelle, avec le même plafond de 200 lignes que le tableau de bord — une feuille qu'on emmène
+porte ce qui reste à faire, pas les vingt premières lignes.
