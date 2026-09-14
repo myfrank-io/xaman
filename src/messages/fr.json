@@ -657,6 +657,7 @@
     "upcoming": {
       "allChecklist": "Tous les points à traiter",
       "allLogs": "Interventions ouvertes",
+      "takeAway": "Emporter la liste",
       "emptyTitle": "Rien à faire dans les 30 prochains jours",
       "emptyNext": "Prochaine échéance : {label}, dans {days} jours.",
       "startTitle": "Votre carnet démarre avec {count} points",
@@ -1651,7 +1652,29 @@
       "inProgress": "en cours",
       "none": "Aucune sortie de l'eau enregistrée."
     },
-    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}"
+    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}",
+    "queue": {
+      "title": "À faire et à racheter",
+      "link": "Emporter la liste",
+      "stateReport": "Rapport d'état",
+      "todo": "À faire",
+      "todoEmpty": "Rien n'est dû : la liste est vide.",
+      "restock": "À racheter",
+      "restockEmpty": "Aucune pièce sous son seuil.",
+      "what": "Quoi",
+      "system": "Système",
+      "why": "Pourquoi",
+      "quantity": "Manque",
+      "done": "Fait",
+      "bought": "Acheté",
+      "late": "{count, plural, one {en retard d''# jour} other {en retard de # jours}}",
+      "inDays": "{count, plural, =0 {aujourd'hui} one {dans # jour} other {dans # jours}}",
+      "lateHours": "en retard de {count}",
+      "inHours": "dans {count}",
+      "missing": "il manque {count}",
+      "noDate": "sans échéance",
+      "footer": "{todo, plural, =0 {rien à faire} one {# chose à faire} other {# choses à faire}} · {restock, plural, =0 {rien à racheter} one {# pièce à racheter} other {# pièces à racheter}} · Carnet tenu dans Xaman"
+    }
   },
   "purchaseKind": {
     "gas": "Gaz",

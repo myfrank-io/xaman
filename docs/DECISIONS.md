@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D131.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D132.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3234,3 +3234,36 @@ TypeScript de `text_fold` à tenir à parité — une dette à ouvrir avec son t
 **80 ms** au pire sur un mot que porte un quart d'une famille (« chantier », présent dans chaque
 nom de fournisseur du jeu d'essai). Le budget écrit est donc **≤ 100 ms** sur un carnet de dix
 ans, et il est tenu avec un ordre de grandeur de marge sur le carnet réel.
+
+## 2026-09-14 — D131 : la file s'emporte, et une feuille n'a pas de paliers
+
+**Question.** Le plan de travail vit sur l'écran d'arrivée (D121). Au ponton, l'iPad reste dans
+le sac : on a les mains prises, parfois mouillées, le réseau du port est mauvais, et ce qu'on
+voulait c'était la liste — celle qu'on emmène au bateau ou qu'on envoie au chantier. E18-5
+demandait de **réutiliser le rapport d'état** (E9-2b) plutôt que de dessiner une seconde mise en
+page.
+
+**Décision.**
+
+1. **Un second document, la même mise en page.** Le rapport d'état parle à un assureur, un
+   acheteur ou un expert ; la liste parle à soi-même ou au chantier. Contenus différents, lecteurs
+   différents — mais une seule colonne, les mêmes titres de section, les mêmes tableaux et le même
+   comportement à l'impression. Les quatre primitives partagées sortent dans
+   `src/components/report/print.tsx` ; `ReportDocument` les lui emprunte désormais. La page vit
+   sous `/report/queue`, donc sous la tranche i18n du rapport : le mot « rapport » couvre les deux.
+2. **Deux blocs, pas cinq paliers.** La file de l'écran range par *quand* — aujourd'hui, cette
+   semaine, ce mois-ci, aux heures, à racheter (D127). Sur papier, ces titres n'ont plus d'objet :
+   la feuille restera dans une poche jusqu'à ce que le travail soit fait, et « cette semaine » y
+   aura vieilli avant d'être lu. Ce qui compte alors est **pourquoi** chaque ligne est là — « en
+   retard de 41 jours », « dans 38 h », « il manque 2 » —, en toutes lettres et par ligne. Restent
+   donc **à faire** et **à racheter**, dans l'ordre d'urgence que la file donne déjà.
+3. **Une case à cocher, dessinée.** C'est la seule chose que le document ajoute à la file, et
+   c'est ce qui en fait une liste : on coche au stylo, on ressaisit au retour. `print-color-adjust`
+   garde le trait sur une imprimante qui « économiserait » les bordures claires.
+4. **Les documents à valider ne partent pas au bateau.** Le rang 2 de la file (« À valider »)
+   reste à l'écran : on ne valide pas une facture debout dans un coffre moteur, et une ligne qu'on
+   ne peut pas traiter là où on lit la feuille est une ligne qu'on raye sans l'avoir faite.
+
+**Ce que cela ne change pas.** Aucune migration : la page lit `boat_todo_queue` (E18-2) telle
+quelle, avec le même plafond de 200 lignes que le tableau de bord — une feuille qu'on emmène
+porte ce qui reste à faire, pas les vingt premières lignes.

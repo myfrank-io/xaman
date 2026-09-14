@@ -156,6 +156,14 @@ export function reportPath(boatId: string, costs = true): string {
   return withQuery(`/boats/${boatId}/report`, costs ? undefined : { costs: 0 });
 }
 
+/**
+ * « La file s'emporte » (E18-5): the same queue as the dashboard, on a sheet of paper. Under
+ * `/report` because it is the state report's layout, for a different reader.
+ */
+export function queueReportPath(boatId: string): string {
+  return `/boats/${boatId}/report/queue`;
+}
+
 export function haulOutPath(boatId: string, haulOutId: string): string {
   return `${boatPath(boatId, "haulOuts")}/${haulOutId}`;
 }

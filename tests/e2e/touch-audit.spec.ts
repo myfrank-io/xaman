@@ -59,6 +59,8 @@ const PAGES = [
   "/dev/ui/checklist-plan",
   "/dev/ui/members",
   "/dev/ui/report",
+  // La file sur une feuille : c'est la colonne « Pourquoi » qui fixe la largeur (E18-5).
+  "/dev/ui/report/queue",
   "/dev/ui/forgot-password",
   "/dev/ui/reset-password",
   "/dev/ui/checklist-setup",

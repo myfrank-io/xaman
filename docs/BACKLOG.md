@@ -407,9 +407,19 @@ indépendants dans cet ordre : le premier se livre seul.
   peut pas exécuter, un autre bateau, la corbeille, le plancher de deux caractères, et les trois
   champs privés d'un intervenant), 11 cas sur la couche pure, lint/format/typecheck/tests/build
   verts, audit tactile aux cinq viewports.
-- [ ] **E18-5 (C, 1)** **La file s'emporte.** Ce qui est dû et ce qu'il faut racheter, en une page
-  imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
-  le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
+- [x] **E18-5 (C, 1)** **La file s'emporte** (D131). Ce qui est dû et ce qu'il faut racheter, en
+  une page imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au
+  chantier. Réutilise le rapport d'état (E9-2b) : les quatre primitives d'impression sortent dans
+  `src/components/report/print.tsx`, que `ReportDocument` emprunte désormais, et la page vit sous
+  `/report/queue` — donc sous la tranche i18n du rapport. **Deux blocs, pas cinq paliers** : sur
+  papier « cette semaine » aura vieilli avant d'être lu, donc chaque ligne porte sa raison en
+  toutes lettres (« en retard de 41 jours », « dans 38 h », « il manque 2 ») et l'ordre d'urgence
+  de la file suffit. Une **case à cocher** dessinée, seule chose que le document ajoute à la file.
+  Les documents à valider n'y sont pas (D131). **Aucune migration** : la page lit
+  `boat_todo_queue` (E18-2) telle quelle, même plafond de 200 lignes que le tableau de bord.
+  Portes : « Emporter la liste » sous la file du tableau de bord, et depuis le rapport d'état.
+  **Vérifié** : lint/format/typecheck/tests/build verts, audit tactile aux cinq viewports sur
+  `/dev/ui/report/queue`, qui porte les cinq raisons et les deux blocs.
 
 - [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D129) — signalé à
   l'usage sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à

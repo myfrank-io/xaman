@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, PrinterIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ChecklistItemRow } from "@/components/checklist/ChecklistItemRow";
@@ -29,6 +29,7 @@ import {
   inboxPath,
   logPath,
   logsPath,
+  queueReportPath,
   stockPath,
 } from "@/lib/queries/boat-routes";
 
@@ -222,6 +223,14 @@ export function UpcomingList({
         >
           {t("allLogs")}
           <ChevronRightIcon className="size-4" aria-hidden />
+        </Link>
+        {/* La même file, sur une feuille (E18-5) : au ponton l'iPad reste dans le sac. */}
+        <Link
+          href={queueReportPath(boatId) as Route}
+          className="inline-flex min-h-11 items-center gap-1 text-label font-medium text-primary"
+        >
+          <PrinterIcon className="size-4" aria-hidden />
+          {t("takeAway")}
         </Link>
       </div>
       <CompleteItemDialog
