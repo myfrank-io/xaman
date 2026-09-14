@@ -63,7 +63,7 @@ export function isInboxWarningCode(value: string): value is InboxWarningCode {
  * estimate.
  *
  * The fourth is the odd one out: an `inventory` writes **no line of the carnet at all** (E2-10,
- * D126). A builder's specification says what the boat carries, so it fills the equipment list —
+ * D128). A builder's specification says what the boat carries, so it fills the equipment list —
  * through the import screen, which already reviews a list before writing it. `INBOX_FILINGS`
  * below therefore does not carry it: « Valider » never files an inventory.
  */
