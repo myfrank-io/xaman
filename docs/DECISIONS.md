@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D116.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D117.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2531,3 +2531,34 @@ aujourd'hui, plus ce que tout bateau a. Une famille entre quand un bateau l'appo
 cas où » : une famille inutilisée est une ligne de plus dans un menu, qui rend la bonne plus dure à
 trouver.
 
+## 2026-09-14 — D116 : la bibliothèque de règles est semée en « proposition », et elle l'assume
+
+**Question.** Les 49 règles d'entretien semées avec `maintenance_rules` (E17-4, `0033`) portent des
+intervalles — vidange à 250 h, turbine tous les ans, soufflet de saildrive à sept ans. Sous quelle
+`source` les publier ?
+
+**Décision.** **Toutes en `proposal`, aucune avec `source_ref`.** Et la contrainte
+`source = 'proposal' or coalesce(source_ref,'') <> ''` met la règle en base : ce qui revendique une
+autorité — `manual`, `builder`, `regulation` — doit nommer où on va la vérifier.
+
+**Raison.** `AUTOPILOT.md §6` : *un intervalle n'est jamais inventé ; une règle porte sa source,
+sinon le point arrive marqué « proposé »*. Les intervalles semés sont ceux de la pratique courante,
+et c'est exactement la définition d'une proposition — bon à montrer à quelqu'un, pas à lui imposer.
+Écrire « Manuel Wallas 30DT, p. 14 » sans avoir ouvert ce manuel serait précisément la faute que
+cette table existe pour empêcher : une fausse autorité ne se distingue plus d'une vraie une fois
+écrite, et c'est elle qu'on croit. Le précédent est déjà dans le dépôt : les 93 points de l'ORC 50
+sont semés `source: proposal`.
+
+Les sources réelles arrivent par le seul chemin qui les produit : un bateau dépose son manuel, on
+le lit (E17-1, E17-2), la règle gagne sa référence.
+
+**Cinq familles ne reçoivent aucune règle** — congélateur, lave-linge, traceur, AIS, liaison
+satellite. Il n'y a pas de geste périodique qu'on remercierait quelqu'un d'avoir rappelé, et
+« contrôler que ça marche » est une ligne qu'on coche sans la lire : elle coûte la crédibilité des
+quarante-neuf qui disent quelque chose. Une famille reçoit une règle quand quelqu'un peut dire quoi
+lui faire (`AUTOPILOT.md §10`).
+
+**Ce qui est vérifié plutôt que promis.** Trois contraintes, testées des deux côtés
+(`tests/unit/maintenance-rules.test.ts`) : une source sans référence est refusée ; un intervalle en
+heures sans `engine_scope` est refusé — une heure se lit sur un moteur ; un consommable sans nom est
+refusé, parce que c'est le stock d'E17-8 qu'il irait remplir de lignes anonymes.
