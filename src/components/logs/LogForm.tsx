@@ -120,7 +120,7 @@ export function LogForm({
   /** Documents already stored on this intervention (E10-1); empty on a creation. */
   attachments?: AttachmentItem[];
   /**
-   * The document this intervention starts from (D117): already in the inbox, already read, and
+   * The document this intervention starts from (D118): already in the inbox, already read, and
    * hung on the intervention the moment it is saved.
    */
   sourceDocument?: LogFormDocument;
@@ -212,7 +212,7 @@ export function LogForm({
     items: [],
   });
   const [serverError, setServerError] = useState<string | null>(null);
-  // A fiche created from the document (D118) has to reach the picker of *this* form at once,
+  // A fiche created from the document (D119) has to reach the picker of *this* form at once,
   // without a round trip to the server that would lose everything already typed.
   const [extraContacts, setExtraContacts] = useState<ContactOption[]>([]);
   const knownContacts = extraContacts.length === 0 ? contacts : [...contacts, ...extraContacts];
@@ -385,7 +385,7 @@ export function LogForm({
         action: saveLog,
         enqueue: outbox.enqueue,
         online,
-        // Never queued when a document opened the form (D117): the reading came from the
+        // Never queued when a document opened the form (D118): the reading came from the
         // network anyway, and a line saved on the iPad would leave its document behind.
         allowQueue: !log && !sourceDocument,
       });
@@ -419,7 +419,7 @@ export function LogForm({
         if (!committed.ok) toast.error(ta("commitFailed"));
       }
       // The document the intervention started from joins it, by the very path « Valider » takes
-      // from « À valider » (D117). A refusal is said and nothing else: the intervention is
+      // from « À valider » (D118). A refusal is said and nothing else: the intervention is
       // written, and the document is still on its card, one tap from the same outcome.
       if (sourceDocument) {
         const joined = await attachInboxDocument({
@@ -463,7 +463,7 @@ export function LogForm({
     <form onSubmit={submitForm} noValidate className="flex flex-col gap-6">
       <PageHeader title={log ? t("editTitle") : t("newTitle")} />
 
-      {/* The document the intervention was started from (D117): it is already in « À valider »,
+      {/* The document the intervention was started from (D118): it is already in « À valider »,
           and joins this intervention's attachments the moment it is saved. Saying which one, and
           saying when the reading proposed a purchase instead, is what keeps the screen honest. */}
       {sourceDocument ? (
@@ -495,7 +495,7 @@ export function LogForm({
                 onClick={() => {
                   const found = draft.draft;
                   // Rebased on the current defaults, never used raw: a draft written before
-                  // D116 carries `categoryId` and no `categoryIds` at all, and resetting to it
+                  // D117 carries `categoryId` and no `categoryIds` at all, and resetting to it
                   // would hand the chips an undefined list. What the older shape does not name,
                   // the form's own defaults still answer for.
                   if (found) form.reset({ ...defaultValues, ...found, id: form.getValues("id") });
@@ -716,7 +716,7 @@ export function LogForm({
                   canCreate={canCreateContact}
                   label={t("by")}
                 />
-                {/* Who the document says did the work (D118): recognised here, or created with
+                {/* Who the document says did the work (D119): recognised here, or created with
                     everything the invoice carries rather than retyped from it. */}
                 <SupplierSuggestion
                   boatId={boatId}

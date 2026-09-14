@@ -218,7 +218,7 @@ describe("the reading, made safe", () => {
         ...output,
         contactId: "someone-else",
         categoryId: "not-a-system",
-        // Nothing said about the provider at all: the fallback matching (D118) has no name, no
+        // Nothing said about the provider at all: the fallback matching (D119) has no name, no
         // number and no address to recognise, so the dropped id stays dropped.
         supplierName: null,
         supplier: { name: null, company: null, phone: null, email: null, address: null },
@@ -236,7 +236,7 @@ describe("the reading, made safe", () => {
   });
 
   /**
-   * D118: the reading missed the link, the annuaire has it. An exact e-mail is a certainty, and
+   * D119: the reading missed the link, the annuaire has it. An exact e-mail is a certainty, and
    * the block is kept whole either way — it is what creates the fiche when nothing matches.
    */
   it("recognises a provider the reading did not link, on what the document prints", () => {
@@ -354,7 +354,7 @@ describe("validating a card", () => {
     ).toBe(true);
   });
 
-  /** D116: an invoice that covers three systems files the intervention under the three. */
+  /** D117: an invoice that covers three systems files the intervention under the three. */
   it("carries every system of an intervention, the principal first", () => {
     const second = "00000000-0000-4000-8000-0000000000c2";
     const parsed = validateInboxItemSchema.parse({ ...base, categoryIds: [CATEGORY, second] });

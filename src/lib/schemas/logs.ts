@@ -23,7 +23,7 @@ export const FUTURE_ALLOWED_STATUSES: LogStatusValue[] = ["planned", "urgent"];
 
 export const COST_MAX = 9_999_999.99;
 
-/** How many systems one intervention may carry (D116): a boat has a dozen, a visit never all. */
+/** How many systems one intervention may carry (D117): a boat has a dozen, a visit never all. */
 export const LOG_CATEGORIES_MAX = 6;
 
 const emptyToNull = (value: unknown) => (value === "" ? null : value);
@@ -45,7 +45,7 @@ export const saveLogSchema = z
     expectedUpdatedAt,
     title: requiredText(160),
     /**
-     * The systems this intervention touches (D116). One visit of the mechanic is often three
+     * The systems this intervention touches (D117). One visit of the mechanic is often three
      * of them — vidange, anode, gréement — and the single column made the person pick the least
      * wrong one. The first is the principal: it is what `maintenance_logs.category_id` keeps,
      * and with it every filter, the report and the export that already read that column.
@@ -71,7 +71,7 @@ export const saveLogSchema = z
     }
   });
 
-/** The system the row keeps in its own column: the first one chosen (D116). */
+/** The system the row keeps in its own column: the first one chosen (D117). */
 export function primaryCategoryId(categoryIds: string[]): string {
   return categoryIds[0] ?? "";
 }

@@ -18,7 +18,7 @@ export type LogFormChoice = { id: string; label: string };
 export type LogFormValues = {
   id: string;
   title: string;
-  /** Every system it touches, the principal first (D116). */
+  /** Every system it touches, the principal first (D117). */
   categoryIds: string[];
   status: LogStatusValue;
   performedAt: string;
@@ -37,7 +37,7 @@ export type LogFormValues = {
 /**
  * Values the form opens on, whatever named them: the query string (`?item=`, `?category=`,
  * `?date=`, `?hours=<engine>:<h>`), resolved on the server so the form receives plain strings,
- * or the reading of the document the intervention starts from (D117).
+ * or the reading of the document the intervention starts from (D118).
  */
 export type LogFormPrefill = {
   title?: string;
@@ -47,10 +47,10 @@ export type LogFormPrefill = {
   checklistItemIds?: string[];
   contactId?: string;
   equipmentId?: string;
-  /** Read on the document the intervention starts from (D117): cost, notes, provider. */
+  /** Read on the document the intervention starts from (D118): cost, notes, provider. */
   cost?: string;
   notes?: string;
-  /** The provider as the document spells it, when no contact of the boat matched (D118). */
+  /** The provider as the document spells it, when no contact of the boat matched (D119). */
   supplier?: SupplierRead;
   /**
    * Open the hours block at once: « + Ajouter les détails » from an hour-based point, or the
@@ -77,7 +77,7 @@ export function parseHoursParam(
 
 /**
  * `?category=<id>` — repeatable, and comma-separated inside one value, because an intervention
- * carries several systems since D116 and « Refaire » must bring them all back.
+ * carries several systems since D117 and « Refaire » must bring them all back.
  */
 export function parseCategoriesParam(value: string | string[] | undefined): string[] {
   const raw = value === undefined ? [] : Array.isArray(value) ? value : [value];
@@ -91,7 +91,7 @@ export function firstParam(value: string | string[] | undefined): string | undef
 }
 
 /**
- * The document an intervention starts from (D117): it is already in the inbox — same upload,
+ * The document an intervention starts from (D118): it is already in the inbox — same upload,
  * same reading as a mail — and joins the intervention as its attachment once it is saved.
  */
 export type LogFormDocument = {
@@ -109,7 +109,7 @@ export type LogFormDocument = {
 /**
  * Whether the URL already says what the intervention is about. « + Ajouter les détails » from
  * the checklist, « Refaire » from a detail page and « Noter une intervention » from an engine
- * sheet all arrive knowing; only the bare « + » opens on the document (D117).
+ * sheet all arrive knowing; only the bare « + » opens on the document (D118).
  */
 export const PREFILL_PARAMS = [
   "item",

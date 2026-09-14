@@ -1640,12 +1640,12 @@ describeWithDb("future dates (D17)", () => {
 });
 
 /**
- * D116 — les systèmes d'une intervention. La liaison suit les droits de la ligne qu'elle décrit :
+ * D117 — les systèmes d'une intervention. La liaison suit les droits de la ligne qu'elle décrit :
  * un membre la lit, un contributeur l'ajoute, `write` la retire — et le pro la retire sur *ses*
  * interventions, même si un editor avait coché les systèmes pour lui. Rien ne se met à jour : une
  * liaison s'ajoute ou se retire, et il n'y a pas de politique UPDATE pour le faire croire.
  */
-describeWithDb("maintenance_log_categories (D116)", () => {
+describeWithDb("maintenance_log_categories (D117)", () => {
   const CATEGORY2 = "00000000-0000-0000-0000-00000000ca02";
 
   const link = (u: User, log: string, category: string, by: string) =>

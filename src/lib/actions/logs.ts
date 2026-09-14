@@ -102,7 +102,7 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     id,
     boat_id: boatId,
     title: values.title,
-    // The principal stays in its own column (D116): every filter, the report and the export
+    // The principal stays in its own column (D117): every filter, the report and the export
     // read it, and the link rows below carry the whole list — this one included.
     category_id: primaryCategoryId(categoryIds),
     status: values.status,
@@ -129,7 +129,7 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
         .upsert({ ...row, created_by: userId }, { onConflict: "id" });
   if (error) return fail(dbErrorKey(error));
 
-  // ---- the systems it touches (D116) -----------------------------------------------------
+  // ---- the systems it touches (D117) -----------------------------------------------------
   // Rewritten whole at every save: the form always sends the complete list, so what is no
   // longer ticked goes, and what is ticked stays on the row it already had (`ignoreDuplicates`),
   // which keeps who first filed it under which system.
@@ -287,7 +287,7 @@ export async function suggestChecklistItems(
   if (!parsed.ok) return parsed.result;
 
   const supabase = await createClient();
-  // One call per system (D116): the function answers for one, and an intervention that carries
+  // One call per system (D117): the function answers for one, and an intervention that carries
   // three must propose the points of the three. Six at most, asked in one wave, merged on the
   // point's id — a point named by two systems is one line, kept at its best score.
   const answers = await Promise.all(

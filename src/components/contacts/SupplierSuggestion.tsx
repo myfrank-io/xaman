@@ -19,7 +19,7 @@ import {
 } from "@/lib/contacts/match";
 
 /**
- * Le prestataire lu sur le document (D118).
+ * Le prestataire lu sur le document (D119).
  *
  * Une facture porte le nom du chantier, son téléphone, son e-mail et son adresse ; l'annuaire du
  * bateau porte souvent déjà sa fiche. Ce bloc fait les deux moitiés du travail que la personne

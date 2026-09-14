@@ -9,7 +9,7 @@ import {
 import type { InboxSuggestion } from "@/lib/schemas/inbox";
 
 /**
- * Une intervention commence par son document (D117) — et ce que la lecture propose se traduit dans
+ * Une intervention commence par son document (D118) — et ce que la lecture propose se traduit dans
  * la langue du formulaire sans jamais écraser ce que l'URL avait déjà dit : un paramètre est une
  * intention explicite, une lecture est une proposition (D91).
  */
@@ -48,7 +48,7 @@ const suggestion: InboxSuggestion = {
   warnings: [],
 };
 
-describe("le formulaire pré-rempli par le document (D117)", () => {
+describe("le formulaire pré-rempli par le document (D118)", () => {
   it("traduit la lecture dans les chaînes que les champs tactiles parlent", () => {
     const prefill = mergePrefill({}, suggestion, ENGINES);
     expect(prefill.title).toBe("Vidange moteur bâbord");
@@ -97,7 +97,7 @@ describe("le formulaire pré-rempli par le document (D117)", () => {
     });
   });
 
-  it("retombe sur le nom seul quand la lecture est antérieure au bloc prestataire (D118)", () => {
+  it("retombe sur le nom seul quand la lecture est antérieure au bloc prestataire (D119)", () => {
     const old = mergePrefill(
       {},
       {

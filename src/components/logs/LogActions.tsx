@@ -31,7 +31,7 @@ export function LogActions({
   log: {
     id: string;
     title: string;
-    /** Every system of the intervention, the principal first (D116). */
+    /** Every system of the intervention, the principal first (D117). */
     categoryIds: string[];
     contactId: string | null;
     equipmentId: string | null;
@@ -49,7 +49,7 @@ export function LogActions({
   const redoHref = newLogPath(boatId, {
     title: log.title,
     // Comma-separated, read back as the whole list: « Refaire » d'une visite à trois systèmes
-    // rouvre le formulaire avec les trois cochés (D116).
+    // rouvre le formulaire avec les trois cochés (D117).
     category: log.categoryIds.join(",") || undefined,
     contact: log.contactId ?? undefined,
     equipment: log.equipmentId ?? undefined,

@@ -27,7 +27,7 @@ import { upsertContactSchema, type ContactSpecialty } from "@/lib/schemas/contac
 type FieldErrors = Partial<Record<"name" | "specialty" | "phone" | "email", string>>;
 
 /**
- * What the dialog opens on when a document named the provider (D118): everything the invoice
+ * What the dialog opens on when a document named the provider (D119): everything the invoice
  * carried, already typed. An empty object is « the person taps + and types », the case the
  * dialog was written for.
  */
@@ -55,7 +55,7 @@ function hasExtras(initial: QuickContactInitial | undefined): boolean {
  * Inline creation from ContactPicker (ux-flows §4.5): name, specialty, phone — nothing else.
  * The new contact is selected at once; the current form is never left.
  *
- * With `initial` it is the same dialogue, pre-filled from what was read on a document (D118),
+ * With `initial` it is the same dialogue, pre-filled from what was read on a document (D119),
  * and the three fields the invoice also carried — société, e-mail, adresse — come with it:
  * re-typing a phone number that is printed on the page is exactly the work this is meant to
  * remove, and a fiche created without them is a fiche someone completes by hand later.

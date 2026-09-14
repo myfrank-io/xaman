@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D119.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D120.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2531,7 +2531,7 @@ aujourd'hui, plus ce que tout bateau a. Une famille entre quand un bateau l'appo
 cas où » : une famille inutilisée est une ligne de plus dans un menu, qui rend la bonne plus dure à
 trouver.
 
-## 2026-09-14 — D116 : une intervention porte plusieurs systèmes
+## 2026-09-14 — D117 : une intervention porte plusieurs systèmes
 
 **Question.** Le formulaire d'intervention n'accepte qu'une catégorie. Une visite de mécanicien —
 vidange, anode, contrôle du gréement, une seule facture — doit-elle se ranger sous un seul système,
@@ -2541,7 +2541,7 @@ se découper en trois lignes, ou porter les trois ?
 l'intervention (six au plus), et **la première cochée reste le système principal** :
 `maintenance_logs.category_id` ne bouge pas, et avec elle les filtres du journal, le rapport,
 l'export, la grille des systèmes et le rapprochement des points de checklist. Une table de liaison
-`maintenance_log_categories` (migration `0033`, RLS calquée sur celle de l'intervention) porte la
+`maintenance_log_categories` (migration `0034`, RLS calquée sur celle de l'intervention) porte la
 liste complète, principal compris ; `maintenance_logs_view` la rend en `category_ids`, et retombe
 sur la seule colonne quand la liaison est vide — une ligne importée reste classée. Les points de
 checklist proposés sont ceux de **tous** les systèmes cochés, dédoublonnés au meilleur score. Un
@@ -2553,7 +2553,7 @@ lignes aurait triplé la saisie et éclaté un coût unique en trois montants in
 colonne principale plutôt que la remplacer par un tableau était la moitié la plus importante de la
 décision : aucune vue, aucun filtre, aucun export n'a eu à changer, et la migration ne réécrit rien.
 
-## 2026-09-14 — D117 : une intervention commence par son document
+## 2026-09-14 — D118 : une intervention commence par son document
 
 **Question.** « Noter une intervention » ouvre huit champs vides, et les photos se joignent en bas
 de l'écran, une fois tout saisi. Or l'intervention naît presque toujours d'un papier — la facture du
@@ -2576,7 +2576,7 @@ en dernier faisait taper huit champs à côté de la page qui les portait tous, 
 de route perdait tout. Ici rien ne se perd : le document est dans « À valider » dès qu'il est monté,
 même si personne ne finit le formulaire — il se classera d'un tap plus tard.
 
-## 2026-09-14 — D118 : le prestataire se lit sur le document, et sa fiche s'ouvre remplie
+## 2026-09-14 — D119 : le prestataire se lit sur le document, et sa fiche s'ouvre remplie
 
 **Question.** Une facture porte le nom du chantier, son téléphone, son e-mail et son adresse. La
 lecture n'en gardait que le nom (`supplierName`), et proposait un contact seulement quand le modèle

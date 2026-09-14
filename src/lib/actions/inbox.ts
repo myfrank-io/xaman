@@ -358,7 +358,7 @@ export async function validateInboxItem(input: unknown): Promise<
 }
 
 /**
- * The document an intervention was started from, joined to it (D117).
+ * The document an intervention was started from, joined to it (D118).
  *
  * « Noter une intervention » now opens on a document: the file goes up by the same door as a
  * mailed one, is read by the same reading, and pre-fills the form. Once the person saves, the
