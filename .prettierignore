@@ -18,3 +18,6 @@ seed
 *.md
 supabase/functions
 .claude
+# Design Components (.dc.html): a bespoke format read by the design canvas's generator — the
+# `<x-dc>` / `<helmet>` tags and the `./support.js` line are contract, not markup to reflow.
+.design

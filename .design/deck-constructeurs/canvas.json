@@ -1,0 +1,63 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "1 · Le constat", "x": 0, "y": 0, "w": 1920, "h": 1080 },
+    {
+      "file": "Cout.dc.html",
+      "title": "2 · Ce que ça coûte",
+      "x": 2040,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "Automobile.dc.html",
+      "title": "3 · L'analogie automobile",
+      "x": 4080,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "Produit.dc.html",
+      "title": "4 · Ce qu'est Xaman",
+      "x": 6120,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "DeuxChemins.dc.html",
+      "title": "5 · Les deux chemins",
+      "x": 0,
+      "y": 1280,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "Confidentialite.dc.html",
+      "title": "6 · Ce que vous ne verrez jamais",
+      "x": 2040,
+      "y": 1280,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "Pilote.dc.html",
+      "title": "7 · Le programme pilote",
+      "x": 4080,
+      "y": 1280,
+      "w": 1920,
+      "h": 1080
+    }
+  ],
+  "annotations": [
+    {
+      "id": "version-courte",
+      "x": 6120,
+      "y": 1280,
+      "w": 640,
+      "text": "Version courte à 5 slides : garder 1, 2, 5, 6, 7 — les slides 3 et 4 se disent à l'oral.\n\nÀ vérifier avant de présenter : la boîte constructeurs@xaman.boats n'existe pas encore (le domaine, si).\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier — ce n'est pas tranché."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
