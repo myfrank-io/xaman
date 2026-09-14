@@ -12,6 +12,9 @@ const PAGES = [
   // The second public page (D126): two dark bands, six cards and a mailto, none of which the
   // app's own screens audit.
   "/constructeurs",
+  // The deck read on the site (E19-10): seven full-height pages and a rail of nine round
+  // controls, the densest row of targets the public site has.
+  "/constructeurs/brochure",
   "/login",
   "/signup",
   "/forgot-password",

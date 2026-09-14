@@ -2215,7 +2215,8 @@
         "subtitle": "Xaman est le carnet d'entretien que vous livrez avec la coque, et l'option de service que vous vendez avec. Votre acheteur n'est plus lâché dans la nature, vos garanties arrivent documentées, et l'entretien de vos modèles cesse d'être une rumeur de forum.",
         "primary": "Parler à l'équipe",
         "secondary": "Voir le carnet côté propriétaire",
-        "note": "Vous fixez le prix de l'option. Nous facturons le chantier, jamais son client."
+        "note": "Vous fixez le prix de l'option. Nous facturons le chantier, jamais son client.",
+        "brochure": "Voir la présentation"
       },
       "preview": {
         "caption": "Une file de flotte, dessinée : un compte n'est affiché que s'il rend ses lignes.",
@@ -2311,7 +2312,123 @@
         "button": "Parler à l'équipe",
         "secondary": "Voir le carnet côté propriétaire",
         "email": "constructeurs@xaman.boats",
-        "subject": "Xaman — programme pilote constructeurs"
+        "subject": "Xaman — programme pilote constructeurs",
+        "brochure": "Revoir la présentation"
+      }
+    },
+    "brochure": {
+      "meta": {
+        "title": "Xaman pour les constructeurs — la présentation",
+        "description": "La présentation Xaman destinée aux chantiers, en sept pages : ce que la livraison vous coûte, ce qui tourne déjà, et l'option de service que vous vendez avec la coque."
+      },
+      "nav": {
+        "label": "Pages de la présentation",
+        "goTo": "Page {number}",
+        "position": "Page {number} sur {total}",
+        "back": "Revenir à l'offre constructeur",
+        "print": "Imprimer la brochure"
+      },
+      "footer": "Xaman pour les constructeurs",
+      "pilot": "Programme pilote : le carnet du propriétaire est en service, l'étage constructeur s'écrit avec nos premiers chantiers partenaires.",
+      "one": {
+        "eyebrow": "Xaman · le carnet d'entretien des bateaux",
+        "title": "Le premier carnet d'entretien nautique numérique.",
+        "leadLabel": "Le jour de la livraison",
+        "leadTitle": "Deux pertes, le même jour.",
+        "buyerWho": "L'acheteur",
+        "buyerBody": "seul, sans carnet, avec une doc qu'il ne lira pas.",
+        "yardWho": "Le chantier",
+        "yardBody": "plus une ligne sur une coque qu'il a construite."
+      },
+      "two": {
+        "eyebrow": "Le carnet d'entretien, aujourd'hui",
+        "title": "Quinze ans d'entretien sur vos coques, et vous n'en savez rien.",
+        "docLabel": "La documentation",
+        "docTitle": "La documentation papier",
+        "docBody": "Elle pourrait être numérique et interactive. Elle part en classeur et ne sera pas consultée.",
+        "trainingLabel": "La formation",
+        "trainingTitle": "Un jour pour apprendre un bateau",
+        "trainingBody": "La prise en main ne remplace pas les saisons. Plus de savoir, moins de dégâts sur vos bateaux.",
+        "afterLabel": "Puis quinze ans",
+        "afterTitle": "Le carnet d'entretien s'écrit à la main",
+        "afterBody": "Dans un classeur papier et bloqué à bord.",
+        "noteTitle": "Le carnet d'entretien de vos bateaux existe déjà. Il est en papier.",
+        "noteBody": "Manuscrit, à bord, chez le propriétaire : tout est écrit, rien ne vous parvient.",
+        "noteTurn": "Numérique, il se lit — par le propriétaire, par son mécanicien et par vous s'il vous y invite."
+      },
+      "three": {
+        "eyebrow": "Le moment décide de tout",
+        "title": "L'automobile vend son contrat d'entretien au bon de commande.",
+        "carLabel": "Automobile",
+        "carOne": "Bon de commande",
+        "carOneBody": "L'option est sur la feuille.",
+        "carTwo": "Livraison",
+        "carTwoBody": "Le carnet est au nom du client.",
+        "carThree": "Année 1",
+        "carThreeBody": "Révision au réseau.",
+        "carFour": "Année 15",
+        "carFourBody": "Un historique complet.",
+        "yardLabel": "Votre chantier aujourd'hui",
+        "yardOne": "Bon de commande",
+        "yardOneBody": "La coque, les options, la voilure.",
+        "yardTwo": "Livraison",
+        "yardTwoBody": "Mise en main, convoyage, formation.",
+        "yardThree": "Année 1",
+        "yardThreeBody": "Votre réseau de services, ou le mécano du port.",
+        "yardFour": "Année 15",
+        "yardFourBody": "Des factures éparpillées, un carnet papier.",
+        "noteTitle": "Vous avez déjà le réseau. Il manque le carnet qui le relie.",
+        "noteBody": "Et il ne peut pas vous appartenir : un bateau, c'est du Yanmar, du B&G, du Victron, entretenu à Cherbourg, en Guadeloupe ou par un mécano grec. Le carnet suit le bateau ; vous y êtes l'intervenant privilégié, pas le propriétaire."
+      },
+      "four": {
+        "eyebrow": "Ce n'est pas nous qui le disons",
+        "quote": "Ce qui fait la valeur d'un bateau à la revente : les factures des prestataires, et « un bon carnet d'entretien ».",
+        "author": "Pierre Delhomeau",
+        "role": "Responsable du pôle occasion, Grand Large Yachting",
+        "source": "Figaro Nautisme, octobre 2025"
+      },
+      "five": {
+        "eyebrow": "Ce qui tourne déjà",
+        "title": "Une de vos coques est déjà dedans.",
+        "speedTitle": "Trente secondes par intervention",
+        "speedBody": "Photo et facture attachées.",
+        "dueTitle": "L'échéance tombe à la date ou aux heures moteur",
+        "dueBody": "Au premier atteint. Avant la panne.",
+        "sharedTitle": "Propriétaire, associé, mécanicien : la même page",
+        "sharedBody": "À bord, sans réseau. Et vous dessus.",
+        "boat": "Xaman · ORC 50, coque n° 25",
+        "caption": "Sur son carnet papier : un treizième mois, un 31 novembre et 361 heures moteur disparues.",
+        "noteTitle": "C'est parce qu'il ne vous appartient pas qu'il est rempli.",
+        "noteBody": "Celui qui navigue le tient pour lui. Vous n'avez rien à construire : vous avez à y être."
+      },
+      "six": {
+        "eyebrow": "À qui l'option s'adresse",
+        "title": "Deux acheteurs sortent de votre hangar :",
+        "withoutBadge": "Sans option",
+        "withoutTitle": "Celui qui part",
+        "withoutOne": "Vous le réentendez à la panne. Hors garantie, sans preuve.",
+        "withoutTwo": "Quinze ans d'entretien facturés ailleurs.",
+        "withoutThree": "À la revente, aucun historique. Son bateau a moins de valeur.",
+        "withoutFoot": "Il se débrouillera seul, comme aujourd'hui.",
+        "withBadge": "Avec votre option de service",
+        "withTitle": "Celui qui reste",
+        "withOne": "Ses interventions et ses heures en direct.",
+        "withTwo": "Vos bulletins arrivent sur son bateau.",
+        "withThree": "À la revente, un carnet complet. Votre modèle se revend mieux.",
+        "withFoot": "Son entretien passe par vous.",
+        "noteTitle": "Vous fixez le prix de l'option."
+      },
+      "seven": {
+        "eyebrow": "Des bateaux tous suivis pareil",
+        "title": "La même remise des clés, mais avec le carnet.",
+        "beforeLabel": "Aujourd'hui",
+        "beforeBody": "Vous remettez les clés.",
+        "afterLabel": "À la fin de la saison",
+        "afterBody": "Vous remettez les clés et le carnet du bateau, déjà rempli : son modèle, ses moteurs, ses garanties, votre plan d'entretien…",
+        "afterMore": "Il l'ouvre devant vous. Chaque intervention s'y ajoute ensuite, la sienne comme la vôtre.",
+        "ctaButton": "Écrire à Xaman",
+        "ctaSubject": "Programme pilote constructeurs",
+        "site": "xaman.boats"
       }
     }
   },
