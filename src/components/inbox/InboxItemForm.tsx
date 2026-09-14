@@ -2,8 +2,13 @@
 
 import { useTranslations } from "next-intl";
 
-import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
+import {
+  CategoryChips,
+  CategoryChipsMulti,
+  type CategoryChoice,
+} from "@/components/common/CategoryChips";
 import { ContactPicker } from "@/components/contacts/ContactPicker";
+import { SupplierSuggestion } from "@/components/contacts/SupplierSuggestion";
 import type { ContactOption } from "@/components/contacts/specialties";
 import { Field } from "@/components/forms/Field";
 import type {
@@ -20,7 +25,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DateField } from "@/components/ui/date-field";
 import { formatDate } from "@/lib/format";
+import type { SupplierRead } from "@/lib/contacts/match";
 import type { InboxFiling } from "@/lib/schemas/inbox";
+import { LOG_CATEGORIES_MAX } from "@/lib/schemas/logs";
 import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/purchases";
 
 /**
@@ -45,6 +52,8 @@ export function InboxItemForm({
   engines,
   contacts,
   logs,
+  supplier,
+  onContactCreated,
   deadlineItems,
   canWrite,
 }: {
@@ -58,6 +67,10 @@ export function InboxItemForm({
   contacts: ContactOption[];
   /** The interventions a document can join instead of becoming one (D109). */
   logs: InboxLogChoice[];
+  /** The provider block read on the document (D120), when there was one. */
+  supplier?: SupplierRead | null;
+  /** A fiche created from the document, so this card's picker lists it at once. */
+  onContactCreated?: (contact: ContactOption) => void;
   /** The checklist points a paper can land on (E17-6). */
   deadlineItems: InboxDeadlineItem[];
   canWrite: boolean;
@@ -218,13 +231,25 @@ export function InboxItemForm({
 
           <div className="grid gap-2">
             <Label>{t("fields.category")}</Label>
-            <CategoryChips
-              categories={categories}
-              value={draft.categoryId}
-              onValueChange={(id) => onChange({ categoryId: id })}
-              label={t("fields.category")}
-            />
-            {errors.categoryId ? (
+            {/* An intervention carries as many systems as the invoice covers (D118); a purchase
+                lands in exactly one place, as it always did. */}
+            {draft.kind === "log" ? (
+              <CategoryChipsMulti
+                categories={categories}
+                values={draft.categoryIds}
+                onValuesChange={(ids) => onChange({ categoryIds: ids })}
+                max={LOG_CATEGORIES_MAX}
+                label={t("fields.category")}
+              />
+            ) : (
+              <CategoryChips
+                categories={categories}
+                value={draft.categoryIds[0] ?? ""}
+                onValueChange={(id) => onChange({ categoryIds: [id] })}
+                label={t("fields.category")}
+              />
+            )}
+            {errors.categoryIds ? (
               <p role="alert" className="text-caption font-medium text-state-overdue-fg">
                 {t("categoryRequired")}
               </p>
@@ -273,6 +298,17 @@ export function InboxItemForm({
                 canCreate={canWrite}
                 label={t("fields.contact")}
                 crewLabel={t("fields.noContact")}
+              />
+              {/* Who the document says it is from (D120): recognised in the annuaire, or created
+                  from the block the invoice prints — numéro, mail, adresse compris. */}
+              <SupplierSuggestion
+                boatId={boatId}
+                supplier={supplier}
+                contacts={contacts}
+                value={draft.contactId}
+                onValueChange={(contactId) => onChange({ contactId })}
+                onContactCreated={onContactCreated}
+                canCreate={canWrite}
               />
             </div>
             {draft.kind === "purchase" ? (

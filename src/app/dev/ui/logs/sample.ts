@@ -200,11 +200,11 @@ export const DEV_LOG_DETAIL: LogDetailData = {
   title: "Vidange + entretien complet (2 moteurs)",
   performedAt: "2026-03-06",
   status: "done",
-  categoryId: ENGINES_CATEGORY.id,
-  categoryName: ENGINES_CATEGORY.name,
-  categoryColor: ENGINES_CATEGORY.color,
-  categoryIcon: ENGINES_CATEGORY.icon,
-  categoryArchived: false,
+  // Deux systèmes (D118) : la visite a touché les moteurs et la coque, la fiche le dit.
+  categories: [
+    { ...ENGINES_CATEGORY, archived: false },
+    { id: "hull", name: "Coque & Pont", color: "#52606F", icon: "ship", archived: false },
+  ],
   cost: 620,
   notes: "Huile 15W40, filtres neufs. Courroie alternateur SB retendue.",
   equipmentName: "Moteur SB · Yanmar 4JH45",

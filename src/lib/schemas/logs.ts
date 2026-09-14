@@ -23,6 +23,9 @@ export const FUTURE_ALLOWED_STATUSES: LogStatusValue[] = ["planned", "urgent"];
 
 export const COST_MAX = 9_999_999.99;
 
+/** How many systems one intervention may carry (D118): a boat has a dozen, a visit never all. */
+export const LOG_CATEGORIES_MAX = 6;
+
 const emptyToNull = (value: unknown) => (value === "" ? null : value);
 
 const engineHoursEntry = z.object({
@@ -41,8 +44,15 @@ export const saveLogSchema = z
     boatId: uuid,
     expectedUpdatedAt,
     title: requiredText(160),
-    // Required from the UI; the column stays nullable for imported rows only (ux-flows §3a).
-    categoryId: uuid,
+    /**
+     * The systems this intervention touches (D118). One visit of the mechanic is often three
+     * of them — vidange, anode, gréement — and the single column made the person pick the least
+     * wrong one. The first is the principal: it is what `maintenance_logs.category_id` keeps,
+     * and with it every filter, the report and the export that already read that column.
+     *
+     * Required from the UI; the column stays nullable for imported rows only (ux-flows §3a).
+     */
+    categoryIds: z.array(uuid).min(1).max(LOG_CATEGORIES_MAX),
     status: logStatusSchema,
     performedAt: isoDate,
     cost: nullableDecimal({ scale: 2, max: COST_MAX }),
@@ -61,6 +71,11 @@ export const saveLogSchema = z
     }
   });
 
+/** The system the row keeps in its own column: the first one chosen (D118). */
+export function primaryCategoryId(categoryIds: string[]): string {
+  return categoryIds[0] ?? "";
+}
+
 export const trashLogSchema = z.object({
   boatId: uuid,
   logId: uuid,
@@ -73,7 +88,8 @@ export const titleSuggestionsSchema = z.object({
 
 export const suggestItemsSchema = z.object({
   boatId: uuid,
-  categoryId: uuid,
+  // Every system the intervention carries: a « vidange + anode » proposes the points of both.
+  categoryIds: z.array(uuid).min(1).max(LOG_CATEGORIES_MAX),
   title: z.string().trim().min(3).max(160),
 });
 

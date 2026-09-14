@@ -14,7 +14,7 @@ export async function contactOptions(
 ): Promise<ContactOption[]> {
   const { data } = await supabase
     .from("contacts")
-    .select("id, name, specialty, company, phone")
+    .select("id, name, specialty, company, phone, email")
     .eq("boat_id", boatId)
     .is("deleted_at", null)
     .order("name");

@@ -160,7 +160,16 @@ const context: InboxContext = {
   today: "2026-09-08",
   categories: [{ id: CATEGORY, name: "Moteurs" }],
   engines: [{ id: ENGINE, label: "Moteur bâbord", propulsion: "saildrive" }],
-  contacts: [{ id: CONTACT, name: "Chantier Naval", company: null, specialty: "Chantier" }],
+  contacts: [
+    {
+      id: CONTACT,
+      name: "Chantier Naval",
+      company: null,
+      specialty: "Chantier",
+      phone: "02 97 55 12 34",
+      email: "contact@chantier-naval.fr",
+    },
+  ],
   deadlineItems: [{ id: POINT, label: "Radeau de survie : révision", category: "Sécurité" }],
 };
 
@@ -173,6 +182,13 @@ const output = {
   amount: 312.456,
   currency: "eur",
   supplierName: "Chantier Naval",
+  supplier: {
+    name: "Chantier Naval",
+    company: "Chantier Naval SARL",
+    phone: "02 97 55 12 34",
+    email: "contact@chantier-naval.fr",
+    address: "12 quai des Voiliers, 56000 Vannes",
+  },
   contactId: CONTACT,
   categoryId: CATEGORY,
   engineHours: [{ engineId: ENGINE, hours: 1250.44 }],
@@ -202,6 +218,10 @@ describe("the reading, made safe", () => {
         ...output,
         contactId: "someone-else",
         categoryId: "not-a-system",
+        // Nothing said about the provider at all: the fallback matching (D120) has no name, no
+        // number and no address to recognise, so the dropped id stays dropped.
+        supplierName: null,
+        supplier: { name: null, company: null, phone: null, email: null, address: null },
         engineHours: [{ engineId: "other-engine", hours: 10 }],
         date: "1er septembre",
         amount: -5,
@@ -213,6 +233,47 @@ describe("the reading, made safe", () => {
     expect(suggestion!.engineHours).toEqual([]);
     expect(suggestion!.date).toBeNull();
     expect(suggestion!.amount).toBeNull();
+  });
+
+  /**
+   * D120: the reading missed the link, the annuaire has it. An exact e-mail is a certainty, and
+   * the block is kept whole either way — it is what creates the fiche when nothing matches.
+   */
+  it("recognises a provider the reading did not link, on what the document prints", () => {
+    const missed = normaliseSuggestion({ ...output, contactId: null }, context);
+    expect(missed!.contactId).toBe(CONTACT);
+    expect(missed!.supplier.phone).toBe("02 97 55 12 34");
+    expect(missed!.supplier.address).toBe("12 quai des Voiliers, 56000 Vannes");
+
+    // An older reading carries the name alone, in `supplierName`: it is still a name written on
+    // the document, and it is still enough.
+    const older = normaliseSuggestion(
+      {
+        ...output,
+        contactId: null,
+        supplier: { name: null, company: null, phone: null, email: null, address: null },
+      },
+      context,
+    );
+    expect(older!.contactId).toBe(CONTACT);
+
+    const stranger = normaliseSuggestion(
+      {
+        ...output,
+        contactId: null,
+        supplierName: "Voilerie du Ponant",
+        supplier: {
+          name: "Voilerie du Ponant",
+          company: null,
+          phone: "02 40 11 22 33",
+          email: "atelier@voilerie-ponant.fr",
+          address: null,
+        },
+      },
+      context,
+    );
+    expect(stranger!.contactId).toBeNull();
+    expect(stranger!.supplier.email).toBe("atelier@voilerie-ponant.fr");
   });
 
   /** A paper lands on a point of *this* boat, or on none: the select would otherwise be empty. */
@@ -278,7 +339,7 @@ describe("validating a card", () => {
     kind: "log",
     title: "Vidange",
     date: "2026-09-01",
-    categoryId: CATEGORY,
+    categoryIds: [CATEGORY],
     amount: "312,46",
     contactId: "",
     supplierName: null,
@@ -287,10 +348,17 @@ describe("validating a card", () => {
   };
 
   it("needs a system for an intervention, not for a purchase", () => {
-    expect(validateInboxItemSchema.safeParse({ ...base, categoryId: "" }).success).toBe(false);
+    expect(validateInboxItemSchema.safeParse({ ...base, categoryIds: [] }).success).toBe(false);
     expect(
-      validateInboxItemSchema.safeParse({ ...base, kind: "purchase", categoryId: "" }).success,
+      validateInboxItemSchema.safeParse({ ...base, kind: "purchase", categoryIds: [] }).success,
     ).toBe(true);
+  });
+
+  /** D118: an invoice that covers three systems files the intervention under the three. */
+  it("carries every system of an intervention, the principal first", () => {
+    const second = "00000000-0000-4000-8000-0000000000c2";
+    const parsed = validateInboxItemSchema.parse({ ...base, categoryIds: [CATEGORY, second] });
+    expect(parsed.categoryIds).toEqual([CATEGORY, second]);
   });
 
   it("reads the French decimal and an emptied contact", () => {
@@ -306,7 +374,7 @@ describe("validating a card", () => {
   it("hangs a document on an existing intervention with nothing but its id (D109)", () => {
     const LOG = "00000000-0000-4000-8000-0000000000f1";
     // The title, the system, the amount are the intervention's already: none is asked for.
-    const attach = { ...base, kind: "attach", title: "", categoryId: "", logId: LOG };
+    const attach = { ...base, kind: "attach", title: "", categoryIds: [], logId: LOG };
     const parsed = validateInboxItemSchema.parse(attach);
     expect(parsed.kind).toBe("attach");
     expect(parsed.logId).toBe(LOG);
@@ -490,6 +558,13 @@ describe("a card that opens on one line", () => {
     amount: 24.9,
     currency: "EUR",
     supplierName: "Accastillage Diffusion",
+    supplier: {
+      name: "Accastillage Diffusion",
+      company: null,
+      phone: null,
+      email: null,
+      address: null,
+    },
     contactId: null,
     categoryId: null,
     engineHours: [],
