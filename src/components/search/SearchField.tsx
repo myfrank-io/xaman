@@ -12,7 +12,7 @@ import { searchPath } from "@/lib/queries/boat-routes";
 const DEBOUNCE_MS = 300;
 
 /**
- * Le champ de recherche (E18-4, D130).
+ * Le champ de recherche (E18-4, D134).
  *
  * L'état vit dans l'URL et nulle part ailleurs : un résultat se partage, se met en favori et
  * survit au retour arrière. `replace` plutôt que `push`, sinon chaque lettre tapée laisserait une

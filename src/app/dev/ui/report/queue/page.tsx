@@ -6,7 +6,7 @@ import { DevShell } from "../../DevShell";
 import { devUiEnabled } from "@/lib/dev-ui";
 
 /**
- * La liste qu'on emmène, pleine (E18-5, D131).
+ * La liste qu'on emmène, pleine (E18-5, D135).
  *
  * Les cinq raisons d'être sur la feuille sont représentées — en retard, dû dans quelques jours,
  * dû aux heures, en retard aux heures, sans échéance — plus les pièces à racheter : c'est la

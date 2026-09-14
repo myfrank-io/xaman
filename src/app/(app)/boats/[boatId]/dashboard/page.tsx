@@ -112,9 +112,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
 
   /**
    * Une seule vague. `boat_dashboard_stats` ne porte plus que les deux comptes du bandeau
-   * (0036) : les onze sous-requêtes que les vignettes et le récapitulatif faisaient tourner à
+   * (0037) : les onze sous-requêtes que les vignettes et le récapitulatif faisaient tourner à
    * chaque rendu n'avaient plus de lecteur. Le compte « À valider » n'est plus lu ici non
-   * plus — la file en porte chaque ligne (D127).
+   * plus — la file en porte chaque ligne (D131).
    *
    * La ligne du bateau fait exception : `readBoatRow` la lit entière, mais c'est **celle du
    * layout** (`cache()` de React déduplique la requête).
@@ -164,11 +164,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     loadItemAttention(supabase, boatId),
     // Ce qui a été réglé sur sept jours : la moitié gauche de la phrase d'état.
     loadWeekActivity(supabase, boatId, weekSince),
-    // Ce qui a bougé, avec les noms : la zone « savoir » de l'écran (D128).
+    // Ce qui a bougé, avec les noms : la zone « savoir » de l'écran (D132).
     loadActivity(supabase, boatId, ACTIVITY_PREVIEW),
     /**
      * Les quatre lectures de la maquette (E2-8), qui est ici le bloc « consulter mon bateau »
-     * (D129). Elles voyagent dans la même vague que le reste : elles n'attendent la réponse de
+     * (D133). Elles voyagent dans la même vague que le reste : elles n'attendent la réponse de
      * rien, et le `toBoatModelData` qui les assemble est celui de l'onglet Bateau.
      */
     supabase
@@ -398,7 +398,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
         />
       </header>
 
-      {/* 2 — écrire : deux actes, séparés par le temps du verbe (D129). Ce qu'il faudra faire
+      {/* 2 — écrire : deux actes, séparés par le temps du verbe (D133). Ce qu'il faudra faire
           était la porte qui manquait : le bouton nommé ne prenait que ce qui est déjà fait. */}
       {canContribute ? <WriteActions boatId={boatId} /> : null}
 
@@ -448,7 +448,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       )}
 
       {/* 5 — savoir : ce qui a bougé, avec les noms. Le bloc n'existe que s'il a quelque chose à
-          dire : sur un carnet neuf, la mise en route parle déjà (D128). */}
+          dire : sur un carnet neuf, la mise en route parle déjà (D132). */}
       {activity.length > 0 ? (
         <SectionCard
           title={t("activity.title")}
@@ -460,11 +460,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
         </SectionCard>
       ) : null}
 
-      {/* 6 — consulter mon bateau : la maquette d'E2-8, qui est déjà cet objet (D129). Elle
+      {/* 6 — consulter mon bateau : la maquette d'E2-8, qui est déjà cet objet (D133). Elle
           deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). */}
       <BoatModel3D boatId={boatId} boatName={boat.name} data={boatModel} />
 
-      {/* 7 — découvrir ses dépenses : un montant qu'on regarde, pas un lien qu'on lit (D129). */}
+      {/* 7 — découvrir ses dépenses : un montant qu'on regarde, pas un lien qu'on lit (D133). */}
       <ExpensesTeaser boatId={boatId} total={expensesTotal} categories={expenseCategories} />
     </div>
   );

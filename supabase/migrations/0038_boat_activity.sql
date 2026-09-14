@@ -1,4 +1,4 @@
--- 0037_boat_activity.sql — E18-3 / D128: le fil du carnet, ce qui a eu lieu.
+-- 0038_boat_activity.sql — E18-3 / D132: le fil du carnet, ce qui a eu lieu.
 --
 -- Le tableau de bord montrait trois résumés d'autres onglets ; ils sont partis avec E18-1, et ce
 -- qui manquait à leur place est la seule chose qu'un carnet partagé sait faire et que le papier
@@ -7,7 +7,7 @@
 -- Une vue, cinq faits, aucune table. `security_invoker` : la RLS de chaque table source décide,
 -- exactement comme sur l'écran où le fait se montre déjà. Un étranger lit un fil vide.
 --
--- Ce que le fil ne montre pas (D128) : les mises à la corbeille et les modifications. Ce n'est
+-- Ce que le fil ne montre pas (D132) : les mises à la corbeille et les modifications. Ce n'est
 -- pas un journal d'audit, c'est ce que le bateau a vécu — une ligne à la corbeille en sort comme
 -- elle sort des listes.
 
@@ -117,7 +117,7 @@ with (security_invoker = true) as
   where h.deleted_at is null;
 
 comment on view public.boat_activity is
-  'The carnet''s shared feed (D128): what happened — points ticked, interventions done, purchases, manual hour readings, haul-outs — newest first, with who did it. Facts only: nothing here says what was trashed or edited. security_invoker, so each source table''s RLS decides.';
+  'The carnet''s shared feed (D132): what happened — points ticked, interventions done, purchases, manual hour readings, haul-outs — newest first, with who did it. Facts only: nothing here says what was trashed or edited. security_invoker, so each source table''s RLS decides.';
 
 grant select on public.boat_activity to authenticated, service_role;
 revoke all on public.boat_activity from anon;

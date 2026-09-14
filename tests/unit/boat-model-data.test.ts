@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { specsRecord, toBoatModelData, type BoatModelInput } from "@/lib/boat-3d/data";
 
 /**
- * L'assemblage de la maquette (E2-8), partagé depuis D129 par l'onglet Bateau et par « À bord ».
+ * L'assemblage de la maquette (E2-8), partagé depuis D133 par l'onglet Bateau et par « À bord ».
  *
  * Deux écrans dessinent maintenant le même bateau à partir des mêmes lignes : ce qui est fixé
  * ici est ce qui les ferait diverger — un équipement déposé qu'un écran dessinerait encore, un

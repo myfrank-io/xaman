@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 const PER_FAMILY = 8;
 
 /**
- * Chercher dans le carnet (E18-4, D130).
+ * Chercher dans le carnet (E18-4, D134).
  *
  * « C'était quand, la dernière courroie ? Combien ? Quelle référence ? » est la première raison
  * d'ouvrir un carnet d'entretien, et jusqu'ici la seule recherche vivait **dans** le Journal, sur

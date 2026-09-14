@@ -48,7 +48,7 @@ function Box() {
 }
 
 /**
- * La liste qu'on emmène au bateau (E18-5, D131).
+ * La liste qu'on emmène au bateau (E18-5, D135).
  *
  * La file du tableau de bord ne sort pas de l'écran : au ponton on a les mains prises, le
  * réseau est mauvais et l'iPad reste dans son sac. Ce document est la même file, sur une

@@ -2105,7 +2105,7 @@ describeWithDb("boat_expense_totals (0030)", () => {
 });
 
 /**
- * Le fil du carnet (D128). La vue unit cinq tables sans politique à elle : `security_invoker`
+ * Le fil du carnet (D132). La vue unit cinq tables sans politique à elle : `security_invoker`
  * veut dire que chacune décide comme sur son propre écran. Ce qui est vérifié ici est donc ce
  * qu'aucune relecture ne garantit — qu'un étranger n'y lit rien, et qu'une ligne mise à la
  * corbeille en sort, parce qu'un fil qui garderait ce que les listes ont jeté serait un journal
@@ -2201,7 +2201,7 @@ describeWithDb("boat_todo_queue", () => {
       ).toEqual([
         [0, "log", "Fuite bâbord"],
         [1, "item", "Point en retard"],
-        // Ce qui attend sans date entre dans la file à son tour (D127) : le document du seed,
+        // Ce qui attend sans date entre dans la file à son tour (D131) : le document du seed,
         // puis la pièce sous son seuil, toujours en dernier.
         [2, "inbox", "Facture 118"],
         [5, "part", "Filtre à huile"],
@@ -2769,7 +2769,7 @@ describeWithDb("editing an existing row (D42)", () => {
 });
 
 /**
- * Chercher dans le carnet (E18-4, D130). La fonction est `security invoker` et n'a donc aucune
+ * Chercher dans le carnet (E18-4, D134). La fonction est `security invoker` et n'a donc aucune
  * politique à elle : ce qu'elle rend est ce que les sept familles laissent déjà lire. C'est
  * exactement ce qui doit être vérifié ici — une recherche est la seule porte du carnet qui
  * interroge tout d'un coup, et une fonction qui se tromperait de rôle les ouvrirait toutes.

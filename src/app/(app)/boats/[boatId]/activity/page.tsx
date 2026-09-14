@@ -18,7 +18,7 @@ const PAGE_SIZE = 50;
 const MAX_ROWS = 500;
 
 /**
- * « Ce qui a bougé », en entier (E18-3, D128).
+ * « Ce qui a bougé », en entier (E18-3, D132).
  *
  * L'écran d'arrivée en montre les dix premières lignes ; celui-ci les montre toutes, dans le même
  * ordre et avec le même vocabulaire. Il n'est pas dans la barre : on y arrive par le fil, et le

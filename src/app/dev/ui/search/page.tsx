@@ -14,7 +14,7 @@ import { devUiEnabled } from "@/lib/dev-ui";
 const DEV_CATEGORY_ID = "00000000-0000-4000-8000-0000000000ca";
 
 /**
- * Une réponse à « courroie », sur les sept familles (E18-4, D130).
+ * Une réponse à « courroie », sur les sept familles (E18-4, D134).
  *
  * Les sept sont remplies exprès : c'est la page la plus haute de l'app, et l'audit tactile doit
  * la mesurer pleine — sur un iPhone SE, sept sections et leurs lignes sont ce qui dira si les

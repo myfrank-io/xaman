@@ -144,7 +144,7 @@ export default async function BoatPage({
 
   /**
    * The 3D model (E2-8, D117): the boat's own shape, its systems and what each of them owes.
-   * The assembly is shared with « À bord », which shows the same model (D129) — two mappings
+   * The assembly is shared with « À bord », which shows the same model (D133) — two mappings
    * would have drawn two different boats from one carnet.
    */
   const model: BoatModelData = toBoatModelData({

@@ -8,7 +8,7 @@ import type { Database } from "@/types/database";
 type LogStatus = Database["public"]["Enums"]["log_status"];
 
 /**
- * Une ligne de la file : tout ce qui attend quelqu'un sur ce bateau (D127).
+ * Une ligne de la file : tout ce qui attend quelqu'un sur ce bateau (D131).
  *
  * Quatre objets, pas un de plus, et chacun porte son propre geste : un point de checklist
  * (« Fait »), une intervention ouverte, un document à valider, une pièce à racheter.
@@ -40,7 +40,7 @@ export function entryKey(entry: UpcomingEntry): string {
 }
 
 /**
- * Les paliers de la file (D121, D127, E18-1, E18-2).
+ * Les paliers de la file (D121, D131, E18-1, E18-2).
  *
  * L'écran ne montre plus six lignes suivies d'un lien : il montre tout ce qui attend quelqu'un.
  * Quarante lignes d'affilée ne se lisent pas, donc elles se rangent — par ce que la personne
@@ -57,7 +57,7 @@ export function entryKey(entry: UpcomingEntry): string {
  * qui se lit comme un fait.
  *
  * Un document, lui, attend **depuis** son arrivée : il est du travail d'aujourd'hui, et c'est
- * exactement ce que le bandeau disait avant d'être une ligne (D127).
+ * exactement ce que le bandeau disait avant d'être une ligne (D131).
  */
 export type QueueGroupKey = "today" | "week" | "month" | "hours" | "restock";
 

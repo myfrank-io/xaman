@@ -1,4 +1,4 @@
--- 0036_queue_waits.sql — E18-2 / D127: the queue says everything that waits for someone.
+-- 0037_queue_waits.sql — E18-2 / D131: the queue says everything that waits for someone.
 --
 --   1. boat_todo_queue() gains two kinds — a document waiting on « À valider » (D91) and a part
 --      under its threshold (D10). Neither carries a deadline, and that is exactly why they were
@@ -90,7 +90,7 @@ as $$
 
     union all
 
-    -- rank 2: documents waiting for a decision (D91, D127). A paper waits for a person, never
+    -- rank 2: documents waiting for a decision (D91, D131). A paper waits for a person, never
     -- for a date: `due_at` carries the day it ARRIVED, which is what the row says, and the
     -- oldest comes first. `days_remaining` stays null — nothing here is late, it is unanswered.
     select
@@ -166,7 +166,7 @@ as $$
 
     union all
 
-    -- rank 5: parts at or under their threshold (D10, D127). No date either: this one falls when
+    -- rank 5: parts at or under their threshold (D10, D131). No date either: this one falls when
     -- someone goes to the chandlery. `severity` is how short the line is, and the shortest stock
     -- comes first — a box with none left before one with one left.
     select
@@ -203,7 +203,7 @@ as $$
 $$;
 
 comment on function public.boat_todo_queue(uuid, int) is
-  'Dashboard queue (D127): urgent logs (0), overdue items by relative delay (1), documents waiting on « À valider » oldest first (2), in-progress then planned logs within 30 days (3), items due soon (4), parts under their threshold, shortest stock first (5). Items with status never are excluded on purpose (audit §3.5).';
+  'Dashboard queue (D131): urgent logs (0), overdue items by relative delay (1), documents waiting on « À valider » oldest first (2), in-progress then planned logs within 30 days (3), items due soon (4), parts under their threshold, shortest stock first (5). Items with status never are excluded on purpose (audit §3.5).';
 
 -- ---------------------------------------------------------------------------------------------
 -- 2. boat_dashboard_stats: two counts, and nothing else
@@ -226,7 +226,7 @@ select
 from public.boats b;
 
 comment on view public.boat_dashboard_stats is
-  'What the dashboard banner still asks the database for: how many imported rows wait for a check (D127). Everything else this view carried left with the summary blocks (E18-1).';
+  'What the dashboard banner still asks the database for: how many imported rows wait for a check (D131). Everything else this view carried left with the summary blocks (E18-1).';
 
 grant select on public.boat_dashboard_stats to authenticated, service_role;
 revoke all on public.boat_dashboard_stats from anon;

@@ -224,9 +224,10 @@ export function editPartPath(boatId: string, partId: string): string {
 export function importPath(
   boatId: string,
   entity: "logs" | "purchases" | "contacts" | "equipment" | "parts" | "completions" | "readings",
-  query?: Record<string, string | number | undefined>,
+  /** A document already read as an inventory (E2-10): the wizard opens on its lines. */
+  fromInboxItemId?: string,
 ): string {
-  return withQuery(`/boats/${boatId}/import`, { entity, ...query });
+  return withQuery(`/boats/${boatId}/import`, { entity, from: fromInboxItemId });
 }
 
 export function boatTabPath(

@@ -1,4 +1,4 @@
--- 0038_search_boat.sql — E18-4: « C'était quand, la dernière courroie ? » gets one answer.
+-- 0039_search_boat.sql — E18-4: « C'était quand, la dernière courroie ? » gets one answer.
 --
 -- The carnet could only be searched from inside the Journal, on a log's title and notes. But the
 -- first reason to open a maintenance log is a question about a *thing* — a belt, an anode, a

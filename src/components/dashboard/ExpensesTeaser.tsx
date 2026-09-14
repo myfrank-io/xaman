@@ -11,7 +11,7 @@ import { suppliesPath } from "@/lib/queries/boat-routes";
 const TOP = 3;
 
 /**
- * « Ce que le bateau a coûté » (E18-13, D129) : le bloc qui donne envie d'ouvrir Dépenses.
+ * « Ce que le bateau a coûté » (E18-13, D133) : le bloc qui donne envie d'ouvrir Dépenses.
  *
  * E18-1 avait retiré la ligne « Dépenses, 12 derniers mois » du récapitulatif — un lien de
  * sommaire de plus. Elle revient, mais comme une **découverte** : un montant qu'on regarde, et

@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
 /**
- * Les sept familles du carnet (E18-4, D130).
+ * Les sept familles du carnet (E18-4, D134).
  *
  * L'ordre est celui de la page de résultats, et il n'est pas alphabétique : il descend de ce
  * qu'on a fait vers ce qui le porte. On cherche « courroie » pour savoir *quand* on l'a changée

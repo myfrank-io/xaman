@@ -49,6 +49,18 @@ describe("normalising what people and documents write", () => {
   it("keeps « & » as a word, so a brand written B&G survives", () => {
     expect(normaliseForMatch("Pack B&G")).toBe("pack b&g");
   });
+
+  /**
+   * `normalize("NFD")` undoes an accent put on a letter; `œ æ ø` are letters of their own, so it
+   * leaves them alone and the punctuation step used to swallow them — « Cœur » came out `c ur`
+   * (E17-12). The SQL twin went through its own accent table and had the same blind spot, so the
+   * two agreed on the wrong answer. `text_fold` has folded these since `0005`.
+   */
+  it("folds the ligatures instead of dropping them", () => {
+    expect(normaliseForMatch("Cœur")).toBe("coeur");
+    expect(normaliseForMatch("NŒUD de chaise")).toBe("noeud de chaise");
+    expect(normaliseForMatch("Ærø")).toBe("aero");
+  });
 });
 
 describe("the family an equipment looks like", () => {
@@ -92,6 +104,22 @@ describe("the family an equipment looks like", () => {
     expect(matchEquipmentKind({ name: "Chauffage à air pulsé Wallas" }, kinds)?.externalRef).toBe(
       "forced-air",
     );
+  });
+
+  /**
+   * No family of `0032` carries a ligature today, but the catalogue is French and the terms come
+   * off a yard's papers — « œil de pont », « cœur de cordage ». The two spellings of the same word
+   * have to land on the same family, whichever side the ligature is on.
+   */
+  it("reads a ligature the same whether the paper or the catalogue spells it out", () => {
+    const spelledOut = [kind("padeye", "Oeil de pont", ["oeil de pont"])];
+    const withLigature = [kind("padeye", "Œil de pont", ["œil de pont"])];
+    for (const kinds of [spelledOut, withLigature]) {
+      expect(matchEquipmentKind({ name: "Œil de pont bâbord" }, kinds)?.externalRef).toBe("padeye");
+      expect(matchEquipmentKind({ name: "Oeil de pont bâbord" }, kinds)?.externalRef).toBe(
+        "padeye",
+      );
+    }
   });
 
   it("matches whole words only", () => {

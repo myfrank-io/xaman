@@ -57,7 +57,7 @@ function hrefFor(boatId: string, hit: SearchHit): string {
 }
 
 /**
- * Ce que le carnet sait de la question (E18-4, D130).
+ * Ce que le carnet sait de la question (E18-4, D134).
  *
  * Groupé par famille, jamais mélangé : « la dernière courroie » et « la courroie qu'il faudra
  * changer » sont deux réponses différentes à la même frappe, et les confondre dans une liste

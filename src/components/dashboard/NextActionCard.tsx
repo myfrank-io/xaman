@@ -119,7 +119,7 @@ export function NextActionCard({
   }
 
   // Un document ou une pièce peut arriver en tête : la file range ce qui attend, pas seulement
-  // ce qui est daté (D127). Le geste reste un seul, et il mène là où on le traite.
+  // ce qui est daté (D131). Le geste reste un seul, et il mène là où on le traite.
   if (entry.kind === "inbox") {
     return (
       <Shell

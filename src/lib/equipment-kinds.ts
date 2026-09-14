@@ -23,12 +23,33 @@ export type EquipmentKind = {
 };
 
 /**
+ * Letters that `normalize("NFD")` leaves alone. Decomposition only undoes an accent put on a
+ * letter, and these are letters in their own right rather than accented ones — so `œ` would reach
+ * the `[^a-z0-9&]` step untouched and be swallowed there as if it were punctuation, turning
+ * « Cœur » into `c ur`. The SQL twin folds them in `text_fold` (`0005`); these are the same three.
+ */
+const LIGATURES = /[ŒœÆæØø]/g;
+const FOLDED_LIGATURES: Record<string, string> = {
+  Œ: "OE",
+  œ: "oe",
+  Æ: "AE",
+  æ: "ae",
+  Ø: "O",
+  ø: "o",
+};
+
+/**
  * Lower-case, unaccented, punctuation turned into spaces: « Chauffage Wallas 30DT, air pulsé »
  * and « chauffage wallas 30dt air pulse » have to compare equal. `&` is kept as a word of its own
  * so that « B&G » survives as `b & g` rather than becoming `bg`.
+ *
+ * The twin of `public.normalise_for_match()` (migrations `0035`, `0036`), which is `text_fold()`
+ * followed by the same punctuation step. `tests/unit/plan-composition.test.ts` runs both over the
+ * same strings: two normalisers that drift would put a rule on the wrong boat.
  */
 export function normaliseForMatch(value: string): string {
   return value
+    .replace(LIGATURES, (letter) => FOLDED_LIGATURES[letter] ?? letter)
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()

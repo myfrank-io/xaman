@@ -9,7 +9,7 @@ import {
 } from "@/lib/queries/search";
 
 /**
- * La couche entre `search_boat()` et l'écran (E18-4, D130).
+ * La couche entre `search_boat()` et l'écran (E18-4, D134).
  *
  * Ce qui est fixé ici est ce qu'aucune relecture du SQL ne garantit : qu'une ligne qu'on ne
  * saurait pas ouvrir n'arrive jamais à l'écran, que le regroupement ne réordonne pas ce que la
