@@ -46,6 +46,8 @@ export type EquipmentDetail = {
   notes: string | null;
   specs: { key: string; value: string }[];
   category: { id: string; name: string; color: string } | null;
+  /** The family this equipment belongs to (E17-3), or null while nobody has said. */
+  kindLabel: string | null;
 };
 
 export type EquipmentLogRow = {
@@ -164,6 +166,7 @@ export function EquipmentSheet({
               ) : (
                 <span>{t("uncategorized")}</span>
               )}
+              {item.kindLabel ? <span>· {item.kindLabel}</span> : null}
               {subtitle ? <span>· {subtitle}</span> : null}
             </span>
           }

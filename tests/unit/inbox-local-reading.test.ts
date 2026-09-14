@@ -53,6 +53,10 @@ const context: InboxContext = {
       email: null,
     },
   ],
+  deadlineItems: [
+    { id: "item-liferaft", label: "Radeau de survie : révision", category: "Sécurité" },
+    { id: "item-insurance", label: "Assurance du bateau : renouvellement", category: "Sécurité" },
+  ],
 };
 
 const INVOICE_TEXT = `CHANTIER NAVAL DU PORT

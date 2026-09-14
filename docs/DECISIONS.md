@@ -2459,6 +2459,78 @@ le numéro de coque, les coordonnées du constructeur. C'est à ce titre que `se
 gagne le contact Marsaudon Composites et six `specs.ref_chantier` — sans qu'aucune des cinq
 divergences ci-dessus n'ait été reportée dans le carnet.
 
+
+## 2026-09-14 — D114 : un papier daté est une réalisation, pas une intervention
+
+**Question.** Une attestation d'assurance, un procès-verbal de révision de radeau, un contrôle
+d'extincteurs : ces documents n'décrivent aucun travail à facturer et n'achètent rien. Où vont-ils
+dans le carnet ?
+
+**Décision.** Ils deviennent une **réalisation sur un point de checklist**, avec `completed_at` à
+la date du contrôle et `next_due_at` à la date de validité (D11). « À valider » gagne donc un
+quatrième classement, **Échéance**, à côté d'Intervention, Achat et Intervention existante. La
+lecture ne peut proposer qu'un point **de ce bateau**, parmi les points actifs **sans intervalle en
+heures** — un certificat ne porte jamais d'heures moteur, et un point qui en exige refuserait le
+cochage (`check_completion_hours`). L'écriture passe par `completeChecklistItem`, la Server Action
+que le dialogue « Fait » appelle déjà : mêmes règles, même RLS, même idempotence sur un id dérivé
+du document (`inboxEntityId`, règle 11). Le lecteur local (D92) ne propose jamais d'échéance : lire
+« valide jusqu'au » sur un scan et choisir le point concerné est le travail du modèle.
+
+**Raison.** C'est la réponse la plus directe au défaut que l'audit avait nommé (`AUDIT.md §0.3`) :
+« au jour 1, l'app telle que spécifiée ne rappelle rien ». L'ancrage (D1) répond par une estimation
+— « ~1 an » — parce qu'il n'a rien de mieux. Un papier, lui, porte **une date vraie**. Trois photos
+— assurance, radeau, extincteurs — et la file d'attente cesse d'être vide sans qu'on ait inventé
+quoi que ce soit. C'est aussi le classement qui manquait à un carnet neuf : sans lui, ces documents
+entraient en « Intervention » avec un titre et un coût, et la date de péremption se perdait dans
+une note que rien ne relit.
+
+**Ce qui n'a pas été ajouté.** Aucune migration : `attachment_entity` porte
+`checklist_completion` depuis `0001`, donc le document se range sur la réalisation qu'il produit, et
+c'est cette pièce jointe — son `(entity_type, entity_id)` — qui dit où il est parti. Une colonne
+`completion_id` sur `inbox_items` aurait écrit la même chose deux fois.
+
+**Ce qui en est séparé.** Le **certificat CE** (E17-11) ne porte pas de date de péremption : il
+porte une catégorie de conception, qui se lit dans `boats.navigation_zone` et **réapplique le plan**
+quand elle change. Ce n'est pas une échéance mais une lecture d'identité, et elle appartient au lot
+de la lecture d'inventaire.
+
+## 2026-09-14 — D115 : le plan suit l'équipement, et la famille se propose sans s'imposer
+
+**Question.** Sur quelle clé accrocher les règles d'entretien ? Le modèle de coque, comme
+aujourd'hui, ou autre chose ?
+
+**Décision.** Sur la **famille d'équipement**. `equipment_kinds` (`0032`) est une table de
+référence sans `boat_id` — publiée par la plateforme, lue par tout compte connecté, écrite par le
+seul admin — et `equipment.kind_id` y rattache la ligne d'un bateau. C'est la première des deux
+couches de `docs/AUTOPILOT.md §4` : E17-4 accrochera les règles sur les familles, E17-5 composera
+le plan « modèle de coque + règles des équipements présents ».
+
+La famille se **propose** : `matchEquipmentKind` cherche le libellé et les synonymes en mots
+entiers dans « nom marque modèle » et retient le terme le plus long, si bien que « chauffage à air
+pulsé » l'emporte sur « chauffage ». Le formulaire montre ce qu'il a trouvé et **cesse de proposer
+dès que quelqu'un touche au champ** ; une ligne qui a déjà une famille arrive « déjà choisie ».
+
+**Raison.** Ce qui décide de ce qu'un bateau doit entretenir n'est pas sa coque, c'est ce qu'il
+porte : deux ORC 50 diffèrent par leurs options, et deux bateaux quelconques qui portent le même
+chauffage à air pulsé demandent les mêmes trois gestes. `seed/orc50-checklist.json` montre où mène
+l'autre clé — un modèle publié à tous les ORC 50 qui nomme le Starlink, le Garmin et les Super B
+d'un seul exemplaire (`AUTOPILOT.md §1.4`). Et c'est la seule clé dont la valeur **grandit** : une
+règle écrite une fois pour un Wallas sert tous les bateaux qui en portent un.
+
+**Pourquoi les synonymes portent des marques.** Personne n'écrit « chauffage à air pulsé » : on
+écrit « Wallas 30DT », « Webasto », « chauffage fuel ». Sur ce matériel, la marque *est* le nom de
+la famille. Les synonymes sont donc ce que les gens et les documents écrivent, pas une taxonomie.
+
+**Ne rien trouver est une réponse.** Ranger un chauffage sous les règles du dessalinisateur
+donnerait au bateau trois points faux et en cacherait trois justes ; `kind_id` à null ne lui donne
+rien du tout. Le rapprochement se tait donc plutôt que de deviner, et le champ reste à « Aucune
+famille ».
+
+**Ce qui est semé, et ce qui ne l'est pas.** Les familles qu'un bateau réel du carnet porte
+aujourd'hui, plus ce que tout bateau a. Une famille entre quand un bateau l'apporte, jamais « au
+cas où » : une famille inutilisée est une ligne de plus dans un menu, qui rend la bonne plus dure à
+trouver.
+
 ## 2026-09-14 — D116 : une intervention porte plusieurs systèmes
 
 **Question.** Le formulaire d'intervention n'accepte qu'une catégorie. Une visite de mécanicien —

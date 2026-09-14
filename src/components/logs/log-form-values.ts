@@ -1,7 +1,7 @@
 import { numberToInput } from "@/components/forms/form-values";
 import type { SupplierRead } from "@/lib/contacts/match";
 import { formatCurrency } from "@/lib/format";
-import type { InboxSuggestion } from "@/lib/schemas/inbox";
+import type { InboxKind, InboxSuggestion } from "@/lib/schemas/inbox";
 import type { LogStatusValue } from "@/lib/schemas/logs";
 
 /** One active engine of the boat, with its last known reading (help text « dernier : … »). */
@@ -98,8 +98,12 @@ export type LogFormDocument = {
   /** The `inbox_items` row: what « Valider » attaches once the intervention exists. */
   itemId: string;
   fileName: string;
-  /** What the reading proposed to file it as: a purchase is worth saying out loud. */
-  kind: "log" | "purchase";
+  /**
+   * What the reading proposed to file it as. « Achat » and « Échéance » are worth saying out
+   * loud on this screen: the person asked for an intervention, and « À valider » is where the
+   * other two are filed.
+   */
+  kind: InboxKind;
 };
 
 /**

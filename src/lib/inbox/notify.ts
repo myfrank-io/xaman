@@ -4,7 +4,7 @@ import { inboxReadyEmail, inboxValidatedEmail } from "@/lib/email/inbox";
 import { mailerConfigured, sendMail } from "@/lib/email/send";
 import { publicEnv } from "@/lib/env";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { editPurchasePath, inboxPath, logPath } from "@/lib/queries/boat-routes";
+import { categoryPath, editPurchasePath, inboxPath, logPath } from "@/lib/queries/boat-routes";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -90,8 +90,10 @@ export async function notifyInboxValidated(input: {
   boatId: string;
   validatorId: string;
   validatorName: string;
-  kind: "log" | "purchase";
+  kind: "log" | "purchase" | "deadline";
   entityId: string;
+  /** For a deadline: the system the point lives on — a realisation has no page of its own. */
+  categoryId?: string | null;
   title: string;
   date: string;
   amount: number | null;
@@ -117,7 +119,11 @@ export async function notifyInboxValidated(input: {
       url: `${publicEnv.appUrl}${
         input.kind === "log"
           ? logPath(input.boatId, input.entityId)
-          : editPurchasePath(input.boatId, input.entityId)
+          : input.kind === "purchase"
+            ? editPurchasePath(input.boatId, input.entityId)
+            : input.categoryId
+              ? categoryPath(input.boatId, input.categoryId)
+              : inboxPath(input.boatId)
       }`,
       appUrl: publicEnv.appUrl,
     });

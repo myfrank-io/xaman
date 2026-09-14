@@ -475,9 +475,11 @@ export function LogForm({
                 {t("fromDocument", { name: sourceDocument.fileName })}
               </span>
             </span>
-            {sourceDocument.kind === "purchase" ? (
-              <span className="text-caption text-ink-2">{ti("looksLikePurchase")}</span>
-            ) : null}
+            {sourceDocument.kind === "log" ? null : (
+              <span className="text-caption text-ink-2">
+                {ti(sourceDocument.kind === "purchase" ? "looksLikePurchase" : "looksLikeDeadline")}
+              </span>
+            )}
           </AlertDescription>
         </Alert>
       ) : null}

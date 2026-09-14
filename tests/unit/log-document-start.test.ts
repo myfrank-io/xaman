@@ -42,6 +42,8 @@ const suggestion: InboxSuggestion = {
   engineHours: [{ engineId: ENGINE, hours: 1284 }],
   lineItems: [{ designation: "Huile 15W40", amount: 48 }],
   notes: "Vidange et filtre.",
+  checklistItemId: null,
+  validUntil: null,
   confidence: "high",
   warnings: [],
 };

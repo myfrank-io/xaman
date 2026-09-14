@@ -37,6 +37,7 @@ const ITEM = "00000000-0000-4000-8000-0000000000c1";
 const CATEGORY = "00000000-0000-4000-8000-0000000000a1";
 const CONTACT = "00000000-0000-4000-8000-0000000000d1";
 const ENGINE = "00000000-0000-4000-8000-0000000000e1";
+const POINT = "00000000-0000-4000-8000-0000000000f7";
 
 /**
  * D91 — « chaque bateau a une adresse e-mail dédiée » and « je prends en photo mon ticket, ça
@@ -169,6 +170,7 @@ const context: InboxContext = {
       email: "contact@chantier-naval.fr",
     },
   ],
+  deadlineItems: [{ id: POINT, label: "Radeau de survie : révision", category: "Sécurité" }],
 };
 
 const output = {
@@ -192,6 +194,8 @@ const output = {
   engineHours: [{ engineId: ENGINE, hours: 1250.44 }],
   lineItems: [{ designation: "Huile 15W40", amount: 48 }],
   notes: "Vidange et filtre.",
+  checklistItemId: null,
+  validUntil: null,
   confidence: "high" as const,
   warnings: [],
 };
@@ -272,6 +276,41 @@ describe("the reading, made safe", () => {
     expect(stranger!.supplier.email).toBe("atelier@voilerie-ponant.fr");
   });
 
+  /** A paper lands on a point of *this* boat, or on none: the select would otherwise be empty. */
+  it("keeps a deadline that names one of the boat's points, and drops one that does not", () => {
+    const paper = {
+      ...output,
+      kind: "deadline" as const,
+      documentType: "certificate" as const,
+      title: "Révision du radeau",
+      checklistItemId: POINT,
+      validUntil: "2029-06-12",
+    };
+    const kept = normaliseSuggestion(paper, context);
+    expect(kept!.kind).toBe("deadline");
+    expect(kept!.checklistItemId).toBe(POINT);
+    expect(kept!.validUntil).toBe("2029-06-12");
+
+    const dropped = normaliseSuggestion(
+      { ...paper, checklistItemId: "not-a-point", validUntil: "juin 2029" },
+      context,
+    );
+    // The card then opens on the form with the two fields empty, rather than on one wrong line.
+    expect(dropped!.checklistItemId).toBeNull();
+    expect(dropped!.validUntil).toBeNull();
+  });
+
+  it("reads a row written before deadlines existed", () => {
+    // A stored suggestion from an earlier prompt simply has no such keys.
+    const before: Record<string, unknown> = { ...normaliseSuggestion(output, context)! };
+    delete before.checklistItemId;
+    delete before.validUntil;
+    const parsed = parseSuggestion(before);
+    expect(parsed).not.toBeNull();
+    expect(parsed!.checklistItemId).toBeNull();
+    expect(parsed!.validUntil).toBeNull();
+  });
+
   it("never lets an empty title through, and clips a long one", () => {
     expect(normaliseSuggestion({ ...output, title: "   " }, context)!.title).toBe("Document");
     expect(normaliseSuggestion({ ...output, title: "x".repeat(500) }, context)!.title).toHaveLength(
@@ -342,8 +381,45 @@ describe("validating a card", () => {
     // Without the intervention there is nothing to attach to.
     expect(validateInboxItemSchema.safeParse({ ...attach, logId: "" }).success).toBe(false);
     expect(validateInboxItemSchema.safeParse({ ...attach, logId: undefined }).success).toBe(false);
-    // The other two filings still need their title.
+    // The other filings still need their title.
     expect(validateInboxItemSchema.safeParse({ ...base, title: "  " }).success).toBe(false);
+  });
+
+  /**
+   * A paper is a deadline only if it says *which* point and *until when* (E17-6). Without the
+   * point there is nothing to complete; without the date the realisation would say nothing and
+   * the queue would not move — so both are refused here rather than in the database.
+   */
+  it("asks a deadline for its point and its date, and for a date after the check", () => {
+    const paper = {
+      ...base,
+      kind: "deadline",
+      categoryId: "",
+      checklistItemId: POINT,
+      validUntil: "2029-06-12",
+    };
+    const parsed = validateInboxItemSchema.parse(paper);
+    expect(parsed.kind).toBe("deadline");
+    expect(parsed.checklistItemId).toBe(POINT);
+    expect(parsed.validUntil).toBe("2029-06-12");
+    // A deadline needs no system: the point carries one already.
+    expect(validateInboxItemSchema.safeParse({ ...paper, checklistItemId: "" }).success).toBe(
+      false,
+    );
+    expect(
+      validateInboxItemSchema.safeParse({ ...paper, checklistItemId: undefined }).success,
+    ).toBe(false);
+    expect(validateInboxItemSchema.safeParse({ ...paper, validUntil: "" }).success).toBe(false);
+    // « Valide jusqu'au » before the check is a misread date, not an expired paper.
+    expect(validateInboxItemSchema.safeParse({ ...paper, validUntil: base.date }).success).toBe(
+      false,
+    );
+    expect(validateInboxItemSchema.safeParse({ ...paper, validUntil: "2026-08-31" }).success).toBe(
+      false,
+    );
+    // The other filings carry none of it.
+    expect(validateInboxItemSchema.parse(base).checklistItemId).toBeNull();
+    expect(validateInboxItemSchema.parse(base).validUntil).toBeNull();
   });
 });
 
@@ -379,6 +455,28 @@ describe("the inbox's words", () => {
   ] as const)("names every %s", (section, keys) => {
     const words = inbox[section] as Record<string, string>;
     for (const key of keys) expect(words[key]?.trim(), `${section}.${key}`).toBeTruthy();
+  });
+
+  it("names what a paper becomes (E17-6)", () => {
+    for (const key of [
+      "deadlineHelp",
+      "checklistItemRequired",
+      "validUntilRequired",
+      "validUntilAfterDate",
+      "deadlineDone",
+    ] as const)
+      expect((inbox[key] as string)?.trim(), key).toBeTruthy();
+    const fields = inbox.fields as Record<string, string>;
+    for (const key of [
+      "checklistItem",
+      "checklistItemPlaceholder",
+      "checkedOn",
+      "validUntil",
+    ] as const)
+      expect(fields[key]?.trim(), `fields.${key}`).toBeTruthy();
+    expect((inbox.went as Record<string, string>).deadline?.trim()).toBeTruthy();
+    expect((inbox.summary as Record<string, string>).validUntil).toContain("{date");
+    expect(inbox.deadlineDone).toContain("{title");
   });
 
   it("names the one door and the third filing (D109)", () => {
@@ -430,10 +528,14 @@ describe("the id a document becomes", () => {
   });
 
   it("never files the same document twice in the same place", () => {
-    // An intervention and a purchase are two tables, but a card that changed its mind between
-    // two taps must not hand the second list the id of the line it left in the first.
+    // An intervention, a purchase and a realisation are three tables, but a card that changed
+    // its mind between two taps must not hand the next one the id of the line it already left.
     expect(inboxEntityId(ITEM, "log")).not.toBe(inboxEntityId(ITEM, "purchase"));
+    expect(inboxEntityId(ITEM, "log")).not.toBe(inboxEntityId(ITEM, "deadline"));
+    expect(inboxEntityId(ITEM, "purchase")).not.toBe(inboxEntityId(ITEM, "deadline"));
     expect(inboxEntityId(ITEM, "log")).not.toBe(inboxEntityId(BOAT, "log"));
+    // And a retry re-derives it, so the second tap updates the realisation it already wrote.
+    expect(inboxEntityId(ITEM, "deadline")).toBe(inboxEntityId(ITEM, "deadline"));
   });
 
   it("refuses anything that is not a document id", () => {
@@ -468,6 +570,8 @@ describe("a card that opens on one line", () => {
     engineHours: [],
     lineItems: [],
     notes: null,
+    checklistItemId: null,
+    validUntil: null,
     confidence: "high" as const,
     warnings: ["local"],
   };
@@ -489,6 +593,7 @@ describe("a card that opens on one line", () => {
     error: null,
     logId: null,
     purchaseId: null,
+    completionId: null,
     validatedAt: null,
     updatedAt: "2026-09-04T11:40:00.000Z",
     ...over,
