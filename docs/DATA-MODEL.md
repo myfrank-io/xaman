@@ -386,7 +386,17 @@ une famille, chaque règle active de cette famille :
 - **La zone** : une règle `zone_scope = 'offshore'` n'est pas appliquée à un bateau côtier (D90).
 - **La marque / le modèle** : `null` ne restreint rien ; sinon comparaison via
   `normalise_for_match()`, **jumelle SQL** de `normaliseForMatch` (`src/lib/equipment-kinds.ts`),
-  tenue à parité par `tests/unit/plan-composition.test.ts`.
+  tenue à parité par `tests/unit/plan-composition.test.ts`. Depuis `0036` (E17-12) elle passe par
+  **`text_fold()`** (`0005`) et n'a plus de table d'accents à elle :
+  `trim(regexp_replace(text_fold(v), '[^a-z0-9&]+', ' ', 'g'))`. Deux tables pour une seule
+  question, c'est ainsi qu'elles divergent : celle de `0035` ignorait `Œ œ Æ æ Ø ø`, donc `œ`
+  survivait au `translate` puis était avalé comme une ponctuation — `normalise_for_match('Cœur')`
+  rendait `c ur` au lieu de `coeur`. La jumelle TypeScript replie désormais les mêmes ligatures
+  avant son passage `normalize("NFD")`, qui ne décompose pas une lettre à part entière. **Portée
+  de la parité** : l'alphabet que `text_fold` couvre, c'est-à-dire le latin-1 (le français). Au
+  delà — `Ā Š Ž Ÿ`… — `text_fold` ne replie rien là où NFD replie encore ; c'est la limite assumée
+  du `translate()` choisi le 2026-09-02 contre l'extension `unaccent`, et non un écart introduit
+  ici (D125).
 - **`external_ref`** : `rule:{règle}:{équipement}` (+ `:{moteur}` si la règle se duplique). C'est la
   clé de l'idempotence.
 - **`anchor_date`** : `current_date`, comme `apply_checklist_template`. Ancrer sur `installed_at`
@@ -944,7 +954,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 
 ## 13. Notes d'implémentation — `0005_journal.sql`, `0007_invitation_privacy.sql`, `0008_weekly_digest.sql`, `0009_function_privileges.sql`, `0010_parts_stock.sql`, `0011_attachments.sql`
 
-- **0005** : trois fonctions `security invoker` en lecture seule (la RLS de l'appelant s'applique) : `text_fold(text)` (minuscules + repli des accents par `translate`, `immutable`, pas d'extension `unaccent`), `log_title_suggestions(p_boat_id, p_query)` (≤ 5 titres distincts du bateau contenant la requête repliée via `strpos`, 2 caractères minimum, avec la catégorie du dernier journal et le moteur le plus fréquent), `suggest_checklist_items(p_boat_id, p_category_id, p_title)` (≤ 5 points actifs de la catégorie dont `greatest(similarity, strict_word_similarity)` — calculé sur le libellé **sans** le suffixe « — Moteur » — dépasse 0,5, avec leur statut d'échéance). Grants `authenticated` + `service_role`.
+- **0005** : trois fonctions `security invoker` en lecture seule (la RLS de l'appelant s'applique) : `text_fold(text)` (minuscules + repli des accents par `translate` — ligatures `Œ œ Æ æ` et `Ø ø` comprises —, `immutable`, pas d'extension `unaccent` ; **seule table d'accents du dépôt** depuis `0036`, `normalise_for_match` s'appuyant dessus), `log_title_suggestions(p_boat_id, p_query)` (≤ 5 titres distincts du bateau contenant la requête repliée via `strpos`, 2 caractères minimum, avec la catégorie du dernier journal et le moteur le plus fréquent), `suggest_checklist_items(p_boat_id, p_category_id, p_title)` (≤ 5 points actifs de la catégorie dont `greatest(similarity, strict_word_similarity)` — calculé sur le libellé **sans** le suffixe « — Moteur » — dépasse 0,5, avec leur statut d'échéance). Grants `authenticated` + `service_role`.
 - **0007** : `get_invitation_preview(p_token)` renvoie désormais l'adresse invitée **masquée** (`x•••@domaine`) ; la page publique `/invite/[token]` ne pré-remplit plus le formulaire de connexion et `accept_invitation` reste la seule vérification exacte de l'adresse (D29).
 - **0008** : `weekly_digest_payload()` (security definer, `service_role` seulement) agrège par bateau les destinataires owner/editor actifs, les points en retard et bientôt (`checklist_item_status`) et les interventions planifiées / en cours / urgentes à 30 jours ; `enqueue_weekly_digest()` appelle l'Edge Function `weekly-digest` via `net.http_post` avec l'URL et la clé lues dans Vault (`xaman_digest_url`, `xaman_digest_key`) ; planification `pg_cron` « vendredi 06:30 UTC » quand l'extension existe (rien en local). L'envoi passe par Resend (secrets de la fonction : `RESEND_API_KEY`, `DIGEST_FROM`, `APP_URL`).
 
@@ -958,6 +968,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
 - **0034** (D118) : table `maintenance_log_categories` (les systèmes d'une intervention) avec ses politiques et son trigger de cohérence de bateau, reprise des lignes existantes depuis `maintenance_logs.category_id`, et `maintenance_logs_view` qui gagne `category_ids` — **en dernière colonne**, parce qu'un `create or replace view` ne sait qu'ajouter à la fin. `category_id` ne change ni de sens ni de valeur : c'est le système principal, et tout ce qui le lisait continue.
+- **0036** (D125, E17-12) : `normalise_for_match()` (`0035`) devient une enveloppe de `text_fold()` — `trim(regexp_replace(text_fold(v), '[^a-z0-9&]+', ' ', 'g'))` — au lieu de porter sa propre table d'accents, plus faible que celle de `0005` : `Œ œ Æ æ Ø ø` en étaient absents, donc `œ` survivait au `translate` puis était avalé comme une ponctuation (`'Cœur'` → `c ur`). Même signature, même `immutable`, même `search_path` vide, mêmes privilèges (`authenticated`, `service_role`) ; la jumelle TypeScript replie les mêmes ligatures avant son `normalize("NFD")`. Aucune table, aucune politique, aucune donnée touchée.
 
 ### Conseillers de sécurité Supabase — avertissements acceptés
 
