@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D122.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D124.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2800,3 +2800,154 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+
+## 2026-09-14 — D122 : deux acheteurs, un seul carnet — le propriétaire ne paie pas, le chantier vend du service
+
+**Question.** Le produit s'est écrit pour un propriétaire qui tient le carnet de son bateau, et
+`SPEC.md §3.3` plafonne l'ambition tarifaire sous 60 €/an — le prix d'une application de
+plaisancier, sur un marché dont le concurrent réel est le papier. À qui vend-on, et à quel moment
+encaisse-t-on ?
+
+**Le constat.** Trois faits déjà écrits dans ce dépôt, qui ne se recoupaient pas jusqu'ici.
+
+1. **Le coût d'amorçage est le premier tueur du secteur** (`SPEC.md §3.3.1`) : le propriétaire
+   abandonne avant d'avoir fini de saisir son inventaire. Aucune fonctionnalité ne règle ça. Une
+   seule chose le règle : que **quelqu'un d'autre ait rempli le carnet avant lui**. Et la seule
+   personne qui connaît le bateau avant le propriétaire, c'est celui qui l'a construit.
+2. **Le jour de la livraison, deux pertes ont lieu en même temps.** L'acheteur sort du hangar sans
+   rien : pas de plan d'entretien, pas de dates de garantie, pas d'interlocuteur. Le chantier, lui,
+   perd la relation client, quinze ans de revenu de service sur une coque qu'il a construite, la
+   vérité terrain sur ses propres défauts — qu'il apprend sur les forums — et arbitre ses garanties
+   au téléphone, sans date, sans heures moteur, sans photo.
+3. **Le contrat d'entretien automobile se vend au bon de commande**, au moment où l'acheteur signe
+   déjà, et pas un an plus tard par une campagne d'e-mails. C'est la seule différence de mécanique
+   entre 60 €/an arrachés un par un et une ligne acceptée sans discussion.
+
+**Décision. Deux personas, un seul produit.**
+
+1. **Le propriétaire ne paie pas.** Le carnet est gratuit, sans limite de temps, sur n'importe quel
+   bateau, sans chantier. **Le partage n'est jamais facturé** (`SPEC.md §3.3.7`) : lecteurs et
+   professionnels invités restent illimités — c'est l'endroit exact où le produit est différenciant,
+   le facturer serait le tuer.
+2. **Le constructeur est le cœur de cible.** Il vend une **option de service** avec le bateau, au
+   prix qu'il fixe, comme un constructeur automobile vend son contrat d'entretien. **Xaman facture
+   le chantier**, par coque sous contrat, **jamais son client**. Au bon de commande, deux cases :
+   l'option du chantier, ou se débrouiller — et « se débrouiller » reste le carnet gratuit,
+   complet, pas une version mutilée.
+3. **Le seul moment payant côté propriétaire est la passation à la vente.**
+
+**Ce que « payant à la vente » veut dire, et surtout ce que ça ne veut pas dire.** C'est le point
+qui pouvait retourner le produit contre sa propre promesse, et il se tranche en trois lignes.
+
+- **L'export reste gratuit, toujours, et affiché** (`SPEC.md §3.2`, ligne « Données »). Une donnée
+  retenue en otage détruirait le seul argument que nos concurrents ne peuvent pas copier, et ne
+  survivrait pas au premier article de forum.
+- **Le transfert par invitation (D30) reste gratuit** : inviter l'acheteur en `owner`, puis quitter
+  le bateau. C'est tout ou rien — l'acheteur hérite aussi des montants payés, des contacts et des
+  documents personnels du vendeur.
+- **Ce qui se paie est la passation** : le carnet se sépare en deux (le technique d'un côté,
+  l'argent et le privé de l'autre, ligne à ligne, **décoché par défaut**), le vendeur **garde une
+  copie archivée en lecture** de son propre carnet, l'acheteur reçoit un carnet dont il est
+  propriétaire dès le premier jour avec la chaîne des garanties intacte, et un **certificat de
+  passation** imprimable — « carnet tenu depuis le 12/03/2019, 143 interventions, 8 sorties de
+  l'eau » — que l'expert de l'acheteur réclame de toute façon.
+
+Le vendeur paie donc pour **ne pas** donner sa comptabilité, et pour vendre son bateau plus cher. Il
+ne paie jamais pour récupérer ses données. C'est la même somme perçue au même moment, mais ce n'est
+pas le même produit, et ce n'est pas la même phrase à écrire sur une page publique.
+
+**Raison.** Le gratuit n'est pas une générosité, c'est le canal d'acquisition : chaque carnet ouvert
+sans chantier est un bateau dont le constructeur découvrira un jour qu'il existe, et un acheteur de
+plus qui saura ce qu'il perd en refusant l'option. Le payant n'est pas un abonnement arraché à un
+plaisancier, c'est une ligne de marge vendue à celui qui a déjà un bon de commande ouvert. Les deux
+personas se tiennent par le même produit : ce que le chantier vend, ce n'est pas une autre
+application, c'est **le premier jour**.
+
+**Ce qui n'est pas retenu.**
+
+- *Un abonnement propriétaire à 30–60 €/an.* C'est le prix du marché, et c'est aussi le prix auquel
+  l'acquisition coûte plus cher que ce qu'elle rapporte quand 90 % du parc tient au papier. Cela
+  supprimerait le seul mécanisme qui fait entrer des carnets.
+- *Limiter le nombre d'invités, ou faire payer le rôle professionnel.* Le mécano invité et l'associé
+  sont la démonstration du produit ; les facturer reviendrait à vendre l'argument de vente.
+- *Retenir l'export derrière le paiement.* Voir ci-dessus : ce serait échanger la promesse centrale
+  contre un encaissement unique.
+- *Une marque blanche vendue au chantier.* Le carnet doit survivre à la fin de l'option, sinon « la
+  donnée suit le bateau, pas la personne » est faux, et l'acheteur a raison de refuser l'option.
+- *Une console constructeur séparée.* Déjà refusé en D121 : même file, mêmes mots, mêmes couleurs.
+
+**Ce que ça change dans le produit.** Le détail est dans l'épique **E19** ; l'ossature tient en six
+points. (1) **Les garanties n'existent pas** dans le modèle — ni date de mise en service, ni durée,
+ni pièce couverte, ni réclamation : c'est le premier levier du chantier et la première douleur de
+l'acheteur, et c'est un domaine entier à créer. (2) **Le carnet livré avec le bateau** : un chantier
+prépare une coque (modèle exact, moteurs, numéros de série, plan d'entretien, garanties) et la
+**remet** à son acheteur, qui ouvre un compte et trouve son bateau dedans — un parcours d'entrée que
+D64/D65/D67 ne couvrent pas. (3) **Le contrat de service** : ce que l'option achète, ce qu'elle
+ouvre, ce qu'elle ferme quand elle expire — et qui **ne contourne jamais** l'accès consenti et daté
+de D121. (4) **L'organisation sort de la V2** (E18-9 à E18-12), et E18-12 (plan officiel et
+bulletins) cesse d'être un « Could ». (5) **La passation** décrite plus haut, à côté de D30 et non à
+sa place. (6) **La facturation entre dans le périmètre** : `SPEC.md §9` l'excluait — contrat facturé
+pour le chantier, paiement unique pour la passation.
+
+**Ce qui reste à trancher** (et n'est écrit nulle part sur le site public, faute de réponse) : le
+prix de la passation et qui la paie (vendeur ou acheteur) ; le prix payé par le chantier et son
+unité (par coque sous contrat, par coque livrée, par an) ; l'existence de la boîte
+`constructeurs@xaman.boats`, citée par la page publique et à créer avant sa mise en ligne.
+
+## 2026-09-14 — D123 : le site public parle à deux personnes, sur deux pages
+
+**Question.** D122 donne deux acheteurs au produit. La page d'accueil, elle, n'en connaît qu'un :
+elle décrit un carnet à un propriétaire, et un directeur commercial de chantier n'y trouve pas un
+mot pour lui. Une seule page peut-elle porter les deux ?
+
+**Le constat.** Non, et pour une raison qui n'est pas de mise en page : les deux lectures se
+contredisent à voix haute. Dire au propriétaire « votre chantier s'en occupe » sur la page où il
+vient ouvrir un carnet gratuit, c'est lui faire croire que son carnet dépend d'un chantier — il n'en
+a pas, ou il ne l'aime pas. Dire au chantier « notez vos vidanges en trente secondes », c'est lui
+vendre une application de plaisancier alors qu'on lui propose une ligne de son bon de commande.
+
+**Décision.** Deux pages, un seul design, une seule navigation.
+
+- **`/`** reste la page du propriétaire. Elle gagne **« Deux façons d'avoir un carnet à jour »** —
+  deux cartes de même hauteur et de même vocabulaire, le gratuit et l'option du chantier, parce que
+  la différence entre les deux n'est pas une liste de fonctions mais **qui remplit le carnet le
+  premier jour** — et une carte constructeur avant la clôture.
+- **`/constructeurs`** est la page du chantier : ce que la poignée de main lui coûte (le lien, le
+  service, la garantie au téléphone, les défauts appris sur les forums), ce qu'il obtient, comment
+  l'option se vend (bon de commande, livraison, renouvellement), et **ce qu'il ne verra jamais**.
+
+**Trois règles d'écriture, qui valent plus que la maquette.**
+
+1. **La page dit son état.** Le carnet du propriétaire tourne ; l'étage constructeur — flotte,
+   garanties, bulletins, carnet livré avec le bateau — est un **programme pilote** qui cherche deux
+   ou trois chantiers. Un chantier qui découvre à la démo que la flotte n'existe pas ne revient pas,
+   et c'est précisément le prospect qu'on ne peut pas se permettre de perdre.
+2. **La clause de confidentialité (D121) est sur la page du chantier**, pas seulement sur celle du
+   propriétaire. C'est le chantier qui doit pouvoir la dire à haute voix à son acheteur : rien sans
+   invitation datée et révocable, jamais un nom dans les statistiques, jamais en dessous de cinq
+   carnets.
+3. **Aucun chiffre inventé dans une affirmation**, et **aucun nom réel dans un dessin** : ni prix
+   d'option, ni nombre de chantiers, ni pourcentage de conformité. Les deux aperçus (`AppPreview`,
+   `FleetPreview`) sont des **dessins** et leur légende le dit. La première version de la file de
+   flotte s'intitulait « Marsaudon Composites · 312 coques suivies » : sur une page qui vend aux
+   chantiers, cela ne se lit pas comme une illustration mais comme un client. Le dessin dit
+   « Votre chantier », et le carnet du propriétaire garde le seul nom que nous ayons le droit
+   d'écrire — celui du bateau sur lequel l'application a été construite.
+
+**L'adresse est en français, contrairement aux routes de l'application.** `/constructeurs`, pas
+`/builders` : `CLAUDE.md` règle 7 met les identifiants en anglais, et les quarante routes du carnet
+le sont. Mais une adresse publique se colle dans un e-mail envoyé à un chantier français, se lit
+dans un résultat de recherche et n'est jamais tapée par un développeur. Le site public est de l'UI ;
+l'application garde ses routes anglaises.
+
+**Ce qui n'est pas retenu.**
+
+- *Une page unique avec un sélecteur « je suis propriétaire / constructeur ».* Un sélecteur demande
+  à un visiteur de se ranger avant de savoir ce qu'on vend, et double la page sans doubler la
+  lecture.
+- *Une page constructeur qui décrit l'étage à venir au présent.* Voir la règle 1.
+- *Un formulaire de contact.* Une boîte aux lettres suffit pour deux ou trois chantiers, et un
+  formulaire demanderait une table, une politique RLS et une modération pour recueillir ce qu'un
+  `mailto:` fait déjà.
+- *Une page de tarifs.* Il n'y a rien à y écrire tant que les prix de D122 ne sont pas tranchés ;
+  une grille avec des « à partir de » inventés est exactement ce que la règle 3 interdit.

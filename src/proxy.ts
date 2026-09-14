@@ -6,6 +6,9 @@ import { updateSession } from "@/lib/supabase/middleware";
 // Paths reachable without a session. Everything else (the (app) group) requires one.
 const PUBLIC_PREFIXES = [
   "/login",
+  // The second audience's page (D123). Public like the home page, but deliberately absent from
+  // SIGNED_IN_ELSEWHERE: an owner who is signed in is exactly who forwards it to their yard.
+  "/constructeurs",
   "/signup",
   "/forgot-password",
   "/reset-password",

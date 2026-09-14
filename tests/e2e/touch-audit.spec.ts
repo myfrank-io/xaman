@@ -9,6 +9,9 @@ import { expect, test, type Page } from "@playwright/test";
 const PAGES = [
   // Public pages: the home page and the four ways in are the first thing anyone touches.
   "/",
+  // The second public page (D123): two dark bands, six cards and a mailto, none of which the
+  // app's own screens audit.
+  "/constructeurs",
   "/login",
   "/signup",
   "/forgot-password",
