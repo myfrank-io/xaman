@@ -34,6 +34,9 @@ const PAGES = [
   "/dev/ui/import",
   "/dev/ui/install",
   "/dev/ui/inbox",
+  // « Ce que j'ai lu » (E17-2): the divergence block is the tallest thing a line can carry, and
+  // the row is a 44 px checkbox target on a list nobody aims at.
+  "/dev/ui/inbox-batch",
   // The six e-mails Supabase sends (D71). The frame around them is what is measured here — the
   // e-mail itself lives in a sandboxed iframe, and an inbox is nobody's viewport to audit.
   "/dev/ui/emails",

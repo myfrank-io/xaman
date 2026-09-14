@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { planBatch, tallyBatch, type Carnet } from "@/lib/inbox/batch-plan";
+import { groupBatch, planBatch, tallyBatch, type Carnet } from "@/lib/inbox/batch-plan";
 import { inboxBatchLineSchema, type InboxBatchLine } from "@/lib/schemas/inbox";
 
 /**
@@ -265,5 +265,72 @@ describe("what the screen counts above the list", () => {
     expect(tally.create + tally.fill + tally.same + tally.contradiction).toBe(4);
     // Whatever the split, what is ticked never exceeds what is worth doing.
     expect(tally.checked).toBeLessThanOrEqual(tally.create + tally.fill);
+  });
+});
+
+/**
+ * How the screen lays the batch out (E17-2). Equipment goes under the boat's own systems, in the
+ * boat's own order; a provider, a fact about the boat and an expiry each get a heading of their
+ * own, because filing a provider under « Hydraulique » to avoid a fourth heading is a small lie
+ * that costs a scan of the whole list.
+ */
+describe("how the batch is laid out", () => {
+  const CATEGORIES = [
+    { externalRef: "sails_rigging", name: "Voiles & Gréement", color: "#7c3aed" },
+    { externalRef: "plumbing_systems", name: "Hydraulique & Circuits", color: "#0d9488" },
+  ];
+
+  const of = (over: Partial<InboxBatchLine>) =>
+    planBatch([line(over)], EMPTY)[0] as NonNullable<ReturnType<typeof planBatch>[number]>;
+
+  it("keeps the boat's own order, and leaves out a system nothing was read about", () => {
+    const groups = groupBatch(
+      [of({ categoryRef: "plumbing_systems" }), of({ categoryRef: "sails_rigging" })],
+      CATEGORIES,
+    );
+    // The boat lists rigging first, so the screen does too — whatever order the document used.
+    expect(groups.map((group) => group.key)).toEqual(["sails_rigging", "plumbing_systems"]);
+    expect(groups.every((group) => group.lines.length === 1)).toBe(true);
+  });
+
+  it("gives providers, identity and deadlines a heading of their own, after the systems", () => {
+    const groups = groupBatch(
+      [
+        of({ categoryRef: "sails_rigging" }),
+        of({ type: "deadline", validUntil: "2029-01-01", kindRef: null }),
+        of({
+          type: "provider",
+          kindRef: null,
+          provider: {
+            name: "Marsaudon",
+            company: null,
+            phone: null,
+            email: null,
+            address: null,
+          },
+        }),
+        of({ type: "identity", kindRef: null, identityField: "flag", identityValue: "France" }),
+      ],
+      CATEGORIES,
+    );
+    expect(groups.map((group) => group.key)).toEqual([
+      "sails_rigging",
+      "providers",
+      "identity",
+      "deadlines",
+    ]);
+    // Only a system heading carries a colour; the other three are not systems.
+    expect(groups.filter((group) => group.category !== null).map((group) => group.key)).toEqual([
+      "sails_rigging",
+    ]);
+  });
+
+  it("collects under « sans système » what has none, and what names one the boat does not list", () => {
+    const groups = groupBatch(
+      [of({ categoryRef: null }), of({ categoryRef: "inventé" })],
+      CATEGORIES,
+    );
+    expect(groups.map((group) => group.key)).toEqual(["unfiled"]);
+    expect(groups[0]?.lines).toHaveLength(2);
   });
 });

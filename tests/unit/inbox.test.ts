@@ -18,7 +18,10 @@ import {
 import fr from "@/messages/fr.json";
 import {
   INBOX_CONFIDENCES,
+  INBOX_DOCUMENT_FAMILIES,
   INBOX_ERROR_KEYS,
+  INBOX_IDENTITY_FIELDS,
+  INBOX_LINE_STATUSES,
   INBOX_FILINGS,
   INBOX_KINDS,
   INBOX_SOURCES,
@@ -456,7 +459,9 @@ describe("dropping a pile", () => {
 
 /** Every enum the screen labels has its French word (rule 7). */
 describe("the inbox's words", () => {
-  const inbox = fr.inbox as Record<string, Record<string, string> | string>;
+  // `inbox.batch` nests one level deeper (E17-2), so the cast goes through `unknown`.
+  const inbox = fr.inbox as unknown as Record<string, Record<string, string> | string>;
+  const batch = (fr.inbox as unknown as { batch: Record<string, Record<string, string>> }).batch;
   it.each([
     ["source", INBOX_SOURCES],
     ["status", INBOX_STATUSES],
@@ -468,6 +473,17 @@ describe("the inbox's words", () => {
   ] as const)("names every %s", (section, keys) => {
     const words = inbox[section] as Record<string, string>;
     for (const key of keys) expect(words[key]?.trim(), `${section}.${key}`).toBeTruthy();
+  });
+
+  /** The three vocabularies E17-1 and E17-2 put on the « ce que j'ai lu » screen. */
+  it.each([
+    ["family", INBOX_DOCUMENT_FAMILIES],
+    ["status", INBOX_LINE_STATUSES],
+    ["identityField", INBOX_IDENTITY_FIELDS],
+  ] as const)("names every batch %s", (section, keys) => {
+    for (const key of keys) {
+      expect(batch[section]?.[key]?.trim(), `batch.${section}.${key}`).toBeTruthy();
+    }
   });
 
   it("names what a paper becomes (E17-6)", () => {

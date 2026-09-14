@@ -45,8 +45,22 @@ export type Carnet = {
   identity: Partial<Record<InboxIdentityField, string | null>>;
 };
 
+/** The fields a divergence can be about — the same list `inbox.batch.field` translates. */
+export const DIVERGENCE_FIELDS = [
+  "brand",
+  "model",
+  "serial",
+  "quantity",
+  "company",
+  "email",
+  "phone",
+  /** An identity line disagrees about the one field it is about — it says which in `value`. */
+  "value",
+] as const;
+export type DivergenceField = (typeof DIVERGENCE_FIELDS)[number];
+
 /** One difference worth showing side by side: what the carnet says, what the document says. */
-export type Divergence = { field: string; carnet: string; document: string };
+export type Divergence = { field: DivergenceField; carnet: string; document: string };
 
 export type BatchOutcome =
   /** Nothing in the carnet looks like this line. */
@@ -54,7 +68,7 @@ export type BatchOutcome =
   /** The carnet already holds it, and says the same thing. Nothing to do. */
   | { kind: "same"; targetId: string | null }
   /** The carnet holds it but says nothing about some of what the document says. */
-  | { kind: "fill"; targetId: string | null; fields: string[] }
+  | { kind: "fill"; targetId: string | null; fields: DivergenceField[] }
   /** The carnet holds it and says something else (D113). */
   | { kind: "contradiction"; targetId: string | null; divergences: Divergence[] };
 
@@ -133,7 +147,7 @@ function planEquipment(line: InboxBatchLine, carnet: Carnet): BatchOutcome {
   if (!match) return { kind: "create" };
 
   const divergences: Divergence[] = [];
-  const blanks: string[] = [];
+  const blanks: DivergenceField[] = [];
   for (const field of EQUIPMENT_FIELDS) {
     const read = line[field];
     if (!filled(read)) continue;
@@ -176,7 +190,7 @@ function planProvider(line: InboxBatchLine, carnet: Carnet): BatchOutcome {
   if (!match) return { kind: "create" };
   const provider = line.provider;
   const divergences: Divergence[] = [];
-  const blanks: string[] = [];
+  const blanks: DivergenceField[] = [];
   for (const { field, key } of PROVIDER_FIELDS) {
     const read = provider?.[field] ?? null;
     if (!filled(read)) continue;
@@ -201,7 +215,9 @@ function planIdentity(line: InboxBatchLine, carnet: Carnet): BatchOutcome {
   return {
     kind: "contradiction",
     targetId: null,
-    divergences: [{ field, carnet: held as string, document: read as string }],
+    // The line's own label already names the field (« N° de coque »), so the divergence heading
+    // says « Valeur » rather than repeating it.
+    divergences: [{ field: "value", carnet: held as string, document: read as string }],
   };
 }
 
@@ -252,4 +268,77 @@ export function tallyBatch(planned: PlannedLine[]): BatchTally {
     if (row.checked) tally.checked += 1;
   }
   return tally;
+}
+
+/**
+ * The screen's shape: the batch laid out the way a person reads it (E17-2).
+ *
+ * Equipment goes under the boat's own systems, because that is how the carnet is organised and
+ * how someone checks « do I really have two of those ». The other three sorts get groups of their
+ * own rather than being filed under a system: a provider is not part of the plumbing, and putting
+ * it there to avoid a fourth heading would be a small lie that costs a scan of the whole list.
+ */
+export type BatchGroupKey = "providers" | "identity" | "deadlines" | "unfiled" | (string & {});
+
+export type BatchGroup<T extends PlannedLine = PlannedLine> = {
+  /** `boat_categories.external_ref`, or one of the four special keys below. */
+  key: BatchGroupKey;
+  /** Which heading to print: a system's own name, or a translation key under `inbox.batch.groups`. */
+  category: { externalRef: string; name: string; color: string } | null;
+  lines: T[];
+};
+
+export const BATCH_GROUP_PROVIDERS = "providers";
+export const BATCH_GROUP_IDENTITY = "identity";
+export const BATCH_GROUP_DEADLINES = "deadlines";
+export const BATCH_GROUP_UNFILED = "unfiled";
+
+/**
+ * Groups in the order the boat itself lists its systems, then the three that are not systems.
+ * A system with nothing read about it is left out — an empty heading is a question about nothing.
+ */
+export function groupBatch<T extends PlannedLine>(
+  planned: readonly T[],
+  categories: readonly { externalRef: string | null; name: string; color: string }[],
+): BatchGroup<T>[] {
+  const keyOf = (row: T): string => {
+    if (row.line.type === "provider") return BATCH_GROUP_PROVIDERS;
+    if (row.line.type === "identity") return BATCH_GROUP_IDENTITY;
+    if (row.line.type === "deadline") return BATCH_GROUP_DEADLINES;
+    return row.line.categoryRef ?? BATCH_GROUP_UNFILED;
+  };
+
+  const byKey = new Map<string, T[]>();
+  for (const row of planned) {
+    const key = keyOf(row);
+    const rows = byKey.get(key);
+    if (rows) rows.push(row);
+    else byKey.set(key, [row]);
+  }
+
+  const groups: BatchGroup<T>[] = [];
+  for (const category of categories) {
+    if (!category.externalRef) continue;
+    const lines = byKey.get(category.externalRef);
+    if (!lines) continue;
+    groups.push({
+      key: category.externalRef,
+      category: { externalRef: category.externalRef, name: category.name, color: category.color },
+      lines,
+    });
+    byKey.delete(category.externalRef);
+  }
+  // Anything filed under a system the boat does not list falls in with the unfiled.
+  const tail: T[] = [];
+  for (const [key, lines] of byKey) {
+    if (key === BATCH_GROUP_PROVIDERS || key === BATCH_GROUP_IDENTITY) continue;
+    if (key === BATCH_GROUP_DEADLINES) continue;
+    tail.push(...lines);
+  }
+  for (const key of [BATCH_GROUP_PROVIDERS, BATCH_GROUP_IDENTITY, BATCH_GROUP_DEADLINES]) {
+    const lines = byKey.get(key);
+    if (lines) groups.push({ key, category: null, lines });
+  }
+  if (tail.length > 0) groups.push({ key: BATCH_GROUP_UNFILED, category: null, lines: tail });
+  return groups;
 }

@@ -2270,7 +2270,93 @@
     "looksLikePurchase": "Ce document ressemble plutôt à un achat : vous pourrez le reclasser depuis « À valider ».",
     "attachFailed": "L'intervention est enregistrée. Le document n'a pas pu y être rattaché : il reste dans « À valider ».",
     "deadlineDone": "Échéance posée : {title}",
-    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider »."
+    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider ».",
+    "batch": {
+      "title": "Ce que j'ai lu",
+      "subtitle": "{family} du {date}. Cochez ce qui doit entrer au carnet.",
+      "subtitleNoDate": "{family}. Cochez ce qui doit entrer au carnet.",
+      "family": {
+        "quote_order": "Devis ou bon de commande",
+        "delivery_note": "Bon de livraison",
+        "technical_spec": "Descriptif technique",
+        "ce_certificate": "Certificat CE",
+        "warranty": "Carnet de garantie",
+        "broker_listing": "Fiche de vente",
+        "survey": "Rapport d'expertise",
+        "registration": "Acte de francisation",
+        "insurance": "Attestation d'assurance",
+        "mmsi_licence": "Licence MMSI",
+        "inspection_certificate": "Certificat de révision",
+        "manual": "Manuel constructeur",
+        "maintenance_invoice": "Facture d'entretien",
+        "paper_logbook": "Carnet d'entretien papier",
+        "hour_meter_photo": "Photo de compteur",
+        "plans": "Plans",
+        "unknown": "Document"
+      },
+      "status": {
+        "fitted": "Monté",
+        "retained": "Retenu",
+        "optional": "Option",
+        "cancelled": "Annulé",
+        "removed": "Déposé",
+        "unknown": "Statut non lu"
+      },
+      "groups": {
+        "providers": "Intervenants",
+        "identity": "Le bateau",
+        "deadlines": "Échéances",
+        "unfiled": "Sans système"
+      },
+      "identityField": {
+        "builder": "Constructeur",
+        "model": "Modèle",
+        "hullNumber": "N° de coque",
+        "year": "Année",
+        "registration": "Immatriculation",
+        "flag": "Pavillon",
+        "homePort": "Port d'attache",
+        "navigationZone": "Zone de navigation"
+      },
+      "field": {
+        "brand": "Marque",
+        "model": "Modèle",
+        "serial": "N° de série",
+        "quantity": "Quantité",
+        "company": "Raison sociale",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "value": "Valeur"
+      },
+      "divergence": "Déjà renseigné : {carnet} — ce document dit {document}",
+      "divergenceHelp": "Le carnet fait foi. Ce document date du {date} ; cochez seulement si vous savez qu'il est plus juste.",
+      "outcome": {
+        "create": "Nouveau",
+        "fill": "Complète {fields}",
+        "same": "Déjà au carnet",
+        "contradiction": "Diffère du carnet"
+      },
+      "quantity": "× {count}",
+      "validUntil": "Valable jusqu'au {date}",
+      "ref": "Réf. chantier {ref}",
+      "selectAll": "Tout cocher",
+      "selectNone": "Tout décocher",
+      "addAll": "Tout ajouter",
+      "addSelected": "Ajouter {count, plural, one {# ligne} other {# lignes}}",
+      "nothingChecked": "Rien de coché",
+      "plan": "{create, plural, =0 {Aucune ligne nouvelle} one {# ligne nouvelle} other {# lignes nouvelles}}, {fill, plural, =0 {aucune à compléter} one {# à compléter} other {# à compléter}}, {same, plural, =0 {aucune déjà au carnet} one {# déjà au carnet} other {# déjà au carnet}}, {contradiction, plural, =0 {aucune divergence} one {# divergence} other {# divergences}}.",
+      "empty": "Ce document ne propose aucune ligne.",
+      "fieldShort": {
+        "brand": "la marque",
+        "model": "le modèle",
+        "serial": "le n° de série",
+        "quantity": "la quantité",
+        "company": "la raison sociale",
+        "email": "l'e-mail",
+        "phone": "le téléphone",
+        "value": "la valeur"
+      }
+    }
   },
   "parts": {
     "title": "Stock",
