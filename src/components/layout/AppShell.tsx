@@ -6,6 +6,7 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import type { NavItem } from "@/components/layout/nav";
+import { searchPath } from "@/lib/queries/boat-routes";
 
 // Application frame: sidebar from `lg` (iPad landscape, Mac), top bar + bottom tabs below.
 export async function AppShell({
@@ -61,6 +62,7 @@ export async function AppShell({
           items={nav}
           primaryAction={at("sidebar-action", primaryAction)}
           accountMenu={at("sidebar-account", accountMenu)}
+          searchHref={boatId ? searchPath(boatId) : undefined}
           className="hidden lg:flex print:hidden"
         />
       </Suspense>
@@ -69,6 +71,7 @@ export async function AppShell({
         boatSubtitle={boatSubtitle}
         nav={nav}
         action={at("header-action", primaryAction)}
+        searchHref={boatId ? searchPath(boatId) : undefined}
         className="lg:hidden print:hidden"
       />
       <div className="print:hidden">{banner}</div>

@@ -60,6 +60,9 @@ export const BOAT_SHELL: readonly Namespace[] = [
   "nav",
   "offline",
   "roles",
+  // La porte de la recherche vit dans la barre et dans le rail (E18-4) : ses mots voyagent donc
+  // avec le cadre, pas avec la page de résultats.
+  "search",
 ];
 
 /**
@@ -116,6 +119,9 @@ export const BOAT_SECTIONS = {
     "validation",
   ],
   dashboard: [
+    // La maquette 3D est le bloc « consulter mon bateau » de l'écran d'arrivée (D133) : ses mots
+    // voyagent donc avec ceux du tableau de bord, comme ils voyagent avec l'onglet Bateau.
+    "boat3d",
     "checklist",
     "checklistState",
     "common",

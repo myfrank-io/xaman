@@ -1,37 +1,10 @@
 import { getTranslations } from "next-intl/server";
 
 import { engineKind } from "@/components/engines/engine-kind";
+import { num, Scroller, Section, table, td, th } from "@/components/report/print";
 import { formatCurrency, formatDate, formatHours, formatPercent } from "@/lib/format";
 import type { Database } from "@/types/database";
 import { cn } from "@/lib/utils";
-
-const table = "w-full border-collapse text-sm";
-const th =
-  "border-b border-border py-2 pr-3 text-left text-caption font-semibold text-ink-2 uppercase";
-const td = "border-b border-border py-2 pr-3 align-top";
-const num = "num text-right whitespace-nowrap";
-
-/**
- * A table wide enough to be a table cannot also fit a 320 px phone. It scrolls inside its own
- * box rather than dragging the whole page sideways, and `print:overflow-visible` keeps the
- * paper version whole — printing is what this screen is for.
- */
-function Scroller({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="-mx-1 overflow-x-auto px-1 print:mx-0 print:overflow-visible print:px-0">
-      {children}
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="flex min-w-0 break-inside-avoid flex-col gap-3">
-      <h2 className="text-h2">{title}</h2>
-      {children}
-    </section>
-  );
-}
 
 export type ReportBoat = {
   name: string;

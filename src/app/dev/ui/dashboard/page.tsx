@@ -1,11 +1,13 @@
-import Link from "next/link";
-import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { PlusIcon, TriangleAlertIcon } from "lucide-react";
+import { TriangleAlertIcon } from "lucide-react";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { SectionCard } from "@/components/common/SectionCard";
+import { BoatModel3D } from "@/components/boat-3d/BoatModel3D";
+import { ActivityList } from "@/components/dashboard/ActivityList";
+import { ExpensesTeaser } from "@/components/dashboard/ExpensesTeaser";
+import { WriteActions } from "@/components/dashboard/WriteActions";
 import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
 import { EngineStrip } from "@/components/dashboard/EngineStrip";
 import type { UpcomingEntry } from "@/components/dashboard/queue";
@@ -23,7 +25,9 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { todayString } from "@/lib/format";
+import type { ActivityRow } from "@/lib/queries/activity";
 
+import { SAMPLE_BOAT, SAMPLE_MODEL } from "../boat/sample";
 import { SAMPLE_CATEGORIES } from "../sample-data";
 import { devUiEnabled } from "@/lib/dev-ui";
 
@@ -169,6 +173,75 @@ const UPCOMING: UpcomingEntry[] = [
       hoursRemaining: 18,
     }),
   },
+  // Ce qui attend sans date (D131) : un document arrivé tout seul, une pièce sous son seuil.
+  { kind: "inbox", id: "u9", title: "Facture Nautic Service", receivedAt: "2026-09-12" },
+  {
+    kind: "part",
+    id: "u10",
+    title: "Filtre à huile (x2)",
+    missing: 2,
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+  },
+];
+
+/** Le fil du carnet (D132) : cinq faits, cinq genres, et les noms qui vont avec. */
+const ACTIVITY: ActivityRow[] = [
+  {
+    kind: "completion",
+    id: "a1",
+    happenedAt: "2026-09-13",
+    title: "Pompes de cale (test auto/manuel)",
+    who: "Emmanuel Lesaffre",
+    categoryName: SAMPLE_CATEGORIES[6].name,
+    categoryColor: SAMPLE_CATEGORIES[6].color,
+    amount: null,
+    hours: null,
+  },
+  {
+    kind: "log",
+    id: "a2",
+    happenedAt: "2026-09-12",
+    title: "Vidange + entretien complet (2 moteurs)",
+    who: "Chantier du Port",
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+    amount: 620,
+    hours: null,
+  },
+  {
+    kind: "reading",
+    id: "a3",
+    happenedAt: "2026-09-11",
+    title: "Moteur SB",
+    who: "Xavier Marin",
+    categoryName: null,
+    categoryColor: null,
+    amount: null,
+    hours: 1256,
+  },
+  {
+    kind: "purchase",
+    id: "a4",
+    happenedAt: "2026-09-08",
+    title: "Bouteille de gaz",
+    who: "Xavier Marin",
+    categoryName: SAMPLE_CATEGORIES[5].name,
+    categoryColor: SAMPLE_CATEGORIES[5].color,
+    amount: 35,
+    hours: null,
+  },
+  {
+    kind: "haul_out",
+    id: "a5",
+    happenedAt: "2026-01-10",
+    title: "Chantier Naval de Méditerranée",
+    who: "Chantier Naval de Méditerranée",
+    categoryName: null,
+    categoryColor: null,
+    amount: 2400,
+    hours: null,
+  },
 ];
 
 /** Ce qui a été réglé cette semaine : la phrase d'état lit cet objet. */
@@ -181,7 +254,6 @@ export default async function DevDashboardPage() {
   const t = await getTranslations("dashboard");
   const tn = await getTranslations("nav");
   const td = await getTranslations("dev");
-  const tcreate = await getTranslations("create");
 
   // Same assembly as the real screen: two clauses joined by the locale, never by a hard « et ».
   const list = new Intl.ListFormat("fr-FR", { style: "long", type: "conjunction" });
@@ -234,15 +306,8 @@ export default async function DevDashboardPage() {
           <EngineStrip boatId={DEV_BOAT_ID} engines={ENGINES} canContribute canWrite />
         </header>
 
-        {/* 2 — écrire : the dominant act, named, below `lg` (D35) */}
-        <div className="lg:hidden">
-          <Button asChild size="xl" className="w-full sm:w-auto">
-            <Link href={`/boats/${DEV_BOAT_ID}/logs/new` as Route}>
-              <PlusIcon />
-              {tcreate("primary")}
-            </Link>
-          </Button>
-        </div>
+        {/* 2 — écrire : deux actes, séparés par le temps du verbe (D133) */}
+        <WriteActions boatId={DEV_BOAT_ID} />
 
         {/* 3 — contextual banner (a single one, by priority) */}
         <Alert variant="warning" className="items-center">
@@ -267,6 +332,48 @@ export default async function DevDashboardPage() {
           currentUserName="Xavier Marin"
           canContribute
           today={todayString()}
+        />
+
+        {/* 5 — savoir : ce qui a bougé, avec les noms (D132) */}
+        <SectionCard
+          title={t("activity.title")}
+          actionHref="/dev/ui/dashboard"
+          actionLabel={t("activity.all")}
+          bare
+        >
+          <ActivityList rows={ACTIVITY} />
+        </SectionCard>
+
+        {/* 6 — consulter mon bateau : la maquette d'E2-8 (D133) */}
+        <BoatModel3D boatId={DEV_BOAT_ID} boatName={SAMPLE_BOAT.name} data={SAMPLE_MODEL} />
+
+        {/* 7 — découvrir ses dépenses (D133) */}
+        <ExpensesTeaser
+          boatId={DEV_BOAT_ID}
+          total={4321.5}
+          categories={[
+            {
+              id: "c1",
+              name: SAMPLE_CATEGORIES[0].name,
+              color: SAMPLE_CATEGORIES[0].color,
+              amount: 2480,
+              count: 6,
+            },
+            {
+              id: "c2",
+              name: SAMPLE_CATEGORIES[3].name,
+              color: SAMPLE_CATEGORIES[3].color,
+              amount: 1210.5,
+              count: 3,
+            },
+            {
+              id: "c3",
+              name: SAMPLE_CATEGORIES[7].name,
+              color: SAMPLE_CATEGORIES[7].color,
+              amount: 631,
+              count: 4,
+            },
+          ]}
         />
 
         {/* 4b — day-one state of the same block */}

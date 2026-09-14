@@ -1972,10 +1972,12 @@ describeWithDb("engine without an hour meter (D73)", () => {
         Number(
           (
             await c.query(
-              "select engines_without_reading from public.boat_dashboard_stats where boat_id = $1",
+              `select count(*)::int as waiting from public.engines en
+                 where en.boat_id = $1 and en.is_active and en.tracks_hours
+                   and not exists (select 1 from public.engine_current_hours ech where ech.engine_id = en.id)`,
               [BOAT],
             )
-          ).rows[0].engines_without_reading,
+          ).rows[0].waiting,
         );
       const inserted = await c.query(
         "insert into public.engines (boat_id, label, position, created_by) values ($1, 'Annexe', 'outboard', $2) returning id",
@@ -2102,6 +2104,67 @@ describeWithDb("boat_expense_totals (0030)", () => {
   });
 });
 
+/**
+ * Le fil du carnet (D132). La vue unit cinq tables sans politique à elle : `security_invoker`
+ * veut dire que chacune décide comme sur son propre écran. Ce qui est vérifié ici est donc ce
+ * qu'aucune relecture ne garantit — qu'un étranger n'y lit rien, et qu'une ligne mise à la
+ * corbeille en sort, parce qu'un fil qui garderait ce que les listes ont jeté serait un journal
+ * d'audit que personne n'a demandé.
+ */
+describeWithDb("boat_activity", () => {
+  const feedOf = (u: User) =>
+    as(u, async (c) => {
+      const res = await c.query(
+        "select kind, title, who from public.boat_activity where boat_id = $1 order by happened_at desc",
+        [BOAT],
+      );
+      return res.rows as { kind: string; title: string; who: string | null }[];
+    });
+
+  it("shows every member what the carnet lived, and who did it", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      const rows = await feedOf(U[role]);
+      expect(rows.length, role).toBeGreaterThan(0);
+      expect(
+        rows.every((r) =>
+          ["completion", "log", "purchase", "reading", "haul_out"].includes(r.kind),
+        ),
+        role,
+      ).toBe(true);
+      expect(
+        rows.some((r) => r.kind === "log" && r.who !== null),
+        role,
+      ).toBe(true);
+    }
+  });
+
+  it("says nothing at all to an outsider", async () => {
+    expect(await feedOf(U.stranger)).toEqual([]);
+  });
+
+  it("drops a line the moment it goes to the trash", async () => {
+    const counts = await as(U.owner, async (c) => {
+      const logs = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as n from public.boat_activity where boat_id = $1 and kind = 'log'",
+              [BOAT],
+            )
+          ).rows[0].n,
+        );
+      const before = await logs();
+      await c.query(
+        "update public.maintenance_logs set deleted_at = now() where boat_id = $1 and status = 'done'",
+        [BOAT],
+      );
+      return { before, after: await logs() };
+    });
+    expect(counts.before).toBeGreaterThan(0);
+    expect(counts.after).toBe(0);
+  });
+});
+
 describeWithDb("boat_todo_queue", () => {
   const seedQueue = async (c: PoolClient) => {
     await c.query("set local role service_role");
@@ -2138,6 +2201,10 @@ describeWithDb("boat_todo_queue", () => {
       ).toEqual([
         [0, "log", "Fuite bâbord"],
         [1, "item", "Point en retard"],
+        // Ce qui attend sans date entre dans la file à son tour (D131) : le document du seed,
+        // puis la pièce sous son seuil, toujours en dernier.
+        [2, "inbox", "Facture 118"],
+        [5, "part", "Filtre à huile"],
       ]);
       expect(
         rows.some((r) => r.title === "Contrôle ponctuel"),
@@ -2465,21 +2532,20 @@ describeWithDb("trash for parts and contacts (0012)", () => {
     expect(result).toBe("23505");
   });
 
-  it("the dashboard stops counting a trashed part as missing from the stock", async () => {
+  it("the queue stops asking for a trashed part", async () => {
     const counts = await as(U.owner, async (c) => {
-      const before = await c.query(
-        "select low_stock_parts from public.boat_dashboard_stats where boat_id = $1",
-        [BOAT],
-      );
+      const low = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as low from public.boat_todo_queue($1::uuid, 100) q where q.kind = 'part'",
+              [BOAT],
+            )
+          ).rows[0].low,
+        );
+      const before = await low();
       await c.query("update public.parts set deleted_at = now() where id = $1", [PART]);
-      const after = await c.query(
-        "select low_stock_parts from public.boat_dashboard_stats where boat_id = $1",
-        [BOAT],
-      );
-      return {
-        before: Number(before.rows[0]?.low_stock_parts),
-        after: Number(after.rows[0]?.low_stock_parts),
-      };
+      return { before, after: await low() };
     });
     // The seeded part is below its threshold, so it counted before and must not count after.
     expect(counts.before).toBe(1);
@@ -2699,5 +2765,124 @@ describeWithDb("editing an existing row (D42)", () => {
       on conflict (id) do update set title = excluded.title`;
     expect(await run(U.owner, create, [NEW_ID, BOAT])).toEqual({ ok: true, rowCount: 1 });
     expect(await run(U.owner, create, [NEW_ID, BOAT])).toEqual({ ok: true, rowCount: 1 });
+  });
+});
+
+/**
+ * Chercher dans le carnet (E18-4, D134). La fonction est `security invoker` et n'a donc aucune
+ * politique à elle : ce qu'elle rend est ce que les sept familles laissent déjà lire. C'est
+ * exactement ce qui doit être vérifié ici — une recherche est la seule porte du carnet qui
+ * interroge tout d'un coup, et une fonction qui se tromperait de rôle les ouvrirait toutes.
+ *
+ * Trois réponses différentes attendues sur la même question : un membre lit son carnet, un
+ * étranger ne lit rien, `anon` ne peut même pas exécuter.
+ */
+describeWithDb("search_boat", () => {
+  const search = (u: User | null, q: string, boat = BOAT) =>
+    as(u, async (c) => {
+      const res = await c.query(
+        "select kind, id, title, subtitle, happened_at, amount, parent_id, score from public.search_boat($1, $2)",
+        [boat, q],
+      );
+      return res.rows as {
+        kind: string;
+        id: string;
+        title: string;
+        subtitle: string | null;
+        score: number;
+      }[];
+    });
+
+  it("answers every member of the boat, across families", async () => {
+    for (const role of ["owner", "editor", "viewer", "admin"] as Role[]) {
+      const rows = await search(U[role], "vidange");
+      expect(rows.length, role).toBeGreaterThan(0);
+      expect(
+        rows.every((r) => r.title.toLowerCase().includes("vidange")),
+        role,
+      ).toBe(true);
+    }
+  });
+
+  it("answers a pro exactly what the policies already show them, never more", async () => {
+    // Le pro n'a pas de vue privilégiée : ce qu'il trouve est ce qu'il pourrait atteindre écran
+    // par écran. On le compare donc au propriétaire sur la même question — jamais davantage.
+    const owner = new Set((await search(U.owner, "vidange")).map((r) => `${r.kind}:${r.id}`));
+    const pro = await search(U.pro, "vidange");
+    expect(pro.length).toBeGreaterThan(0);
+    expect(pro.every((r) => owner.has(`${r.kind}:${r.id}`))).toBe(true);
+  });
+
+  it("says nothing at all to an outsider", async () => {
+    expect(await search(U.stranger, "vidange")).toEqual([]);
+    expect(await search(U.stranger, "moteur")).toEqual([]);
+  });
+
+  it("is not executable by a signed-out visitor", async () => {
+    await expect(search(null, "vidange")).rejects.toMatchObject({ code: "42501" });
+  });
+
+  it("refuses to answer about a boat the caller is not on", async () => {
+    // Le `boat_id` est un paramètre : le passer en dur ne doit rien ouvrir, la RLS décidant
+    // ligne par ligne même quand la question porte sur un autre bateau.
+    expect(await search(U.owner, "vidange", BOAT2)).toEqual([]);
+  });
+
+  it("keeps the bin out of the answer (rule 9)", async () => {
+    const rows = await as(U.owner, async (c) => {
+      const hits = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as n from public.search_boat($1, 'vidange') where kind = 'log'",
+              [BOAT],
+            )
+          ).rows[0].n,
+        );
+      const before = await hits();
+      await c.query("update public.maintenance_logs set deleted_at = now() where boat_id = $1", [
+        BOAT,
+      ]);
+      return { before, after: await hits() };
+    });
+    expect(rows.before).toBeGreaterThan(0);
+    expect(rows.after).toBe(0);
+  });
+
+  it("folds case and accents, and stays silent under two characters", async () => {
+    const folded = await search(U.owner, "VIDANGE");
+    expect(folded.length).toBeGreaterThan(0);
+    expect(await search(U.owner, "v")).toEqual([]);
+    expect(await search(U.owner, "")).toEqual([]);
+  });
+
+  it("never searches a contact's phone, e-mail or address", async () => {
+    // Une page de résultats se montre à qui se tient à côté : taper « 06 » ne doit pas imprimer
+    // une liste de numéros, et une adresse n'est pas un mot-clé.
+    const contact = await as(U.owner, async (c) => {
+      await c.query("set local role service_role");
+      const res = await c.query(
+        `insert into public.contacts (boat_id, name, specialty, phone, email, address, created_by)
+         values ($1, 'Joignable', 'Mécanique', '0612345678', 'secret@chantier.test', 'Quai des Mystères', $2)
+         returning id`,
+        [BOAT, U.owner.id],
+      );
+      const id = res.rows[0].id as string;
+      await c.query("set local role authenticated");
+      const probe = async (q: string) =>
+        (await c.query("select count(*)::int as n from public.search_boat($1, $2)", [BOAT, q]))
+          .rows[0].n as number;
+      return {
+        byPhone: await probe("0612345678"),
+        byEmail: await probe("secret@chantier"),
+        byAddress: await probe("Mystères"),
+        byName: await probe("Joignable"),
+        id,
+      };
+    });
+    expect(contact.byPhone).toBe(0);
+    expect(contact.byEmail).toBe(0);
+    expect(contact.byAddress).toBe(0);
+    expect(contact.byName).toBe(1);
   });
 });

@@ -642,6 +642,7 @@ export type Database = {
           is_active: boolean
           label: string
           rule_id: string | null
+          search_text: string | null
           sort_order: number
           source: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id: string | null
@@ -666,6 +667,7 @@ export type Database = {
           is_active?: boolean
           label: string
           rule_id?: string | null
+          search_text?: never
           sort_order?: number
           source?: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id?: string | null
@@ -690,6 +692,7 @@ export type Database = {
           is_active?: boolean
           label?: string
           rule_id?: string | null
+          search_text?: never
           sort_order?: number
           source?: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id?: string | null
@@ -953,6 +956,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          search_text: string | null
           specialty: string
           updated_at: string
           updated_by: string | null
@@ -970,6 +974,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          search_text?: never
           specialty: string
           updated_at?: string
           updated_by?: string | null
@@ -987,6 +992,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          search_text?: never
           specialty?: string
           updated_at?: string
           updated_by?: string | null
@@ -1256,6 +1262,7 @@ export type Database = {
           notes: string | null
           quantity: number
           removed_at: string | null
+          search_text: string | null
           serial: string | null
           sort_order: number
           specs: NonNullable<Json>
@@ -1278,6 +1285,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           removed_at?: string | null
+          search_text?: never
           serial?: string | null
           sort_order?: number
           specs?: NonNullable<Json>
@@ -1300,6 +1308,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           removed_at?: string | null
+          search_text?: never
           serial?: string | null
           sort_order?: number
           specs?: NonNullable<Json>
@@ -1501,6 +1510,7 @@ export type Database = {
           mime_type: string
           purchase_id: string | null
           received_at: string
+          search_text: string | null
           sender_email: string | null
           sender_name: string | null
           size_bytes: number
@@ -1527,6 +1537,7 @@ export type Database = {
           mime_type: string
           purchase_id?: string | null
           received_at?: string
+          search_text?: never
           sender_email?: string | null
           sender_name?: string | null
           size_bytes: number
@@ -1553,6 +1564,7 @@ export type Database = {
           mime_type?: string
           purchase_id?: string | null
           received_at?: string
+          search_text?: never
           sender_email?: string | null
           sender_name?: string | null
           size_bytes?: number
@@ -1738,6 +1750,7 @@ export type Database = {
           notes: string | null
           pending_engine_hours: Json | null
           performed_at: string
+          search_text: string | null
           status: Database["public"]["Enums"]["log_status"]
           title: string
           updated_at: string
@@ -1760,6 +1773,7 @@ export type Database = {
           notes?: string | null
           pending_engine_hours?: Json | null
           performed_at: string
+          search_text?: never
           status?: Database["public"]["Enums"]["log_status"]
           title: string
           updated_at?: string
@@ -1782,6 +1796,7 @@ export type Database = {
           notes?: string | null
           pending_engine_hours?: Json | null
           performed_at?: string
+          search_text?: never
           status?: Database["public"]["Enums"]["log_status"]
           title?: string
           updated_at?: string
@@ -2017,6 +2032,7 @@ export type Database = {
           notes: string | null
           quantity: number
           reference: string | null
+          search_text: string | null
           supplier_contact_id: string | null
           unit: string
           updated_at: string
@@ -2037,6 +2053,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           reference?: string | null
+          search_text?: never
           supplier_contact_id?: string | null
           unit?: string
           updated_at?: string
@@ -2057,6 +2074,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           reference?: string | null
+          search_text?: never
           supplier_contact_id?: string | null
           unit?: string
           updated_at?: string
@@ -2167,6 +2185,7 @@ export type Database = {
           part_id: string | null
           purchased_at: string
           quantity: number
+          search_text: string | null
           supplier_contact_id: string | null
           supplier_name: string | null
           updated_at: string
@@ -2191,6 +2210,7 @@ export type Database = {
           part_id?: string | null
           purchased_at: string
           quantity?: number
+          search_text?: never
           supplier_contact_id?: string | null
           supplier_name?: string | null
           updated_at?: string
@@ -2215,6 +2235,7 @@ export type Database = {
           part_id?: string | null
           purchased_at?: string
           quantity?: number
+          search_text?: never
           supplier_contact_id?: string | null
           supplier_name?: string | null
           updated_at?: string
@@ -2302,57 +2323,37 @@ export type Database = {
       }
     }
     Views: {
+      boat_activity: {
+        Row: {
+          amount: number | null
+          boat_id: string | null
+          category_color: string | null
+          category_name: string | null
+          happened_at: string | null
+          hours: number | null
+          id: string | null
+          kind: string | null
+          recorded_at: string | null
+          title: string | null
+          who: string | null
+        }
+        Relationships: []
+      }
       boat_dashboard_stats: {
         Row: {
           boat_id: string | null
-          engines_without_reading: number | null
-          expenses_12m: number | null
-          in_progress_logs: number | null
-          last_haul_out_at: string | null
-          low_stock_parts: number | null
-          months_since_haul_out: number | null
-          never_recorded_items: number | null
-          overdue_items: number | null
-          planned_logs: number | null
           review_pending_logs: number | null
           review_pending_purchases: number | null
-          soon_items: number | null
-          urgent_logs: number | null
-          ytd_expenses: number | null
         }
         Insert: {
           boat_id?: string | null
-          engines_without_reading?: never
-          expenses_12m?: never
-          in_progress_logs?: never
-          last_haul_out_at?: never
-          low_stock_parts?: never
-          months_since_haul_out?: never
-          never_recorded_items?: never
-          overdue_items?: never
-          planned_logs?: never
           review_pending_logs?: never
           review_pending_purchases?: never
-          soon_items?: never
-          urgent_logs?: never
-          ytd_expenses?: never
         }
         Update: {
           boat_id?: string | null
-          engines_without_reading?: never
-          expenses_12m?: never
-          in_progress_logs?: never
-          last_haul_out_at?: never
-          low_stock_parts?: never
-          months_since_haul_out?: never
-          never_recorded_items?: never
-          overdue_items?: never
-          planned_logs?: never
           review_pending_logs?: never
           review_pending_purchases?: never
-          soon_items?: never
-          urgent_logs?: never
-          ytd_expenses?: never
         }
         Relationships: []
       }
@@ -2914,6 +2915,19 @@ export type Database = {
       }
       normalise_for_match: { Args: { p_value: string }; Returns: string }
       purge_trash: { Args: Record<PropertyKey, never>; Returns: number }
+      search_boat: {
+        Args: { p_boat_id: string; p_limit?: number; p_query: string }
+        Returns: {
+          amount: number
+          happened_at: string
+          id: string
+          kind: string
+          parent_id: string
+          score: number
+          subtitle: string
+          title: string
+        }[]
+      }
       shares_boat_with: { Args: { p_user_id: string }; Returns: boolean }
       suggest_checklist_items: {
         Args: { p_boat_id: string; p_category_id: string; p_title: string }
@@ -2937,6 +2951,7 @@ export type Database = {
         }[]
       }
       text_fold: { Args: { p_text: string }; Returns: string }
+      text_haystack: { Args: { p_parts: string[] }; Returns: string }
       weekly_digest_payload: {
         Args: Record<PropertyKey, never>
         Returns: {

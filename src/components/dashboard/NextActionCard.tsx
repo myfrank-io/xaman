@@ -14,7 +14,9 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import type { UpcomingEntry } from "@/components/dashboard/queue";
 import { LogDueLabel } from "@/components/logs/LogDueLabel";
 import { Button } from "@/components/ui/button";
-import { categoryPath, logPath } from "@/lib/queries/boat-routes";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/format";
+import { categoryPath, inboxPath, logPath, stockPath } from "@/lib/queries/boat-routes";
 
 /** Le cadre : un intitulé, le titre cliquable, la raison de l'échéance, un seul geste. */
 function Shell({
@@ -71,6 +73,7 @@ export function NextActionCard({
   onDone?: (row: ChecklistRow) => void;
 }) {
   const t = useTranslations("dashboard");
+  const tu = useTranslations("dashboard.upcoming");
 
   if (entry.kind === "item") {
     const row: ChecklistRow = entry.row;
@@ -110,6 +113,58 @@ export function NextActionCard({
               <Link href={categoryPath(boatId, row.categoryId) as Route}>{t("next.open")}</Link>
             </Button>
           )
+        }
+      />
+    );
+  }
+
+  // Un document ou une pièce peut arriver en tête : la file range ce qui attend, pas seulement
+  // ce qui est daté (D131). Le geste reste un seul, et il mène là où on le traite.
+  if (entry.kind === "inbox") {
+    return (
+      <Shell
+        overline={t("next.title")}
+        title={entry.title}
+        href={inboxPath(boatId)}
+        reason={
+          <>
+            <Badge size="sm" variant="secondary">
+              {tu("inbox.badge")}
+            </Badge>
+            {entry.receivedAt ? (
+              <span>{tu("inbox.received", { date: formatDate(entry.receivedAt) })}</span>
+            ) : null}
+          </>
+        }
+        action={
+          <Button asChild size="xl" variant="outline" className="w-full sm:w-auto">
+            <Link href={inboxPath(boatId) as Route}>{t("next.open")}</Link>
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (entry.kind === "part") {
+    return (
+      <Shell
+        overline={t("next.title")}
+        title={entry.title}
+        href={stockPath(boatId, { filter: "low" })}
+        reason={
+          <>
+            <Badge size="sm" variant="secondary">
+              {tu("part.badge")}
+            </Badge>
+            <span className="num">{tu("part.missing", { count: entry.missing })}</span>
+            {entry.categoryColor ? <CategoryDot color={entry.categoryColor} /> : null}
+            {entry.categoryName ? <span className="truncate">{entry.categoryName}</span> : null}
+          </>
+        }
+        action={
+          <Button asChild size="xl" variant="outline" className="w-full sm:w-auto">
+            <Link href={stockPath(boatId, { filter: "low" }) as Route}>{t("next.open")}</Link>
+          </Button>
         }
       />
     );

@@ -1,13 +1,16 @@
-import Link from "next/link";
-import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { subDays } from "date-fns";
-import { AnchorIcon, PlusIcon } from "lucide-react";
+import { subDays, subMonths } from "date-fns";
+import { AnchorIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import type { EngineReadDates } from "@/components/checklist/completable";
 import { toChecklistRow, type StatusViewRow } from "@/components/checklist/rows";
+import { BoatModel3D } from "@/components/boat-3d/BoatModel3D";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SectionCard } from "@/components/common/SectionCard";
+import { ActivityList } from "@/components/dashboard/ActivityList";
+import { ExpensesTeaser } from "@/components/dashboard/ExpensesTeaser";
+import { WriteActions } from "@/components/dashboard/WriteActions";
 import { BrandNewBlock } from "@/components/dashboard/BrandNewBlock";
 import { OutboxCard } from "@/components/offline/OutboxCard";
 import { DashboardBanner } from "@/components/dashboard/DashboardBanner";
@@ -16,12 +19,13 @@ import { pickNextDue, type NextDue } from "@/components/dashboard/next-due";
 import type { UpcomingEntry } from "@/components/dashboard/queue";
 import { UpcomingList } from "@/components/dashboard/UpcomingList";
 import { WEEK_DAYS } from "@/lib/attention";
+import { toBoatModelData } from "@/lib/boat-3d/data";
+import { categoryTotalsFrom, EXPENSE_SOURCES, NO_CATEGORY_COLOR } from "@/lib/expenses";
 import { toDateString, todayString } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
+import { loadActivity } from "@/lib/queries/activity";
 import { loadItemAttention, loadWeekActivity, pickNames } from "@/lib/queries/attention";
-import { newLogPath } from "@/lib/queries/boat-routes";
-import { pendingInboxCount } from "@/lib/queries/inbox";
-import { Button } from "@/components/ui/button";
+import { activityPath } from "@/lib/queries/boat-routes";
 import { completionContext } from "@/lib/queries/completion-context";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
@@ -37,6 +41,11 @@ import type { Database } from "@/types/database";
  * mènent aux listes complètes, qui savent filtrer.
  */
 const QUEUE_LIMIT = 200;
+/**
+ * Dix lignes de fil : de quoi voir ce qui a bougé depuis la dernière visite sans transformer
+ * l'écran en journal. Le reste est à un tap, sur son propre écran (E18-3).
+ */
+const ACTIVITY_PREVIEW = 10;
 /** Combien de points « ok » on regarde pour nommer la prochaine échéance de l'état vide. */
 const NEXT_DUE_SAMPLE = 20;
 const FALLBACK_COLOR = "#63748A";
@@ -102,10 +111,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const weekSince = toDateString(subDays(new Date(), WEEK_DAYS));
 
   /**
-   * Une seule vague. `boat_dashboard_stats` n'est plus lu que pour les deux comptes du bandeau :
-   * les colonnes que les vignettes et le récapitulatif faisaient calculer (dépenses sur douze
-   * mois, sortie de l'eau, stock, états des points) n'ont plus de lecteur ici, et la vue perd
-   * les siennes avec E18-2.
+   * Une seule vague. `boat_dashboard_stats` ne porte plus que les deux comptes du bandeau
+   * (0037) : les onze sous-requêtes que les vignettes et le récapitulatif faisaient tourner à
+   * chaque rendu n'avaient plus de lecteur. Le compte « À valider » n'est plus lu ici non
+   * plus — la file en porte chaque ligne (D131).
    *
    * La ligne du bateau fait exception : `readBoatRow` la lit entière, mais c'est **celle du
    * layout** (`cache()` de React déduplique la requête).
@@ -120,7 +129,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     { data: progress },
     attention,
     week,
-    inboxCount,
+    activity,
+    { data: modelEngines },
+    { data: modelEquipment },
+    { data: modelCategories },
+    { data: modelPoints },
+    { data: expenses },
   ] = await Promise.all([
     readBoatRow(boatId),
     readBoatRole(boatId),
@@ -150,18 +164,59 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     loadItemAttention(supabase, boatId),
     // Ce qui a été réglé sur sept jours : la moitié gauche de la phrase d'état.
     loadWeekActivity(supabase, boatId, weekSince),
-    // Documents waiting on « À valider » (D91): a narrow count, read here rather than in the view.
-    pendingInboxCount(supabase, boatId),
+    // Ce qui a bougé, avec les noms : la zone « savoir » de l'écran (D132).
+    loadActivity(supabase, boatId, ACTIVITY_PREVIEW),
+    /**
+     * Les quatre lectures de la maquette (E2-8), qui est ici le bloc « consulter mon bateau »
+     * (D133). Elles voyagent dans la même vague que le reste : elles n'attendent la réponse de
+     * rien, et le `toBoatModelData` qui les assemble est celui de l'onglet Bateau.
+     */
+    supabase
+      .from("engines")
+      .select("id, label, position, is_active")
+      .eq("boat_id", boatId)
+      .order("sort_order")
+      .order("label"),
+    supabase
+      .from("equipment")
+      .select("id, name, brand, model, quantity, category_id, external_ref, removed_at, specs")
+      .eq("boat_id", boatId)
+      .is("deleted_at", null)
+      .order("sort_order")
+      .order("name"),
+    supabase
+      .from("boat_categories")
+      .select("id, external_ref")
+      .eq("boat_id", boatId)
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("checklist_item_status")
+      .select(
+        "id, label, status, days_remaining, hours_remaining, category_id, engine_id, engine_tracks_hours",
+      )
+      .eq("boat_id", boatId),
+    // Ce que le bateau a coûté sur douze mois, compté par la base (D111) : un total et sa
+    // répartition par système, en une lecture.
+    supabase
+      .rpc("boat_expense_totals", {
+        p_boat_id: boatId,
+        p_from: toDateString(subMonths(new Date(), 12)),
+        p_to: today,
+        p_sources: [...EXPENSE_SOURCES],
+      })
+      .maybeSingle(),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
   const canWrite = can(boatRole, "write");
   const canContribute = can(boatRole, "contribute");
 
-  const [t, tb, tcreate] = await Promise.all([
+  const [t, tb, tsupplies] = await Promise.all([
     getTranslations("dashboard"),
     getTranslations("boatType"),
-    getTranslations("create"),
+    // « Sans catégorie » a déjà son mot, là où les dépenses se lisent : on le lui emprunte.
+    getTranslations("supplies"),
   ]);
 
   // Engines and their last reading
@@ -179,6 +234,21 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   // reading is fresh, and asks for them when it is not.
   const engineReadDates: EngineReadDates = Object.fromEntries(
     (hours ?? []).map((row) => [row.engine_id ?? "", row.read_at]),
+  );
+
+  // La maquette (E2-8) : les mêmes lignes, le même assemblage que l'onglet Bateau.
+  const boatModel = toBoatModelData({
+    boat,
+    engines: modelEngines ?? [],
+    categories: modelCategories ?? [],
+    equipment: modelEquipment ?? [],
+    points: modelPoints ?? [],
+  });
+  const expensesTotal = expenses?.total ?? 0;
+  const expenseCategories = categoryTotalsFrom(
+    expenses?.by_category,
+    tsupplies("expenses.uncategorized"),
+    NO_CATEGORY_COLOR,
   );
 
   // The « brand new » state: the carnet has its points and not one has ever been recorded.
@@ -223,6 +293,23 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
           { name: row.category_name, color: row.category_color ?? FALLBACK_COLOR },
           row.engine_label ?? null,
         ),
+      });
+    } else if (row.kind === "inbox") {
+      entries.push({
+        kind: "inbox",
+        id: row.id,
+        title: row.title,
+        // `due_at` porte le jour d'arrivée pour un document : il attend depuis, pas jusqu'à.
+        receivedAt: row.due_at,
+      });
+    } else if (row.kind === "part") {
+      entries.push({
+        kind: "part",
+        id: row.id,
+        title: row.title,
+        missing: Number(row.severity ?? 0),
+        categoryName: row.category_name,
+        categoryColor: row.category_color,
       });
     } else {
       entries.push({
@@ -311,24 +398,13 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
         />
       </header>
 
-      {/* 2 — écrire : the dominant act, named, on the screen a cold start lands on (D35). From
-          `lg` the sidebar already carries « Noter une intervention »: one named primary action
-          per viewport, never two. */}
-      {canContribute ? (
-        <div className="lg:hidden">
-          <Button asChild size="xl" className="w-full sm:w-auto">
-            <Link href={newLogPath(boatId) as Route}>
-              <PlusIcon />
-              {tcreate("primary")}
-            </Link>
-          </Button>
-        </div>
-      ) : null}
+      {/* 2 — écrire : deux actes, séparés par le temps du verbe (D133). Ce qu'il faudra faire
+          était la porte qui manquait : le bouton nommé ne prenait que ce qui est déjà fait. */}
+      {canContribute ? <WriteActions boatId={boatId} /> : null}
 
       {/* 3 — one contextual banner */}
       <DashboardBanner
         boatId={boatId}
-        inboxCount={inboxCount}
         reviewCount={reviewCount}
         noReadingEngines={noReadingEngines}
         canContribute={canContribute}
@@ -370,6 +446,26 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
           description={nextDueText}
         />
       )}
+
+      {/* 5 — savoir : ce qui a bougé, avec les noms. Le bloc n'existe que s'il a quelque chose à
+          dire : sur un carnet neuf, la mise en route parle déjà (D132). */}
+      {activity.length > 0 ? (
+        <SectionCard
+          title={t("activity.title")}
+          actionHref={activityPath(boatId)}
+          actionLabel={t("activity.all")}
+          bare
+        >
+          <ActivityList rows={activity} />
+        </SectionCard>
+      ) : null}
+
+      {/* 6 — consulter mon bateau : la maquette d'E2-8, qui est déjà cet objet (D133). Elle
+          deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). */}
+      <BoatModel3D boatId={boatId} boatName={boat.name} data={boatModel} />
+
+      {/* 7 — découvrir ses dépenses : un montant qu'on regarde, pas un lien qu'on lit (D133). */}
+      <ExpensesTeaser boatId={boatId} total={expensesTotal} categories={expenseCategories} />
     </div>
   );
 }
