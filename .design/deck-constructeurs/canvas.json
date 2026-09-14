@@ -25,8 +25,16 @@
       "h": 1080
     },
     {
+      "file": "Citation.dc.html",
+      "title": "4 · Ce que dit leur pôle occasion",
+      "x": 6120,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+    },
+    {
       "file": "Produit.dc.html",
-      "title": "4 · Ce qu'est Xaman",
+      "title": "5 · Ce qu'est Xaman",
       "x": 0,
       "y": 1280,
       "w": 1920,
@@ -34,7 +42,7 @@
     },
     {
       "file": "DeuxChemins.dc.html",
-      "title": "5 · Les deux acheteurs",
+      "title": "6 · Les deux acheteurs",
       "x": 2040,
       "y": 1280,
       "w": 1920,
@@ -42,7 +50,7 @@
     },
     {
       "file": "Pilote.dc.html",
-      "title": "6 · Ce que nous leur proposons",
+      "title": "7 · Ce que nous leur proposons",
       "x": 4080,
       "y": 1280,
       "w": 1920,
@@ -53,9 +61,9 @@
     {
       "id": "notes-deck",
       "x": 6120,
-      "y": 0,
+      "y": 1280,
       "w": 620,
-      "text": "Six slides, dédiées à Grand Large Yachting.\n\nÀ vérifier avant de présenter : la boîte constructeurs@xaman.boats n'existe pas encore (le domaine, si).\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier — ce n'est pas tranché.\n\nSlide 4 : l'aperçu montre « Marsaudon ORC 50 », le vrai bateau du produit — mais c'est un concurrent d'Outremer. À neutraliser si ça gêne."
+      "text": "Sept slides, dédiées à Grand Large Yachting.\n\nSLIDE 4 — la citation de Pierre Delhomeau n'a PAS pu être vérifiée à la source (Figaro Nautisme inaccessible d'ici). Seul « un bon carnet d'entretien » est entre guillemets, le reste est en discours rapporté. À confirmer mot à mot avant de présenter, ainsi que le chiffre de 35 à 40 bateaux par an.\n\nLes trois anomalies du carnet papier, elles, sont réelles : relevées dans seed/xaman-history.json.\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier."
     }
   ],
   "launch": {
