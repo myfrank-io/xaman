@@ -38,7 +38,7 @@ describe("who gets past the session gate", () => {
   });
 
   /**
-   * The builders' page (D123) is read by people who have no account and never will — a yard's
+   * The builders' page (D126) is read by people who have no account and never will — a yard's
    * sales director forwarding it to a CEO. Behind the gate it would answer `307 → /login`, and
    * the one audience the business runs on would meet a password field.
    */

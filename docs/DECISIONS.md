@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D124.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D127.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2800,8 +2800,75 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+## 2026-09-14 — D122 : le plan se compose par trigger, et un point ne se supprime jamais
 
-## 2026-09-14 — D122 : deux acheteurs, un seul carnet — le propriétaire ne paie pas, le chantier vend du service
+**Question.** E17-5 doit recomposer le plan « à l'ajout et au dépôt d'un équipement ». Où mettre ce
+déclenchement, et que faire des points d'un équipement qui s'en va ?
+
+**Décision — un trigger, pas les Server Actions.** `equipment_plan_sync` sur `equipment` (after
+insert or update de `kind_id`, `brand`, `model`, `category_id`, `removed_at`, `deleted_at`).
+
+**Raison.** Un équipement entre par plus d'une porte : le formulaire, le document validé (D91), le
+seed, l'import — et E17-1/E17-2 en ouvriront une de plus. Une Server Action qui appelle la
+composition est une ligne que la porte suivante oubliera. La règle 8 met déjà la logique de
+checklist en base. Et l'autorité du trigger n'est pas un supplément : pour qu'il se déclenche,
+l'appelant a dû passer les politiques d'`equipment`, qui demandent `can_write_boat` — exactement ce
+que demandent celles de `checklist_items`.
+
+**Décision — un point n'est jamais supprimé, il est désactivé.** Équipement déposé ou mis à la
+corbeille → `is_active = false` ; il revient → `is_active = true` ; il est purgé pour de bon → le
+point reste, `equipment_id` à `null`.
+
+**Raison.** `checklist_completions` est en `on delete cascade` sur `checklist_items` : supprimer un
+point emporterait la trace du travail réellement fait. Un carnet vaut par ce qu'il atteste ; perdre
+« turbine changée en 2024 » parce que le chauffage a été déposé en 2027 serait détruire la seule
+chose qu'on lui demande de garder. La vue `checklist_item_status` filtre déjà `is_active`, donc la
+désactivation retire le point de la checklist et des compteurs sans une ligne d'interface.
+
+**Décision — pas de système, pas de point.** Si ni l'équipement ni sa famille ne désignent un
+système du bateau, ses règles sont sautées.
+
+**Raison.** Un point ne peut pas exister sans système (`category_id` est `not null`), et le ranger
+sous celui qui vient en premier mettrait l'entretien du chauffage dans « Sécurité ». Ne rien
+proposer est le même choix qu'en E17-3 : ne rien trouver est une réponse.
+
+**Décision — l'ancrage est `current_date`**, comme `apply_checklist_template`, et non
+`installed_at`. Ancrer sur la date de pose ferait arriver un chauffage de 2019 avec vingt points
+déjà en retard, alors que le carnet ne dit pas que l'entretien n'a pas été fait — il dit qu'il n'a
+pas été noté. D113 : le carnet gagne, mais ce qu'il ne sait pas, il ne l'affirme pas.
+
+## 2026-09-14 — D123 : les aides de rôle répondent faux, jamais « on ne sait pas »
+
+**Question.** En testant la garde d'`apply_maintenance_rules`, un étranger — membre d'aucun bateau —
+passait au travers. Pourquoi, et jusqu'où ça va ?
+
+**Constat.** `can_write_boat` lisait `boat_role(p_boat_id) in ('owner','editor')`. `boat_role` est
+`null` pour un non-membre, `null in (…)` vaut `null`, donc l'aide répondait **`null`**. Toute garde
+écrite
+
+```
+if not public.can_write_boat(p_boat_id) then raise exception 'forbidden' …
+```
+
+évaluait alors `not null` → `null`, ne prenait pas la branche, et laissait l'appelant entrer. Il y a
+**six gardes de cette forme** dans le dépôt — `apply_checklist_template` comprise — et elles sont
+toutes `security definer` : la RLS n'était pas là pour rattraper ce que la garde laissait passer.
+`can_contribute_boat` et `is_boat_owner` avaient la même forme ; `is_boat_member`, écrite avec
+`exists`, répondait déjà faux.
+
+Les **politiques** n'ont jamais été exposées : un `using` à `null` vaut faux pour la RLS. C'est
+précisément ce qui a fait durer la chose — la matrice RLS était verte, et elle avait raison.
+
+**Décision.** Corriger à la racine plutôt que dans six branches : les trois aides renvoient
+`coalesce(…, false)`. `null` n'a jamais voulu dire « autorisé », donc rien ne change pour qui
+passait légitimement. `tests/unit/rls.test.ts` refuse désormais un `null` sur les quatre aides,
+vérifie que les quatre rôles obtiennent toujours la même réponse qu'avant, et vérifie que la garde
+d'`apply_checklist_template` se déclenche bien pour un étranger.
+
+**Raison.** Une correction par garde en oublierait une, et la prochaine garde écrite reprendrait la
+forme dangereuse. Une aide qui répond « on ne sait pas » à « a-t-il le droit ? » est le vrai défaut.
+
+## 2026-09-14 — D125 : deux acheteurs, un seul carnet — le propriétaire ne paie pas, le chantier vend du service
 
 **Question.** Le produit s'est écrit pour un propriétaire qui tient le carnet de son bateau, et
 `SPEC.md §3.3` plafonne l'ambition tarifaire sous 60 €/an — le prix d'une application de
@@ -2894,9 +2961,9 @@ prix de la passation et qui la paie (vendeur ou acheteur) ; le prix payé par le
 unité (par coque sous contrat, par coque livrée, par an) ; l'existence de la boîte
 `constructeurs@xaman.boats`, citée par la page publique et à créer avant sa mise en ligne.
 
-## 2026-09-14 — D123 : le site public parle à deux personnes, sur deux pages
+## 2026-09-14 — D126 : le site public parle à deux personnes, sur deux pages
 
-**Question.** D122 donne deux acheteurs au produit. La page d'accueil, elle, n'en connaît qu'un :
+**Question.** D125 donne deux acheteurs au produit. La page d'accueil, elle, n'en connaît qu'un :
 elle décrit un carnet à un propriétaire, et un directeur commercial de chantier n'y trouve pas un
 mot pour lui. Une seule page peut-elle porter les deux ?
 
@@ -2949,5 +3016,5 @@ l'application garde ses routes anglaises.
 - *Un formulaire de contact.* Une boîte aux lettres suffit pour deux ou trois chantiers, et un
   formulaire demanderait une table, une politique RLS et une modération pour recueillir ce qu'un
   `mailto:` fait déjà.
-- *Une page de tarifs.* Il n'y a rien à y écrire tant que les prix de D122 ne sont pas tranchés ;
+- *Une page de tarifs.* Il n'y a rien à y écrire tant que les prix de D125 ne sont pas tranchés ;
   une grille avec des « à partir de » inventés est exactement ce que la règle 3 interdit.

@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * identify themselves before telling them what they are signing in to. Someone signed in never
  * sees this page: `src/proxy.ts` sends them to their boats first.
  *
- * Since D122 it carries two audiences rather than one. The owner reads it top to bottom and
+ * Since D125 it carries two audiences rather than one. The owner reads it top to bottom and
  * opens a free carnet; the shipyard recognises itself in one band and leaves for
  * `/constructeurs`. The two paths section is the page's spine: same application, same screens,
  * and the only difference is who fills the carnet on the first day.
@@ -117,7 +117,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* The two ways in (D122). Two cards, side by side, deliberately the same height and the
+      {/* The two ways in (D125). Two cards, side by side, deliberately the same height and the
           same vocabulary: what the shipyard sells is not another product, it is the first day. */}
       <section className="mx-auto w-full max-w-6xl px-6 py-16 lg:px-8 lg:py-20">
         <h2 className="text-h1">{t("paths.title")}</h2>

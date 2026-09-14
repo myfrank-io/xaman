@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * The public page for shipyards and builders (D122, D123).
+ * The public page for shipyards and builders (D125, D126).
  *
  * The second audience, and the one the business runs on: a builder who sells a service option
  * with the hull, the way a car maker sells its maintenance contract. It says three things the

@@ -310,7 +310,7 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
 - [ ] **E17-2 (M, 3)** L'écran « ce que j'ai lu » : lot groupé par système, contradiction avec le carnet affichée **et décochée** (D113), « Tout ajouter » idempotent, rapport au format E12-1.
 - [x] **E17-3 (M, 2)** **Familles d'équipement** (D115). `equipment_kinds` (`0032`) : table de référence sans `boat_id` — comme `boat_models` —, 41 familles semées d'après ce que le carnet porte réellement, RLS calquée sur le catalogue de modèles (lecture par tout compte connecté quand `is_active`, écriture par le seul admin plateforme), plus `equipment.kind_id`. Le rapprochement (`src/lib/equipment-kinds.ts`) cherche libellé et synonymes en **mots entiers** dans « nom marque modèle » et garde le terme le plus long ; il **propose** dans le formulaire et se tait dès que quelqu'un touche au champ. La fiche équipement dit la famille à côté du système. Aperçu : `/dev/ui/boat/equipment-form?new=1` monte le formulaire vide, seul état où la famille se propose. Tests : neuf cas pour le rapprochement, trois pour la RLS de la nouvelle table (règle 2), audit tactile sur les deux états.
 - [x] **E17-4 (M, 3)** **Bibliothèque `maintenance_rules`** (D116, `0033`). Table de référence sans `boat_id` comme `equipment_kinds` : une règle s'accroche à une **famille**, restreint éventuellement à une marque ou un modèle, et porte ce qu'un point de modèle porte — libellé, intervalle en mois et/ou en heures, `engine_scope` et `zone_scope` du **même vocabulaire** que `checklist_template_items` (D90), actions pas à pas — plus ses **consommables** (dans la forme que `parts` stocke, pour E17-8) et sa **source**. 49 règles sur 36 familles ; cinq familles sans aucune règle, volontairement. Trois contraintes en base : une source autre que `proposal` doit nommer sa référence (`AUTOPILOT.md §6`), une heure exige un moteur, un consommable a un nom. **Ne compose aucun plan** — c'est E17-5. Tests : onze cas sur le catalogue et ses refus, deux pour la RLS de la nouvelle table (règle 2).
-- [ ] **E17-5 (M, 3)** Le plan se compose : modèle de coque + règles des équipements présents ; `checklist_items.equipment_id` ; recalcul à l'ajout et au dépôt d'un équipement.
+- [x] **E17-5 (M, 3)** **Le plan se compose** (D122, D123, `0035`). Les deux couches d'`AUTOPILOT.md §4` deviennent un plan : `apply_maintenance_rules(boat, equipment?) returns int` (vérifie `can_write_boat`, idempotente) au-dessus de `compose_maintenance_rules` (le corps que seul le trigger appelle). `checklist_items.equipment_id` dit **ce que le point entretient** et `rule_id` **d'où il vient** — le frère de `template_item_id`, dont E17-7 aura besoin. Le système vient de l'équipement, sinon de `category_ref` de sa famille, sinon **rien n'est proposé** ; le libellé est suffixé par l'équipement, ou par le moteur quand la règle se duplique (D90) ; les règles hauturières sautent un bateau côtier. Trigger `equipment_plan_sync` : compose à l'entrée, **désactive** au dépôt et à la corbeille, réactive au retour — jamais de suppression, `checklist_completions` étant en cascade. `normalise_for_match()` en base, jumelle de `normaliseForMatch`, tenue à parité. **Au passage (D123)** : `can_write_boat`, `can_contribute_boat` et `is_boat_owner` renvoyaient `null` pour un non-membre, donc les six gardes `if not …` du dépôt ne se déclenchaient pas pour un étranger — corrigé à la racine. Tests : treize cas sur la composition et le cycle de vie, cinq sur les aides de rôle et la garde.
 - [ ] **E17-7 (S, 2)** Dégraisser `orc50-v1` de ses douze marques (`AUTOPILOT.md §1.4`) vers les règles ; migration des bateaux déjà instanciés.
 - [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
@@ -419,16 +419,16 @@ indépendants dans cet ordre : le premier se livre seul.
   de charge de 3 000 carnets. **DoD** : budget de requête mesuré et écrit dans le ticket, aucun
   compte qui compte la page (D111).
 - [ ] **E18-12 (M, 3)** **Le constructeur publie son plan, et ses bulletins.** *(« Could » jusqu'à
-  D122 : c'est ce que l'option de service vend, donc un Must d'E19.)* `owner_organization_id`
+  D125 : c'est ce que l'option de service vend, donc un Must d'E19.)* `owner_organization_id`
   prend son sens : le chantier maintient le plan de son modèle, une version suivante se **propose**
   aux carnets déjà instanciés — affichée, décochée, jamais écrite sans un tap (D113) — et un
   bulletin de service est un point de checklist poussé à un modèle, pas un message.
 
 ---
 
-## E19 — Le constructeur vend du service (D122, D123)
+## E19 — Le constructeur vend du service (D125, D126)
 
-Ouverte le 2026-09-14. **Bascule de marché** (D122) : deux acheteurs, un seul produit. Le
+Ouverte le 2026-09-14. **Bascule de marché** (D125) : deux acheteurs, un seul produit. Le
 propriétaire ne paie pas — carnet complet, partage illimité, export toujours gratuit — et le
 **constructeur** est le cœur de cible : il livre le carnet avec le bateau et en vend l'option de
 service, au prix qu'il fixe, comme un constructeur automobile vend son contrat d'entretien. Xaman
@@ -453,7 +453,7 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
 ### Lot 1 — Le site public (V1, livrable seul)
 
 - [x] **E19-1 (M, 2)** **La page d'accueil porte les deux lectures, et le chantier a la sienne**
-  (D123). `/` garde le propriétaire, gagne « Deux façons d'avoir un carnet à jour » (gratuit /
+  (D126). `/` garde le propriétaire, gagne « Deux façons d'avoir un carnet à jour » (gratuit /
   option du chantier, même hauteur, même vocabulaire : ce qui change est **qui remplit le carnet le
   premier jour**) et une carte constructeur. `/constructeurs` est la page du chantier : ce que la
   poignée de main lui coûte, ce qu'il obtient, comment l'option se vend, **ce qu'il ne verra
@@ -502,7 +502,7 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   côtés.
 - [ ] **E19-7 (S, 3)** **Encaisser.** Paiement unique pour la passation ; contrat facturé pour le
   chantier, hors application (pas de self-service B2B). `SPEC.md §5.4` excluait la facturation :
-  D122 la requalifie. **Aucun mur de paiement dans le carnet du propriétaire** — un seul écran
+  D125 la requalifie. **Aucun mur de paiement dans le carnet du propriétaire** — un seul écran
   payant, celui de la passation, et il annonce son prix avant de demander quoi que ce soit.
 - [ ] **E19-8 (M, 1)** **Ce qu'un contrat oblige à écrire.** Le chantier voit des données
   personnelles de ses clients : mentions légales, CGU/CGV, sous-traitance RGPD, et la trace du
@@ -516,5 +516,5 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   chantier et son unité : par coque sous contrat, par coque livrée, par an. (3) Existence de
   `constructeurs@xaman.boats`, citée par `/constructeurs` et **à créer avant la mise en ligne** :
   le domaine existe (il envoie déjà `noreply@`), la boîte non. Tant que les deux premiers points
-  sont ouverts, aucune page de tarifs n'est écrite (D123) : une grille avec des « à partir de »
+  sont ouverts, aucune page de tarifs n'est écrite (D126) : une grille avec des « à partir de »
   inventés est exactement ce que la règle interdit.

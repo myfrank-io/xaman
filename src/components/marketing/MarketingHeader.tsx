@@ -5,7 +5,7 @@ import { XamanLogotype } from "@/components/brand/XamanLogotype";
 import { Button } from "@/components/ui/button";
 
 /**
- * The navigation of the public site, shared by the two audiences (D123).
+ * The navigation of the public site, shared by the two audiences (D126).
  *
  * Two pages, two readers: an owner who will open a carnet tonight, and a shipyard that sells
  * service with its hulls. The header is the only place where each is told the other exists —
