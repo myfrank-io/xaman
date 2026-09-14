@@ -17,6 +17,8 @@ const PAGES = [
   "/forgot-password",
   "/dev/ui",
   "/dev/ui/dashboard",
+  // Sept familles pleines : la page la plus haute de l'app (E18-4).
+  "/dev/ui/search",
   "/dev/ui/contacts",
   "/dev/ui/checklist",
   "/dev/ui/boat",

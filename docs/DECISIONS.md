@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D130.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D131.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3180,3 +3180,57 @@ sans jamais penser à ouvrir un onglet pour ça. Total et répartition comptés 
 savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu dès qu'elle n'est pas
 vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
 flottaison.
+
+## 2026-09-14 — D130 : chercher est une porte du carnet, et sept réponses à la même question
+
+**Question.** « C'était quand, la dernière courroie ? Combien ? Quelle référence ? » est la
+première raison d'ouvrir un carnet d'entretien. Jusqu'ici la recherche vivait **dans** le Journal,
+sur le titre et les notes d'une intervention : poser la question supposait de savoir déjà dans
+quel écran dormait la réponse — un achat, un équipement, une pièce, un intervenant, une facture.
+Une recherche qui demande de connaître le rangement de l'app n'est pas une recherche.
+
+**Décision.**
+
+1. **Sept familles, une question, un regroupement.** `search_boat()` interroge d'un coup les
+   interventions, les points du plan, les achats, les équipements, les pièces, les intervenants
+   et les documents en attente. La page **groupe** par famille et ne mélange jamais : « la
+   dernière courroie » et « la courroie qu'il faudra changer » sont deux réponses différentes à
+   la même frappe, et les fondre dans une liste unique obligerait à lire chaque ligne pour savoir
+   laquelle on tient. L'ordre des familles descend de ce qu'on a fait vers ce qui le porte.
+2. **Une porte dans le cadre, un champ sur la page.** La barre du haut et le rail portent une
+   **icône**, pas un champ. Un champ vivant dans une barre de 56 px se disputerait la place avec
+   « ‹ Retour », le nom du bateau et le « + » dès 320 px, et la page de résultats porte de toute
+   façon le sien. Un seul champ dans l'app, donc, qui prend le clavier en arrivant ; l'état vit
+   dans l'URL, de sorte qu'un résultat se partage et survit au retour arrière.
+3. **Le téléphone, l'e-mail et l'adresse d'un intervenant ne sont jamais cherchés.** Ils restent
+   lisibles sur sa fiche — la RLS ne change pas —, mais une page de résultats se montre à qui se
+   tient à côté, et taper « 06 » ne doit pas imprimer une liste de numéros. La colonne indexée le
+   dit aussi clairement que la fonction.
+4. **Un document validé ne se cherche pas comme document.** Il est devenu une intervention ou un
+   achat, et c'est sous ce nom qu'on le trouve : le montrer deux fois serait le montrer comme
+   deux choses. Seuls les documents encore en attente dans « À valider » ont une ligne.
+5. **Le pliage est stocké, pas recalculé.** Chaque famille gagne une colonne générée
+   `search_text` — la concaténation de ses colonnes cherchables, minuscules et sans accents
+   (`text_haystack`, au-dessus de `text_fold` de `0005`) — et son index trigramme. En expression
+   d'index, le pliage restait évalué **ligne à ligne** dès que le planificateur préférait entrer
+   par `boat_id`, ce qu'il fait toujours puisque toute requête filtre par bateau (règle 4) :
+   mesuré à **161 ms** sur un carnet de dix ans, passés à plier des lignes qui n'allaient pas
+   correspondre. Payé une fois à l'écriture, le même calcul tombe à **0,6 ms**. C'est la seule
+   raison pour laquelle cette migration touche sept tables.
+
+**Ce que cela remplace.** `0001` avait créé `maintenance_logs_search_idx` sur
+`title || ' ' || coalesce(notes, '')` brut. Aucune requête n'a jamais pu s'en servir : la seule
+qui le voulait est le filtre du Journal, qui demande `title ilike … or notes ilike …` — deux
+colonnes, pas leur concaténation. Vérifié au `EXPLAIN` avant de le supprimer ; il est remplacé,
+sous son nom, par l'index que cette même recherche peut enfin emprunter.
+
+**Ce que cela ne fait pas.** Le filtre du Journal (E3-2) reste tel quel. Le brancher sur
+`search_text` le rendrait insensible aux accents et servi par l'index, mais demanderait un jumeau
+TypeScript de `text_fold` à tenir à parité — une dette à ouvrir avec son ticket, pas en passant.
+
+**Budget.** Mesuré sur une base reconstruite (Postgres 16, sept familles remplies) : **1,5 à
+1,8 ms** sur un carnet de la taille de celui de Xaman, **8 à 22 ms** sur un carnet de dix ans
+(5 000 interventions, 4 000 achats, 2 000 points, 800 pièces, 500 équipements, 200 intervenants),
+**80 ms** au pire sur un mot que porte un quart d'une famille (« chantier », présent dans chaque
+nom de fournisseur du jeu d'essai). Le budget écrit est donc **≤ 100 ms** sur un carnet de dix
+ans, et il est tenu avec un ordre de grandeur de marge sur le carnet réel.

@@ -384,13 +384,29 @@ indépendants dans cet ordre : le premier se livre seul.
   (`use-boat-realtime.ts`). **Vérifié** : 3 cas RLS (un membre lit, un étranger non, la corbeille
   sort du fil), 4 cas unitaires sur la ligne rendue sûre, `/dev/ui/dashboard` porte le bloc et
   l'audit tactile passe aux cinq viewports.
-- [ ] **E18-4 (S, 3)** **Chercher dans le carnet.** « C'était quand, la dernière courroie ? Combien ?
-  Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien, et la recherche
-  n'existe qu'à l'intérieur du Journal, sur titre et notes. Un champ dans la barre du haut, une page
-  de résultats groupés par famille (interventions, points, dépenses, équipements, pièces,
-  intervenants, documents). `search_boat(p_boat_id, q)` sur `pg_trgm` (déjà là, D3) et `unaccent`.
-  **DoD** : la recherche ne rend que ce que la RLS laisse lire (test avec un `pro` et un étranger),
-  requête mesurée sur le carnet de Xaman et budget écrit dans le ticket, clavier iPad (champ ≥ 16 px, annulation d'un tap).
+- [x] **E18-4 (S, 3)** **Chercher dans le carnet** (D130, `0038`). « C'était quand, la dernière
+  courroie ? Combien ? Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien,
+  et la recherche n'existait qu'à l'intérieur du Journal, sur titre et notes. `search_boat()`
+  interroge les **sept familles** d'un coup (interventions, points, achats, équipements, pièces,
+  intervenants, documents en attente), `security invoker` : la RLS décide de chaque ligne. La page
+  les **groupe** sans jamais les mélanger. Le cadre porte une **icône**, pas un champ — un champ
+  dans une barre de 56 px se dispute la place avec « ‹ Retour », le nom du bateau et le « + » dès
+  320 px (D130) —, et le champ de la page prend le clavier en arrivant, l'état vivant dans l'URL.
+  **`unaccent` n'est pas utilisé** : il n'est pas installé sur la pile locale et `0005` l'avait
+  déjà écarté au profit de `text_fold()`, qui est `IMMUTABLE` — donc indexable, ce que `unaccent`
+  (`STABLE`) n'aurait pas permis. Le téléphone, l'e-mail et l'adresse d'un intervenant ne sont
+  jamais cherchés. L'index mort de `0001` (`title || notes` brut, qu'aucune requête ne pouvait
+  emprunter — vérifié à l'`EXPLAIN`) est remplacé sous son nom.
+  **Budget mesuré** (base reconstruite, Postgres 16) : **1,5–1,8 ms** sur un carnet de la taille
+  de celui de Xaman, **8–22 ms** sur un carnet de dix ans (5 000 interventions, 4 000 achats,
+  2 000 points, 800 pièces, 500 équipements, 200 intervenants), **80 ms** au pire sur un mot que
+  porte un quart d'une famille. Budget écrit : **≤ 100 ms** à dix ans. Le pliage est stocké
+  (colonne générée `search_text`) et non recalculé : en expression d'index il coûtait **161 ms**
+  sur le même carnet, contre **0,6 ms** stocké (D130).
+  **Vérifié** : 8 cas RLS (un membre, un `pro` comparé au propriétaire, un étranger, `anon` qui ne
+  peut pas exécuter, un autre bateau, la corbeille, le plancher de deux caractères, et les trois
+  champs privés d'un intervenant), 11 cas sur la couche pure, lint/format/typecheck/tests/build
+  verts, audit tactile aux cinq viewports.
 - [ ] **E18-5 (C, 1)** **La file s'emporte.** Ce qui est dû et ce qu'il faut racheter, en une page
   imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
   le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.

@@ -777,7 +777,45 @@ create function purge_trash() returns int ...;
 --                                    equipment, haul_outs, checklist_completions) — supprime les lignes
 --                                    attachments. Les objets Storage sont retirés par l'app (Server Action
 --                                    de suppression définitive) : SQL ne sait pas effacer le blob.
+--
+--  text_haystack(variadic text[])  : le texte cherchable d'une ligne, plié en une seule chaîne
+--                                    (minuscules, sans accents) au-dessus de text_fold (0005).
+--                                    IMMUTABLE : c'est ce qui lui permet de porter une colonne
+--                                    générée. E18-4, `0038`.
+--  search_boat(boat, q, limit)     : chercher dans le carnet — sept familles d'un coup (log,
+--                                    item, purchase, equipment, part, contact, document), une
+--                                    ligne par résultat (kind, id, title, subtitle, happened_at,
+--                                    amount, parent_id, score). security invoker : la RLS de
+--                                    chaque table décide. Deux caractères minimum, corbeille et
+--                                    points inactifs exclus, documents déjà validés exclus (ils
+--                                    se trouvent sous leur nouveau nom). Le téléphone, l'e-mail
+--                                    et l'adresse d'un intervenant ne sont jamais cherchés
+--                                    (D130). E18-4, `0038`.
 ```
+
+### 4.1 `search_text` — le texte cherchable, plié une fois (E18-4, D130, `0038`)
+
+Sept tables — `maintenance_logs`, `checklist_items`, `purchases`, `equipment`, `parts`,
+`contacts`, `inbox_items` — portent une colonne **générée** `search_text`, la concaténation pliée
+de leurs colonnes cherchables, avec son index GIN `gin_trgm_ops` :
+
+| table | colonnes pliées |
+| --- | --- |
+| `maintenance_logs` | `title`, `notes` |
+| `checklist_items` | `label`, `description` |
+| `purchases` | `designation`, `supplier_name`, `notes` |
+| `equipment` | `name`, `brand`, `model`, `serial` |
+| `parts` | `name`, `reference`, `location`, `notes` |
+| `contacts` | `name`, `company`, `specialty` — **jamais** `phone`, `email`, `address` (D130) |
+| `inbox_items` | `subject`, `file_name`, `sender_name` |
+
+La colonne ne porte **aucune information nouvelle** : tout ce qu'elle contient est déjà lisible
+par qui peut lire la ligne. Elle n'a donc ni politique ni privilège propres.
+
+Écrite en *expression* d'index plutôt que stockée, le pliage restait évalué ligne à ligne dès que
+le planificateur entrait par `boat_id` — ce qu'il fait toujours, puisque toute requête filtre par
+bateau (règle 4) : **161 ms** sur un carnet de dix ans, contre **0,6 ms** une fois stocké. C'est
+la raison pour laquelle `0038` touche sept tables.
 
 ## 5. Politiques RLS (résumé)
 
@@ -974,6 +1012,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
+- **0038** (D130) : `search_boat()` et `text_haystack()`, la recherche du carnet — sept familles, `security invoker`, aucune table ni politique nouvelle. Ajoute la colonne générée `search_text` et son index trigramme sur sept tables (§4.1), et **remplace** `maintenance_logs_search_idx` de `0001` : l'ancien portait sur `title || ' ' || coalesce(notes, '')` brut, qu'aucune requête ne pouvait emprunter (vérifié à l'`EXPLAIN`).
 - **0037** (D128) : vue `boat_activity`, le fil partagé du carnet — cinq faits, aucune table,
   aucune politique (`security_invoker`). Les tests RLS couvrent les trois choses qu'une union peut
   rater : un membre lit, un étranger ne lit rien, une ligne mise à la corbeille sort du fil.

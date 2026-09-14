@@ -80,6 +80,14 @@ export function activityPath(
   return withQuery(`/boats/${boatId}/activity`, query);
 }
 
+/**
+ * « Chercher dans le carnet » (E18-4): the one screen that asks all seven families at once.
+ * Not a tab — a field in the top bar leads here, and the answer knows where each line lives.
+ */
+export function searchPath(boatId: string, query?: string): string {
+  return withQuery(`/boats/${boatId}/search`, { q: query });
+}
+
 export function logsPath(
   boatId: string,
   query?: Record<string, string | number | undefined>,

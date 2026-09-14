@@ -2500,5 +2500,24 @@
       "done": "Pièce mise à la corbeille",
       "restored": "Pièce restaurée"
     }
+  },
+  "search": {
+    "label": "Chercher",
+    "placeholder": "Une courroie, un chantier, une facture…",
+    "title": "Chercher dans le carnet",
+    "subtitle": "Interventions, points, achats, équipements, pièces, intervenants et documents — d'un seul coup.",
+    "prompt": "Que cherchez-vous ?",
+    "promptDescription": "Deux lettres suffisent. Les accents et les majuscules n'ont pas d'importance.",
+    "empty": "Aucun résultat pour « {query} »",
+    "emptyDescription": "Essayez un mot plus court, ou une autre orthographe.",
+    "families": {
+      "logs": "{count, plural, one {# intervention} other {# interventions}}",
+      "items": "{count, plural, one {# point de checklist} other {# points de checklist}}",
+      "purchases": "{count, plural, one {# achat} other {# achats}}",
+      "equipment": "{count, plural, one {# équipement} other {# équipements}}",
+      "parts": "{count, plural, one {# pièce} other {# pièces}}",
+      "contacts": "{count, plural, one {# intervenant} other {# intervenants}}",
+      "documents": "{count, plural, one {# document} other {# documents}}"
+    }
   }
 }

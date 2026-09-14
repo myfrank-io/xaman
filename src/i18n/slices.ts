@@ -60,6 +60,9 @@ export const BOAT_SHELL: readonly Namespace[] = [
   "nav",
   "offline",
   "roles",
+  // La porte de la recherche vit dans la barre et dans le rail (E18-4) : ses mots voyagent donc
+  // avec le cadre, pas avec la page de résultats.
+  "search",
 ];
 
 /**

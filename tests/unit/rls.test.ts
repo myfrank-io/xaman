@@ -2767,3 +2767,122 @@ describeWithDb("editing an existing row (D42)", () => {
     expect(await run(U.owner, create, [NEW_ID, BOAT])).toEqual({ ok: true, rowCount: 1 });
   });
 });
+
+/**
+ * Chercher dans le carnet (E18-4, D130). La fonction est `security invoker` et n'a donc aucune
+ * politique à elle : ce qu'elle rend est ce que les sept familles laissent déjà lire. C'est
+ * exactement ce qui doit être vérifié ici — une recherche est la seule porte du carnet qui
+ * interroge tout d'un coup, et une fonction qui se tromperait de rôle les ouvrirait toutes.
+ *
+ * Trois réponses différentes attendues sur la même question : un membre lit son carnet, un
+ * étranger ne lit rien, `anon` ne peut même pas exécuter.
+ */
+describeWithDb("search_boat", () => {
+  const search = (u: User | null, q: string, boat = BOAT) =>
+    as(u, async (c) => {
+      const res = await c.query(
+        "select kind, id, title, subtitle, happened_at, amount, parent_id, score from public.search_boat($1, $2)",
+        [boat, q],
+      );
+      return res.rows as {
+        kind: string;
+        id: string;
+        title: string;
+        subtitle: string | null;
+        score: number;
+      }[];
+    });
+
+  it("answers every member of the boat, across families", async () => {
+    for (const role of ["owner", "editor", "viewer", "admin"] as Role[]) {
+      const rows = await search(U[role], "vidange");
+      expect(rows.length, role).toBeGreaterThan(0);
+      expect(
+        rows.every((r) => r.title.toLowerCase().includes("vidange")),
+        role,
+      ).toBe(true);
+    }
+  });
+
+  it("answers a pro exactly what the policies already show them, never more", async () => {
+    // Le pro n'a pas de vue privilégiée : ce qu'il trouve est ce qu'il pourrait atteindre écran
+    // par écran. On le compare donc au propriétaire sur la même question — jamais davantage.
+    const owner = new Set((await search(U.owner, "vidange")).map((r) => `${r.kind}:${r.id}`));
+    const pro = await search(U.pro, "vidange");
+    expect(pro.length).toBeGreaterThan(0);
+    expect(pro.every((r) => owner.has(`${r.kind}:${r.id}`))).toBe(true);
+  });
+
+  it("says nothing at all to an outsider", async () => {
+    expect(await search(U.stranger, "vidange")).toEqual([]);
+    expect(await search(U.stranger, "moteur")).toEqual([]);
+  });
+
+  it("is not executable by a signed-out visitor", async () => {
+    await expect(search(null, "vidange")).rejects.toMatchObject({ code: "42501" });
+  });
+
+  it("refuses to answer about a boat the caller is not on", async () => {
+    // Le `boat_id` est un paramètre : le passer en dur ne doit rien ouvrir, la RLS décidant
+    // ligne par ligne même quand la question porte sur un autre bateau.
+    expect(await search(U.owner, "vidange", BOAT2)).toEqual([]);
+  });
+
+  it("keeps the bin out of the answer (rule 9)", async () => {
+    const rows = await as(U.owner, async (c) => {
+      const hits = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as n from public.search_boat($1, 'vidange') where kind = 'log'",
+              [BOAT],
+            )
+          ).rows[0].n,
+        );
+      const before = await hits();
+      await c.query("update public.maintenance_logs set deleted_at = now() where boat_id = $1", [
+        BOAT,
+      ]);
+      return { before, after: await hits() };
+    });
+    expect(rows.before).toBeGreaterThan(0);
+    expect(rows.after).toBe(0);
+  });
+
+  it("folds case and accents, and stays silent under two characters", async () => {
+    const folded = await search(U.owner, "VIDANGE");
+    expect(folded.length).toBeGreaterThan(0);
+    expect(await search(U.owner, "v")).toEqual([]);
+    expect(await search(U.owner, "")).toEqual([]);
+  });
+
+  it("never searches a contact's phone, e-mail or address", async () => {
+    // Une page de résultats se montre à qui se tient à côté : taper « 06 » ne doit pas imprimer
+    // une liste de numéros, et une adresse n'est pas un mot-clé.
+    const contact = await as(U.owner, async (c) => {
+      await c.query("set local role service_role");
+      const res = await c.query(
+        `insert into public.contacts (boat_id, name, specialty, phone, email, address, created_by)
+         values ($1, 'Joignable', 'Mécanique', '0612345678', 'secret@chantier.test', 'Quai des Mystères', $2)
+         returning id`,
+        [BOAT, U.owner.id],
+      );
+      const id = res.rows[0].id as string;
+      await c.query("set local role authenticated");
+      const probe = async (q: string) =>
+        (await c.query("select count(*)::int as n from public.search_boat($1, $2)", [BOAT, q]))
+          .rows[0].n as number;
+      return {
+        byPhone: await probe("0612345678"),
+        byEmail: await probe("secret@chantier"),
+        byAddress: await probe("Mystères"),
+        byName: await probe("Joignable"),
+        id,
+      };
+    });
+    expect(contact.byPhone).toBe(0);
+    expect(contact.byEmail).toBe(0);
+    expect(contact.byAddress).toBe(0);
+    expect(contact.byName).toBe(1);
+  });
+});
