@@ -446,6 +446,7 @@
     "engine_hours_required": "Les heures moteur sont obligatoires pour ce point.",
     "template_not_found": "Modèle de checklist introuvable.",
     "log_not_found": "Intervention introuvable.",
+    "checklist_item_not_found": "Ce point de checklist n'existe plus.",
     "loadFailed": "Impossible de charger",
     "conflict": "Quelqu'un a modifié cet élément entre-temps. Rechargez la page et réessayez.",
     "boat_name_mismatch": "Le nom saisi ne correspond pas au nom du bateau.",
@@ -2132,7 +2133,8 @@
     "kind": {
       "log": "Intervention",
       "purchase": "Achat",
-      "attach": "Intervention existante"
+      "attach": "Intervention existante",
+      "deadline": "Échéance"
     },
     "confidence": {
       "high": "Lecture sûre",
@@ -2174,9 +2176,17 @@
       "hours": "Heures moteur",
       "notes": "Notes",
       "existingLog": "Intervention",
-      "existingLogPlaceholder": "Choisir une intervention…"
+      "existingLogPlaceholder": "Choisir une intervention…",
+      "checklistItem": "Point de checklist",
+      "checklistItemPlaceholder": "Choisir le point concerné…",
+      "checkedOn": "Contrôlé le",
+      "validUntil": "Valide jusqu'au"
     },
     "categoryRequired": "Choisissez un système pour ranger une intervention.",
+    "deadlineHelp": "Le papier entre au carnet comme une réalisation de ce point : la prochaine échéance devient la date de validité.",
+    "checklistItemRequired": "Choisissez le point que ce papier concerne.",
+    "validUntilRequired": "Indiquez la date de fin de validité.",
+    "validUntilAfterDate": "La fin de validité doit être après la date du contrôle.",
     "attachHelp": "Le document rejoint les pièces jointes de cette intervention ; rien d'autre n'est modifié.",
     "validate": "Valider",
     "attach": "Rattacher",
@@ -2197,7 +2207,8 @@
     "dismissed": "Document ignoré",
     "went": {
       "log": "Voir l'intervention",
-      "purchase": "Voir dans Dépenses"
+      "purchase": "Voir dans Dépenses",
+      "deadline": "Voir le point de checklist"
     },
     "uploadStage": {
       "analysing": "L'agent IA lit le document…"
@@ -2207,7 +2218,8 @@
     "uploadedMany": "{count, plural, one {# document déposé} other {# documents déposés}} : l'agent IA les lit, les cartes se remplissent d'elles-mêmes.",
     "summary": {
       "hint": "Un agent IA a lu le document : vérifiez cette ligne, puis validez.",
-      "edit": "Modifier"
+      "edit": "Modifier",
+      "validUntil": "valide jusqu'au {date}"
     },
     "validateAll": {
       "help": "{count, plural, one {# document a été lu sans réserve : rangez-le d'un tap.} other {# documents ont été lus sans réserve : rangez-les d'un seul tap.}}",
@@ -2216,7 +2228,8 @@
       "done": "{count, plural, one {# document classé} other {# documents classés}}",
       "result": "{filed, plural, =0 {Aucun document classé} one {# classé} other {# classés}}{refused, plural, =0 {} one { · # refusé} other { · # refusés}}",
       "failed": "Restés à valider : {files}"
-    }
+    },
+    "deadlineDone": "Échéance posée : {title}"
   },
   "parts": {
     "title": "Stock",

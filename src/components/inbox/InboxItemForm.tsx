@@ -6,7 +6,12 @@ import { CategoryChips, type CategoryChoice } from "@/components/common/Category
 import { ContactPicker } from "@/components/contacts/ContactPicker";
 import type { ContactOption } from "@/components/contacts/specialties";
 import { Field } from "@/components/forms/Field";
-import type { InboxDraft, InboxEngine, InboxLogChoice } from "@/components/inbox/inbox-draft";
+import type {
+  InboxDeadlineItem,
+  InboxDraft,
+  InboxEngine,
+  InboxLogChoice,
+} from "@/components/inbox/inbox-draft";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -25,9 +30,10 @@ import { VISIBLE_PURCHASE_KINDS, type VisiblePurchaseKind } from "@/lib/schemas/
  * A card with a warning opens straight on this form; a card without one opens on its one-line
  * summary and comes here on « Modifier », with exactly the same fields.
  *
- * Three ways to file it (D109). « Intervention existante » only shows when the boat has one to
- * pick, and it replaces the fields rather than adding to them: the title, the system, the date
- * of an attachment are the intervention's already.
+ * Four ways to file it (D109, E17-6). « Intervention existante » only shows when the boat has one
+ * to pick, and it replaces the fields rather than adding to them: the title, the system, the date
+ * of an attachment are the intervention's already. « Échéance » shows when the boat has points a
+ * paper can land on, and asks the two things a paper carries: which point, and until when.
  */
 export function InboxItemForm({
   boatId,
@@ -39,6 +45,7 @@ export function InboxItemForm({
   engines,
   contacts,
   logs,
+  deadlineItems,
   canWrite,
 }: {
   boatId: string;
@@ -51,6 +58,8 @@ export function InboxItemForm({
   contacts: ContactOption[];
   /** The interventions a document can join instead of becoming one (D109). */
   logs: InboxLogChoice[];
+  /** The checklist points a paper can land on (E17-6). */
+  deadlineItems: InboxDeadlineItem[];
   canWrite: boolean;
 }) {
   const t = useTranslations("inbox");
@@ -72,6 +81,11 @@ export function InboxItemForm({
           <ToggleGroupItem value="purchase" className="min-h-11">
             {t("kind.purchase")}
           </ToggleGroupItem>
+          {deadlineItems.length > 0 ? (
+            <ToggleGroupItem value="deadline" className="min-h-11">
+              {t("kind.deadline")}
+            </ToggleGroupItem>
+          ) : null}
           {logs.length > 0 ? (
             <ToggleGroupItem value="attach" className="min-h-11">
               {t("kind.attach")}
@@ -102,6 +116,74 @@ export function InboxItemForm({
             ))}
           </NativeSelect>
         </Field>
+      ) : draft.kind === "deadline" ? (
+        <>
+          <Field
+            id={`inbox-point-${itemId}`}
+            label={t("fields.checklistItem")}
+            required
+            error={errors.checklistItemId ? t("checklistItemRequired") : undefined}
+            help={t("deadlineHelp")}
+          >
+            <NativeSelect
+              id={`inbox-point-${itemId}`}
+              value={draft.checklistItemId}
+              aria-invalid={errors.checklistItemId ? true : undefined}
+              onChange={(event) => onChange({ checklistItemId: event.target.value })}
+            >
+              <option value="">{t("fields.checklistItemPlaceholder")}</option>
+              {deadlineItems.map((point) => (
+                <option key={point.id} value={point.id}>
+                  {point.categoryName ? `${point.categoryName} — ${point.label}` : point.label}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              id={`inbox-date-${itemId}`}
+              label={t("fields.checkedOn")}
+              required
+              error={errors.date}
+            >
+              <DateField
+                id={`inbox-date-${itemId}`}
+                value={draft.date}
+                onValueChange={(value) => onChange({ date: value })}
+              />
+            </Field>
+            <Field
+              id={`inbox-valid-until-${itemId}`}
+              label={t("fields.validUntil")}
+              required
+              error={
+                errors.validUntil === "after_date"
+                  ? t("validUntilAfterDate")
+                  : errors.validUntil
+                    ? t("validUntilRequired")
+                    : undefined
+              }
+            >
+              <DateField
+                id={`inbox-valid-until-${itemId}`}
+                value={draft.validUntil}
+                future
+                min={draft.date}
+                onValueChange={(value) => onChange({ validUntil: value })}
+              />
+            </Field>
+          </div>
+
+          <Field id={`inbox-notes-${itemId}`} label={t("fields.notes")}>
+            <Textarea
+              id={`inbox-notes-${itemId}`}
+              rows={3}
+              value={draft.notes}
+              onChange={(event) => onChange({ notes: event.target.value })}
+            />
+          </Field>
+        </>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2">

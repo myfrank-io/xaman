@@ -4,18 +4,20 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getTranslations } from "next-intl/server";
 
+import { completeChecklistItem } from "@/lib/actions/checklist";
 import { saveLog } from "@/lib/actions/logs";
 import { upsertPurchase } from "@/lib/actions/purchases";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { analyseInboxItem, type AnalysisOutcome } from "@/lib/inbox/analyse";
 import { notifyInboxValidated } from "@/lib/inbox/notify";
-import { boatPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
+import { boatPath, categoryPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
 import { ATTACHMENT_BUCKET } from "@/lib/schemas/attachments";
 import {
   createInboxUploadSchema,
   inboxEntityId,
   inboxItemRefSchema,
   validateInboxItemSchema,
+  type InboxFiling,
 } from "@/lib/schemas/inbox";
 import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
@@ -115,12 +117,17 @@ export async function reanalyseInboxItem(input: unknown): Promise<ActionResult<A
  * rather than a second one — the id comes from the document (`inboxEntityId`), and the
  * attachment is read back by its path instead of being guessed.
  *
- * The third filing, `attach` (D109), creates nothing: the document joins the attachments of an
+ * The filing `attach` (D109) creates nothing: the document joins the attachments of an
  * intervention that already exists, and brings that line's own id rather than a derived one.
+ *
+ * The filing `deadline` (E17-6) writes a realisation on a checklist point instead of a line in a
+ * list: a paper that says « valide jusqu'au » is exactly what the « Fait » dialog writes with
+ * `next_due_at` (D11), so it goes through `completeChecklistItem` — same action, same rules — and
+ * the point leaves the queue with a real date rather than an estimate.
  */
 export async function validateInboxItem(input: unknown): Promise<
   ActionResult<{
-    kind: "log" | "purchase" | "attach";
+    kind: InboxFiling;
     entityId: string;
     title: string;
     href: string;
@@ -152,7 +159,11 @@ export async function validateInboxItem(input: unknown): Promise<
   // A row that already remembers what it became keeps that id, whatever it was drawn with.
   // An attachment brings its own id — the intervention the person picked — so nothing is derived
   // and nothing is created; the rest of this function is unchanged for it.
-  const remembered = values.kind === "purchase" ? item.purchase_id : item.log_id;
+  // A deadline remembers nothing: a realisation has no column of its own on the row, and needs
+  // none — the id is derived from the document, so a retry re-derives it and `upsert` updates the
+  // same realisation instead of writing a second one.
+  const remembered =
+    values.kind === "purchase" ? item.purchase_id : values.kind === "log" ? item.log_id : null;
   const entityId =
     values.kind === "attach"
       ? (values.logId ?? "")
@@ -162,8 +173,39 @@ export async function validateInboxItem(input: unknown): Promise<
   let title = values.title;
   let date = values.date;
   let amount = values.amount;
+  // Where the reader is sent for a deadline: a realisation lives on its point's system page.
+  let deadlineCategoryId: string | null = null;
 
-  if (values.kind === "attach") {
+  if (values.kind === "deadline") {
+    // The point the paper is about, read under RLS: its label titles the line — the carnet says
+    // « Radeau de survie : révision », not the file name — and its system is the page to open.
+    const { data: point, error: pointError } = await supabase
+      .from("checklist_items")
+      .select("id, label, category_id")
+      .eq("id", values.checklistItemId ?? "")
+      .eq("boat_id", values.boatId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (pointError) return fail(dbErrorKey(pointError));
+    if (!point) return fail("errors.checklist_item_not_found");
+
+    const done = await completeChecklistItem({
+      id: entityId,
+      boatId: values.boatId,
+      itemId: point.id,
+      completedAt: values.date,
+      completedBy: null,
+      completedByName: null,
+      // A paper is never an hour reading: an hour-based point is not offered as a target.
+      engineHours: null,
+      nextDueAt: values.validUntil,
+      note: notes,
+    });
+    if (!done.ok) return done;
+    title = point.label;
+    deadlineCategoryId = point.category_id;
+    amount = null;
+  } else if (values.kind === "attach") {
     // RLS scopes the read; a trashed intervention is not one a document should land on.
     const { data: log, error: logError } = await supabase
       .from("maintenance_logs")
@@ -218,7 +260,12 @@ export async function validateInboxItem(input: unknown): Promise<
     {
       id: crypto.randomUUID(),
       boat_id: values.boatId,
-      entity_type: values.kind === "purchase" ? "purchase" : "maintenance_log",
+      entity_type:
+        values.kind === "purchase"
+          ? "purchase"
+          : values.kind === "deadline"
+            ? "checklist_completion"
+            : "maintenance_log",
       entity_id: entityId,
       storage_path: item.storage_path,
       file_name: item.file_name,
@@ -249,7 +296,9 @@ export async function validateInboxItem(input: unknown): Promise<
     .update(
       {
         status: "validated",
-        log_id: values.kind === "purchase" ? null : entityId,
+        // A realisation has no column here; the attachment above carries the link, and its
+        // `(entity_type, entity_id)` is what the screen reads back to say where it went.
+        log_id: values.kind === "log" || values.kind === "attach" ? entityId : null,
         purchase_id: values.kind === "purchase" ? entityId : null,
         attachment_id: attachment?.id ?? null,
         validated_by: userId,
@@ -269,7 +318,8 @@ export async function validateInboxItem(input: unknown): Promise<
     supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
   ]);
   // An attachment is « in the carnet » on the intervention's own terms: its title, its date.
-  const kind = values.kind === "purchase" ? "purchase" : "log";
+  const kind =
+    values.kind === "purchase" ? "purchase" : values.kind === "deadline" ? "deadline" : "log";
   const kindLabel = t(`kind.${kind}`);
   const validatorName = profile?.full_name ?? profile?.email ?? "";
   after(() =>
@@ -279,6 +329,7 @@ export async function validateInboxItem(input: unknown): Promise<
       validatorName,
       kind,
       entityId,
+      categoryId: deadlineCategoryId,
       title,
       date,
       amount,
@@ -286,15 +337,22 @@ export async function validateInboxItem(input: unknown): Promise<
     }),
   );
 
+  // A realisation changes the queue, the progress and the dashboard: `completeChecklistItem`
+  // has already revalidated the whole boat layout, so only the inbox needs saying here.
   revalidateInbox(values.boatId);
-  revalidatePath(boatPath(values.boatId, kind === "log" ? "logs" : "supplies"));
+  if (kind !== "deadline") {
+    revalidatePath(boatPath(values.boatId, kind === "log" ? "logs" : "supplies"));
+  }
   if (kind === "log") revalidatePath(logPath(values.boatId, entityId));
-  return ok({
-    kind: values.kind,
-    entityId,
-    title,
-    href: kind === "log" ? logPath(values.boatId, entityId) : boatPath(values.boatId, "supplies"),
-  });
+  const href =
+    kind === "deadline"
+      ? deadlineCategoryId
+        ? categoryPath(values.boatId, deadlineCategoryId)
+        : boatPath(values.boatId, "checklist")
+      : kind === "log"
+        ? logPath(values.boatId, entityId)
+        : boatPath(values.boatId, "supplies");
+  return ok({ kind: values.kind, entityId, title, href });
 }
 
 /**

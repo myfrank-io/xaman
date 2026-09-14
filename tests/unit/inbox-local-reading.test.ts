@@ -39,6 +39,10 @@ const context: InboxContext = {
     { id: "contact-yard", name: "Chantier naval du Port", company: null, specialty: "yard" },
     { id: "contact-elec", name: "Marc Le Gall", company: "Marine Élec", specialty: "electrician" },
   ],
+  deadlineItems: [
+    { id: "item-liferaft", label: "Radeau de survie : révision", category: "Sécurité" },
+    { id: "item-insurance", label: "Assurance du bateau : renouvellement", category: "Sécurité" },
+  ],
 };
 
 const INVOICE_TEXT = `CHANTIER NAVAL DU PORT

@@ -23,11 +23,14 @@ const base = {
   url: null,
   logId: null,
   purchaseId: null,
+  completionId: null,
   validatedAt: null,
   updatedAt: NOW,
   error: null,
   suggestion: null,
 };
+
+const POINT = "00000000-0000-4000-8000-000000003001";
 
 const ITEMS: InboxItem[] = [
   {
@@ -73,6 +76,8 @@ const ITEMS: InboxItem[] = [
         { designation: "Main-d'œuvre — 3 h", amount: 336 },
       ],
       notes: "Vidange des deux Yanmar avec filtres. Heures relevées sur le moteur bâbord.",
+      checklistItemId: null,
+      validUntil: null,
       confidence: "medium",
       warnings: ["local", "Le relevé d'heures du moteur tribord n'est pas lisible sur la facture."],
     },
@@ -120,6 +125,8 @@ const ITEMS: InboxItem[] = [
       engineHours: [],
       lineItems: [],
       notes: null,
+      checklistItemId: null,
+      validUntil: null,
       confidence: "high",
       warnings: ["local"],
     },
@@ -150,6 +157,8 @@ const ITEMS: InboxItem[] = [
       engineHours: [],
       lineItems: [],
       notes: null,
+      checklistItemId: null,
+      validUntil: null,
       confidence: "high",
       warnings: ["local"],
     },
@@ -182,6 +191,8 @@ const ITEMS: InboxItem[] = [
       engineHours: [],
       lineItems: [],
       notes: null,
+      checklistItemId: null,
+      validUntil: null,
       confidence: "high",
       warnings: [],
     },
@@ -199,6 +210,38 @@ const ITEMS: InboxItem[] = [
     fileName: "promo.pdf",
     mimeType: "application/pdf",
     sizeBytes: 2_048_000,
+  },
+  {
+    ...base,
+    id: "00000000-0000-4000-8000-000000009007",
+    source: "email",
+    status: "ready",
+    receivedAt: "2026-09-06T08:05:00.000Z",
+    senderEmail: "contact@survitec-marseille.fr",
+    senderName: "Survitec Marseille",
+    subject: "Révision radeau — Xaman",
+    fileName: "pv-revision-radeau-2026.pdf",
+    mimeType: "application/pdf",
+    sizeBytes: 96_512,
+    suggestion: {
+      documentType: "certificate",
+      kind: "deadline",
+      purchaseKind: "service",
+      title: "Révision du radeau de survie",
+      date: "2026-09-04",
+      amount: null,
+      currency: null,
+      supplierName: "Survitec Marseille",
+      contactId: null,
+      categoryId: null,
+      engineHours: [],
+      lineItems: [],
+      notes: "Radeau 10 personnes, conteneur rigide. Prochaine révision à trois ans.",
+      checklistItemId: POINT,
+      validUntil: "2029-09-04",
+      confidence: "high",
+      warnings: [],
+    },
   },
 ];
 
@@ -228,6 +271,26 @@ export default function DevInboxPage() {
             id: "00000000-0000-4000-8000-000000002002",
             title: "Antifouling et anodes",
             performedAt: "2026-05-03",
+          },
+        ]}
+        deadlineItems={[
+          {
+            id: POINT,
+            label: "Radeau de survie : révision",
+            categoryName: "Sécurité",
+            categoryId: "00000000-0000-4000-8000-0000000000c8",
+          },
+          {
+            id: "00000000-0000-4000-8000-000000003002",
+            label: "Extincteurs : contrôle",
+            categoryName: "Sécurité",
+            categoryId: "00000000-0000-4000-8000-0000000000c8",
+          },
+          {
+            id: "00000000-0000-4000-8000-000000003003",
+            label: "Assurance du bateau : renouvellement",
+            categoryName: "Sécurité",
+            categoryId: "00000000-0000-4000-8000-0000000000c8",
           },
         ]}
         canContribute

@@ -18,6 +18,13 @@ import type { VisiblePurchaseKind } from "@/lib/schemas/purchases";
 
 /** An engine of the boat, as the hour fields name it. */
 export type InboxEngine = { id: string; label: string };
+/** A checklist point a paper can land on (E17-6), with the system it belongs to. */
+export type InboxDeadlineItem = {
+  id: string;
+  label: string;
+  categoryName: string;
+  categoryId: string | null;
+};
 /** An intervention a document can join instead of becoming one (D109). */
 export type InboxLogChoice = { id: string; title: string; performedAt: string };
 
@@ -35,6 +42,9 @@ export type InboxDraft = {
   hours: Record<string, string>;
   /** The intervention an `attach` joins; empty until one is picked (D109). */
   logId: string;
+  /** The point a `deadline` lands on, and the date it is valid until (E17-6). */
+  checklistItemId: string;
+  validUntil: string;
 };
 
 /** What the card opens on: the suggestion, or the document alone when there is none. */
@@ -64,6 +74,8 @@ export function draftFrom(item: InboxItem, suggestion: InboxSuggestion | null): 
     hours,
     // Never proposed by the reading: joining an existing line is the person's call.
     logId: "",
+    checklistItemId: suggestion?.checklistItemId ?? "",
+    validUntil: suggestion?.validUntil ?? "",
   };
 }
 
@@ -85,6 +97,8 @@ export function toValidateInput(
     purchaseKind: draft.purchaseKind,
     notes: draft.notes,
     logId: draft.kind === "attach" ? draft.logId : null,
+    checklistItemId: draft.kind === "deadline" ? draft.checklistItemId : null,
+    validUntil: draft.kind === "deadline" ? draft.validUntil : null,
     engineHours: engineIds.map((engineId) => ({
       engineId,
       hours:

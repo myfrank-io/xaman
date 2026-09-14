@@ -32,8 +32,15 @@ export function InboxItemSummary({
 
   // A document with no total is still a document: the line simply says one thing less.
   const parts: string[] = [t(`kind.${draft.kind}`), formatDate(draft.date)];
-  if (amount !== null) parts.push(formatCurrency(amount));
-  if (supplier) parts.push(supplier);
+  // A paper says one thing, and it is the only thing worth a glance here (E17-6).
+  if (draft.kind === "deadline") {
+    if (draft.validUntil) {
+      parts.push(t("summary.validUntil", { date: formatDate(draft.validUntil) }));
+    }
+  } else {
+    if (amount !== null) parts.push(formatCurrency(amount));
+    if (supplier) parts.push(supplier);
+  }
 
   return (
     <div className="flex flex-col gap-1">

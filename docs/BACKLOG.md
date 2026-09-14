@@ -30,6 +30,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E14 | E14-8 |
 | E15 | E15-10 |
 | E16 | E16-10 |
+| E17 | E17-12 |
 
 ---
 
@@ -271,3 +272,39 @@ cassées, responsive, performance perçue, boucle produit) et leurs corrections.
   écran que le changement ne peut pas atteindre ni un onglet caché, persistance TanStack retirée au
   profit d'une route de service worker `NetworkFirst` pour les pages du bateau, migration `0029`
   d'index partiels pour le motif de corbeille sur les deux tables les plus lues.
+
+## E17 — Le carnet se remplit tout seul (`docs/AUTOPILOT.md`)
+
+Ouverte le 2026-09-14. Principe : **un document est une pièce datée, il propose, il n'écrase jamais
+le carnet** (D113). Le catalogue des seize familles de documents qu'un propriétaire peut verser est
+dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §7 du même document.
+
+- [x] **E17-6 (M, 2)** **Les papiers posent les échéances** (D114). Un quatrième classement dans
+  « À valider » : **Échéance**. Un papier qui porte une date de validité — attestation d'assurance,
+  révision de radeau, contrôle d'extincteurs, batterie de balise, péremption de fusées, garantie —
+  devient une **réalisation à date fixe** sur un point de checklist : `completed_at` = la date du
+  contrôle, `next_due_at` = la date de validité (D11). C'est la réponse au problème du jour 1
+  (`AUDIT.md §0.3`, « au jour 1 l'app ne rappelle rien ») : trois photos et la file d'attente est
+  juste, avec des dates vraies au lieu d'estimations. **Aucune migration** : `attachment_entity`
+  portait déjà `checklist_completion` depuis `0001`, et l'écriture passe par
+  `completeChecklistItem` — la Server Action que le dialogue « Fait » appelle déjà, donc mêmes
+  règles, même RLS, même idempotence sur un id tiré d'avance (`inboxEntityId`, règle 11). Le
+  lecteur reçoit les points éligibles (actifs, sans intervalle en heures : un certificat ne porte
+  jamais d'heures moteur) et ne peut proposer que ceux du bateau ; le lecteur local (D92) ne
+  propose jamais d'échéance. La ligne « où c'est parti » se lit sur la pièce jointe
+  (`entity_type = 'checklist_completion'`), pas sur une colonne de plus.
+- [ ] **E17-11 (S, 1)** **Le certificat CE règle la zone de navigation** (`AUDIT.md` D90). Séparé
+  d'E17-6 à l'écriture : un certificat CE **ne porte aucune date de péremption**, il porte une
+  catégorie de conception (A / B / C). Ce n'est donc pas une échéance mais une lecture d'identité,
+  qui écrit `boats.navigation_zone` — et faire passer un carnet de côtier à hauturier **réapplique
+  le plan** (`updateBoat`). Cela appartient au lot de la lecture d'inventaire (E17-1, E17-2), avec
+  la même règle : proposé, décoché, jamais écrit sans un tap.
+- [ ] **E17-1 (M, 3)** Lire un document de bateau : reconnaissance de la famille (`AUTOPILOT.md §2.1`), sortie en **lot**, statut et date portés ligne à ligne.
+- [ ] **E17-2 (M, 3)** L'écran « ce que j'ai lu » : lot groupé par système, contradiction avec le carnet affichée **et décochée** (D113), « Tout ajouter » idempotent, rapport au format E12-1.
+- [ ] **E17-3 (M, 2)** Familles d'équipement : référentiel `equipment_kinds` (sans `boat_id`, comme `boat_models`), `equipment.kind_id`, rapprochement à la lecture et modifiable à la main.
+- [ ] **E17-4 (M, 3)** Bibliothèque `maintenance_rules` : famille, marque/modèle facultatifs, intervalles, `engine_scope`, `zone_scope`, actions, **consommables**, **source**. Seed de ~25 familles.
+- [ ] **E17-5 (M, 3)** Le plan se compose : modèle de coque + règles des équipements présents ; `checklist_items.equipment_id` ; recalcul à l'ajout et au dépôt d'un équipement.
+- [ ] **E17-7 (S, 2)** Dégraisser `orc50-v1` de ses douze marques (`AUTOPILOT.md §1.4`) vers les règles ; migration des bateaux déjà instanciés.
+- [ ] **E17-8 (S, 2)** Les consommables d'une règle alimentent le stock et « À racheter » (E13-7) avec le bon fournisseur.
+- [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
+- [ ] **E17-10 (C, 2)** L'e-mail hebdomadaire (E9-6) devient contextuel : avant une sortie de l'eau, à J-30 d'une péremption, à l'entrée de l'hiver.

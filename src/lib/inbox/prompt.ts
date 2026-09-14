@@ -21,6 +21,12 @@ export type InboxContext = {
   categories: { id: string; name: string; externalRef?: string | null }[];
   engines: { id: string; label: string; propulsion: string }[];
   contacts: { id: string; name: string; company: string | null; specialty: string }[];
+  /**
+   * The checklist points a paper can land on (E17-6): the active ones with no hour interval,
+   * because an hour-based point is never what a certificate is about. Empty on a boat whose
+   * plan has not been chosen yet — the reading then simply never proposes a deadline.
+   */
+  deadlineItems: { id: string; label: string; category: string }[];
 };
 
 /**
@@ -34,7 +40,9 @@ Your job is to propose how the document should be filed in the logbook, so that 
 - an "intervention" (kind "log"): work done on the boat — a service, a repair, a haul-out, an inspection. Its title says what was done ("Vidange moteur bâbord", "Remplacement turbine", "Carénage").
 - a "purchase" (kind "purchase"): something bought — a part, a consumable, fuel or gas, a chandlery receipt with no labour. Its title is a short designation ("Filtre à huile Yanmar", "Bouteille de gaz 13 kg").
 
-An invoice that mixes labour and parts is an intervention. A quote is an intervention too (the person decides what to do with it). A receipt with only goods is a purchase.
+- a "deadline" (kind "deadline"): a paper whose point is a validity date — an insurance certificate, a liferaft or extinguisher inspection, a beacon battery, a flare expiry, a warranty. It is filed on one of the boat's checklist points, with the date it stays valid until.
+
+An invoice that mixes labour and parts is an intervention. A quote is an intervention too (the person decides what to do with it). A receipt with only goods is a purchase. A paper that states a validity date, and whose amount is beside the point, is a deadline — even when it also carries a price: what matters is that the boat is covered until a date.
 
 Rules:
 - Write every text you produce in French, short and factual. Never invent a figure: a value you cannot read is null, and you say so in "warnings".
@@ -45,7 +53,8 @@ Rules:
 - "lineItems" are the main lines of the document (at most 30), designation and amount.
 - "notes" is a two-sentence summary worth keeping under the intervention, or null.
 - "confidence" is your own reading: "high" when title, date and amount are all read cleanly, "low" when the document is hard to read or is not a maintenance document at all.
-- "purchaseKind" is one of gas, part, service, other — meaningful only for a purchase.`;
+- "purchaseKind" is one of gas, part, service, other — meaningful only for a purchase.
+- For a deadline: "checklistItemId" is the point it lands on, chosen only among the ids given for this boat, and "validUntil" is the date it stays valid until in yyyy-MM-dd. When no point clearly matches, or the document states no validity date, the document is not a deadline: file it as an intervention or a purchase instead. On a deadline, "date" is the date of the inspection or of issue, and "title" names the paper ("Révision du radeau de survie", "Attestation d'assurance 2026").`;
 
 /**
  * The shape the model fills. Enums, strings, numbers and nullables only — the reading is checked
@@ -65,6 +74,8 @@ export const inboxModelOutputSchema = z.object({
   engineHours: z.array(z.object({ engineId: z.string(), hours: z.number() })),
   lineItems: z.array(z.object({ designation: z.string(), amount: z.number().nullable() })),
   notes: z.string().nullable(),
+  checklistItemId: z.string().nullable(),
+  validUntil: z.string().nullable(),
   confidence: z.enum(INBOX_CONFIDENCES),
   warnings: z.array(z.string()),
 });
@@ -78,6 +89,13 @@ export function contextText(context: InboxContext, fileName: string): string {
     `Systems (categoryId → name): ${JSON.stringify(context.categories.map((c) => ({ id: c.id, name: c.name })))}`,
     `Engines (engineId → label, propulsion): ${JSON.stringify(context.engines)}`,
     `Contacts (contactId → name, company, specialty): ${JSON.stringify(context.contacts)}`,
+    `Checklist points a deadline can land on (checklistItemId → label, system): ${JSON.stringify(
+      context.deadlineItems.map((item) => ({
+        id: item.id,
+        label: item.label,
+        system: item.category,
+      })),
+    )}`,
     `File name: ${fileName}`,
     "Read the document above and propose how to file it.",
   ].join("\n");
@@ -95,6 +113,7 @@ export function normaliseSuggestion(
   const categoryIds = new Set(context.categories.map((c) => c.id));
   const contactIds = new Set(context.contacts.map((c) => c.id));
   const engineIds = new Set(context.engines.map((e) => e.id));
+  const deadlineItemIds = new Set(context.deadlineItems.map((i) => i.id));
   const clip = (value: string | null, max: number) =>
     value === null ? null : value.trim().slice(0, max) || null;
 
@@ -121,6 +140,11 @@ export function normaliseSuggestion(
       amount: line.amount !== null && Number.isFinite(line.amount) ? line.amount : null,
     })),
     notes: clip(output.notes, 2000),
+    checklistItemId:
+      output.checklistItemId && deadlineItemIds.has(output.checklistItemId)
+        ? output.checklistItemId
+        : null,
+    validUntil: /^\d{4}-\d{2}-\d{2}$/.test(output.validUntil ?? "") ? output.validUntil : null,
     confidence: output.confidence,
     warnings: output.warnings
       .map((w) => w.trim().slice(0, 200))
