@@ -370,10 +370,13 @@ export default async function DevUiPage() {
           </div>
         </Section>
 
+        {/* Les puces d'état sont à leur taille de liste (`md`), celle que les écrans posent : en
+            `sm` la recette montrait une ligne que l'application n'écrit nulle part, et la colonne
+            d'état de 120 px — la contrainte de la ligne — n'y était jamais mesurée. */}
         <Section title={t("sections.rows")} description="64 px (paysage) · 76 px (portrait).">
           <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <ListRow
-              lead={<ChecklistStateBadge state="overdue" size="sm" />}
+              lead={<ChecklistStateBadge state="overdue" className="min-w-30" />}
               title="Vidange huile + filtre — Moteur SB"
               meta={
                 <>
@@ -397,7 +400,7 @@ export default async function DevUiPage() {
               categoryColor="#D97706"
             />
             <ListRow
-              lead={<StatusBadge status="urgent" size="sm" />}
+              lead={<StatusBadge status="urgent" className="min-w-30" />}
               title="Fuite inverseur BB"
               meta={<span>Moteurs · Nous-mêmes</span>}
               trailing={<span className="num text-caption text-ink-2">depuis 4 j</span>}
@@ -406,7 +409,7 @@ export default async function DevUiPage() {
             />
             <ListRow
               size="lg"
-              lead={<ChecklistStateBadge state="soon" size="sm" />}
+              lead={<ChecklistStateBadge state="soon" className="min-w-30" />}
               title="Capteur loch (roue à aubes)"
               meta={<span>Électronique / Nav</span>}
               trailing={<DueLabel status="soon" daysRemaining={9} />}
