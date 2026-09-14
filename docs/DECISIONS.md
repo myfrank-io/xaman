@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D130.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D131.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3182,3 +3182,38 @@ consommateur n'existe pas, en perdant au passage les `specs`. Les réunir quand 
 sera une décision informée par un écran réel : soit `batch` gagne les `specs` et E2-10 s'y
 rebranche, soit les deux restent — un document qui **est** un inventaire prend le chemin court de
 l'import, un document qui **décrit** un bateau prend l'écran de revue.
+
+## 2026-09-14 — D130 : une seule table d'accents, et c'est `text_fold`
+
+**Question.** `0035` a donné à `normalise_for_match()` une table d'accents à elle. `text_fold()`
+fait ce travail depuis `0005` — et mieux : elle replie `Œ œ Æ æ` en `OE oe AE ae` et connaît
+`Ø ø`, ce que la table neuve ignore. Le dépôt portait donc **deux** tables d'accents pour une
+seule question, et la dernière écrite était la plus faible. Laquelle garde-t-on, et jusqu'où la
+parité des jumelles s'étend-elle ?
+
+**Décision — `normalise_for_match` n'est que `text_fold` plus la ponctuation.**
+
+    select trim(regexp_replace(public.text_fold(p_value), '[^a-z0-9&]+', ' ', 'g'));
+
+Même signature, `immutable`, `search_path` vide et privilèges inchangés (`0036`). La jumelle
+TypeScript (`normaliseForMatch`, `src/lib/equipment-kinds.ts`) replie les trois mêmes ligatures
+**avant** son passage `normalize("NFD")`.
+
+**Raison.** L'écart n'était pas théorique. `œ` absent de la table de `0035` survivait au
+`translate`, puis l'étape `[^a-z0-9&]` l'avalait comme une ponctuation : `normalise_for_match('Cœur')`
+rendait `c ur`. Une règle restreinte à une marque écrite avec une ligature aurait comparé égale à
+n'importe quelle autre réduite au même moignon. Côté TypeScript, la cause était différente et le
+résultat identique : `normalize("NFD")` défait un accent posé sur une lettre, or `œ æ ø` sont des
+lettres à part entière. Les deux côtés étaient donc **d'accord sur la mauvaise réponse**, et
+`tests/unit/plan-composition.test.ts`, qui ne vérifiait que leur accord, le certifiait. Il pique
+désormais aussi la réponse elle-même.
+
+**Décision — la parité est garantie sur le latin-1, pas au delà.** `text_fold` couvre l'alphabet
+français ; `Ā Š Ž Ÿ`… ne sont repliés ni par elle ni, donc, par `normalise_for_match`, là où NFD
+les replierait côté navigateur.
+
+**Raison.** C'est la limite assumée du `translate()` choisi le 2026-09-02 contre l'extension
+`unaccent` (une extension de moins en production, et la fonction reste `immutable`, donc
+indexable). L'élargir demanderait une table de 190 entrées ou l'extension refusée, pour des noms
+qu'un carnet de bord français n'écrit pas. Le dire ici évite qu'on la rouvre à chaque ligature
+trouvée — et surtout qu'on réponde en recréant une seconde table, ce que `0036` vient de défaire.
