@@ -63,7 +63,7 @@
       "x": 6120,
       "y": 1280,
       "w": 620,
-      "text": "Sept slides, dédiées à Grand Large Yachting.\n\nSLIDE 4 — la citation de Pierre Delhomeau n'a PAS pu être vérifiée à la source (Figaro Nautisme inaccessible d'ici). Seul « un bon carnet d'entretien » est entre guillemets, le reste est en discours rapporté. À confirmer mot à mot avant de présenter, ainsi que le chiffre de 35 à 40 bateaux par an.\n\nLes trois anomalies du carnet papier, elles, sont réelles : relevées dans seed/xaman-history.json.\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier."
+      "text": "Sept slides, dédiées à Grand Large Yachting.\n\nSLIDE 5 — « une de vos coques » est vérifié : Grand Large Yachting a repris Marsaudon Composites et la marque ORC (annoncé au Yachting Festival de Cannes, 18 septembre 2023), et Xaman est un ORC 50 coque n° 25 (seed/xaman-boat.json). Nuance à assumer si on la soulève : la coque est sortie avant la reprise — c'est justement la flotte que leur pôle occasion revend. Vérifier aussi que le carnet de Xaman est bien chargé dans la démo avant de présenter.\n\nSLIDE 4 — la citation de Pierre Delhomeau n'a PAS pu être vérifiée à la source (Figaro Nautisme inaccessible d'ici). Seul « un bon carnet d'entretien » est entre guillemets, le reste est en discours rapporté. À confirmer mot à mot avant de présenter, ainsi que le chiffre de 35 à 40 bateaux par an.\n\nLes anomalies du carnet papier citées en slide 5 sont réelles : relevées dans seed/xaman-history.json (20/13/25, 31/11/25, moteur SB 708 h → 347 h).\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier."
     }
   ],
   "launch": {
