@@ -27,22 +27,14 @@
     {
       "file": "Produit.dc.html",
       "title": "4 · Ce qu'est Xaman",
-      "x": 6120,
-      "y": 0,
-      "w": 1920,
-      "h": 1080
-    },
-    {
-      "file": "DeuxChemins.dc.html",
-      "title": "5 · Les deux acheteurs",
       "x": 0,
       "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Confidentialite.dc.html",
-      "title": "6 · Grand Large Yachting",
+      "file": "DeuxChemins.dc.html",
+      "title": "5 · Les deux acheteurs",
       "x": 2040,
       "y": 1280,
       "w": 1920,
@@ -50,7 +42,7 @@
     },
     {
       "file": "Pilote.dc.html",
-      "title": "7 · Ce que nous leur proposons",
+      "title": "6 · Ce que nous leur proposons",
       "x": 4080,
       "y": 1280,
       "w": 1920,
@@ -59,11 +51,11 @@
   ],
   "annotations": [
     {
-      "id": "version-courte",
+      "id": "notes-deck",
       "x": 6120,
-      "y": 1280,
-      "w": 640,
-      "text": "Deck dédié à Grand Large Yachting (slides 6 et 7). Les chiffres de la slide 6 viennent de grandlargeyachting.com : 1 500 bateaux, 9 sites, 650 personnes, 5 marques, 32 bateaux sur le World Odyssey 500.\n\nVersion courte à 5 slides : garder 1, 2, 5, 6, 7.\n\nÀ vérifier avant de présenter : la boîte constructeurs@xaman.boats n'existe pas encore (le domaine, si).\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier — ce n'est pas tranché.\n\nSlide 4 : l'aperçu montre « Marsaudon ORC 50 », le vrai bateau du produit — mais c'est un concurrent d'Outremer. À neutraliser si ça gêne."
+      "y": 0,
+      "w": 620,
+      "text": "Six slides, dédiées à Grand Large Yachting.\n\nÀ vérifier avant de présenter : la boîte constructeurs@xaman.boats n'existe pas encore (le domaine, si).\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier — ce n'est pas tranché.\n\nSlide 4 : l'aperçu montre « Marsaudon ORC 50 », le vrai bateau du produit — mais c'est un concurrent d'Outremer. À neutraliser si ça gêne."
     }
   ],
   "launch": {
