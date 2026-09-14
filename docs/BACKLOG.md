@@ -31,7 +31,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-13 |
 | E16 | E16-10 |
 | E17 | E17-13 |
-| E18 | E18-13 |
+| E18 | E18-14 |
 | E19 | E19-10 |
 | E20 | E20-4 |
 
@@ -358,30 +358,90 @@ indépendants dans cet ordre : le premier se livre seul.
   **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
   `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
   390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
-- [ ] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un.** Un document « À valider »
-  (D91) et une pièce sous son seuil (D84) attendent une personne exactement comme un point en
-  retard, mais le premier est un bandeau et la seconde une carte de la Checklist. `boat_todo_queue`
-  gagne deux `kind` (`inbox`, `part`) et leur rang ; le bandeau perd son cas « documents », une
-  ligne valant mieux qu'une bannière. La même migration retire de `boat_dashboard_stats` les
-  colonnes qu'E18-1 laisse sans lecteur (dépenses 12 mois, sortie de l'eau, stock bas), chacune
-  ayant son écran. **DoD** : fonction `security invoker` (RLS inchangée), test de tri et de rang,
-  `tests/unit/rls.test.ts` étendu à la vue réécrite, `pnpm db:types` commité.
-- [ ] **E18-3 (M, 2)** **« Ce qui a bougé ».** Le bloc qui remplace les trois résumés : le fil
-  partagé du carnet — cochages, interventions, achats, relevés d'heures, documents validés, sorties
-  de l'eau — avec **qui** et **quand**, dix lignes puis « tout voir ». C'est la seule chose que le
-  papier ne sait pas faire et qu'aucun écran ne montre. Vue `boat_activity` (`security_invoker`),
-  auteur lu sur le nom figé quand le compte n'existe plus (D31). **DoD** : matrice RLS sur la vue,
-  temps réel branché sur ce que l'écran montre déjà, pas de pagination infinie.
-- [ ] **E18-4 (S, 3)** **Chercher dans le carnet.** « C'était quand, la dernière courroie ? Combien ?
-  Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien, et la recherche
-  n'existe qu'à l'intérieur du Journal, sur titre et notes. Un champ dans la barre du haut, une page
-  de résultats groupés par famille (interventions, points, dépenses, équipements, pièces,
-  intervenants, documents). `search_boat(p_boat_id, q)` sur `pg_trgm` (déjà là, D3) et `unaccent`.
-  **DoD** : la recherche ne rend que ce que la RLS laisse lire (test avec un `pro` et un étranger),
-  requête mesurée sur le carnet de Xaman et budget écrit dans le ticket, clavier iPad (champ ≥ 16 px, annulation d'un tap).
-- [ ] **E18-5 (C, 1)** **La file s'emporte.** Ce qui est dû et ce qu'il faut racheter, en une page
-  imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au chantier. Réutilise
-  le rapport d'état (E9-2b) plutôt qu'une seconde mise en page.
+- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D131). Un document « À
+  valider » (D91) et une pièce sous son seuil (D84) attendaient une personne exactement comme un
+  point en retard — mais le premier criait depuis un bandeau et la seconde depuis un écran qu'on
+  n'ouvre pas avant de partir. `boat_todo_queue` passe à **six rangs** (`0037`) et gagne
+  `kind = 'inbox'` et `kind = 'part'` : le document se range dans **« Aujourd'hui »** (sa raison
+  est *depuis quand* il attend, le plus ancien devant), la pièce ouvre le cinquième palier
+  **« À racheter »**, en bas avec « Aux heures moteur » — les deux qui ne tombent pas avec le
+  calendrier. La raison d'une pièce est ce qui manque (`severity = min_quantity − quantity`), et
+  le stock le plus court passe devant. Le bandeau perd son cas « documents » ; l'écran ne lit
+  plus `pendingInboxCount`. **`boat_dashboard_stats` est refaite à deux colonnes** : les onze
+  sous-requêtes que les vignettes et le récapitulatif faisaient tourner à chaque rendu n'avaient
+  plus de lecteur depuis E18-1. Les deux tests RLS qui s'en servaient comme sonde interrogent
+  maintenant ce que l'écran lit vraiment (les moteurs sans relevé sur leurs tables, le stock bas
+  sur la file). **Vérifié** : `pnpm db:types` commité, 153 tests RLS verts sur la base reconstruite
+  (dont le rang des quatre genres), 13 cas sur les paliers, lint/format/typecheck/build verts.
+- [x] **E18-3 (M, 2)** **« Ce qui a bougé »** (D132). Le bloc qui remplace les trois résumés :
+  le fil partagé du carnet — points cochés, interventions terminées, achats, relevés d'heures
+  saisis à la main, sorties de l'eau — avec **qui** et **quand**. Vue `boat_activity` (`0038`),
+  `security_invoker`, sans table ni politique nouvelle : chaque table source décide comme sur son
+  propre écran. `who` lit le **nom figé** avant le profil (D31), l'intervenant avant l'auteur. Ce
+  que le fil ne montre pas est une décision, pas un oubli : ni corbeille ni modification — un
+  carnet qui dirait « X a supprimé… » deviendrait une surveillance entre associés. Les relevés
+  dérivés d'une intervention (D5) n'y sont pas non plus : leur ligne est déjà au-dessus. Dix
+  lignes sur l'écran d'arrivée, le reste sur `/activity` par pages de cinquante (jamais de
+  défilement infini) ; les lignes ne sont pas cliquables — un fait n'est pas une porte, et une
+  moitié de lignes cliquables aurait fait croire l'autre cassée. Le temps réel existait déjà :
+  les cinq tables sont publiées et le tableau de bord est dans leurs sections
+  (`use-boat-realtime.ts`). **Vérifié** : 3 cas RLS (un membre lit, un étranger non, la corbeille
+  sort du fil), 4 cas unitaires sur la ligne rendue sûre, `/dev/ui/dashboard` porte le bloc et
+  l'audit tactile passe aux cinq viewports.
+- [x] **E18-4 (S, 3)** **Chercher dans le carnet** (D134, `0039`). « C'était quand, la dernière
+  courroie ? Combien ? Quelle référence ? » est la première raison d'ouvrir un carnet d'entretien,
+  et la recherche n'existait qu'à l'intérieur du Journal, sur titre et notes. `search_boat()`
+  interroge les **sept familles** d'un coup (interventions, points, achats, équipements, pièces,
+  intervenants, documents en attente), `security invoker` : la RLS décide de chaque ligne. La page
+  les **groupe** sans jamais les mélanger. Le cadre porte une **icône**, pas un champ — un champ
+  dans une barre de 56 px se dispute la place avec « ‹ Retour », le nom du bateau et le « + » dès
+  320 px (D134) —, et le champ de la page prend le clavier en arrivant, l'état vivant dans l'URL.
+  **`unaccent` n'est pas utilisé** : il n'est pas installé sur la pile locale et `0005` l'avait
+  déjà écarté au profit de `text_fold()`, qui est `IMMUTABLE` — donc indexable, ce que `unaccent`
+  (`STABLE`) n'aurait pas permis. Le téléphone, l'e-mail et l'adresse d'un intervenant ne sont
+  jamais cherchés. L'index mort de `0001` (`title || notes` brut, qu'aucune requête ne pouvait
+  emprunter — vérifié à l'`EXPLAIN`) est remplacé sous son nom.
+  **Budget mesuré** (base reconstruite, Postgres 16) : **1,5–1,8 ms** sur un carnet de la taille
+  de celui de Xaman, **8–22 ms** sur un carnet de dix ans (5 000 interventions, 4 000 achats,
+  2 000 points, 800 pièces, 500 équipements, 200 intervenants), **80 ms** au pire sur un mot que
+  porte un quart d'une famille. Budget écrit : **≤ 100 ms** à dix ans. Le pliage est stocké
+  (colonne générée `search_text`) et non recalculé : en expression d'index il coûtait **161 ms**
+  sur le même carnet, contre **0,6 ms** stocké (D134).
+  **Vérifié** : 8 cas RLS (un membre, un `pro` comparé au propriétaire, un étranger, `anon` qui ne
+  peut pas exécuter, un autre bateau, la corbeille, le plancher de deux caractères, et les trois
+  champs privés d'un intervenant), 11 cas sur la couche pure, lint/format/typecheck/tests/build
+  verts, audit tactile aux cinq viewports.
+- [x] **E18-5 (C, 1)** **La file s'emporte** (D135). Ce qui est dû et ce qu'il faut racheter, en
+  une page imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au
+  chantier. Réutilise le rapport d'état (E9-2b) : les quatre primitives d'impression sortent dans
+  `src/components/report/print.tsx`, que `ReportDocument` emprunte désormais, et la page vit sous
+  `/report/queue` — donc sous la tranche i18n du rapport. **Deux blocs, pas cinq paliers** : sur
+  papier « cette semaine » aura vieilli avant d'être lu, donc chaque ligne porte sa raison en
+  toutes lettres (« en retard de 41 jours », « dans 38 h », « il manque 2 ») et l'ordre d'urgence
+  de la file suffit. Une **case à cocher** dessinée, seule chose que le document ajoute à la file.
+  Les documents à valider n'y sont pas (D135). **Aucune migration** : la page lit
+  `boat_todo_queue` (E18-2) telle quelle, même plafond de 200 lignes que le tableau de bord.
+  Portes : « Emporter la liste » sous la file du tableau de bord, et depuis le rapport d'état.
+  **Vérifié** : lint/format/typecheck/tests/build verts, audit tactile aux cinq viewports sur
+  `/dev/ui/report/queue`, qui porte les cinq raisons et les deux blocs.
+
+- [x] **E18-13 (M, 2)** **L'écran offre ses deux actes et ses deux portes** (D133) — signalé à
+  l'usage sur le carnet de Xaman, file vide : « ici on peut scinder en 2 : Ajouter une tâche à
+  faire : checklist / Ajouter une tâche déjà faite : intervention. En dessous un gros bloc en mode :
+  consulter mon bateau / mes bateaux dans le futur. Encore en dessous : découvrir mes dépenses de
+  maintenance ». **(1)** Écrire se scinde par le temps du verbe : deux cartes, « Ajouter une tâche
+  à faire » (un point de checklist) et « Noter une intervention » (le journal). Le carnet n'avait
+  que la seconde porte, et la note la plus fréquente à bord est l'autre — « il faudra changer
+  l'anode au printemps » demandait de connaître le rangement de l'app avant de pouvoir s'en servir.
+  **(2)** « Consulter mon bateau » est la **maquette d'E2-8**, remontée telle quelle ; son
+  assemblage sort de l'onglet Bateau dans `src/lib/boat-3d/data.ts` (`toBoatModelData`, testé) pour
+  que deux écrans ne dessinent pas deux bateaux du même carnet. La tranche i18n du tableau de bord
+  gagne `boat3d`. **(3)** « Ce que le bateau a coûté » : le total sur douze mois et ses trois
+  premiers systèmes, comptés par `boat_expense_totals` (D111), trois barres de part, aucun
+  graphique (règle 10) — un renversement assumé du dégraissage d'E18-1, en découverte et non en
+  ligne de sommaire. **Aucune migration.** **Vérifié** : 5 cas sur l'assemblage partagé, tranche
+  i18n verte, lint/format/typecheck/tests/build verts, audit tactile aux cinq viewports sur
+  `/dev/ui/dashboard`, qui porte les trois blocs.
 
 ### Lot 2 — La flotte, de 2 à 10 bateaux
 

@@ -95,6 +95,7 @@
       "equipment": "Équipements",
       "parts": "Stock",
       "report": "Rapport",
+      "activity": "Ce qui a bougé",
       "profile": "Profil"
     },
     "newBoat": "Ajouter un bateau"
@@ -656,6 +657,7 @@
     "upcoming": {
       "allChecklist": "Tout ce qui est à faire",
       "allLogs": "Interventions ouvertes",
+      "takeAway": "Emporter la liste",
       "emptyTitle": "Rien à faire dans les 30 prochains jours",
       "emptyNext": "Prochaine échéance : {label}, dans {days} jours.",
       "startTitle": "Votre carnet démarre avec {count} lignes à suivre",
@@ -674,16 +676,49 @@
         "today": "Aujourd'hui",
         "week": "Cette semaine",
         "month": "Ce mois-ci",
-        "hours": "Aux heures moteur"
+        "hours": "Aux heures moteur",
+        "restock": "À racheter"
+      },
+      "inbox": {
+        "badge": "À valider",
+        "received": "reçu le {date}"
+      },
+      "part": {
+        "badge": "Sous le seuil",
+        "missing": "il en manque {count}"
       }
+    },
+    "write": {
+      "todoTitle": "Ajouter une tâche à faire",
+      "todoHint": "Un point de checklist, qui reviendra tout seul",
+      "doneTitle": "Noter une intervention",
+      "doneHint": "Ce qui vient d'être fait, dans le journal"
+    },
+    "expenses": {
+      "title": "Ce que le bateau a coûté",
+      "window": "sur douze mois",
+      "all": "Voir les dépenses",
+      "empty": "Aucune dépense notée sur les douze derniers mois."
+    },
+    "activity": {
+      "title": "Ce qui a bougé",
+      "all": "Tout voir",
+      "empty": "Rien n'a encore été noté sur ce carnet.",
+      "by": "par {name}",
+      "kind": {
+        "completion": "Point coché",
+        "log": "Intervention",
+        "purchase": "Achat",
+        "reading": "Relevé d'heures",
+        "haulOut": "Sortie de l'eau"
+      },
+      "screenTitle": "Ce qui a bougé",
+      "screenSubtitle": "Tout ce qui a été noté sur ce carnet, le plus récent d'abord.",
+      "more": "Charger plus"
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
       "action": "Vérifier"
-    },
-    "inbox": {
-      "banner": "{count, plural, one {# document attend votre validation} other {# documents attendent votre validation}}",
-      "action": "Valider"
     },
     "markDone": "Fait",
     "state": {
@@ -1639,7 +1674,29 @@
       "inProgress": "en cours",
       "none": "Aucune sortie de l'eau enregistrée."
     },
-    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}"
+    "footer": "Carnet tenu dans Xaman · {logs, plural, one {# intervention} other {# interventions}} · {completions, plural, one {# réalisation de checklist} other {# réalisations de checklist}}",
+    "queue": {
+      "title": "À faire et à racheter",
+      "link": "Emporter la liste",
+      "stateReport": "Rapport d'état",
+      "todo": "À faire",
+      "todoEmpty": "Rien n'est dû : la liste est vide.",
+      "restock": "À racheter",
+      "restockEmpty": "Aucune pièce sous son seuil.",
+      "what": "Quoi",
+      "system": "Système",
+      "why": "Pourquoi",
+      "quantity": "Manque",
+      "done": "Fait",
+      "bought": "Acheté",
+      "late": "{count, plural, one {en retard d''# jour} other {en retard de # jours}}",
+      "inDays": "{count, plural, =0 {aujourd'hui} one {dans # jour} other {dans # jours}}",
+      "lateHours": "en retard de {count}",
+      "inHours": "dans {count}",
+      "missing": "il manque {count}",
+      "noDate": "sans échéance",
+      "footer": "{todo, plural, =0 {rien à faire} one {# chose à faire} other {# choses à faire}} · {restock, plural, =0 {rien à racheter} one {# pièce à racheter} other {# pièces à racheter}} · Carnet tenu dans Xaman"
+    }
   },
   "purchaseKind": {
     "gas": "Gaz",
@@ -2495,6 +2552,25 @@
       "action": "Mettre à la corbeille",
       "done": "Pièce mise à la corbeille",
       "restored": "Pièce restaurée"
+    }
+  },
+  "search": {
+    "label": "Chercher",
+    "placeholder": "Une courroie, un chantier, une facture…",
+    "title": "Chercher dans le carnet",
+    "subtitle": "Interventions, points, achats, équipements, pièces, intervenants et documents — d'un seul coup.",
+    "prompt": "Que cherchez-vous ?",
+    "promptDescription": "Deux lettres suffisent. Les accents et les majuscules n'ont pas d'importance.",
+    "empty": "Aucun résultat pour « {query} »",
+    "emptyDescription": "Essayez un mot plus court, ou une autre orthographe.",
+    "families": {
+      "logs": "{count, plural, one {# intervention} other {# interventions}}",
+      "items": "{count, plural, one {# point de checklist} other {# points de checklist}}",
+      "purchases": "{count, plural, one {# achat} other {# achats}}",
+      "equipment": "{count, plural, one {# équipement} other {# équipements}}",
+      "parts": "{count, plural, one {# pièce} other {# pièces}}",
+      "contacts": "{count, plural, one {# intervenant} other {# intervenants}}",
+      "documents": "{count, plural, one {# document} other {# documents}}"
     }
   }
 }

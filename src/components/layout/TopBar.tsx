@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { ChevronLeftIcon, CloudOffIcon } from "lucide-react";
+import { ChevronLeftIcon, CloudOffIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useOnline } from "@/components/common/use-online";
@@ -26,15 +26,19 @@ export function TopBar({
   boatSubtitle,
   nav,
   action,
+  searchHref,
   className,
 }: {
   boatName: string;
   boatSubtitle?: string;
   nav?: NavItem[];
   action?: React.ReactNode;
+  /** La porte de la recherche (E18-4). Absente hors d'un carnet : il n'y a rien à chercher. */
+  searchHref?: string;
   className?: string;
 }) {
   const t = useTranslations("app");
+  const ts = useTranslations("search");
   const tc = useTranslations("common");
   const to = useTranslations("offline");
   const pathname = usePathname();
@@ -77,6 +81,18 @@ export function TopBar({
           )}
           {isRoot && boatSubtitle ? <span className="sr-only">{boatSubtitle}</span> : null}
         </div>
+        {searchHref ? (
+          // Une porte, pas un champ. Un champ vivant dans une barre de 56 px se disputerait la
+          // place avec « ‹ Retour », le nom du bateau et le « + » dès 320 px ; et la page de
+          // résultats porte de toute façon le sien, qui prend le clavier en arrivant.
+          <Link
+            href={searchHref as Route}
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg tap-feedback text-on-navy focus-visible:ring-[3px] focus-visible:ring-on-navy/50 focus-visible:outline-none"
+          >
+            <SearchIcon className="size-5" aria-hidden />
+            <span className="sr-only">{ts("label")}</span>
+          </Link>
+        ) : null}
         {!online ? (
           <span
             className="inline-flex size-11 shrink-0 items-center justify-center text-on-navy-2"

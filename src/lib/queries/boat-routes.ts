@@ -69,6 +69,25 @@ export function newLogPath(
   return withQuery(`${boatPath(boatId, "logs")}/new`, query);
 }
 
+/**
+ * « Ce qui a bougé », en entier (E18-3). L'écran n'est pas dans la barre : il s'ouvre depuis le
+ * fil du tableau de bord, qui en montre les dix premières lignes.
+ */
+export function activityPath(
+  boatId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`/boats/${boatId}/activity`, query);
+}
+
+/**
+ * « Chercher dans le carnet » (E18-4): the one screen that asks all seven families at once.
+ * Not a tab — a field in the top bar leads here, and the answer knows where each line lives.
+ */
+export function searchPath(boatId: string, query?: string): string {
+  return withQuery(`/boats/${boatId}/search`, { q: query });
+}
+
 export function logsPath(
   boatId: string,
   query?: Record<string, string | number | undefined>,
@@ -135,6 +154,14 @@ export function editContactPath(boatId: string, contactId: string): string {
 // Printable state report (E9-2b), outside the tab navigation.
 export function reportPath(boatId: string, costs = true): string {
   return withQuery(`/boats/${boatId}/report`, costs ? undefined : { costs: 0 });
+}
+
+/**
+ * « La file s'emporte » (E18-5): the same queue as the dashboard, on a sheet of paper. Under
+ * `/report` because it is the state report's layout, for a different reader.
+ */
+export function queueReportPath(boatId: string): string {
+  return `/boats/${boatId}/report/queue`;
 }
 
 export function haulOutPath(boatId: string, haulOutId: string): string {

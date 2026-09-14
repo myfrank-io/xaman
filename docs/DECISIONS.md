@@ -530,6 +530,7 @@ l'objection au bouton mort ne s'y applique pas.
 Règle générale qui en sort : **le silence n'est pas une réponse acceptable pour une capacité
 absente.** Si l'application ne peut pas faire quelque chose sur cet appareil, elle le dit à
 l'endroit où on la cherche.
+
 ## 2026-09-03 — Rafraîchissement visuel (moins « vibe-code », plus premium)
 
 Passe de direction artistique sur l'app existante, sans toucher au fonctionnel ni au responsive
@@ -636,7 +637,6 @@ elle est désormais la référence unique. Aucune migration : tout reste dériv�
 La case à cocher « racheté » de la première version et son action serveur `restockPart` sont
 retirées : les +/− couvrent le même besoin plus précisément (on saisit la quantité réellement
 rachetée), et une pièce qui franchit son seuil disparaît de la liste comme avant.
-
 
 ## 2026-09-03 — D64 : un compte sans bateau ajoute le sien (renversement du 2026-09-02)
 
@@ -807,7 +807,6 @@ création échouait.
 **Reste ouvert.** La reconnaissance du carnet papier en texte (photo → saisie guidée, E11) : ici,
 la photo devient une pièce jointe sur une intervention à compléter, pas une ligne lue toute seule.
 
-
 ## 2026-09-04 — D67 : une seule mise en route, en trois étapes, et l'étape écrite en haut
 
 **Question.** « C'est un onboarding en 3 étapes : 1) le bateau, 2) l'upload du carnet actuel, 3) une
@@ -895,7 +894,6 @@ honnête de laisser la main.
 deux lecteurs, `import.fromNew`, `import.back.dashboard`, `attachments.import.dashboard`,
 `boats.new.submitImport`) : l'étape 2 fait mieux au même endroit, et deux façons de faire la même
 chose valent moins qu'une seule qui marche.
-
 
 ## 2026-09-04 — D68 : l'annexe est un moteur, et l'exemple suit la coque
 
@@ -1321,6 +1319,7 @@ comptent : une lettre, un espace au milieu, trop court, trop long.
 **Ce qui reste vrai.** `otp_length = 6` demeure dans `supabase/config.toml` — c'est le réglage
 local, et six chiffres restent le bon choix par défaut. Simplement, si le projet hébergé en dit
 autre chose un jour, l'application suit au lieu de casser.
+
 ## 2026-09-07 — D75 : l'invitation part de l'application, pas de Supabase
 
 **Question.** « Pourquoi quand j'ajoute un user depuis un compte il reçoit ça ? » — le gabarit du
@@ -1410,7 +1409,6 @@ modifiables sur l'écran Bateau, où l'on est déjà pour tout le reste. Écart�
 numériques nues (« 1 · 2 · 3 · 4 ») pour tenir sur une ligne à 320 px. Le groupe passe à deux
 lignes, ce que le type de bateau juste au-dessus fait déjà sur trois — et « 3 moteurs » se lit
 sans avoir à remonter au libellé du champ.
-
 
 ## 2026-09-07 — D80 : l'e-mail de code ne contient aucun lien
 
@@ -1749,6 +1747,7 @@ deux tickets qui répondent au même nom.
 `scripts/check-numbering.mjs` et tient les cinq règles ; `tests/unit/decisions.test.ts` devient
 `tests/unit/numbering.test.ts`. Deux fichiers presque identiques auraient divergé au premier
 correctif (règle 10 : pas de poids sans raison).
+
 ## 2026-09-08 — D88 : le point rouge ne dit qu'une chose, et il la dit jusqu'au bout
 
 **Question.** « Gère mieux les points rouges des notifications pour guider les users : que sur
@@ -2429,7 +2428,6 @@ l'owner, écrits par la seule clé de service — `revoked_at` reste la seule co
 06/09/2026 ». C'est le fait qui met fin à l'attente : l'adresse est bonne, le message n'est lu par
 personne, il faut téléphoner.
 
-
 ## 2026-09-14 — D113 : le carnet fait foi, un document ne l'écrase jamais
 
 **Question.** Un propriétaire verse dans l'app un document qui décrit son bateau — dossier de
@@ -2458,7 +2456,6 @@ n'a jamais saisi et qui ne bouge pas : la référence d'option du chantier, le f
 le numéro de coque, les coordonnées du constructeur. C'est à ce titre que `seed/xaman-boat.json`
 gagne le contact Marsaudon Composites et six `specs.ref_chantier` — sans qu'aucune des cinq
 divergences ci-dessus n'ait été reportée dans le carnet.
-
 
 ## 2026-09-14 — D114 : un papier daté est une réalisation, pas une intervention
 
@@ -2691,7 +2688,6 @@ facture reposait une question déjà répondue dix fois et la réponse finissait
 de la fiche qui existait déjà ; sans pré-remplissage, la fiche créée à la volée n'avait qu'un nom,
 et quelqu'un la complétait à la main plus tard — ou jamais.
 
-
 ## 2026-09-14 — D121 : le premier écran est un plan de travail, à trois altitudes
 
 **Question.** Le tableau de bord récapitule tout et n'approfondit rien : « est-ce qu'il ne perd pas
@@ -2800,6 +2796,7 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+
 ## 2026-09-14 — D122 : le plan se compose par trigger, et un point ne se supprime jamais
 
 **Question.** E17-5 doit recomposer le plan « à l'ajout et au dépôt d'un équipement ». Où mettre ce
@@ -2917,6 +2914,7 @@ la famille existe pour bien dire. `unknown` est sa réponse honnête.
 
 **Ce ticket n'écrit rien.** E17-1 est le contrat de lecture ; l'écran, la contradiction affichée
 côte à côte et « Tout ajouter » sont E17-2.
+
 ## 2026-09-14 — D125 : deux acheteurs, un seul carnet — le propriétaire ne paie pas, le chantier vend du service
 
 **Question.** Le produit s'est écrit pour un propriétaire qui tient le carnet de son bateau, et
@@ -3114,7 +3112,6 @@ qui met l'unité que la clé annonce et laisse parler les valeurs qui se nomment
 faire » ne passe devant que si quelque chose est dû. Et quand rien n'est en retard, le titre de la
 carte annonce ce que le bateau porte, pas « rien » : « rien en retard » n'apprend rien sur un
 bateau.
-
 
 ## 2026-09-14 — D128 : un document de chantier verse l'inventaire dans l'import qui existe déjà
 

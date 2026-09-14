@@ -8,7 +8,7 @@ import { ReportDocument } from "@/components/report/ReportDocument";
 import { ReportPrintButton } from "@/components/settings/ReportPrintButton";
 import { Button } from "@/components/ui/button";
 import { toDateString } from "@/lib/format";
-import { reportPath } from "@/lib/queries/boat-routes";
+import { queueReportPath, reportPath } from "@/lib/queries/boat-routes";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
@@ -116,6 +116,10 @@ export default async function ReportPage({
             <Link href={reportPath(boatId, !showCosts) as Route}>
               {showCosts ? t("hideCosts") : t("showCosts")}
             </Link>
+          </Button>
+          {/* L'autre document imprimable, pour l'autre lecteur (E18-5). */}
+          <Button asChild variant="outline">
+            <Link href={queueReportPath(boatId) as Route}>{t("queue.link")}</Link>
           </Button>
           <ReportPrintButton />
         </>

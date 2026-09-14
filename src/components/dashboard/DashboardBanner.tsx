@@ -6,16 +6,18 @@ import { getTranslations } from "next-intl/server";
 import { InstallBanner } from "@/components/pwa/InstallBanner";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { hourReadingPath, inboxPath, logsPath, onboardingPath } from "@/lib/queries/boat-routes";
+import { hourReadingPath, logsPath, onboardingPath } from "@/lib/queries/boat-routes";
 
 /**
  * The single contextual banner (ux-flows §2.3). Offline is handled by the app shell and
  * pending drafts arrive with E9-1; here: an unfinished onboarding › rows to review › engines
  * never read › install.
+ *
+ * Les documents qui attendent n'y sont plus (D131) : ils ont chacun leur ligne dans la file,
+ * avec le geste qui va avec. Une bannière qui compte n'est pas un plan de travail.
  */
 export async function DashboardBanner({
   boatId,
-  inboxCount = 0,
   reviewCount,
   noReadingEngines,
   canContribute,
@@ -23,8 +25,6 @@ export async function DashboardBanner({
   unfinished = false,
 }: {
   boatId: string;
-  /** Documents that arrived by mail or photo and wait for a decision (D91). */
-  inboxCount?: number;
   reviewCount: number;
   noReadingEngines: string[];
   canContribute: boolean;
@@ -47,22 +47,6 @@ export async function DashboardBanner({
           {t("banner.unfinished")}
           <Button asChild size="sm" variant="outline">
             <Link href={onboardingPath(boatId, 3) as Route}>{t("banner.unfinishedAction")}</Link>
-          </Button>
-        </AlertTitle>
-      </Alert>
-    );
-  }
-
-  // What arrived on its own comes before what was imported: a mail from the yard this morning
-  // is more likely to be waited for than a paper line from last year.
-  if (inboxCount > 0 && canWrite) {
-    return (
-      <Alert variant="warning" className="items-center">
-        <TriangleAlertIcon />
-        <AlertTitle className="flex flex-wrap items-center justify-between gap-3">
-          {t("inbox.banner", { count: inboxCount })}
-          <Button asChild size="sm" variant="outline">
-            <Link href={inboxPath(boatId) as Route}>{t("inbox.action")}</Link>
           </Button>
         </AlertTitle>
       </Alert>
