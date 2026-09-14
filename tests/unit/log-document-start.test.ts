@@ -45,6 +45,7 @@ const suggestion: InboxSuggestion = {
   checklistItemId: null,
   validUntil: null,
   confidence: "high",
+  inventory: [],
   warnings: [],
 };
 

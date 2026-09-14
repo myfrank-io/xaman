@@ -197,6 +197,7 @@ const output = {
   checklistItemId: null,
   validUntil: null,
   confidence: "high" as const,
+  inventory: [],
   warnings: [],
 };
 
@@ -573,6 +574,7 @@ describe("a card that opens on one line", () => {
     checklistItemId: null,
     validUntil: null,
     confidence: "high" as const,
+    inventory: [],
     warnings: ["local"],
   };
 

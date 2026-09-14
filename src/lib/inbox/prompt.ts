@@ -3,6 +3,8 @@ import { z } from "zod";
 import { matchSupplierContact, type SupplierRead } from "@/lib/contacts/match";
 import {
   inboxSuggestionSchema,
+  INVENTORY_LINES_MAX,
+  INVENTORY_SPECS_MAX,
   INBOX_CONFIDENCES,
   INBOX_DOCUMENT_TYPES,
   INBOX_KINDS,
@@ -48,6 +50,8 @@ Your job is to propose how the document should be filed in the logbook, so that 
 - an "intervention" (kind "log"): work done on the boat — a service, a repair, a haul-out, an inspection. Its title says what was done ("Vidange moteur bâbord", "Remplacement turbine", "Carénage").
 - a "purchase" (kind "purchase"): something bought — a part, a consumable, fuel or gas, a chandlery receipt with no labour. Its title is a short designation ("Filtre à huile Yanmar", "Bouteille de gaz 13 kg").
 
+- an "inventory" (kind "inventory"): a document whose point is **what is aboard** — a builder's technical specification, a delivery note, an inventory drawn up for a sale, a survey. It does not become one line: it fills the boat's equipment list. Put one entry per piece of equipment in "inventory", and leave "title" as the document's own name ("Spécification technique ORC 50 #25").
+
 - a "deadline" (kind "deadline"): a paper whose point is a validity date — an insurance certificate, a liferaft or extinguisher inspection, a beacon battery, a flare expiry, a warranty. It is filed on one of the boat's checklist points, with the date it stays valid until.
 
 An invoice that mixes labour and parts is an intervention. A quote is an intervention too (the person decides what to do with it). A receipt with only goods is a purchase. A paper that states a validity date, and whose amount is beside the point, is a deadline — even when it also carries a price: what matters is that the boat is covered until a date.
@@ -63,6 +67,7 @@ Rules:
 - "notes" is a two-sentence summary worth keeping under the intervention, or null.
 - "confidence" is your own reading: "high" when title, date and amount are all read cleanly, "low" when the document is hard to read or is not a maintenance document at all.
 - "purchaseKind" is one of gas, part, service, other — meaningful only for a purchase.
+- For an inventory: "inventory" holds one entry per piece of equipment the document names. "name" is what the thing is called aboard, in French and short ("Grand-voile (GV)", "Batteries Lithium", "Guindeau électrique"); "brand" and "model" as printed, null when they are not; "serial" only when a serial number is printed; "quantity" the number aboard, null when not stated; "categoryId" one of the boat's systems or null; "installedAt" yyyy-MM-dd or null. "specs" are the figures the document gives **about that entry**, as key/value pairs — prefer the keys the carnet already uses when they apply: surface_m2, puissance_w, capacite_ah, tension_v, volume_l, debit_l_h, poids_kg, longueur_m, diametre_mm, materiau, emplacement, tissu; otherwise a short snake_case key of your own. Never repeat the name in the specs, never invent a figure, and never list a consumable or a spare part here — those are purchases. A document that names fewer than three pieces of equipment is not an inventory: file it as an intervention or a purchase.
 - For a deadline: "checklistItemId" is the point it lands on, chosen only among the ids given for this boat, and "validUntil" is the date it stays valid until in yyyy-MM-dd. When no point clearly matches, or the document states no validity date, the document is not a deadline: file it as an intervention or a purchase instead. On a deadline, "date" is the date of the inspection or of issue, and "title" names the paper ("Révision du radeau de survie", "Attestation d'assurance 2026").`;
 
 /**
@@ -90,6 +95,18 @@ export const inboxModelOutputSchema = z.object({
   engineHours: z.array(z.object({ engineId: z.string(), hours: z.number() })),
   lineItems: z.array(z.object({ designation: z.string(), amount: z.number().nullable() })),
   notes: z.string().nullable(),
+  inventory: z.array(
+    z.object({
+      name: z.string(),
+      brand: z.string().nullable(),
+      model: z.string().nullable(),
+      serial: z.string().nullable(),
+      quantity: z.number().nullable(),
+      categoryId: z.string().nullable(),
+      installedAt: z.string().nullable(),
+      specs: z.array(z.object({ key: z.string(), value: z.string() })),
+    }),
+  ),
   checklistItemId: z.string().nullable(),
   validUntil: z.string().nullable(),
   confidence: z.enum(INBOX_CONFIDENCES),
@@ -173,6 +190,31 @@ export function normaliseSuggestion(
       designation: line.designation.trim().slice(0, 160),
       amount: line.amount !== null && Number.isFinite(line.amount) ? line.amount : null,
     })),
+    // An inventory (E2-10): the lines a builder's document names, each cut to what the columns
+    // hold. A system it was not given is dropped rather than pointed at nothing, and a line with
+    // no name is not a line at all.
+    inventory: output.inventory
+      .slice(0, INVENTORY_LINES_MAX)
+      .map((line) => ({
+        name: (clip(line.name, 120) ?? "").trim(),
+        brand: clip(line.brand, 80),
+        model: clip(line.model, 80),
+        serial: clip(line.serial, 80),
+        quantity:
+          line.quantity !== null && Number.isFinite(line.quantity) && line.quantity >= 0
+            ? Math.min(9999, Math.round(line.quantity))
+            : null,
+        categoryId: line.categoryId && categoryIds.has(line.categoryId) ? line.categoryId : null,
+        installedAt: /^\d{4}-\d{2}-\d{2}$/.test(line.installedAt ?? "") ? line.installedAt : null,
+        specs: line.specs
+          .map((spec) => ({
+            key: (clip(spec.key, 60) ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+            value: clip(spec.value, 200) ?? "",
+          }))
+          .filter((spec) => spec.key !== "" && spec.value !== "")
+          .slice(0, INVENTORY_SPECS_MAX),
+      }))
+      .filter((line) => line.name !== ""),
     notes: clip(output.notes, 2000),
     checklistItemId:
       output.checklistItemId && deadlineItemIds.has(output.checklistItemId)

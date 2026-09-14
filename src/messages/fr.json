@@ -1210,7 +1210,7 @@
     "zones": {
       "mast": "Mât & gréement",
       "mainsail": "Grand-voile & bôme",
-      "headsail": "Voiles d’avant",
+      "headsail": "Voiles d'avant",
       "bow": "Étrave & mouillage",
       "crossbeam": "Traverse",
       "trampoline": "Trampoline",
@@ -1223,8 +1223,8 @@
       "keel": "Quille",
       "rudders": "Safrans"
     },
-    "fromCarnet": "Dessinée d’après le carnet : {details}.",
-    "fromCarnetEmpty": "La maquette suit l’inventaire : chaque équipement noté affine le dessin.",
+    "fromCarnet": "Dessinée d'après le carnet : {details}.",
+    "fromCarnetEmpty": "La maquette suit l'inventaire : chaque équipement noté affine le dessin.",
     "detail": {
       "mainsail": "{area} m² de grand-voile",
       "daggerboards": "dérives",
@@ -1241,7 +1241,7 @@
     "rowMetaPoints": "{count, plural, one {# point} other {# points}}",
     "rowMetaEmpty": "Rien de noté ici",
     "invite": "Touchez un élément du bateau",
-    "listHint": "Touchez un élément pour savoir ce qu’il est et ce qu’il y a à y faire",
+    "listHint": "Touchez un élément pour savoir ce qu'il est et ce qu'il y a à y faire",
     "headlineAboard": "{count, plural, =0 {aucun équipement noté} one {# équipement à bord} other {# équipements à bord}}"
   },
   "engines": {
@@ -2213,7 +2213,8 @@
       "log": "Intervention",
       "purchase": "Achat",
       "attach": "Intervention existante",
-      "deadline": "Échéance"
+      "deadline": "Échéance",
+      "inventory": "Inventaire"
     },
     "confidence": {
       "high": "Lecture sûre",
@@ -2311,7 +2312,14 @@
     "looksLikePurchase": "Ce document ressemble plutôt à un achat : vous pourrez le reclasser depuis « À valider ».",
     "attachFailed": "L'intervention est enregistrée. Le document n'a pas pu y être rattaché : il reste dans « À valider ».",
     "deadlineDone": "Échéance posée : {title}",
-    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider »."
+    "looksLikeDeadline": "Ce document ressemble plutôt à une échéance : vous pourrez la poser depuis « À valider ».",
+    "inventory": {
+      "title": "{count, plural, one {# équipement lu sur ce document} other {# équipements lus sur ce document}}",
+      "description": "Ce document décrit ce qu'il y a à bord. Il ne devient pas une ligne du journal : il remplit l'inventaire, après que vous ayez vu ce qui sera écrit.",
+      "more": "et {count, plural, one {# autre} other {# autres}}…",
+      "action": "Remplir l'inventaire",
+      "fileToo": "Ranger aussi ce document"
+    }
   },
   "parts": {
     "title": "Stock",

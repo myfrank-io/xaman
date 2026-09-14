@@ -60,7 +60,9 @@ export function draftFrom(item: InboxItem, suggestion: InboxSuggestion | null): 
     )
     .join("\n");
   return {
-    kind: suggestion?.kind ?? "log",
+    // An inventory is never a line of the carnet (E2-10): it fills the equipment list, through
+    // the import screen. The draft falls back to an intervention so the card still opens.
+    kind: suggestion?.kind === "inventory" ? "log" : (suggestion?.kind ?? "log"),
     title: suggestion?.title ?? item.fileName.replace(/\.[a-z0-9]{1,8}$/i, ""),
     date: suggestion?.date ?? todayString(),
     categoryIds: suggestion?.categoryId ? [suggestion.categoryId] : [],
@@ -137,6 +139,9 @@ export function isConfidentItem(
   const suggestion = item.suggestion;
   if (!suggestion) return false;
   if (suggestion.confidence === "low") return false;
+  // An inventory is never filed blind (E2-10): it is a list, and its lines go through the
+  // import's own review. « Tout valider » would otherwise write it as an intervention.
+  if (suggestion.kind === "inventory") return false;
   if (documentWarnings(item).length > 0) return false;
   const input = toValidateInput(draftFrom(item, suggestion), {
     boatId,

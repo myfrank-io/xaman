@@ -12,6 +12,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   MailIcon,
+  PackageIcon,
   PaperclipIcon,
   PencilIcon,
   RefreshCwIcon,
@@ -34,6 +35,7 @@ import {
   type InboxLogChoice,
 } from "@/components/inbox/inbox-draft";
 import { InboxItemForm } from "@/components/inbox/InboxItemForm";
+import { specFacts } from "@/lib/boat-3d/specs";
 import { InboxItemSummary } from "@/components/inbox/InboxItemSummary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +48,7 @@ import {
   validateInboxItem,
 } from "@/lib/actions/inbox";
 import { formatBytes, formatDate } from "@/lib/format";
+import { importPath } from "@/lib/queries/boat-routes";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatPath, logPath, suppliesPath } from "@/lib/queries/boat-routes";
 import type { InboxItem } from "@/lib/queries/inbox";
@@ -93,6 +96,11 @@ export function InboxItemCard({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const inventory = item.suggestion?.inventory ?? [];
+  // A builder's list is neither an intervention nor a purchase: filing it as one would
+  // write a journal line nobody asked for. So the card leads with the inventory and keeps
+  // the filing form folded — reachable in one tap, never in the way (E2-10).
+  const folded = item.suggestion?.kind === "inventory" && inventory.length > 0;
 
   const patch = (changes: Partial<InboxDraft>) =>
     setDraft((current) => ({ ...current, ...changes }));
@@ -361,7 +369,64 @@ export function InboxItemCard({
             </div>
           ) : null}
 
-          {showSummary ? (
+          {/* An inventory is not a line of the carnet (E2-10): it is a list, and the app already
+              has a screen that reviews a list before writing it. The card hands it over rather
+              than growing a second one. */}
+          {inventory.length > 0 && !settled ? (
+            <div className="flex flex-col gap-2 rounded-lg border border-info-border bg-info-tint p-3">
+              <p className="text-label font-medium text-info-fg">
+                {t("inventory.title", { count: inventory.length })}
+              </p>
+              <p className="text-caption text-ink-2">{t("inventory.description")}</p>
+              <ul className="flex flex-col gap-0.5 text-caption text-ink-2">
+                {inventory.slice(0, 4).map((line, index) => (
+                  <li key={`${line.name}-${index}`} className="truncate">
+                    {[
+                      line.name,
+                      line.brand,
+                      // The same reading as the maquette (D121): « 88 m² · Hydranet », never
+                      // « surface_m2: 88 ». The person checks what was understood, not the keys.
+                      ...specFacts(
+                        Object.fromEntries(line.specs.map((spec) => [spec.key, spec.value])),
+                        2,
+                      ),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </li>
+                ))}
+                {inventory.length > 4 ? (
+                  <li className="text-ink-3">
+                    {t("inventory.more", { count: inventory.length - 4 })}
+                  </li>
+                ) : null}
+              </ul>
+              {canWrite ? (
+                <Button asChild size="lg" className="self-start">
+                  <Link href={importPath(boatId, "equipment", item.id) as Route}>
+                    <PackageIcon />
+                    {t("inventory.action")}
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {folded && !expanded ? (
+            canWrite ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="lg"
+                className="self-start"
+                onClick={() => setExpanded(true)}
+                disabled={pending}
+              >
+                <PencilIcon />
+                {t("inventory.fileToo")}
+              </Button>
+            ) : null
+          ) : showSummary ? (
             <InboxItemSummary draft={draft} contacts={contacts} />
           ) : (
             <InboxItemForm
@@ -380,16 +445,18 @@ export function InboxItemCard({
           )}
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              size="lg"
-              onClick={validate}
-              disabled={!canWrite || pending}
-              aria-busy={pending}
-            >
-              {pending ? <Spinner /> : attaching ? <PaperclipIcon /> : <CheckIcon />}
-              {attaching ? t("attach") : t("validate")}
-            </Button>
+            {folded && !expanded ? null : (
+              <Button
+                type="button"
+                size="lg"
+                onClick={validate}
+                disabled={!canWrite || pending}
+                aria-busy={pending}
+              >
+                {pending ? <Spinner /> : attaching ? <PaperclipIcon /> : <CheckIcon />}
+                {attaching ? t("attach") : t("validate")}
+              </Button>
+            )}
             {showSummary ? (
               <Button
                 type="button"

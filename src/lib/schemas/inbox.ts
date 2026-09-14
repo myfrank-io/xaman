@@ -61,13 +61,18 @@ export function isInboxWarningCode(value: string): value is InboxWarningCode {
  * a realisation on a checklist item carrying `next_due_at` (D11), which is what the « Fait »
  * dialog already writes, so the deadline lands in the queue with a real date instead of an
  * estimate.
+ *
+ * The fourth is the odd one out: an `inventory` writes **no line of the carnet at all** (E2-10,
+ * D122). A builder's specification says what the boat carries, so it fills the equipment list —
+ * through the import screen, which already reviews a list before writing it. `INBOX_FILINGS`
+ * below therefore does not carry it: « Valider » never files an inventory.
  */
-export const INBOX_KINDS = ["log", "purchase", "deadline"] as const;
+export const INBOX_KINDS = ["log", "purchase", "deadline", "inventory"] as const;
 export const inboxKindSchema = z.enum(INBOX_KINDS);
 export type InboxKind = z.infer<typeof inboxKindSchema>;
 
 /**
- * What « Valider » can do with a card (D109). The three kinds above create a line; `attach` hangs
+ * What « Valider » can do with a card (D109). The three filing kinds above create a line; `attach` hangs
  * the document on an intervention the carnet already has — an invoice mailed in for last week's
  * work, a photo of a page already noted. It is deliberately *not* an `InboxKind`: a kind is what
  * a document becomes, and `inboxEntityId` derives an id from it (D97), whereas an attachment
@@ -97,6 +102,9 @@ const ENTITY_ID_MASK: Record<InboxKind, string> = {
   log: "9b1d4a6f2c8e5730a41f6d92b8c30e75",
   purchase: "3e7c85a09d24b16fc0538ea7412d9b6e",
   deadline: "c4a70f13e85b269d7ac1054fb3e28d96",
+  // An inventory becomes many rows, not one: this mask names the document, and the import
+  // matches each line by its name the way a spreadsheet does.
+  inventory: "5f2b93c6a0d748e1b7539c2f86ad401b",
 };
 
 export function inboxEntityId(itemId: string, kind: InboxKind): string {
@@ -196,6 +204,39 @@ export const supplierReadSchema = z.object({
   address: z.string().trim().max(300).nullable(),
 });
 
+/**
+ * One piece of equipment a document says is aboard (E2-10).
+ *
+ * A builder's technical specification, a delivery note, an inventory drawn up for a sale: a
+ * document whose whole point is **what the boat carries**. It does not become one line of the
+ * carnet, it fills the equipment list — and with it the maquette, which draws the boat from that
+ * very list (D117).
+ *
+ * `specs` are the free pairs `equipment.specs` already holds, with the carnet's own keys where
+ * they exist (`surface_m2`, `puissance_w`, `emplacement`…). They are what turns « Grand-voile »
+ * into « Grand-voile · 88 m² · Hydranet » on the screen that names the boat's parts.
+ */
+export const INVENTORY_LINES_MAX = 80;
+export const INVENTORY_SPECS_MAX = 20;
+
+export const inventoryLineSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  brand: z.string().trim().max(80).nullable(),
+  model: z.string().trim().max(80).nullable(),
+  serial: z.string().trim().max(80).nullable(),
+  quantity: z.number().int().min(0).max(9999).nullable(),
+  /** One of the boat's systems, or null. */
+  categoryId: z.string().nullable(),
+  installedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable(),
+  specs: z
+    .array(z.object({ key: z.string().trim().min(1).max(60), value: z.string().trim().max(200) }))
+    .max(INVENTORY_SPECS_MAX),
+});
+export type InventoryLine = z.infer<typeof inventoryLineSchema>;
+
 export const inboxSuggestionSchema = z.object({
   documentType: z.enum(INBOX_DOCUMENT_TYPES),
   /** Where it should be filed: an intervention, a purchase, or a deadline (E17-6). */
@@ -246,6 +287,11 @@ export const inboxSuggestionSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .nullable()
     .default(null),
+  /**
+   * For an inventory: the equipment the document lists. Defaulted so every row written before
+   * E2-10 — and every reading that is not an inventory — still parses.
+   */
+  inventory: z.array(inventoryLineSchema).max(INVENTORY_LINES_MAX).default([]),
   confidence: z.enum(INBOX_CONFIDENCES),
   /** What the person should double-check, in French — an illegible total, a guessed date… */
   warnings: z.array(z.string().max(200)).max(6),

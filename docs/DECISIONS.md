@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D122.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D123.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2738,3 +2738,43 @@ faire » ne passe devant que si quelque chose est dû. Et quand rien n'est en re
 carte annonce ce que le bateau porte, pas « rien » : « rien en retard » n'apprend rien sur un
 bateau.
 
+
+## 2026-09-14 — D122 : un document de chantier verse l'inventaire dans l'import qui existe déjà
+
+**Question.** La maquette (D117, D121) se précise avec ce que le carnet sait du bateau : elle lit
+les `specs` des équipements pour dire « 88 m² · Hydranet » et en déduit dérives, jupes, bout-dehors
+ou panneaux. Or ces `specs` n'arrivaient par aucun chemin en masse : le chantier envoie une liste
+d'équipements — un PDF de livraison, un tableau d'inventaire — et il fallait la ressaisir fiche par
+fiche. Fallait-il un écran de revue dédié pour les inventaires lus sur un document ?
+
+**Décision.** Non : la lecture **verse dans l'import qui existe**. Trois pièces, aucune nouvelle
+surface.
+
+1. L'import d'équipements gagne une colonne **« Caractéristiques »** (`cellSpecs`,
+   `src/lib/import/entities.ts`) : `surface_m2: 88 ; tissu: Hydranet`, séparateurs `;` ou retour à
+   la ligne, clé et valeur sur `:` ou `=`, clé repliée en `snake_case`, 20 paires au plus, une
+   demi-paire est ignorée. C'est la forme que `src/lib/boat-3d/specs.ts` relit.
+2. La boîte de réception apprend un genre **`inventory`** : le modèle qui lit un document renvoie
+   des lignes d'équipement (nom, catégorie, marque, modèle, n° de série, quantité, date de pose,
+   caractéristiques), 80 au plus. La carte de l'élément montre les premières et propose
+   **« Importer ces équipements »**, qui ouvre l'import **pré-rempli** — `inventoryToTable`
+   (`src/lib/inbox/inventory.ts`) rend un tableau tabulé dont l'en-tête porte les libellés que
+   l'import déclare, donc `guessMapping` place toutes les colonnes seule.
+3. Sur l'écriture, **les `specs` déjà en base gagnent** : l'import fusionne les paires proposées
+   sous celles qui existent (`{ ...proposées, ...existantes }`) et n'écrit que si la fiche y gagne
+   quelque chose.
+
+La carte d'un inventaire ne ressemble donc pas aux autres : elle montre les premières lignes **en
+clair** — `specFacts` les lit comme la maquette, « Grand-voile · Incidence · 88 m² · Hydranet » et
+jamais `surface_m2: 88` —, pose « Remplir l'inventaire » en action principale, et **replie** le
+formulaire de rangement derrière « Ranger aussi ce document ». Un inventaire est enfin retiré de
+**« Tout valider »** (`isConfidentItem`) : une liste ne se range jamais à l'aveugle, et sans cette
+garde un inventaire à qui le modèle a donné une catégorie serait écrit comme une intervention.
+
+**Raison.** Importer une liste d'équipements est un problème déjà résolu ici : le `ImportWizard`
+mappe les colonnes, dit ce qui est nouveau et ce qui est reconnu, refuse ce que l'écriture
+refuserait, et n'écrit qu'ensuite. Un deuxième écran de revue aurait refait tout cela en moins bien
+et aurait divergé au premier champ ajouté ; le document n'avait pas besoin d'une surface, il avait
+besoin d'arriver dans la forme que la surface lit déjà. Et la règle de fusion est celle de D113 :
+**un document propose, il n'écrase jamais** — une fiche renseignée à la main par Xav ne se fait pas
+récrire par un PDF de chantier, elle se fait compléter.
