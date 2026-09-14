@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import type { ChecklistRow } from "@/components/checklist/rows";
-import { isDueToday, isPunctual } from "@/components/checklist/rows";
+import { hasCounter, isDueToday, isPunctual } from "@/components/checklist/rows";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ChecklistStateBadge } from "@/components/common/ChecklistStateBadge";
 import { DueLabel } from "@/components/common/DueLabel";
@@ -86,7 +86,7 @@ export function ChecklistItemRow({
             status={row.status}
             daysRemaining={row.daysRemaining}
             hoursRemaining={row.hoursRemaining}
-            hasCounter={row.engineId === null || row.currentHours !== null}
+            hasCounter={hasCounter(row)}
             compact={compact}
           />
         )

@@ -8,11 +8,15 @@ import { pickNames, summariseWeek } from "@/lib/queries/attention";
  * Le tableau de bord comptait « à traiter » de trois façons — la vignette (état), la file
  * (état) et le lien de pied (`en retard + bientôt + jamais renseignés`). Les tests ci-dessous
  * fixent la règle unique : **on compte ce que l'écran d'arrivée montre**.
+ *
+ * Depuis E18-1 il ne reste que deux comptes — la file, qui est l'écran, et l'onglet « À traiter »
+ * où elle mène : la vignette et le compte du lien de pied ont quitté l'écran avec le résumé
+ * (D115). La règle, elle, n'a pas changé, et c'est elle que ces cas gardent.
  */
 
 type Row = { status: "overdue" | "soon" | "never" | "ok"; interval: boolean };
 
-/** Le compte de la vignette et du lien : `boat_dashboard_stats.overdue_items + soon_items`. */
+/** Ce que la vue comptait pour la vignette : `boat_dashboard_stats.overdue_items + soon_items`. */
 function dashboardTodo(rows: Row[]): number {
   return rows.filter((row) => row.status === "overdue" || row.status === "soon").length;
 }

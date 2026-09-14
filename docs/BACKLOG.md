@@ -327,16 +327,27 @@ indépendants dans cet ordre : le premier se livre seul.
 
 ### Lot 1 — Le carnet (V1)
 
-- [ ] **E18-1 (M, 2)** **L'écran devient un plan de travail.** Retrait des quatre vignettes, de la
-  grille des huit systèmes, des trois dernières interventions et du récapitulatif. La file cesse
-  d'être un aperçu de six lignes (`QUEUE_LIMIT`) : elle prend la hauteur de l'écran, groupée par
-  échéance — **Aujourd'hui · Cette semaine · Ce mois** —, `NextActionCard` en tête. Restent la
-  phrase d'état, `EngineStrip`, `DashboardBanner` et le bouton nommé (D35). L'onglet prend le nom
-  **« À bord »** (`nav.short.dashboard` dit déjà « Bord »). **Aucune migration** : tout ce qui
-  reste est déjà lu, et `boat_dashboard_stats` n'est plus lu que pour les deux comptes du bandeau —
-  la vue est dégraissée par la migration d'E18-2, pas ici. **DoD** : clés orphelines retirées de
-  `fr.json` (`dashboard.stats`, `.categories`, `.recent`, `.recap`), `loading.tsx` aux dimensions
-  des blocs qui restent, `/dev/ui/dashboard` à jour, audit tactile vert aux cinq viewports.
+- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D115). Les quatre vignettes, la
+  grille des huit systèmes, les trois dernières interventions et le récapitulatif quittent
+  l'écran : quatre blocs qui étaient des copies tronquées d'un onglet à un tap. La file cesse
+  d'être un aperçu de six lignes — elle prend la hauteur de l'écran et se range par palier,
+  **Aujourd'hui · Cette semaine · Ce mois-ci · Aux heures moteur** (`queue.ts`, testé), avec
+  `NextActionCard` toujours promue en tête et « Fait » toujours en ligne. Les trois premiers
+  paliers ne réinventent aucune règle : le point rouge (D88) décide d'« Aujourd'hui », `WEEK_DAYS`
+  de « Cette semaine ». Le quatrième est à part parce qu'une échéance en heures **ne tombe pas un
+  jour** : la ranger sous « Cette semaine » aurait affiché la conversion (1 h ≈ 1,2 j) comme un
+  fait. Deux règles sortent de leur copie pour que l'étiquette d'une ligne et son palier ne
+  puissent pas diverger : « laquelle des deux échéances déclenche » (`drivenByHours`, tirée de
+  `DueLabel`) et `hasCounter` (qui était écrite deux fois). L'onglet prend le nom **« À bord »**,
+  et les deux liens de pied perdent leur compte — la liste au-dessus *est* le compte. **Aucune
+  migration** : `boat_dashboard_stats` n'est plus lu que pour les deux comptes du bandeau (la vue
+  est dégraissée par E18-2), `checklist_category_progress` passe de `*` à deux colonnes, et la
+  lecture des interventions ouvertes disparaît de l'écran avec la vignette qui la demandait.
+  `fr.json` perd **36 clés** et en gagne 4 (les paliers) ; `loading.tsx` annonce la forme d'une
+  liste au lieu de vignettes ; `/dev/ui/dashboard` porte de quoi peupler les quatre paliers.
+  **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
+  `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
+  390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
 - [ ] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un.** Un document « À valider »
   (D91) et une pièce sous son seuil (D84) attendent une personne exactement comme un point en
   retard, mais le premier est un bandeau et la seconde une carte de la Checklist. `boat_todo_queue`
