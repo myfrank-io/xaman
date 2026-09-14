@@ -3,10 +3,13 @@ import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { ImportWizard } from "@/components/import/ImportWizard";
+import { inventoryToTable } from "@/lib/inbox/inventory";
 import { loadImportCatalog } from "@/lib/import/catalog";
 import { descriptorOf, isImportEntity } from "@/lib/import/entities";
 import { can, type BoatRole } from "@/lib/permissions";
 import { boatPath, boatTabPath, stockPath } from "@/lib/queries/boat-routes";
+import { activeCategories } from "@/lib/queries/categories";
+import { parseSuggestion } from "@/lib/schemas/inbox";
 import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,9 +22,9 @@ export default async function ImportPage({
   searchParams,
 }: {
   params: Promise<{ boatId: string }>;
-  searchParams: Promise<{ entity?: string }>;
+  searchParams: Promise<{ entity?: string; from?: string }>;
 }) {
-  const [{ boatId }, { entity }] = await Promise.all([params, searchParams]);
+  const [{ boatId }, { entity, from }] = await Promise.all([params, searchParams]);
   if (!isImportEntity(entity)) notFound();
 
   const supabase = await createClient();
@@ -42,6 +45,28 @@ export default async function ImportPage({
   const existingKeys = (existing ?? [])
     .map((row) => descriptor.existingKey(row))
     .filter((key) => key !== "");
+
+  /**
+   * `?from=` — a document already read as an inventory (E2-10). Its lines arrive as the table
+   * this screen reads anyway, so the builder's specification gets the same preview a spreadsheet
+   * does: which lines are new, which are recognised, which are refused and why.
+   */
+  let initialText: string | undefined;
+  if (from && entity === "equipment") {
+    const { data: item } = await supabase
+      .from("inbox_items")
+      .select("suggestion")
+      .eq("id", from)
+      .eq("boat_id", boatId)
+      .maybeSingle();
+    const suggestion = parseSuggestion(item?.suggestion);
+    if (suggestion && suggestion.inventory.length > 0) {
+      initialText = inventoryToTable(
+        suggestion.inventory,
+        await activeCategories(supabase, boatId),
+      );
+    }
+  }
 
   const t = await getTranslations("import");
   const back = {
@@ -64,6 +89,7 @@ export default async function ImportPage({
         backLabel={back.label}
         existingKeys={existingKeys}
         catalog={catalog}
+        initialText={initialText}
       />
     </div>
   );

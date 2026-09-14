@@ -40,115 +40,134 @@ export function ZoneList({
   }, [selected]);
 
   return (
-    <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
-      {zones.map((zone) => {
-        const open = zone.key === selected;
-        const name = zone.name ?? t(ZONE_LABELS[zone.labelKey ?? "hulls"]);
-        return (
-          <div
-            key={zone.key}
-            ref={(element) => {
-              if (element) rowsRef.current.set(zone.key, element);
-              else rowsRef.current.delete(zone.key);
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => onSelect(open ? null : zone.key)}
-              aria-expanded={open}
-              className={cn(
-                "flex min-h-14 w-full items-center gap-3 tap-feedback px-4 py-2 text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:-outline-offset-2 focus-visible:outline-none",
-                open && "bg-accent/50",
-              )}
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      {/* Said once, above the rows, because the hint under the model is off screen by the time
+          anyone reaches the list. */}
+      <p className="sticky top-0 z-10 border-b border-border bg-surface-2 px-4 py-2 text-caption text-ink-2">
+        {t("listHint")}
+      </p>
+      <div className="divide-y divide-border">
+        {zones.map((zone) => {
+          const open = zone.key === selected;
+          const name = zone.name ?? t(ZONE_LABELS[zone.labelKey ?? "hulls"]);
+          return (
+            <div
+              key={zone.key}
+              ref={(element) => {
+                if (element) rowsRef.current.set(zone.key, element);
+                else rowsRef.current.delete(zone.key);
+              }}
             >
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-body font-medium">{name}</span>
-                <span className="block truncate text-caption text-ink-3">{meta(zone, t)}</span>
-              </span>
-              {zone.state === "overdue" || zone.state === "soon" ? (
-                <ChecklistStateBadge state={zone.state} size="sm" />
-              ) : null}
-              <ChevronRightIcon
+              <button
+                type="button"
+                onClick={() => onSelect(open ? null : zone.key)}
+                aria-expanded={open}
                 className={cn(
-                  "size-4 shrink-0 text-ink-3 transition-transform",
-                  open && "rotate-90",
+                  "flex min-h-14 w-full items-center gap-3 tap-feedback px-4 py-2 text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:-outline-offset-2 focus-visible:outline-none",
+                  open && "bg-accent/50",
                 )}
-                aria-hidden
-              />
-            </button>
-
-            {open ? (
-              <div className="flex flex-col gap-4 border-t border-border bg-surface-sunken px-4 py-3">
-                <Section title={t("todo")}>
-                  {zone.points.length === 0 ? (
-                    <p className="text-caption text-ink-3">{t("nothingDue")}</p>
-                  ) : (
-                    <ul className="flex flex-col gap-1">
-                      {zone.points.map((point) => (
-                        <li key={point.id}>
-                          <Link
-                            href={
-                              (point.categoryId
-                                ? categoryPath(boatId, point.categoryId)
-                                : "#") as Route
-                            }
-                            className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                          >
-                            <ChecklistStateBadge state={point.state} size="sm" />
-                            <span className="min-w-0 flex-1 truncate text-label">
-                              {point.label}
-                            </span>
-                            <DueLabel
-                              status={point.state}
-                              daysRemaining={point.daysRemaining}
-                              hoursRemaining={point.hoursRemaining}
-                              hasCounter={point.hasCounter}
-                              compact
-                            />
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body font-medium">{name}</span>
+                  <span className="block truncate text-caption text-ink-3">{meta(zone, t)}</span>
+                </span>
+                {zone.state === "overdue" || zone.state === "soon" ? (
+                  <ChecklistStateBadge state={zone.state} size="sm" />
+                ) : null}
+                <ChevronRightIcon
+                  className={cn(
+                    "size-5 shrink-0 text-ink-2 transition-transform",
+                    open && "rotate-90",
                   )}
-                </Section>
+                  aria-hidden
+                />
+              </button>
 
-                <Section title={t("aboard")}>
-                  {zone.things.length === 0 ? (
-                    <p className="text-caption text-ink-3">{t("noEquipment")}</p>
-                  ) : (
-                    <ul className="flex flex-col gap-1">
-                      {zone.things.map((thing) => (
-                        <li key={thing.id}>
-                          <Link
-                            href={equipmentPath(boatId, thing.id) as Route}
-                            className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                          >
-                            <PackageIcon className="size-4 shrink-0 text-ink-3" aria-hidden />
-                            <span className="min-w-0 flex-1 truncate text-label">{thing.name}</span>
-                            {thing.meta ? (
-                              <span className="shrink-0 truncate text-caption text-ink-3">
-                                {thing.meta}
+              {open ? (
+                <div className="flex flex-col gap-4 border-t border-border bg-surface-sunken px-4 py-3">
+                  {/* What is due comes first only when something is: the rest of the time this
+                    panel answers « c'est quoi, ce truc ? », which is what an owner opens it for. */}
+                  {(zone.state === "overdue" || zone.state === "soon") && todo(zone, t, boatId)}
+                  <Section title={t("aboard")}>
+                    {zone.things.length === 0 ? (
+                      <p className="text-caption text-ink-3">{t("noEquipment")}</p>
+                    ) : (
+                      <ul className="flex flex-col gap-1">
+                        {zone.things.map((thing) => (
+                          <li key={thing.id}>
+                            <Link
+                              href={equipmentPath(boatId, thing.id) as Route}
+                              className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 py-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                            >
+                              <PackageIcon className="size-4 shrink-0 text-ink-3" aria-hidden />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-label">{thing.name}</span>
+                                {thing.facts.length > 0 || thing.meta ? (
+                                  <span className="block truncate text-caption text-ink-3">
+                                    {[thing.meta, ...thing.facts].filter(Boolean).join(" · ")}
+                                  </span>
+                                ) : null}
                               </span>
-                            ) : null}
-                            <ChevronRightIcon className="size-4 shrink-0 text-ink-3" aria-hidden />
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </Section>
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
+                              <ChevronRightIcon
+                                className="size-4 shrink-0 text-ink-3"
+                                aria-hidden
+                              />
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Section>
+                  {zone.state !== "overdue" && zone.state !== "soon" && todo(zone, t, boatId)}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
+/** « À faire » — the points due on this zone, the worst first. */
+function todo(
+  zone: ZoneSummary,
+  t: ReturnType<typeof useTranslations<"boat3d">>,
+  boatId: string,
+): React.ReactNode {
+  return (
+    <Section title={t("todo")}>
+      {zone.points.length === 0 ? (
+        <p className="text-caption text-ink-3">{t("nothingDue")}</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {zone.points.map((point) => (
+            <li key={point.id}>
+              <Link
+                href={(point.categoryId ? categoryPath(boatId, point.categoryId) : "#") as Route}
+                className="flex min-h-11 items-center gap-2 rounded-lg tap-feedback px-1 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                <ChecklistStateBadge state={point.state} size="sm" />
+                <span className="min-w-0 flex-1 truncate text-label">{point.label}</span>
+                <DueLabel
+                  status={point.state}
+                  daysRemaining={point.daysRemaining}
+                  hoursRemaining={point.hoursRemaining}
+                  hasCounter={point.hasCounter}
+                  compact
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
 /**
- * « 3 équipements · 2 points de suivi », and « Rien de noté ici » when there is neither. Counting
- * zeroes out loud on eleven rows is what made the list read as a form with nothing in it.
+ * « 3 équipements · 2 points », and « Rien de noté ici » when there is neither. Counting zeroes
+ * out loud on eleven rows is what made the list read as a form with nothing in it.
  */
 function meta(zone: ZoneSummary, t: ReturnType<typeof useTranslations<"boat3d">>): string {
   const parts: string[] = [];
