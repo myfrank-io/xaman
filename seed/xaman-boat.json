@@ -15,7 +15,7 @@
     "beam_m": null,
     "draft_m": null,
     "checklist_template_ref": "orc50-v1",
-    "notes": "Antifouling : Copper Coat (antifouling époxy permanent appliqué à la construction). Pas d'antifouling classique annuel — entretien par polissage et retouches ponctuelles. Antifouling ponctuel utilisé : Nautix A88M. Suivre les sorties de l'eau (date, chantier, durée, travaux, coût) dans le module dédié."
+    "notes": "Antifouling : Copper Coat (antifouling époxy permanent appliqué à la construction). Pas d'antifouling classique annuel — entretien par polissage et retouches ponctuelles. Antifouling ponctuel utilisé : Nautix A88M. Suivre les sorties de l'eau (date, chantier, durée, travaux, coût) dans le module dédié. Dossier chantier (Marsaudon Composites) : devis BDC 2022042101, descriptif technique SEPT21-SEPT22 indice B signé le 07/05/2022, spécification technique de besoin du 31/01/2023."
   },
   "members": [
     { "email": "TODO-xavier@example.com", "role": "owner", "display_name": "Xavier" },
@@ -29,11 +29,11 @@
   ],
   "equipment": [
     { "external_ref": "hull-sandwich", "category_ref": "hull_deck", "name": "Coque sandwich PVC foam core / vinylester", "specs": { "materiau": "Sandwich mousse PVC / vinylester" } },
-    { "external_ref": "bulkhead-mast", "category_ref": "hull_deck", "name": "Cloison de mât + poutre arrière", "specs": { "materiau": "Carbone" } },
-    { "external_ref": "roof-carbon", "category_ref": "hull_deck", "name": "Roof et cloisons de roof", "specs": { "materiau": "Carbone" } },
-    { "external_ref": "skirts", "category_ref": "hull_deck", "name": "Jupes de flotteur allongées", "specs": { "allongement_cm": 60 } },
-    { "external_ref": "crossbeam", "category_ref": "hull_deck", "name": "Traverse (croix) carbone", "specs": { "finition": "Laquée blanc" } },
-    { "external_ref": "daggerboards", "category_ref": "daggerboards_rudders", "name": "Dérives sabres carbone", "quantity": 2, "specs": { "type": "Remplacement standard" } },
+    { "external_ref": "bulkhead-mast", "category_ref": "hull_deck", "name": "Cloison de mât + poutre arrière", "specs": { "materiau": "Carbone", "ref_chantier": "STRC01" } },
+    { "external_ref": "roof-carbon", "category_ref": "hull_deck", "name": "Roof et cloisons de roof", "specs": { "materiau": "Carbone", "ref_chantier": "STRC06" } },
+    { "external_ref": "skirts", "category_ref": "hull_deck", "name": "Jupes de flotteur allongées", "specs": { "allongement_cm": 60, "ref_chantier": "STRC03" } },
+    { "external_ref": "crossbeam", "category_ref": "hull_deck", "name": "Traverse (croix) carbone", "specs": { "finition": "Laquée blanc", "ref_chantier": "GREM10" } },
+    { "external_ref": "daggerboards", "category_ref": "daggerboards_rudders", "name": "Dérives sabres carbone", "quantity": 2, "specs": { "type": "Remplacement standard", "ref_chantier": "STRC02" } },
     { "external_ref": "rudders", "category_ref": "daggerboards_rudders", "name": "Safrans suspendus", "quantity": 2 },
     { "external_ref": "mast", "category_ref": "sails_rigging", "name": "Mât carbone croisière fixe", "brand": "Lorima", "specs": { "haubans": "Textiles kevlar" } },
     { "external_ref": "winch-electric-st62", "category_ref": "sails_rigging", "name": "Winch électrique pied de mât tribord", "brand": "Andersen", "model": "Compact ST62" },
@@ -44,7 +44,7 @@
     { "external_ref": "sail-code0", "category_ref": "sails_rigging", "name": "Code 0 (J0)", "brand": "North Sails", "specs": { "surface_m2": 87.5, "tissu": "PX Black", "drisse": "Hookée", "emmagasineur": "Karver" } },
     { "external_ref": "sail-a0", "category_ref": "sails_rigging", "name": "Spi léger (A0)", "brand": "North Sails", "specs": { "surface_m2": 220, "tissu": "Stormlite", "point_de_drisse": "En tête (au capelage)" } },
     { "external_ref": "sail-a4", "category_ref": "sails_rigging", "name": "Spi lourd (A4)", "brand": "North Sails", "specs": { "surface_m2": 170, "point_de_drisse": "Au capelage", "chaussette": true } },
-    { "external_ref": "rail-3d", "category_ref": "sails_rigging", "name": "Kit rail transversal 3D (réglage voiles d'avant)" },
+    { "external_ref": "rail-3d", "category_ref": "sails_rigging", "name": "Kit rail transversal 3D (réglage voiles d'avant)", "specs": { "ref_chantier": "ACC13" } },
     { "external_ref": "furlers-karver", "category_ref": "sails_rigging", "name": "Emmagasineurs Karver", "brand": "Karver", "specs": { "voiles": "J1, J2, J3, Code 0, Gennaker, Spi" } },
     { "external_ref": "batteries-lithium", "category_ref": "energy", "name": "Batteries Lithium", "brand": "Super B", "quantity": 3, "specs": { "capacite_ah": 210, "tension_v": 12, "total_ah": 630 } },
     { "external_ref": "solar-panels", "category_ref": "energy", "name": "Panneaux solaires monocristallins", "specs": { "puissance_w": 990, "emplacement": "Sur bossoirs" } },
@@ -71,7 +71,8 @@
     { "external_ref": "contact-electronics", "name": "TODO", "specialty": "Électronicien / B&G", "phone": null, "email": null },
     { "external_ref": "contact-yanmar", "name": "TODO", "specialty": "Motoriste Yanmar", "phone": null, "email": null },
     { "external_ref": "contact-rigger", "name": "TODO", "specialty": "Gréeur", "phone": null, "email": null },
-    { "external_ref": "contact-suzuki", "name": "TODO", "specialty": "Mécanicien Suzuki (annexe)", "phone": null, "email": null }
+    { "external_ref": "contact-suzuki", "name": "TODO", "specialty": "Mécanicien Suzuki (annexe)", "phone": null, "email": null },
+    { "external_ref": "contact-builder", "name": "Marsaudon Composites", "company": "Marsaudon Composites SAS", "specialty": "Chantier constructeur", "phone": "02 97 83 01 31", "email": "contact@marsaudon-composites.com", "address": "BSM Keroman — Bloc K1, 56100 Lorient", "notes": "Chantier constructeur de l'ORC 50 #25. Pour commander une pièce d'origine, citer la référence d'option du chantier portée par l'équipement (specs.ref_chantier, ex. STRC02)." }
   ],
   "haul_outs": []
 }

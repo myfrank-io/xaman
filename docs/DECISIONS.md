@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D113.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D114.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2428,3 +2428,33 @@ l'owner, écrits par la seule clé de service — `revoked_at` reste la seule co
 écrit sur cette table. L'écran le dit en fin de ligne : « relancée 3 fois, la dernière le
 06/09/2026 ». C'est le fait qui met fin à l'attente : l'adresse est bonne, le message n'est lu par
 personne, il faut téléphoner.
+
+
+## 2026-09-14 — D113 : le carnet fait foi, un document ne l'écrase jamais
+
+**Question.** Un propriétaire verse dans l'app un document qui décrit son bateau — dossier de
+commande du chantier, inventaire de vente, rapport d'expertise. Quand ce document contredit une
+donnée déjà présente, laquelle gagne ?
+
+**Décision.** Les données de l'application font foi. Un document est une **pièce datée** : il
+propose, il n'écrit pas. Une ligne lue qui contredit une donnée existante ne remplace rien — elle
+s'affiche à côté d'elle (« déjà renseigné : *X* — ce document dit *Y* »), **décochée**, avec un
+bouton « remplacer » explicite ; et la date du document se lit sur la ligne, pas seulement en tête
+d'écran. Le rapprochement se fait par **famille d'équipement**, jamais par libellé, sans quoi deux
+noms du même appareil font deux lignes au lieu d'une contradiction visible. Entre deux documents,
+le plus récent prime, et la famille arbitre : un bon de livraison prime sur le devis qui l'a
+précédé.
+
+**Raison.** Le dossier de commande de Xaman, daté du 31/01/2023, a servi de spécimen : le bateau a
+été livré un an plus tard et cinq postes avaient changé entre-temps (voilerie, pack électronique,
+traceur, puissance solaire, hors-bord d'annexe). Ce n'est pas un défaut du document, c'est la
+propriété normale de cette famille de pièces — un devis dit ce qui était envisagé, pas ce qui a été
+monté. Un document peut donc être **parfaitement lu et malgré tout périmé** : aucune qualité de
+lecture ne rattrape cela, seule une personne sait que le pack a changé depuis. C'est le prolongement
+direct de D91, où une ligne de « À valider » est une proposition et rien n'est écrit avant le tap.
+
+**Ce que ça n'interdit pas.** Un document ancien reste la meilleure source pour tout ce que personne
+n'a jamais saisi et qui ne bouge pas : la référence d'option du chantier, le fournisseur d'origine,
+le numéro de coque, les coordonnées du constructeur. C'est à ce titre que `seed/xaman-boat.json`
+gagne le contact Marsaudon Composites et six `specs.ref_chantier` — sans qu'aucune des cinq
+divergences ci-dessus n'ait été reportée dans le carnet.
