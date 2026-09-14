@@ -138,7 +138,7 @@ export function normaliseSuggestion(
     currency: clip(output.currency, 3)?.toUpperCase() ?? null,
     supplierName: clip(output.supplierName, 120),
     supplier,
-    // What the model did not recognise, the annuaire often does (D116): an exact e-mail, an
+    // What the model did not recognise, the annuaire often does (D118): an exact e-mail, an
     // exact number, a name one of the two spells with « SARL » in front. Never the reverse —
     // a contactId the model gave is the model's answer, and this only fills a null.
     contactId:

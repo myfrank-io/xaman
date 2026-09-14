@@ -200,7 +200,7 @@ export const DEV_LOG_DETAIL: LogDetailData = {
   title: "Vidange + entretien complet (2 moteurs)",
   performedAt: "2026-03-06",
   status: "done",
-  // Deux systèmes (D114) : la visite a touché les moteurs et la coque, la fiche le dit.
+  // Deux systèmes (D116) : la visite a touché les moteurs et la coque, la fiche le dit.
   categories: [
     { ...ENGINES_CATEGORY, archived: false },
     { id: "hull", name: "Coque & Pont", color: "#52606F", icon: "ship", archived: false },

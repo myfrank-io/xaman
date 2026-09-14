@@ -125,7 +125,7 @@ describe("the local reader on an invoice", () => {
     expect(suggestion?.supplierName).toBe("Chantier naval du Port");
   });
 
-  /** D116: the block a person would copy by hand into a fiche prestataire. */
+  /** D118: the block a person would copy by hand into a fiche prestataire. */
   it("copies the issuer's own block, and never a SIRET for a phone number", () => {
     expect(suggestion?.supplier.name).toBe("Chantier naval du Port");
     expect(suggestion?.supplier.phone).toBe("02 97 40 11 22");

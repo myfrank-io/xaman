@@ -15,7 +15,7 @@ import {
 } from "@/components/logs/log-form-values";
 
 /**
- * « Noter une intervention » en deux temps (D115) : le document, puis le formulaire.
+ * « Noter une intervention » en deux temps (D117) : le document, puis le formulaire.
  *
  * L'écran ne fait que tenir l'ordre. Le premier temps vit dans `LogDocumentStart` (envoi et
  * lecture, la chaîne de la boîte de réception), le second dans `LogForm`, inchangé pour tous les

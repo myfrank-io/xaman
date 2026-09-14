@@ -60,7 +60,7 @@ export function InboxItemForm({
   contacts: ContactOption[];
   /** The interventions a document can join instead of becoming one (D109). */
   logs: InboxLogChoice[];
-  /** The provider block read on the document (D116), when there was one. */
+  /** The provider block read on the document (D118), when there was one. */
   supplier?: SupplierRead | null;
   /** A fiche created from the document, so this card's picker lists it at once. */
   onContactCreated?: (contact: ContactOption) => void;
@@ -149,7 +149,7 @@ export function InboxItemForm({
 
           <div className="grid gap-2">
             <Label>{t("fields.category")}</Label>
-            {/* An intervention carries as many systems as the invoice covers (D114); a purchase
+            {/* An intervention carries as many systems as the invoice covers (D116); a purchase
                 lands in exactly one place, as it always did. */}
             {draft.kind === "log" ? (
               <CategoryChipsMulti
@@ -217,7 +217,7 @@ export function InboxItemForm({
                 label={t("fields.contact")}
                 crewLabel={t("fields.noContact")}
               />
-              {/* Who the document says it is from (D116): recognised in the annuaire, or created
+              {/* Who the document says it is from (D118): recognised in the annuaire, or created
                   from the block the invoice prints — numéro, mail, adresse compris. */}
               <SupplierSuggestion
                 boatId={boatId}

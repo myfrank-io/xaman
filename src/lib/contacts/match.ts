@@ -1,5 +1,5 @@
 /**
- * Rapprocher le prestataire lu sur un document avec l'annuaire du bateau (D116).
+ * Rapprocher le prestataire lu sur un document avec l'annuaire du bateau (D118).
  *
  * Une facture porte toujours de quoi reconnaître son émetteur — un nom, une raison sociale, un
  * téléphone, un e-mail — et le carnet porte déjà, la plupart du temps, la fiche de ce même

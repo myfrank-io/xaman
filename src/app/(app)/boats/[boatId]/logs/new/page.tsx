@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 type Search = Record<string, string | string[] | undefined>;
 
 /**
- * « + Intervention » (E3-3). Opens on its document (D115) — photo, photothèque ou fichier, lu par
+ * « + Intervention » (E3-3). Opens on its document (D117) — photo, photothèque ou fichier, lu par
  * la chaîne de la boîte de réception — puis sur le formulaire pré-rempli de ce qu'elle en a tiré.
  *
  * Sauf quand l'URL sait déjà de quoi il s'agit : le dialogue de la checklist (`?item=`, `?date=`,

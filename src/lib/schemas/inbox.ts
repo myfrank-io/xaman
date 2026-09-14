@@ -175,7 +175,7 @@ export const INBOX_DOCUMENT_TYPES = [
 ] as const;
 export const INBOX_CONFIDENCES = ["high", "medium", "low"] as const;
 
-/** The provider block of a document, every field optional and nothing invented (D116). */
+/** The provider block of a document, every field optional and nothing invented (D118). */
 export const supplierReadSchema = z.object({
   name: z.string().trim().max(120).nullable(),
   company: z.string().trim().max(120).nullable(),
@@ -205,7 +205,7 @@ export const inboxSuggestionSchema = z.object({
   /** The supplier or yard as written on the document. */
   supplierName: z.string().trim().max(120).nullable(),
   /**
-   * The provider's block as the document prints it (D116): raison sociale, téléphone, e-mail,
+   * The provider's block as the document prints it (D118): raison sociale, téléphone, e-mail,
    * adresse. It is what makes « créer la fiche » a tap instead of a form — and what recognises
    * a provider already in the annuaire when the name alone is written differently.
    *
@@ -281,7 +281,7 @@ export const validateInboxItemSchema = z
     kind: inboxFilingSchema,
     title: z.string().trim().max(160),
     date: isoDate,
-    // Several systems on an intervention (D114); a purchase keeps the first, which is the one
+    // Several systems on an intervention (D116); a purchase keeps the first, which is the one
     // its own column holds.
     categoryIds: z.array(uuid).max(LOG_CATEGORIES_MAX).default([]),
     amount: nullableDecimal({ scale: 2, max: COST_MAX }),
@@ -311,7 +311,7 @@ export const validateInboxItemSchema = z
 export const inboxItemRefSchema = z.object({ boatId: uuid, itemId: uuid });
 
 /**
- * The document an intervention was started from, hung on it once it exists (D115). It is the
+ * The document an intervention was started from, hung on it once it exists (D117). It is the
  * `attach` filing of `validateInboxItem`, minus the fields that filing already ignores: the
  * title, the date and the amount are the intervention's, and it is the form that just wrote it.
  */

@@ -117,7 +117,7 @@ export default async function DevLogsPage() {
 
         <Section
           title="Commencer par le document"
-          description="Première étape de « Noter une intervention » (D115) : appareil photo, photothèque, fichiers — et « Saisir sans document » sous les trois, qui ouvre le formulaire vide."
+          description="Première étape de « Noter une intervention » (D117) : appareil photo, photothèque, fichiers — et « Saisir sans document » sous les trois, qui ouvre le formulaire vide."
         >
           <NewLogScreen
             boatId={DEV_BOAT_ID}
@@ -135,7 +135,7 @@ export default async function DevLogsPage() {
 
         <Section
           title="Formulaire"
-          description="Catégorie Moteurs sélectionnée : le bloc des heures est déplié, les champs restent vides. Deux systèmes cochés (D114) et le prestataire lu sur le document (D116), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
+          description="Catégorie Moteurs sélectionnée : le bloc des heures est déplié, les champs restent vides. Deux systèmes cochés (D116) et le prestataire lu sur le document (D118), inconnu de l'annuaire : « Créer la fiche prestataire » ouvre le dialogue déjà rempli."
         >
           <LogForm
             boatId={DEV_BOAT_ID}

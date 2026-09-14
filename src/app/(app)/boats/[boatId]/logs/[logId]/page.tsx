@@ -78,7 +78,7 @@ export default async function LogPage({
     listAttachments(supabase, boatId, { type: "maintenance_log", id: logId }).catch(() => []),
   ]);
 
-  // Tous les systèmes de l'intervention (D114), le principal en tête : c'est lui que la ligne
+  // Tous les systèmes de l'intervention (D116), le principal en tête : c'est lui que la ligne
   // garde dans sa colonne, et la vue les liste dans l'ordre du bateau.
   const byId = new Map((categories ?? []).map((row) => [row.id, row]));
   const ordered = [

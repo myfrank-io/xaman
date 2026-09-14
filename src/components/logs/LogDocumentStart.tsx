@@ -31,7 +31,7 @@ export type ReadDocument = {
 };
 
 /**
- * Ce par quoi une intervention commence (D115) : son document.
+ * Ce par quoi une intervention commence (D117) : son document.
  *
  * Une intervention naît presque toujours d'un papier — la facture du mécanicien, le devis du
  * chantier, le ticket de l'accastilleur — et le carnet le demandait en dernier, une fois les huit

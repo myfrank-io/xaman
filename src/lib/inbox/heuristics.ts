@@ -819,7 +819,7 @@ type SupplierReading = {
 };
 
 // ---------------------------------------------------------------------------------------------
-// The issuer's block (D116)
+// The issuer's block (D118)
 // ---------------------------------------------------------------------------------------------
 
 /** An address, anywhere on the page: the letterhead prints it, the footer repeats it. */
@@ -842,7 +842,7 @@ const POSTCODE = /\b\d{5}\b\s+[A-Za-zÀ-ÿ]/;
 
 /**
  * What the document prints about its issuer, beyond its name: the block a person would copy by
- * hand into a fiche prestataire (D116).
+ * hand into a fiche prestataire (D118).
  *
  * Read on the letterhead and on the footer, which is where invoices put it, and never inferred:
  * a field that is not on the page is null, and the screen shows what was read next to the button

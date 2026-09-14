@@ -23,7 +23,7 @@ export type LogDetailData = {
   title: string;
   performedAt: string;
   status: LogStatus;
-  /** The systems it touches, the principal first (D114). */
+  /** The systems it touches, the principal first (D116). */
   categories: LogDetailCategory[];
   cost: number | null;
   notes: string | null;
@@ -136,7 +136,7 @@ export function LogDetail({
         <Fact label={t("fields.status")}>
           <StatusBadge status={log.status} />
         </Fact>
-        {/* Tous les systèmes que l'intervention touche (D114), le principal en tête : une visite
+        {/* Tous les systèmes que l'intervention touche (D116), le principal en tête : une visite
             qui a fait la vidange *et* l'anode se relit sous les deux. */}
         <Fact label={t("fields.category")}>
           {log.categories.length > 0 ? (
