@@ -13,6 +13,7 @@ import type { ContactOption } from "@/components/contacts/specialties";
 import { InboxDropzone } from "@/components/inbox/InboxDropzone";
 import {
   confidentItems,
+  type InboxDeadlineItem,
   type InboxEngine,
   type InboxLogChoice,
 } from "@/components/inbox/inbox-draft";
@@ -44,6 +45,7 @@ export function InboxScreen({
   engines,
   contacts,
   logs,
+  deadlineItems,
   canContribute,
   canWrite,
   inboxAddress,
@@ -56,6 +58,8 @@ export function InboxScreen({
   contacts: ContactOption[];
   /** The interventions a document can join instead of becoming one (D109). */
   logs: InboxLogChoice[];
+  /** The checklist points a paper can land on (E17-6). */
+  deadlineItems: InboxDeadlineItem[];
   canContribute: boolean;
   canWrite: boolean;
   /** Null when `INBOUND_EMAIL_DOMAIN` is not configured: the mail door is then simply absent. */
@@ -162,6 +166,7 @@ export function InboxScreen({
                   engines={engines}
                   contacts={contacts}
                   logs={logs}
+                  deadlineItems={deadlineItems}
                   canWrite={canWrite}
                 />
               </li>
@@ -183,6 +188,7 @@ export function InboxScreen({
                   engines={engines}
                   contacts={contacts}
                   logs={logs}
+                  deadlineItems={deadlineItems}
                   canWrite={canWrite}
                 />
               </li>

@@ -485,7 +485,9 @@ La contrainte `attachments_path_boat` est écrite avec `is not distinct from` et
 
 ### 3.20 `inbox_items` (documents à valider — D91, `0026`)
 
-Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, une photo prise dans l'app — et attend qu'une personne le range. Une ligne est une **proposition** : rien n'est écrit dans `maintenance_logs` ni `purchases` avant le tap « Valider », qui passe par les Server Actions des formulaires (`saveLog`, `upsertPurchase`).
+Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, une photo prise dans l'app — et attend qu'une personne le range. Une ligne est une **proposition** : rien n'est écrit dans `maintenance_logs`, `purchases` ni `checklist_completions` avant le tap « Valider », qui passe par les Server Actions des formulaires (`saveLog`, `upsertPurchase`, `completeChecklistItem`).
+
+Depuis **D114 (E17-6)**, un document peut être rangé de quatre façons (`INBOX_FILINGS`) : une intervention, un achat, une **échéance**, ou le rattachement à une intervention existante (D109). Une échéance est un papier qui porte une date de validité — assurance, radeau, extincteurs, balise, garantie — et devient une **réalisation** sur un point de checklist, avec `completed_at` à la date du contrôle et `next_due_at` à la date de validité (D11). La lecture ne propose qu'un point **actif et sans `interval_hours`** du bateau : un certificat ne porte jamais d'heures moteur, et `check_completion_hours` refuserait le cochage. Aucune colonne n'a été ajoutée pour ça : `attachment_entity` porte `checklist_completion` depuis `0001`, donc la pièce jointe créée par la validation dit, par son `(entity_type, entity_id)`, où le document est parti.
 
 | Colonne | Type | Contraintes | Notes |
 |---|---|---|---|
@@ -499,7 +501,7 @@ Ce qui arrive tout seul — une pièce jointe envoyée à l'adresse du bateau, u
 | storage_path | text | not null unique, check `boat_id_from_storage_path(storage_path) is not distinct from boat_id` | `boats/{boat_id}/inbox/{item_id}.{ext}` dans `boat-files` ; le document garde ce chemin après validation, la ligne `attachments` créée pointe dessus |
 | suggestion | jsonb | null | la lecture du document par Claude (`inboxSuggestionSchema`), revalidée à la lecture |
 | error_key | text | null | pourquoi il n'y a pas de suggestion : `notConfigured`, `unsupportedFormat`, `download`, `analysis`, `refused` |
-| log_id / purchase_id / attachment_id | uuid | FK on delete set null | ce que la validation a produit — ou, pour un rattachement à une intervention existante (D95), la ligne rejointe : `log_id` + `attachment_id`, rien de créé |
+| log_id / purchase_id / attachment_id | uuid | FK on delete set null | ce que la validation a produit ; une **échéance** n'en renseigne aucun des deux premiers — sa réalisation se lit sur la pièce jointe (D114) — ou, pour un rattachement à une intervention existante (D95), la ligne rejointe : `log_id` + `attachment_id`, rien de créé |
 | validated_by / validated_at | | | |
 | external_ref | text | unique `(boat_id, external_ref)` | idempotence du webhook : `resend:{email_id}:{attachment_id}` |
 | created_by / updated_by / created_at / updated_at | | | `created_by` null pour un e-mail (écrit par la clé service) |

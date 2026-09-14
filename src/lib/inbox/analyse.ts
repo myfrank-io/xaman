@@ -201,28 +201,43 @@ async function loadContext(
   admin: ReturnType<typeof createAdminClient>,
   boatId: string,
 ): Promise<InboxContext> {
-  const [{ data: boat }, { data: categories }, { data: engines }, { data: contacts }] =
-    await Promise.all([
-      admin.from("boats").select("name, type").eq("id", boatId).maybeSingle(),
-      admin
-        .from("boat_categories")
-        .select("id, name, external_ref")
-        .eq("boat_id", boatId)
-        .eq("is_active", true)
-        .order("sort_order"),
-      admin
-        .from("engines")
-        .select("id, label, propulsion")
-        .eq("boat_id", boatId)
-        .eq("is_active", true)
-        .order("sort_order"),
-      admin
-        .from("contacts")
-        .select("id, name, company, specialty")
-        .eq("boat_id", boatId)
-        .is("deleted_at", null)
-        .order("name"),
-    ]);
+  const [
+    { data: boat },
+    { data: categories },
+    { data: engines },
+    { data: contacts },
+    { data: deadlineItems },
+  ] = await Promise.all([
+    admin.from("boats").select("name, type").eq("id", boatId).maybeSingle(),
+    admin
+      .from("boat_categories")
+      .select("id, name, external_ref")
+      .eq("boat_id", boatId)
+      .eq("is_active", true)
+      .order("sort_order"),
+    admin
+      .from("engines")
+      .select("id, label, propulsion")
+      .eq("boat_id", boatId)
+      .eq("is_active", true)
+      .order("sort_order"),
+    admin
+      .from("contacts")
+      .select("id, name, company, specialty")
+      .eq("boat_id", boatId)
+      .is("deleted_at", null)
+      .order("name"),
+    // What a paper can land on (E17-6): an hour-based point is never what a certificate is
+    // about, so the list is the active points without one, with their system for the reading.
+    admin
+      .from("checklist_items")
+      .select("id, label, category_id, sort_order")
+      .eq("boat_id", boatId)
+      .eq("is_active", true)
+      .is("interval_hours", null)
+      .order("sort_order"),
+  ]);
+  const categoryNames = new Map((categories ?? []).map((row) => [row.id, row.name]));
   return {
     boatName: boat?.name ?? "",
     boatType: boat?.type ?? "other",
@@ -242,6 +257,11 @@ async function loadContext(
       name: row.name,
       company: row.company,
       specialty: row.specialty,
+    })),
+    deadlineItems: (deadlineItems ?? []).map((row) => ({
+      id: row.id,
+      label: row.label,
+      category: categoryNames.get(row.category_id ?? "") ?? "",
     })),
   };
 }

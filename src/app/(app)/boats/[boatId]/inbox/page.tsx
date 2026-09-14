@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { InboxScreen } from "@/components/inbox/InboxScreen";
 import { inboundDomain } from "@/lib/inbox/receive";
 import { can, type BoatRole } from "@/lib/permissions";
-import { listInboxItems } from "@/lib/queries/inbox";
+import { deadlineItemChoices, listInboxItems } from "@/lib/queries/inbox";
 import { logFormData } from "@/lib/queries/log-form-data";
 import { inboxAddress } from "@/lib/schemas/inbox";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
@@ -35,19 +35,22 @@ export default async function InboxPage({ params }: { params: Promise<{ boatId: 
   // bateau, le rôle, la liste des documents, les listes du formulaire et les interventions
   // qu'un document peut rejoindre — dans une seule vague.
   const tl = await getTranslations("logs.form");
-  const [{ data: boat }, { data: role }, items, form, { data: logs }] = await Promise.all([
-    readBoatRow(boatId),
-    readBoatRole(boatId),
-    listInboxItems(supabase, boatId),
-    logFormData(supabase, boatId, tl("equipmentRemoved")),
-    // A document can join an intervention the carnet already has (D109): the recent ones.
-    supabase
-      .from("maintenance_logs_view")
-      .select("id, title, performed_at")
-      .eq("boat_id", boatId)
-      .order("performed_at", { ascending: false })
-      .limit(RECENT_LOGS),
-  ]);
+  const [{ data: boat }, { data: role }, items, form, { data: logs }, deadlineItems] =
+    await Promise.all([
+      readBoatRow(boatId),
+      readBoatRole(boatId),
+      listInboxItems(supabase, boatId),
+      logFormData(supabase, boatId, tl("equipmentRemoved")),
+      // A document can join an intervention the carnet already has (D109): the recent ones.
+      supabase
+        .from("maintenance_logs_view")
+        .select("id, title, performed_at")
+        .eq("boat_id", boatId)
+        .order("performed_at", { ascending: false })
+        .limit(RECENT_LOGS),
+      // …and a paper can land on a checklist point (E17-6).
+      deadlineItemChoices(supabase, boatId),
+    ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
   const domain = inboundDomain();
@@ -65,6 +68,7 @@ export default async function InboxPage({ params }: { params: Promise<{ boatId: 
         title: log.title ?? "",
         performedAt: log.performed_at ?? "",
       }))}
+      deadlineItems={deadlineItems}
       canContribute={can(boatRole, "contribute")}
       canWrite={can(boatRole, "write")}
       inboxAddress={domain ? inboxAddress(boat.name, boat.inbox_token, domain) : null}

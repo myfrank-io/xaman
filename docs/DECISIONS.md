@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D114.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D115.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2458,3 +2458,38 @@ n'a jamais saisi et qui ne bouge pas : la référence d'option du chantier, le f
 le numéro de coque, les coordonnées du constructeur. C'est à ce titre que `seed/xaman-boat.json`
 gagne le contact Marsaudon Composites et six `specs.ref_chantier` — sans qu'aucune des cinq
 divergences ci-dessus n'ait été reportée dans le carnet.
+
+
+## 2026-09-14 — D114 : un papier daté est une réalisation, pas une intervention
+
+**Question.** Une attestation d'assurance, un procès-verbal de révision de radeau, un contrôle
+d'extincteurs : ces documents n'décrivent aucun travail à facturer et n'achètent rien. Où vont-ils
+dans le carnet ?
+
+**Décision.** Ils deviennent une **réalisation sur un point de checklist**, avec `completed_at` à
+la date du contrôle et `next_due_at` à la date de validité (D11). « À valider » gagne donc un
+quatrième classement, **Échéance**, à côté d'Intervention, Achat et Intervention existante. La
+lecture ne peut proposer qu'un point **de ce bateau**, parmi les points actifs **sans intervalle en
+heures** — un certificat ne porte jamais d'heures moteur, et un point qui en exige refuserait le
+cochage (`check_completion_hours`). L'écriture passe par `completeChecklistItem`, la Server Action
+que le dialogue « Fait » appelle déjà : mêmes règles, même RLS, même idempotence sur un id dérivé
+du document (`inboxEntityId`, règle 11). Le lecteur local (D92) ne propose jamais d'échéance : lire
+« valide jusqu'au » sur un scan et choisir le point concerné est le travail du modèle.
+
+**Raison.** C'est la réponse la plus directe au défaut que l'audit avait nommé (`AUDIT.md §0.3`) :
+« au jour 1, l'app telle que spécifiée ne rappelle rien ». L'ancrage (D1) répond par une estimation
+— « ~1 an » — parce qu'il n'a rien de mieux. Un papier, lui, porte **une date vraie**. Trois photos
+— assurance, radeau, extincteurs — et la file d'attente cesse d'être vide sans qu'on ait inventé
+quoi que ce soit. C'est aussi le classement qui manquait à un carnet neuf : sans lui, ces documents
+entraient en « Intervention » avec un titre et un coût, et la date de péremption se perdait dans
+une note que rien ne relit.
+
+**Ce qui n'a pas été ajouté.** Aucune migration : `attachment_entity` porte
+`checklist_completion` depuis `0001`, donc le document se range sur la réalisation qu'il produit, et
+c'est cette pièce jointe — son `(entity_type, entity_id)` — qui dit où il est parti. Une colonne
+`completion_id` sur `inbox_items` aurait écrit la même chose deux fois.
+
+**Ce qui en est séparé.** Le **certificat CE** (E17-11) ne porte pas de date de péremption : il
+porte une catégorie de conception, qui se lit dans `boats.navigation_zone` et **réapplique le plan**
+quand elle change. Ce n'est pas une échéance mais une lecture d'identité, et elle appartient au lot
+de la lecture d'inventaire.

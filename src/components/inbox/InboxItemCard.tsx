@@ -28,6 +28,7 @@ import {
   draftFrom,
   isConfidentItem,
   toValidateInput,
+  type InboxDeadlineItem,
   type InboxDraft,
   type InboxEngine,
   type InboxLogChoice,
@@ -46,7 +47,7 @@ import {
 } from "@/lib/actions/inbox";
 import { formatBytes, formatDate } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
-import { logPath, suppliesPath } from "@/lib/queries/boat-routes";
+import { boatPath, logPath, suppliesPath } from "@/lib/queries/boat-routes";
 import type { InboxItem } from "@/lib/queries/inbox";
 import { isPdf } from "@/lib/schemas/attachments";
 import { validateInboxItemSchema, isInboxWarningCode } from "@/lib/schemas/inbox";
@@ -70,6 +71,7 @@ export function InboxItemCard({
   engines,
   contacts,
   logs,
+  deadlineItems,
   canWrite,
 }: {
   boatId: string;
@@ -79,6 +81,8 @@ export function InboxItemCard({
   contacts: ContactOption[];
   /** The interventions a document can join instead of becoming one (D109). */
   logs: InboxLogChoice[];
+  /** The checklist points a paper can land on (E17-6). */
+  deadlineItems: InboxDeadlineItem[];
   canWrite: boolean;
 }) {
   const t = useTranslations("inbox");
@@ -122,11 +126,14 @@ export function InboxItemCard({
         toast.error(errorMessage(result.error));
         return;
       }
-      // The line's own title, which for an attachment is the intervention's, not the card's.
+      // The line's own title, which for an attachment is the intervention's and for a deadline
+      // the point's, not the card's.
       toast.success(
         parsed.data.kind === "attach"
           ? t("attached", { title: result.data.title })
-          : t("validated", { title: result.data.title }),
+          : parsed.data.kind === "deadline"
+            ? t("deadlineDone", { title: result.data.title })
+            : t("validated", { title: result.data.title }),
       );
       router.refresh();
     });
@@ -278,6 +285,11 @@ export function InboxItemCard({
               <Link href={suppliesPath(boatId) as Route}>{t("went.purchase")}</Link>
             </Button>
           ) : null}
+          {item.completionId ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={boatPath(boatId, "checklist") as Route}>{t("went.deadline")}</Link>
+            </Button>
+          ) : null}
           {/* An ignored document is not the end of the road (D93): back up, or gone for good.
               A validated one keeps neither — its file is the attachment of the line it made. */}
           {item.status === "dismissed" && canWrite ? (
@@ -362,6 +374,7 @@ export function InboxItemCard({
               engines={engines}
               contacts={contacts}
               logs={logs}
+              deadlineItems={deadlineItems}
               canWrite={canWrite}
             />
           )}

@@ -1100,6 +1100,10 @@ export function heuristicSuggestion(
     engineHours,
     lineItems,
     notes: null,
+    // The local reader never proposes a deadline (E17-6): reading « valide jusqu'au » off a
+    // scanned certificate, and picking the point it belongs to, is the model's job.
+    checklistItemId: null,
+    validUntil: null,
     confidence,
     warnings,
   };

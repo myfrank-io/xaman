@@ -52,19 +52,26 @@ export function isInboxWarningCode(value: string): value is InboxWarningCode {
   return (INBOX_WARNING_CODES as readonly string[]).includes(value);
 }
 
-/** Kinds a document can be filed as: the two lists a receipt can land in. */
-export const INBOX_KINDS = ["log", "purchase"] as const;
+/**
+ * Kinds a document can be filed as. Two of them are lists a receipt lands in; the third is the
+ * one a *paper* lands in (E17-6): an insurance certificate, a liferaft or extinguisher
+ * inspection, a warranty — a document whose whole content is « this is valid until ». It becomes
+ * a realisation on a checklist item carrying `next_due_at` (D11), which is what the « Fait »
+ * dialog already writes, so the deadline lands in the queue with a real date instead of an
+ * estimate.
+ */
+export const INBOX_KINDS = ["log", "purchase", "deadline"] as const;
 export const inboxKindSchema = z.enum(INBOX_KINDS);
 export type InboxKind = z.infer<typeof inboxKindSchema>;
 
 /**
- * What « Valider » can do with a card (D109). The two kinds above create a line; `attach` hangs
+ * What « Valider » can do with a card (D109). The three kinds above create a line; `attach` hangs
  * the document on an intervention the carnet already has — an invoice mailed in for last week's
  * work, a photo of a page already noted. It is deliberately *not* an `InboxKind`: a kind is what
  * a document becomes, and `inboxEntityId` derives an id from it (D97), whereas an attachment
  * brings the id of the line the person picked. The reading never proposes it.
  */
-export const INBOX_FILINGS = ["log", "purchase", "attach"] as const;
+export const INBOX_FILINGS = ["log", "purchase", "deadline", "attach"] as const;
 export const inboxFilingSchema = z.enum(INBOX_FILINGS);
 export type InboxFiling = z.infer<typeof inboxFilingSchema>;
 
@@ -87,6 +94,7 @@ export type InboxFiling = z.infer<typeof inboxFilingSchema>;
 const ENTITY_ID_MASK: Record<InboxKind, string> = {
   log: "9b1d4a6f2c8e5730a41f6d92b8c30e75",
   purchase: "3e7c85a09d24b16fc0538ea7412d9b6e",
+  deadline: "c4a70f13e85b269d7ac1054fb3e28d96",
 };
 
 export function inboxEntityId(itemId: string, kind: InboxKind): string {
@@ -168,6 +176,8 @@ export const INBOX_DOCUMENT_TYPES = [
   "receipt",
   "quote",
   "report",
+  /** A paper that carries a validity date: insurance, liferaft, extinguishers, warranty. */
+  "certificate",
   "photo",
   "other",
 ] as const;
@@ -175,7 +185,7 @@ export const INBOX_CONFIDENCES = ["high", "medium", "low"] as const;
 
 export const inboxSuggestionSchema = z.object({
   documentType: z.enum(INBOX_DOCUMENT_TYPES),
-  /** Where it should be filed: an intervention (work done) or a purchase (a thing bought). */
+  /** Where it should be filed: an intervention, a purchase, or a deadline (E17-6). */
   kind: inboxKindSchema,
   /** For a purchase: which of the four chips. Ignored on an intervention. */
   purchaseKind: z.enum(VISIBLE_PURCHASE_KINDS),
@@ -203,6 +213,17 @@ export const inboxSuggestionSchema = z.object({
     .max(30),
   /** A short French summary worth keeping in the notes, or null. */
   notes: z.string().max(2000).nullable(),
+  /**
+   * For a deadline: the checklist item the paper is about, among the ones the boat was given,
+   * and the date it stays valid until. Both default to null so a row written before E17-6 —
+   * or by the local reader, which never proposes a deadline — still parses (D92).
+   */
+  checklistItemId: z.string().nullable().default(null),
+  validUntil: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .default(null),
   confidence: z.enum(INBOX_CONFIDENCES),
   /** What the person should double-check, in French — an illegible total, a guessed date… */
   warnings: z.array(z.string().max(200)).max(6),
@@ -266,10 +287,19 @@ export const validateInboxItemSchema = z
     purchaseKind: z.enum(VISIBLE_PURCHASE_KINDS).default("service"),
     notes: nullableText(4000),
     engineHours: z.array(engineHoursEntry).max(20).default([]),
-    /** The intervention an `attach` goes on; ignored by the other two filings. */
+    /** The intervention an `attach` goes on; ignored by the other three filings. */
     logId: z.preprocess(
       (value) => (value === undefined ? null : emptyToNull(value)),
       uuid.nullable(),
+    ),
+    /** The checklist item a `deadline` lands on, and the date it is valid until (E17-6). */
+    checklistItemId: z.preprocess(
+      (value) => (value === undefined ? null : emptyToNull(value)),
+      uuid.nullable(),
+    ),
+    validUntil: z.preprocess(
+      (value) => (value === undefined ? null : emptyToNull(value)),
+      isoDate.nullable(),
     ),
   })
   .superRefine((value, ctx) => {
@@ -281,6 +311,20 @@ export const validateInboxItemSchema = z
     }
     if (value.kind === "attach" && !value.logId) {
       ctx.addIssue({ code: "custom", path: ["logId"], message: "required" });
+    }
+    if (value.kind === "deadline") {
+      // A paper with no point to land on is a paper, not a deadline; and one with no validity
+      // date would write a realisation that says nothing — the queue would not move.
+      if (!value.checklistItemId) {
+        ctx.addIssue({ code: "custom", path: ["checklistItemId"], message: "required" });
+      }
+      if (!value.validUntil) {
+        ctx.addIssue({ code: "custom", path: ["validUntil"], message: "required" });
+      } else if (value.validUntil <= value.date) {
+        // « Valide jusqu'au » is in the future of the inspection, or the point comes out overdue
+        // the day it is filed — which is true of an expired paper, and a mistake on a fresh one.
+        ctx.addIssue({ code: "custom", path: ["validUntil"], message: "after_date" });
+      }
     }
   });
 
