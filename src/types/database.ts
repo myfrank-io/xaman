@@ -1230,6 +1230,7 @@ export type Database = {
           external_ref: string | null
           id: string
           installed_at: string | null
+          kind_id: string | null
           model: string | null
           name: string
           notes: string | null
@@ -1251,6 +1252,7 @@ export type Database = {
           external_ref?: string | null
           id?: string
           installed_at?: string | null
+          kind_id?: string | null
           model?: string | null
           name: string
           notes?: string | null
@@ -1272,6 +1274,7 @@ export type Database = {
           external_ref?: string | null
           id?: string
           installed_at?: string | null
+          kind_id?: string | null
           model?: string | null
           name?: string
           notes?: string | null
@@ -1320,6 +1323,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_kind_id_fkey"
+            columns: ["kind_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_kinds"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "equipment_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
@@ -1327,6 +1337,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      equipment_kinds: {
+        Row: {
+          category_ref: string | null
+          created_at: string
+          external_ref: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          synonyms: string[]
+          updated_at: string
+        }
+        Insert: {
+          category_ref?: string | null
+          created_at?: string
+          external_ref: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          synonyms?: string[]
+          updated_at?: string
+        }
+        Update: {
+          category_ref?: string | null
+          created_at?: string
+          external_ref?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          synonyms?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       haul_outs: {
         Row: {

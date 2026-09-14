@@ -19,6 +19,11 @@ export const upsertEquipmentSchema = z.object({
   boatId: uuid,
   expectedUpdatedAt,
   categoryId: z.preprocess((value) => (value === "" ? null : value), uuid.nullable()),
+  /** The family this equipment is an instance of (E17-3); proposed, never imposed. */
+  kindId: z.preprocess(
+    (value) => (value === "" || value === undefined ? null : value),
+    uuid.nullable(),
+  ),
   name: requiredText(120),
   brand: nullableText(80),
   model: nullableText(80),

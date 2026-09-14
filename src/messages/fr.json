@@ -1295,6 +1295,9 @@
     "fields": {
       "name": "Nom",
       "category": "Catégorie",
+      "kind": "Famille",
+      "kindNone": "Aucune famille",
+      "kindHelp": "Ce que c'est, en général — proposé d'après le nom et la marque, à corriger si besoin.",
       "brand": "Marque",
       "model": "Modèle",
       "serial": "N° de série",

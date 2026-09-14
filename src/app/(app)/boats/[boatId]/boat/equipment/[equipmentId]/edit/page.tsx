@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { EquipmentForm } from "@/components/equipment/EquipmentForm";
 import { can, type BoatRole } from "@/lib/permissions";
 import { readBoatRole } from "@/lib/queries/boat-context";
+import { equipmentKindChoices } from "@/lib/queries/equipment-kinds";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function EditEquipmentPage({
@@ -12,7 +13,7 @@ export default async function EditEquipmentPage({
 }) {
   const { boatId, equipmentId } = await params;
   const supabase = await createClient();
-  const [{ data: role }, { data: item }, { data: categories }] = await Promise.all([
+  const [{ data: role }, { data: item }, { data: categories }, kinds] = await Promise.all([
     readBoatRole(boatId),
     supabase
       .from("equipment")
@@ -26,6 +27,7 @@ export default async function EditEquipmentPage({
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
+    equipmentKindChoices(supabase),
   ]);
   if (!role || !can(role as BoatRole, "write") || !item) notFound();
   const specs =
@@ -42,6 +44,7 @@ export default async function EditEquipmentPage({
         id: item.id,
         name: item.name,
         categoryId: item.category_id,
+        kindId: item.kind_id,
         brand: item.brand,
         model: item.model,
         serial: item.serial,
@@ -52,6 +55,7 @@ export default async function EditEquipmentPage({
         updatedAt: item.updated_at,
       }}
       categories={categories ?? []}
+      kinds={kinds}
     />
   );
 }

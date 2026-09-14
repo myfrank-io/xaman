@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { EquipmentForm } from "@/components/equipment/EquipmentForm";
 import { can, type BoatRole } from "@/lib/permissions";
 import { readBoatRole } from "@/lib/queries/boat-context";
+import { equipmentKindChoices } from "@/lib/queries/equipment-kinds";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function NewEquipmentPage({
@@ -14,7 +15,7 @@ export default async function NewEquipmentPage({
 }) {
   const [{ boatId }, { category }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
-  const [{ data: role }, { data: categories }] = await Promise.all([
+  const [{ data: role }, { data: categories }, kinds] = await Promise.all([
     readBoatRole(boatId),
     supabase
       .from("boat_categories")
@@ -22,6 +23,7 @@ export default async function NewEquipmentPage({
       .eq("boat_id", boatId)
       .eq("is_active", true)
       .order("sort_order"),
+    equipmentKindChoices(supabase),
   ]);
   if (!role || !can(role as BoatRole, "write")) notFound();
   return (
@@ -29,6 +31,7 @@ export default async function NewEquipmentPage({
       boatId={boatId}
       item={null}
       categories={categories ?? []}
+      kinds={kinds}
       defaultCategoryId={category}
     />
   );

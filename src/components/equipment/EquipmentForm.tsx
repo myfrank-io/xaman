@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { PlusIcon, XIcon } from "lucide-react";
 import type { z } from "zod";
 
 import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
+import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DiscardDialog } from "@/components/forms/DiscardDialog";
 import { Field } from "@/components/forms/Field";
@@ -27,12 +28,15 @@ import { upsertEquipment } from "@/lib/actions/equipment";
 import { todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatTabPath, equipmentPath } from "@/lib/queries/boat-routes";
+import { matchEquipmentKind, type EquipmentKind } from "@/lib/equipment-kinds";
 import { upsertEquipmentSchema } from "@/lib/schemas/equipment";
 
 export type EquipmentFormValues = {
   id: string;
   name: string;
   categoryId: string | null;
+  /** The family (E17-3), or null while nobody has said. */
+  kindId: string | null;
   brand: string | null;
   model: string | null;
   serial: string | null;
@@ -48,6 +52,7 @@ type EquipmentFormState = {
   boatId: string;
   expectedUpdatedAt?: string;
   categoryId: string;
+  kindId: string;
   name: string;
   brand: string;
   model: string;
@@ -66,11 +71,14 @@ export function EquipmentForm({
   boatId,
   item,
   categories,
+  kinds,
   defaultCategoryId,
 }: {
   boatId: string;
   item: EquipmentFormValues | null;
   categories: CategoryChoice[];
+  /** The catalogue of families (E17-3); empty until the migration has been applied. */
+  kinds: EquipmentKind[];
   defaultCategoryId?: string;
 }) {
   const t = useTranslations("equipment");
@@ -86,6 +94,7 @@ export function EquipmentForm({
       boatId,
       expectedUpdatedAt: item?.updatedAt,
       categoryId: item?.categoryId ?? defaultCategoryId ?? "",
+      kindId: item?.kindId ?? "",
       name: item?.name ?? "",
       brand: textToInput(item?.brand),
       model: textToInput(item?.model),
@@ -97,6 +106,24 @@ export function EquipmentForm({
     },
   });
   const specs = useFieldArray({ control: form.control, name: "specs" });
+
+  /**
+   * The family proposes itself from what is being typed (E17-3) — and stops the moment someone
+   * touches the select. A row that already has one arrives « touched »: what is aboard is the
+   * crew's word, and a matcher never overwrites it.
+   */
+  const [kindChosen, setKindChosen] = useState(() => item?.kindId != null);
+  // `useWatch` rather than `form.watch()`: the latter returns a fresh function every render,
+  // which opts the whole component out of the React Compiler.
+  const name = useWatch({ control: form.control, name: "name" });
+  const brand = useWatch({ control: form.control, name: "brand" });
+  const model = useWatch({ control: form.control, name: "model" });
+  const setValue = form.setValue;
+  useEffect(() => {
+    if (kindChosen || kinds.length === 0) return;
+    const match = matchEquipmentKind({ name, brand, model }, kinds);
+    setValue("kindId", match?.id ?? "");
+  }, [kindChosen, kinds, name, brand, model, setValue]);
   const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const errors = form.formState.errors;
   const backHref = item ? equipmentPath(boatId, item.id) : boatTabPath(boatId, "equipment");
@@ -147,6 +174,36 @@ export function EquipmentForm({
           )}
         />
       </div>
+      {kinds.length > 0 ? (
+        <Field
+          id="equipment-kind"
+          label={t("fields.kind")}
+          error={fieldError(errors.kindId)}
+          help={t("fields.kindHelp")}
+        >
+          <Controller
+            control={form.control}
+            name="kindId"
+            render={({ field }) => (
+              <NativeSelect
+                id="equipment-kind"
+                value={field.value}
+                onChange={(event) => {
+                  setKindChosen(true);
+                  field.onChange(event.target.value);
+                }}
+              >
+                <option value="">{t("fields.kindNone")}</option>
+                {kinds.map((kind) => (
+                  <option key={kind.id} value={kind.id}>
+                    {kind.label}
+                  </option>
+                ))}
+              </NativeSelect>
+            )}
+          />
+        </Field>
+      ) : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="equipment-brand" label={t("fields.brand")} error={fieldError(errors.brand)}>
           <Input id="equipment-brand" autoComplete="off" {...form.register("brand")} />

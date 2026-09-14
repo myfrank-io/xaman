@@ -53,6 +53,7 @@ export async function upsertEquipment(
       id,
       boat_id: boatId,
       category_id: values.categoryId,
+      kind_id: values.kindId,
       name: values.name,
       brand: values.brand,
       model: values.model,

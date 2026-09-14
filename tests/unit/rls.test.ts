@@ -380,6 +380,57 @@ describeWithDb("insert", () => {
     expect(seen.admin).toEqual(["bm-live", "bm-retired"]);
     expect(seen.stranger).toEqual(["bm-live"]);
   });
+
+  /**
+   * Equipment families (E17-3, migration 0032). The same shape of thing as the model catalogue —
+   * platform data, no boat_id — and the same rule: everyone signed in reads what is active, the
+   * platform admin alone decides what the list contains. `equipment.kind_id` points at it and is
+   * written by the boat's own people, under the equipment table's own policies.
+   */
+  it("equipment kinds: written by the platform admin only", async () => {
+    const sql = "insert into public.equipment_kinds (external_ref, label) values ($1, $2)";
+    expect((await run(U.admin, sql, ["ek-admin", "Famille admin"])).ok, "admin").toBe(true);
+    expect((await run(U.owner, sql, ["ek-owner", "Famille owner"])).ok, "owner").toBe(false);
+    expect((await run(U.viewer, sql, ["ek-viewer", "Famille viewer"])).ok, "viewer").toBe(false);
+    expect((await run(U.stranger, sql, ["ek-stranger", "Famille étrangère"])).ok, "stranger").toBe(
+      false,
+    );
+    expect(await count(null, "equipment_kinds")).toBe(-1);
+  });
+
+  it("equipment kinds: active rows are public, deactivated ones are the admin's alone", async () => {
+    const seen = await as(U.admin, async (c) => {
+      await c.query(
+        `insert into public.equipment_kinds (external_ref, label, is_active) values
+           ('ek-live', 'Famille publiée', true),
+           ('ek-retired', 'Famille retirée', false)`,
+      );
+      const refs = async () => {
+        const res = await c.query(
+          "select external_ref from public.equipment_kinds where external_ref like 'ek-%' order by external_ref",
+        );
+        return res.rows.map((r) => (r as { external_ref: string }).external_ref);
+      };
+      const admin = await refs();
+      await c.query("select set_config('request.jwt.claims', $1, true)", [
+        JSON.stringify({ sub: U.stranger.id, email: U.stranger.email, role: "authenticated" }),
+      ]);
+      return { admin, stranger: await refs() };
+    });
+
+    expect(seen.admin).toEqual(["ek-live", "ek-retired"]);
+    expect(seen.stranger).toEqual(["ek-live"]);
+  });
+
+  /** The catalogue seeded by the migration is the same list for every boat, and it is not empty. */
+  it("equipment kinds: the seeded families are readable by anyone signed in", async () => {
+    const rows = await as(U.viewer, (c) =>
+      c.query(
+        "select count(*)::int as n from public.equipment_kinds where external_ref in ('heater-forced-air','watermaker','liferaft')",
+      ),
+    );
+    expect(Number((rows.rows[0] as { n: number }).n)).toBe(3);
+  });
 });
 
 /**
