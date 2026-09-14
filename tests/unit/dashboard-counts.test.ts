@@ -11,7 +11,7 @@ import { pickNames, summariseWeek } from "@/lib/queries/attention";
  *
  * Depuis E18-1 il ne reste que deux comptes — la file, qui est l'écran, et l'onglet « À traiter »
  * où elle mène : la vignette et le compte du lien de pied ont quitté l'écran avec le résumé
- * (D117). La règle, elle, n'a pas changé, et c'est elle que ces cas gardent.
+ * (D118). La règle, elle, n'a pas changé, et c'est elle que ces cas gardent.
  */
 
 type Row = { status: "overdue" | "soon" | "never" | "ok"; interval: boolean };

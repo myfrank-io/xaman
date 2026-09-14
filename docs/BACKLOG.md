@@ -16,7 +16,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 |---|---|
 | E0 | E0-9 |
 | E1 | E1-9 |
-| E2 | E2-8 |
+| E2 | E2-9 |
 | E3 | E3-9 |
 | E4 | E4-12 |
 | E5 | E5-6 |
@@ -67,6 +67,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 - [x] **E2-4 (M, 1)** Catégories (dans Paramètres) : renommer, couleur (nuancier des 8 valeurs harmonisées + avertissement < 3:1), ordre, archiver avec dialogue d'impact (« archiver aussi les N points » / « les déplacer vers … », §4.6), réactiver.
 - [x] **E2-5 (M, 1)** Paramètres du bateau : catégories, export (E9-2), rapport (E9-2b), « Recaler ma checklist » (E4-9), « Reprise du carnet » (E3-7), transfert (E1-8), suppression du bateau (saisie du nom).
 - [x] **E2-6 (M, 2)** Script `pnpm seed:xaman` idempotent + test (deux exécutions = mêmes comptes). Ancrage renseigné à l'instanciation par `0004`.
+- [x] **E2-8 (S, 3)** Maquette 3D du bateau en tête de l'onglet Équipements (D117) : coque paramétrique construite dans le navigateur à partir du type et des dimensions du carnet **et de son inventaire** (dérives, safrans suspendus, jupes allongées, bout-dehors, panneaux sur bossoirs, surfaces de voiles, winch de mât, radeau, dôme — `src/lib/boat-3d/features.ts`), rotation continue, glisser pour tourner, toucher une zone pour l'ouvrir, ligne « Dessinée d'après le carnet : … » sous la maquette. Équipements et points de checklist routés vers une zone physique par les mots puis par l'`external_ref` de la catégorie ; pastilles sur les seules zones en retard ou bientôt dues ; liste de toutes les zones à côté de la maquette (clavier, lecteur d'écran, doigt qui rate). Pas de dépendance 3D (`src/lib/boat-3d/`, `<canvas>` 2D). `prefers-reduced-motion` arrête la rotation et laisse les boutons de rotation. **DoD** : routage testé (`tests/unit/boat-3d.test.ts`), maquette `/dev/ui/boat/model-3d`, vérifié en 1024×768 et 768×1024.
 
 ## L3 — Le suivi vit ⭐
 
@@ -310,7 +311,7 @@ dans `docs/AUTOPILOT.md §2` ; les trois décisions encore à prendre sont au §
 - [ ] **E17-9 (S, 2)** Le compteur d'heures se relève en photo : un cinquième classement, appelé depuis la bande des moteurs après 60 jours sans relevé.
 - [ ] **E17-10 (C, 2)** L'e-mail hebdomadaire (E9-6) devient contextuel : avant une sortie de l'eau, à J-30 d'une péremption, à l'entrée de l'hiver.
 
-## E18 — Le premier écran est un plan de travail (D117)
+## E18 — Le premier écran est un plan de travail (D118)
 
 Ouverte le 2026-09-14. Constat : sur six blocs du tableau de bord, quatre sont des copies tronquées
 d'un onglet déjà à un tap — les vignettes redisent les pastilles de la navigation, la grille des
@@ -319,7 +320,7 @@ Journal, le récapitulatif est trois liens vers trois onglets. L'écran répond 
 bien », la question la plus rare, et sert de sommaire aux cinq autres moments — dont deux,
 *chercher* et *suivre ce qu'ont fait les autres*, n'ont aucun écran.
 
-Principe (D117) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
+Principe (D118) : **un objet, une raison datée, un geste**, et la même grammaire à trois altitudes —
 le carnet, la flotte (2 à 10 bateaux), l'organisation (jusqu'à 3 000, un constructeur qui vend du
 service à ses acheteurs). Un compte n'est affiché que s'il est un **filtre** qui se résout en
 lignes ; aucun cadran, aucun score de conformité, aucun graphique (règle 10). Les trois lots sont
@@ -327,7 +328,7 @@ indépendants dans cet ordre : le premier se livre seul.
 
 ### Lot 1 — Le carnet (V1)
 
-- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D117). Les quatre vignettes, la
+- [x] **E18-1 (M, 2)** **L'écran devient un plan de travail** (D118). Les quatre vignettes, la
   grille des huit systèmes, les trois dernières interventions et le récapitulatif quittent
   l'écran : quatre blocs qui étaient des copies tronquées d'un onglet à un tap. La file cesse
   d'être un aperçu de six lignes — elle prend la hauteur de l'écran et se range par palier,
@@ -399,7 +400,7 @@ indépendants dans cet ordre : le premier se livre seul.
   (`DATA-MODEL.md §5`). Politiques RLS par appartenance, écran `/orgs/[orgId]`, appartenance lue à
   la connexion pour choisir l'écran d'arrivée. **DoD** : matrice RLS complète (membre, admin,
   étranger), aucun droit accordé côté écran qui ne le soit en base (règle 2).
-- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D117). Deux
+- [ ] **E18-10 (M, 3)** **Ce qu'un constructeur voit, et ce qu'il ne voit jamais** (D118). Deux
   accès séparés, rien entre les deux. **Concédé** : le carnet invite l'organisation comme il invite
   un professionnel — rôle contraint, accès daté, retirable (D28, D29) ; la file de l'organisation
   est la somme exacte de ses accès. **Agrégé** : sur les carnets instanciés depuis un plan dont

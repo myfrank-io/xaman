@@ -255,7 +255,7 @@ export default async function DevDashboardPage() {
           </AlertTitle>
         </Alert>
 
-        {/* 4 — faire : the whole queue, by tier. The screen is this list (D117). */}
+        {/* 4 — faire : the whole queue, by tier. The screen is this list (D118). */}
         <UpcomingList
           boatId={DEV_BOAT_ID}
           entries={UPCOMING}

@@ -70,6 +70,7 @@ const PREVIEWS: { href: string; label: string }[] = [
   { href: "/dev/ui/logs", label: "Interventions" },
   { href: "/dev/ui/attachments", label: "Documents et pièces jointes" },
   { href: "/dev/ui/boat", label: "Bateau" },
+  { href: "/dev/ui/boat/model-3d", label: "Bateau · maquette 3D" },
   { href: "/dev/ui/boat/engine", label: "Bateau · fiche moteur" },
   { href: "/dev/ui/boat/engine-form", label: "Bateau · formulaire moteur" },
   { href: "/dev/ui/boat/equipment-form", label: "Bateau · formulaire équipement" },

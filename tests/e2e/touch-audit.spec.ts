@@ -17,6 +17,8 @@ const PAGES = [
   "/dev/ui/contacts",
   "/dev/ui/checklist",
   "/dev/ui/boat",
+  // The 3D model (E2-8): pins sit on a canvas, so their 44 px targets are easy to lose.
+  "/dev/ui/boat/model-3d",
   "/dev/ui/boat/engine",
   "/dev/ui/boat/engine-form",
   "/dev/ui/boat/equipment-form",
