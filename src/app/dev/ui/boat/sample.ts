@@ -8,6 +8,7 @@ import type {
 } from "@/components/engines/EngineSheet";
 import type { EngineSummary } from "@/components/engines/EnginesTab";
 import type { CategorySummary, EquipmentSummary } from "@/components/equipment/EquipmentTab";
+import type { BoatModelData } from "@/components/boat-3d/BoatModel3D";
 import type { BoatModelOption } from "@/lib/boat-models";
 
 import { DEV_BOAT_ID } from "../DevShell";
@@ -102,11 +103,24 @@ export const SAMPLE_ENGINES: EngineSummary[] = [
   },
 ];
 
+/** The template's own word for each system, as the seeds write it (`orc50-checklist.json`). */
+const CATEGORY_REFS: Record<string, string> = {
+  engines: "engines",
+  daggerboards: "daggerboards_rudders",
+  sails: "sails_rigging",
+  hull: "hull_deck",
+  electronics: "electronics_nav",
+  energy: "energy",
+  plumbing: "plumbing_systems",
+  safety: "safety",
+};
+
 export const SAMPLE_EQUIPMENT_CATEGORIES: CategorySummary[] = SAMPLE_CATEGORIES.map((c) => ({
   id: c.id,
   name: c.name,
   color: c.color,
   icon: c.icon,
+  externalRef: CATEGORY_REFS[c.id] ?? null,
 }));
 
 export const SAMPLE_EQUIPMENT: EquipmentSummary[] = [
@@ -403,3 +417,116 @@ export const SAMPLE_BOAT_MODELS: BoatModelOption[] = [
     draftM: null,
   },
 ];
+
+/**
+ * The 3D model's own sample (E2-8): the same boat, its systems, and a handful of points in
+ * every state so the pins, the badges and the « rien à faire » case are all on screen at once.
+ */
+export const SAMPLE_MODEL: BoatModelData = {
+  shape: {
+    type: SAMPLE_BOAT.type ?? "catamaran",
+    lengthM: SAMPLE_BOAT.length_m,
+    beamM: SAMPLE_BOAT.beam_m,
+    draftM: SAMPLE_BOAT.draft_m,
+    engines: SAMPLE_ENGINES.filter((engine) => engine.isActive).map((engine) => ({
+      id: engine.id,
+      position: engine.position,
+    })),
+  },
+  categories: SAMPLE_EQUIPMENT_CATEGORIES.map((category) => ({
+    id: category.id,
+    externalRef: category.externalRef ?? null,
+  })),
+  equipment: SAMPLE_EQUIPMENT.filter((item) => !item.removedAt).map((item) => ({
+    id: item.id,
+    name: item.name,
+    brand: item.brand,
+    model: item.model,
+    quantity: item.quantity,
+    categoryId: item.categoryId,
+    externalRef: item.externalRef ?? null,
+  })),
+  points: [
+    {
+      id: "p1",
+      label: "Contrôle du gréement dormant",
+      state: "overdue",
+      daysRemaining: -126,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "sails",
+      engineId: null,
+    },
+    {
+      id: "p2",
+      label: "Lattes et chariots de grand-voile",
+      state: "soon",
+      daysRemaining: 12,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "sails",
+      engineId: null,
+    },
+    {
+      id: "p3",
+      label: "Chaîne de mouillage : marquage et manille",
+      state: "overdue",
+      daysRemaining: -18,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "hull",
+      engineId: null,
+    },
+    {
+      id: "p4",
+      label: "Anodes de saildrive",
+      state: "soon",
+      daysRemaining: 21,
+      hoursRemaining: 40,
+      hasCounter: true,
+      categoryId: "engines",
+      engineId: SAMPLE_ENGINES[0]?.id ?? null,
+    },
+    {
+      id: "p5",
+      label: "Vidange moteur",
+      state: "ok",
+      daysRemaining: 180,
+      hoursRemaining: 210,
+      hasCounter: true,
+      categoryId: "engines",
+      engineId: SAMPLE_ENGINES[1]?.id ?? null,
+    },
+    {
+      id: "p6",
+      label: "Joints de dérives",
+      state: "never",
+      daysRemaining: null,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "daggerboards",
+      engineId: null,
+    },
+    {
+      id: "p7",
+      label: "Percussion du radeau de survie",
+      state: "soon",
+      daysRemaining: 27,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "safety",
+      engineId: null,
+    },
+    {
+      id: "p8",
+      label: "Filtres du dessalinisateur",
+      state: "ok",
+      daysRemaining: 95,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "plumbing",
+      engineId: null,
+    },
+  ],
+  engines: SAMPLE_ENGINES.map((engine) => ({ id: engine.id, label: engine.label })),
+};

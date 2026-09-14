@@ -168,6 +168,17 @@
   --success-tint: #e3f4e9;
   --success-border: #b9e3c9;
 
+  /* ---------------------------------------- the 3D model of the boat (D116)
+     Read by the canvas through getComputedStyle, never by Tailwind: the painter
+     mixes `--model-hull` into `--model-light` face by face, so these two are the
+     ends of one ramp and not two independent colours. The brass stays out of it
+     (règle 12) and the pick is the focus azure, so the selected zone reads as
+     « chosen » rather than as a state. */
+  --model-hull: #1e3a5f; /* darkest end: bottom paint, shadowed panels      */
+  --model-light: #ffffff; /* lightest end: topsides, sails, lit deck        */
+  --model-sea: #d8e2ec; /* the disc the boat floats on                      */
+  --model-pick: #1b5e96; /* the selected zone = --ring                      */
+
   /* ------------------------------- categories: seed reference values */
   --cat-engines: #d97706; /* Moteurs                     - 3.19:1          */
   --cat-daggerboards-rudders: #0284c7; /* Dérives & Safrans  - 4.10:1      */
@@ -261,6 +272,12 @@
   --sidebar-accent-foreground: #e8edf4;
   --sidebar-border: #27394f;
   --sidebar-ring: #8ab4ff;
+
+  /* The model at night: a lighter hull on a darker sea, same ramp. */
+  --model-hull: #16283f;
+  --model-light: #cfdae8;
+  --model-sea: #16263f;
+  --model-pick: #8ab4ff;
 
   /* In dark mode `-fg` takes the `-on-dark` value: one single set of calls. */
   --status-planned-fg: #8ab4ff;

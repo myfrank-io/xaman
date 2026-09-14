@@ -70,6 +70,7 @@ export const BOAT_SHELL: readonly Namespace[] = [
 export const BOAT_SECTIONS = {
   boat: [
     "boat",
+    "boat3d",
     "boatType",
     "boats",
     "checklistState",

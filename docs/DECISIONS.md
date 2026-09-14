@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D116.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D117.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2530,4 +2530,43 @@ famille ».
 aujourd'hui, plus ce que tout bateau a. Une famille entre quand un bateau l'apporte, jamais « au
 cas où » : une famille inutilisée est une ligne de plus dans un menu, qui rend la bonne plus dure à
 trouver.
+
+## 2026-09-14 — D116 : le bateau en 3D, dessiné par nous, sur l'onglet Équipements
+
+**Question.** Demande de Joseph : « sur cette page modélise le bateau qui tourne tout seul en 3D
+avec tous les éléments cliquables pour savoir quoi faire dessus ». Trois questions en une : avec
+quoi rendre de la 3D, quel bateau afficher, et à quoi un « élément » correspond dans le carnet.
+
+**Décision.**
+
+1. **Aucune bibliothèque 3D.** Le rendu est écrit dans `src/lib/boat-3d/` : un maillage de faces
+   plates, une caméra en orbite, l'algorithme du peintre, un `<canvas>` 2D. Environ 270 faces par
+   image, rien d'alloué dans la boucle d'animation.
+2. **Le bateau est paramétrique**, construit dans le navigateur à partir de ce que le carnet
+   sait : `type`, `length_m`, `beam_m`, `draft_m` et les moteurs actifs (un `engine_position` =
+   une place sous une coque). Aucun fichier de modèle n'est téléchargé. Dimensions absentes — le
+   cas normal, `boats.length_m` est facultatif — le gabarit du type est dessiné.
+3. **Un « élément » est une zone physique**, pas une catégorie : mât, grand-voile, voiles d'avant,
+   étrave, traverse, trampoline, roof, cockpit, coques, circuits, sécurité, dérives, safrans, et
+   une zone par moteur. Équipements et points de checklist y sont **routés par les mots de leur
+   libellé d'abord** (« safran » est un safran quel que soit le système où il est classé), par
+   l'`external_ref` de la catégorie ensuite, par la coque en dernier recours : rien n'est jamais
+   injoignable.
+4. **Trois chemins vers la même chose** : la maquette (glisser pour tourner, toucher pour
+   choisir), les pastilles — posées **seulement** sur ce qui est en retard ou bientôt dû — et la
+   liste à côté, qui porte toutes les zones, y compris celles qui n'ont rien à signaler.
+
+**Raison.** `three.js` pèse un demi-mégaoctet pour faire exactement ce que trois cents lignes font
+ici, et la règle 10 refuse une dépendance lourde sans raison ; au ponton en 4G, ce demi-mégaoctet
+est la différence entre un écran qui s'ouvre et un écran qui attend. Un fichier `.glb` par bateau
+aurait été pire : il faudrait le produire, l'héberger, et il mentirait sur tous les bateaux sauf
+un. Le routage par les mots avant la catégorie vient de l'inventaire de Xaman : « Safrans
+suspendus » et « Dérives sabres carbone » sont dans la **même** catégorie (`daggerboards_rudders`)
+et sont deux endroits différents du bateau — une maquette qui les confond ne sert à rien.
+
+**Ce que ça ne fait pas.** Aucune position n'est stockée en base : une zone est **calculée**, pas
+saisie. Personne n'a donc à placer ses trente-six équipements sur un plan avant que l'écran serve
+à quelque chose, et un équipement ajouté demain trouve sa place tout seul. Le jour où quelqu'un
+voudra corriger un placement, ce sera une colonne de plus sur `equipment` et une exception devant
+les règles de mots — pas une refonte.
 
