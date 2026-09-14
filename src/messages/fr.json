@@ -52,7 +52,7 @@
     "scrollTable": "Faites glisser le tableau pour voir toutes les colonnes."
   },
   "nav": {
-    "dashboard": "Tableau de bord",
+    "dashboard": "À bord",
     "logs": "Interventions",
     "checklist": "Checklist",
     "supplies": "Dépenses",
@@ -69,7 +69,7 @@
     "account": "Mon compte",
     "installApp": "Installer l'application",
     "short": {
-      "dashboard": "Bord",
+      "dashboard": "À bord",
       "logs": "Journal",
       "checklist": "Checklist",
       "boat": "Bateau",
@@ -191,7 +191,7 @@
       "categoryLabel": "Catégorie"
     },
     "dashboard": {
-      "title": "Tableau de bord — recette visuelle",
+      "title": "À bord — recette visuelle",
       "subtitle": "Données factices, densité à valider en 1024×768 et 768×1024.",
       "brandNew": "État « carnet neuf »"
     }
@@ -646,20 +646,6 @@
     "onEquipment": "Noter une intervention"
   },
   "dashboard": {
-    "title": "Tableau de bord",
-    "stats": {
-      "overdue": "En retard",
-      "overdueHint": "points de checklist",
-      "soon": "Bientôt",
-      "soonHint": "sous 30 jours ou 25 h",
-      "openLogs": "Interventions",
-      "openLogsHint": "{count, plural, =0 {aucune ouverte} one {dont # urgente} other {dont # urgentes}}",
-      "openLogsDue": "{count, plural, one {dont # à faire aujourd'hui} other {dont # à faire aujourd'hui}}",
-      "expenses": "Dépenses {year}",
-      "expensesHint": "{count, plural, one {# ligne} other {# lignes}}",
-      "settled": "Réglés cette semaine",
-      "settledHint": "{items, plural, =0 {aucun point} one {# point} other {# points}} · {logs, plural, =0 {aucune intervention} one {# intervention} other {# interventions}}"
-    },
     "engines": {
       "title": "Heures moteur",
       "noReading": "compteur inconnu",
@@ -668,7 +654,6 @@
       "addReading": "Relevé d'heures"
     },
     "upcoming": {
-      "title": "À faire prochainement",
       "allChecklist": "Tous les points à traiter",
       "allLogs": "Interventions ouvertes",
       "emptyTitle": "Rien à faire dans les 30 prochains jours",
@@ -678,42 +663,19 @@
       "startStep1": "Saisir les heures des moteurs",
       "startStep2": "Vérifier les {count} lignes importées du carnet papier",
       "startStep3": "Cocher ce qui est déjà fait dans la checklist",
-      "allChecklistCount": "Tous les points à traiter ({count})",
-      "allLogsCount": "Interventions ouvertes ({count})",
       "emptyNextHours": "Prochaine échéance : {label}, dans {hours} h.",
       "startStep1Action": "Saisir les heures",
       "startStep2Action": "Vérifier",
       "startStep3Action": "Ouvrir la checklist",
       "startDismiss": "Masquer",
       "startHidden": "{count, plural, one {# point jamais renseigné} other {# points jamais renseignés}}",
-      "emptyNoDated": "Aucune échéance datée pour l'instant."
-    },
-    "categories": {
-      "title": "État des 8 systèmes",
-      "upToDate": "à jour",
-      "neverDone": "jamais fait",
-      "summary": "{count, plural, one {# point} other {# points}}",
-      "overdue": "{count, plural, one {# en retard} other {# en retard}}"
-    },
-    "recent": {
-      "title": "Dernières interventions",
-      "empty": "Aucune intervention terminée pour l'instant."
-    },
-    "recap": {
-      "expenses": "Dépenses {year}",
-      "expensesDetail": "Détail des dépenses",
-      "haulOut": "Sortie de l'eau",
-      "lastHaulOut": "Dernière : {date} — il y a {months} mois",
-      "noHaulOut": "Aucune sortie de l'eau enregistrée",
-      "lowStock": "{count, plural, one {# pièce sous le seuil} other {# pièces sous le seuil}}",
-      "stock": "Stock",
-      "expenses12m": "Dépenses, 12 derniers mois",
-      "noExpenses": "Aucune dépense sur les 12 derniers mois",
-      "other": "Autres",
-      "haulOutDetail": "Voir les sorties de l'eau",
-      "stockDetail": "Voir le stock",
-      "stockOk": "Aucune pièce sous le seuil",
-      "title": "Récapitulatif"
+      "emptyNoDated": "Aucune échéance datée pour l'instant.",
+      "groups": {
+        "today": "Aujourd'hui",
+        "week": "Cette semaine",
+        "month": "Ce mois-ci",
+        "hours": "Aux heures moteur"
+      }
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
