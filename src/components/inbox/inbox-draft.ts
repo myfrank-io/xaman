@@ -26,7 +26,8 @@ export type InboxDraft = {
   kind: InboxFiling;
   title: string;
   date: string;
-  categoryId: string;
+  /** The systems an intervention touches (D114); a purchase keeps the first. */
+  categoryIds: string[];
   amount: string;
   contactId: string | null;
   supplierName: string;
@@ -52,7 +53,7 @@ export function draftFrom(item: InboxItem, suggestion: InboxSuggestion | null): 
     kind: suggestion?.kind ?? "log",
     title: suggestion?.title ?? item.fileName.replace(/\.[a-z0-9]{1,8}$/i, ""),
     date: suggestion?.date ?? todayString(),
-    categoryId: suggestion?.categoryId ?? "",
+    categoryIds: suggestion?.categoryId ? [suggestion.categoryId] : [],
     amount:
       suggestion?.amount === null || suggestion?.amount === undefined
         ? ""
@@ -78,7 +79,7 @@ export function toValidateInput(
     kind: draft.kind,
     title: draft.title,
     date: draft.date,
-    categoryId: draft.categoryId,
+    categoryIds: draft.categoryIds,
     amount: draft.amount.trim() === "" ? null : parseDecimal(draft.amount),
     contactId: draft.contactId,
     supplierName: draft.supplierName,

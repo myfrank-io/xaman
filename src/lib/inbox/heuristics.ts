@@ -818,6 +818,96 @@ type SupplierReading = {
   strength: 0 | 1 | 2;
 };
 
+// ---------------------------------------------------------------------------------------------
+// The issuer's block (D116)
+// ---------------------------------------------------------------------------------------------
+
+/** An address, anywhere on the page: the letterhead prints it, the footer repeats it. */
+const EMAIL = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
+
+/**
+ * A French number as an invoice prints it — « 02 97 55 12 34 », « +33 2 97 55 12 34 »,
+ * « 02.97.55.12.34 » — or an international one of the same length. Deliberately narrow: a SIRET
+ * and an invoice number are digits too, and a wrong phone on a fiche is worse than none.
+ */
+const PHONE = /(?:\+\d{1,3}[\s.-]?)?(?:\(?0\)?[\s.-]?)?\d(?:[\s.-]?\d){8}/;
+const PHONE_LABEL = ["tel", "tel.", "telephone", "port", "portable", "mobile", "fax"];
+const NOT_A_PHONE = ["siret", "siren", "tva", "rcs", "ape", "naf", "iban", "bic", "facture"];
+
+/** A street line: a French address starts with a number or one of these words. */
+const STREET =
+  /(^\d+[\s,]|\b(rue|avenue|av\.|boulevard|bd|chemin|route|rte|impasse|allee|quai|place|zone|za|zi|zac|port|lieu[- ]dit|bp|cs)\b)/;
+/** A « 56000 VANNES » line: five digits then a town. */
+const POSTCODE = /\b\d{5}\b\s+[A-Za-zÀ-ÿ]/;
+
+/**
+ * What the document prints about its issuer, beyond its name: the block a person would copy by
+ * hand into a fiche prestataire (D116).
+ *
+ * Read on the letterhead and on the footer, which is where invoices put it, and never inferred:
+ * a field that is not on the page is null, and the screen shows what was read next to the button
+ * that creates the fiche, so nothing lands in the annuaire unseen.
+ */
+/**
+ * The registration numbers a French letterhead prints on the same line as the address — SIRET,
+ * RCS, TVA. They belong to the company, not to the postbox, and an address field that carries
+ * them reads like a database dump on the fiche.
+ */
+const LEGAL_ID = /\s*[—–-]?\s*\b(siret|siren|rcs|tva|ape|naf)\b.*$/i;
+
+function trimLegalIds(line: string): string {
+  return line
+    .replace(LEGAL_ID, "")
+    .replace(/[\s,;—–-]+$/, "")
+    .trim();
+}
+
+export function findSupplierDetails(
+  lines: string[],
+  name: string | null,
+): { phone: string | null; email: string | null; address: string | null } {
+  const header = lines.slice(0, 20);
+  const footer = lines.slice(-10);
+  const region = [...header, ...footer];
+
+  let email: string | null = null;
+  for (const line of region) {
+    const found = EMAIL.exec(line)?.[0];
+    if (found) {
+      email = found.toLowerCase();
+      break;
+    }
+  }
+
+  let phone: string | null = null;
+  for (const line of region) {
+    const f = fold(line);
+    if (hasWord(f, NOT_A_PHONE)) continue;
+    // A labelled number first; an unlabelled one only in the letterhead, where the issuer's own
+    // number is, rather than anywhere a nine-digit run happens to appear.
+    const labelled = hasWord(f, PHONE_LABEL);
+    if (!labelled && !header.includes(line)) continue;
+    const found = PHONE.exec(labelled ? line.replace(/^[^:]*:/, "") : line)?.[0];
+    if (found && (found.match(/\d/g) ?? []).length >= 9) {
+      phone = found.trim();
+      break;
+    }
+  }
+
+  let address: string | null = null;
+  const boat = name ? fold(name) : "";
+  for (let i = 0; i < header.length; i++) {
+    const line = header[i] ?? "";
+    if (!POSTCODE.test(line)) continue;
+    const previous = header[i - 1] ?? "";
+    const street = STREET.test(previous) && fold(previous) !== boat ? trimLegalIds(previous) : null;
+    address = [street, trimLegalIds(line)].filter(Boolean).join(", ").slice(0, 300);
+    break;
+  }
+
+  return { phone, email, address };
+}
+
 function findSupplier(
   lines: string[],
   folded: string,
@@ -1095,6 +1185,13 @@ export function heuristicSuggestion(
     amount: total?.amount ?? null,
     currency: total ? (total.currency ?? currency ?? "EUR") : null,
     supplierName: supplier.supplierName,
+    supplier: {
+      name: supplier.supplierName,
+      // The local reader tells a trading name from a raison sociale no better than a person
+      // would from one line: it reads one name and says so once.
+      company: null,
+      ...findSupplierDetails(lines, supplier.supplierName),
+    },
     contactId: supplier.contactId,
     categoryId,
     engineHours,

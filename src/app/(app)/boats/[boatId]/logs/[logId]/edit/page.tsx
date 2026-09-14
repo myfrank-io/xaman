@@ -28,6 +28,7 @@ export default async function EditLogPage({
     { data: log },
     { data: readings },
     { data: completions },
+    { data: logCategories },
     attachments,
     { data: auth },
     data,
@@ -50,6 +51,13 @@ export default async function EditLogPage({
       .from("checklist_completions")
       .select("checklist_item_id")
       .eq("maintenance_log_id", logId),
+    // Every system of the intervention (D114). The principal stays on the row itself, so a line
+    // written before the liaison existed — an import — still opens with its one chip ticked.
+    supabase
+      .from("maintenance_log_categories")
+      .select("category_id")
+      .eq("log_id", logId)
+      .eq("boat_id", boatId),
     // Documents already on the intervention (E10-1); a Storage hiccup leaves the form usable.
     listAttachments(supabase, boatId, { type: "maintenance_log", id: logId }).catch(() => []),
     supabase.auth.getUser(),
@@ -60,10 +68,14 @@ export default async function EditLogPage({
   const mine = log.created_by === auth.user?.id;
   if (!can(boatRole, "write") && !(boatRole === "pro" && mine)) notFound();
 
+  const linked = (logCategories ?? []).map((row) => row.category_id);
   const values: LogFormValues = {
     id: log.id,
     title: log.title,
-    categoryId: log.category_id,
+    // The principal first, whatever order the rows came back in: it is the one the column keeps.
+    categoryIds: log.category_id
+      ? [log.category_id, ...linked.filter((id) => id !== log.category_id)]
+      : linked,
     status: log.status as LogStatusValue,
     performedAt: log.performed_at,
     cost: log.cost,

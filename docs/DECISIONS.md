@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D114.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D117.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2458,3 +2458,71 @@ n'a jamais saisi et qui ne bouge pas : la référence d'option du chantier, le f
 le numéro de coque, les coordonnées du constructeur. C'est à ce titre que `seed/xaman-boat.json`
 gagne le contact Marsaudon Composites et six `specs.ref_chantier` — sans qu'aucune des cinq
 divergences ci-dessus n'ait été reportée dans le carnet.
+
+## 2026-09-14 — D114 : une intervention porte plusieurs systèmes
+
+**Question.** Le formulaire d'intervention n'accepte qu'une catégorie. Une visite de mécanicien —
+vidange, anode, contrôle du gréement, une seule facture — doit-elle se ranger sous un seul système,
+se découper en trois lignes, ou porter les trois ?
+
+**Décision.** Elle porte les trois. Les puces de catégorie deviennent **multiples** sur
+l'intervention (six au plus), et **la première cochée reste le système principal** :
+`maintenance_logs.category_id` ne bouge pas, et avec elle les filtres du journal, le rapport,
+l'export, la grille des systèmes et le rapprochement des points de checklist. Une table de liaison
+`maintenance_log_categories` (migration `0032`, RLS calquée sur celle de l'intervention) porte la
+liste complète, principal compris ; `maintenance_logs_view` la rend en `category_ids`, et retombe
+sur la seule colonne quand la liaison est vide — une ligne importée reste classée. Les points de
+checklist proposés sont ceux de **tous** les systèmes cochés, dédoublonnés au meilleur score. Un
+achat garde une catégorie unique : il se range à un seul endroit.
+
+**Raison.** Le choix unique ne simplifiait rien, il déplaçait le travail : la personne rangeait la
+visite sous « Moteurs » et l'anode devenait introuvable depuis « Coque & Pont ». Découper en trois
+lignes aurait triplé la saisie et éclaté un coût unique en trois montants inventés. Garder la
+colonne principale plutôt que la remplacer par un tableau était la moitié la plus importante de la
+décision : aucune vue, aucun filtre, aucun export n'a eu à changer, et la migration ne réécrit rien.
+
+## 2026-09-14 — D115 : une intervention commence par son document
+
+**Question.** « Noter une intervention » ouvre huit champs vides, et les photos se joignent en bas
+de l'écran, une fois tout saisi. Or l'intervention naît presque toujours d'un papier — la facture du
+mécanicien, le devis du chantier, le ticket de l'accastilleur — qui porte déjà le titre, la date, le
+montant et le prestataire. Par quoi l'écran doit-il commencer ?
+
+**Décision.** Par le document. `/logs/new` ouvre sur **« Commencez par le document »** — prendre une
+photo, la photothèque, un fichier — et c'est la **chaîne de « À valider » qui lit** : même envoi
+dans le bucket, même ligne d'`inbox_items`, même lecture (D91, D92), rien de dupliqué. Le formulaire
+s'ouvre ensuite pré-rempli de ce qu'elle a trouvé, et l'enregistrement accroche le document à
+l'intervention par le rangement `attach` que « Valider » emprunte déjà (D109). **« Saisir sans
+document » reste à portée de pouce** : le travail fait par l'équipage n'a pas de facture. Les
+chemins qui savent déjà de quoi ils parlent — le dialogue « Fait » de la checklist, « Refaire », la
+fiche moteur — sautent l'étape : leurs paramètres d'URL sont une intention explicite. Une saisie
+partie d'un document ne se met pas en file d'attente hors ligne : la lecture a déjà demandé le
+réseau, et une ligne gardée sur l'iPad laisserait son document derrière elle.
+
+**Raison.** C'est l'ordre réel du geste : on a la facture en main, puis on la recopie. La demander
+en dernier faisait taper huit champs à côté de la page qui les portait tous, et un abandon en cours
+de route perdait tout. Ici rien ne se perd : le document est dans « À valider » dès qu'il est monté,
+même si personne ne finit le formulaire — il se classera d'un tap plus tard.
+
+## 2026-09-14 — D116 : le prestataire se lit sur le document, et sa fiche s'ouvre remplie
+
+**Question.** Une facture porte le nom du chantier, son téléphone, son e-mail et son adresse. La
+lecture n'en gardait que le nom (`supplierName`), et proposait un contact seulement quand le modèle
+reconnaissait lui-même l'un des intervenants du bateau. Que faire du reste ?
+
+**Décision.** La lecture renvoie le **bloc entier de l'émetteur** (`supplier` : nom, raison sociale,
+téléphone, e-mail, adresse), que ce soit le modèle ou le lecteur local qui lise. Deux usages, tous
+deux à un tap : quand l'annuaire a déjà la fiche, le **rapprochement** la retrouve et la
+sélectionne — e-mail exact, puis téléphone comparé sur ses neuf derniers chiffres, puis nom ou
+raison sociale accents et casse ignorés, et **rien d'autre** : pas de score flou, parce qu'un
+rapprochement douteux range la facture sous le mauvais prestataire quand une absence de
+rapprochement coûte un tap. Quand elle ne l'a pas, **« Créer la fiche prestataire »** ouvre le
+dialogue de création **déjà rempli** de tout ce qui est écrit sur la page, société, e-mail et
+adresse compris, et la nouvelle fiche est sélectionnée sans quitter le formulaire. Le bloc lu reste
+affiché à côté : la personne voit ce qu'elle va enregistrer.
+
+**Raison.** Le numéro et le mail sont imprimés sur la page qu'on est en train de lire : les
+retaper est exactement le travail que cet écran existe pour supprimer. Sans rapprochement, chaque
+facture reposait une question déjà répondue dix fois et la réponse finissait en texte libre à côté
+de la fiche qui existait déjà ; sans pré-remplissage, la fiche créée à la volée n'avait qu'un nom,
+et quelqu'un la complétait à la main plus tard — ou jamais.

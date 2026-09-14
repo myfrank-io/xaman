@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+import { EMPTY_SUPPLIER } from "@/lib/contacts/match";
+
 import { isoDate, nullableDecimal, nullableText, requiredText, uuid } from "@/lib/schemas/common";
 import { attachmentExtension, ATTACHMENT_MAX_BYTES } from "@/lib/schemas/attachments";
-import { COST_MAX } from "@/lib/schemas/logs";
+import { COST_MAX, LOG_CATEGORIES_MAX } from "@/lib/schemas/logs";
 import { PURCHASE_AMOUNT_MAX, VISIBLE_PURCHASE_KINDS } from "@/lib/schemas/purchases";
 
 /**
@@ -173,6 +175,17 @@ export const INBOX_DOCUMENT_TYPES = [
 ] as const;
 export const INBOX_CONFIDENCES = ["high", "medium", "low"] as const;
 
+/** The provider block of a document, every field optional and nothing invented (D116). */
+export const supplierReadSchema = z.object({
+  name: z.string().trim().max(120).nullable(),
+  company: z.string().trim().max(120).nullable(),
+  phone: z.string().trim().max(40).nullable(),
+  // Never `.email()`: a badly OCR-ed address must not make the whole reading unparseable — the
+  // screen shows it, the person corrects it, and `matchSupplierContact` only matches a valid one.
+  email: z.string().trim().max(160).nullable(),
+  address: z.string().trim().max(300).nullable(),
+});
+
 export const inboxSuggestionSchema = z.object({
   documentType: z.enum(INBOX_DOCUMENT_TYPES),
   /** Where it should be filed: an intervention (work done) or a purchase (a thing bought). */
@@ -191,6 +204,15 @@ export const inboxSuggestionSchema = z.object({
   currency: z.string().trim().length(3).nullable(),
   /** The supplier or yard as written on the document. */
   supplierName: z.string().trim().max(120).nullable(),
+  /**
+   * The provider's block as the document prints it (D116): raison sociale, téléphone, e-mail,
+   * adresse. It is what makes « créer la fiche » a tap instead of a form — and what recognises
+   * a provider already in the annuaire when the name alone is written differently.
+   *
+   * Defaulted, not required: a row written by the prompt that predates it must keep opening its
+   * card rather than failing to parse (`parseSuggestion`).
+   */
+  supplier: supplierReadSchema.default(EMPTY_SUPPLIER),
   /** One of the boat's contacts, when the supplier is clearly one of them; else null. */
   contactId: z.string().nullable(),
   /** One of the boat's systems, when the work clearly belongs to one; else null. */
@@ -259,7 +281,9 @@ export const validateInboxItemSchema = z
     kind: inboxFilingSchema,
     title: z.string().trim().max(160),
     date: isoDate,
-    categoryId: z.preprocess(emptyToNull, uuid.nullable()),
+    // Several systems on an intervention (D114); a purchase keeps the first, which is the one
+    // its own column holds.
+    categoryIds: z.array(uuid).max(LOG_CATEGORIES_MAX).default([]),
     amount: nullableDecimal({ scale: 2, max: COST_MAX }),
     contactId: z.preprocess(emptyToNull, uuid.nullable()),
     supplierName: nullableText(120),
@@ -276,8 +300,8 @@ export const validateInboxItemSchema = z
     if (value.kind !== "attach" && value.title === "") {
       ctx.addIssue({ code: "custom", path: ["title"], message: "required" });
     }
-    if (value.kind === "log" && !value.categoryId) {
-      ctx.addIssue({ code: "custom", path: ["categoryId"], message: "required" });
+    if (value.kind === "log" && value.categoryIds.length === 0) {
+      ctx.addIssue({ code: "custom", path: ["categoryIds"], message: "required" });
     }
     if (value.kind === "attach" && !value.logId) {
       ctx.addIssue({ code: "custom", path: ["logId"], message: "required" });
@@ -285,3 +309,14 @@ export const validateInboxItemSchema = z
   });
 
 export const inboxItemRefSchema = z.object({ boatId: uuid, itemId: uuid });
+
+/**
+ * The document an intervention was started from, hung on it once it exists (D115). It is the
+ * `attach` filing of `validateInboxItem`, minus the fields that filing already ignores: the
+ * title, the date and the amount are the intervention's, and it is the form that just wrote it.
+ */
+export const attachInboxDocumentSchema = z.object({
+  boatId: uuid,
+  itemId: uuid,
+  logId: uuid,
+});

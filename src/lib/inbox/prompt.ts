@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { matchSupplierContact, type SupplierRead } from "@/lib/contacts/match";
 import {
   inboxSuggestionSchema,
   INBOX_CONFIDENCES,
@@ -20,7 +21,14 @@ export type InboxContext = {
   today: string;
   categories: { id: string; name: string; externalRef?: string | null }[];
   engines: { id: string; label: string; propulsion: string }[];
-  contacts: { id: string; name: string; company: string | null; specialty: string }[];
+  contacts: {
+    id: string;
+    name: string;
+    company: string | null;
+    specialty: string;
+    phone: string | null;
+    email: string | null;
+  }[];
 };
 
 /**
@@ -41,6 +49,7 @@ Rules:
 - "date" is the date of the work or of the purchase, in yyyy-MM-dd; use the invoice date when no other is stated; null when none.
 - "amount" is the total including tax (TTC) of the whole document, as a number in the document's currency; null when unreadable.
 - Choose "categoryId" and "contactId" only among the ids given for this boat, and only when the match is clear; otherwise null. "supplierName" is the supplier as written on the document even when a contact matches.
+- "supplier" is the issuer's own block, copied from the page and never guessed: "name" the trading name, "company" the raison sociale when it differs, "phone", "email", "address" on one line. A field that is not printed is null. Fill it even when "contactId" matches — it is what creates the fiche when it does not.
 - "engineHours" lists hour-meter readings the document states explicitly, each tied to one of the boat's engine ids; an empty list when none.
 - "lineItems" are the main lines of the document (at most 30), designation and amount.
 - "notes" is a two-sentence summary worth keeping under the intervention, or null.
@@ -60,6 +69,13 @@ export const inboxModelOutputSchema = z.object({
   amount: z.number().nullable(),
   currency: z.string().nullable(),
   supplierName: z.string().nullable(),
+  supplier: z.object({
+    name: z.string().nullable(),
+    company: z.string().nullable(),
+    phone: z.string().nullable(),
+    email: z.string().nullable(),
+    address: z.string().nullable(),
+  }),
   contactId: z.string().nullable(),
   categoryId: z.string().nullable(),
   engineHours: z.array(z.object({ engineId: z.string(), hours: z.number() })),
@@ -77,7 +93,7 @@ export function contextText(context: InboxContext, fileName: string): string {
     `Today: ${context.today}`,
     `Systems (categoryId → name): ${JSON.stringify(context.categories.map((c) => ({ id: c.id, name: c.name })))}`,
     `Engines (engineId → label, propulsion): ${JSON.stringify(context.engines)}`,
-    `Contacts (contactId → name, company, specialty): ${JSON.stringify(context.contacts)}`,
+    `Contacts (contactId → name, company, specialty, phone, email): ${JSON.stringify(context.contacts)}`,
     `File name: ${fileName}`,
     "Read the document above and propose how to file it.",
   ].join("\n");
@@ -98,6 +114,17 @@ export function normaliseSuggestion(
   const clip = (value: string | null, max: number) =>
     value === null ? null : value.trim().slice(0, max) || null;
 
+  const supplier: SupplierRead = {
+    // `supplierName` is the older half of the same answer: when the block carries no name, it is
+    // still the name written on the document, and the matching below needs one.
+    name: clip(output.supplier.name, 120) ?? clip(output.supplierName, 120),
+    company: clip(output.supplier.company, 120),
+    phone: clip(output.supplier.phone, 40),
+    email: clip(output.supplier.email, 160),
+    // One line: the column is 300 and a screen is not a letterhead.
+    address: clip(output.supplier.address?.replace(/\s*\n\s*/g, ", ") ?? null, 300),
+  };
+
   const candidate = {
     documentType: output.documentType,
     kind: output.kind,
@@ -110,7 +137,14 @@ export function normaliseSuggestion(
         : null,
     currency: clip(output.currency, 3)?.toUpperCase() ?? null,
     supplierName: clip(output.supplierName, 120),
-    contactId: output.contactId && contactIds.has(output.contactId) ? output.contactId : null,
+    supplier,
+    // What the model did not recognise, the annuaire often does (D116): an exact e-mail, an
+    // exact number, a name one of the two spells with « SARL » in front. Never the reverse —
+    // a contactId the model gave is the model's answer, and this only fills a null.
+    contactId:
+      (output.contactId && contactIds.has(output.contactId) ? output.contactId : null) ??
+      matchSupplierContact(supplier, context.contacts)?.contactId ??
+      null,
     categoryId: output.categoryId && categoryIds.has(output.categoryId) ? output.categoryId : null,
     engineHours: output.engineHours
       .filter((row) => engineIds.has(row.engineId) && Number.isFinite(row.hours) && row.hours >= 0)

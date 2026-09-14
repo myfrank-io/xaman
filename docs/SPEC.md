@@ -158,7 +158,7 @@ Priorisation MoSCoW. **Must** = livré dans le MVP, **Should** = dans le MVP si 
 - Notes libres (ex. : « pas d'antifouling classique annuel — polissage et retouches »).
 
 #### M3. Journal des interventions (journal de bord d'entretien)
-Chaque intervention contient : **titre** (ex. « Vidange moteur SB »), **catégorie** (un des systèmes du bateau ; obligatoire à la saisie, nullable en base pour l'import), **statut** (Planifié / En cours / Terminé / Urgent), **priorité** (Basse / Normale / Haute), **date de l'intervention**, **prochaine échéance** (date, optionnelle), **heures moteur** au moment de l'intervention (un champ par moteur, optionnel — le remplir crée automatiquement un relevé d'heures), **coût** (€), **prestataire** (choisi dans l'annuaire, ou « nous-mêmes »), **notes libres**, et (Should) photos / pièces jointes.
+Chaque intervention contient : **titre** (ex. « Vidange moteur SB »), **catégorie** (les systèmes du bateau ; au moins un, obligatoire à la saisie — plusieurs depuis D114, le premier coché restant le principal que porte `category_id`, nullable en base pour l'import), **statut** (Planifié / En cours / Terminé / Urgent), **priorité** (Basse / Normale / Haute), **date de l'intervention**, **prochaine échéance** (date, optionnelle), **heures moteur** au moment de l'intervention (un champ par moteur, optionnel — le remplir crée automatiquement un relevé d'heures), **coût** (€), **prestataire** (choisi dans l'annuaire, ou « nous-mêmes »), **notes libres**, et (Should) photos / pièces jointes.
 
 Fonctions :
 - Liste avec résumé (titre, catégorie colorée, statut en badge coloré, date, coût), triée par date décroissante, **filtres** par catégorie et statut, **recherche texte** (titre + notes), vue détail au clic.

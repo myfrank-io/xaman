@@ -94,6 +94,7 @@ const BUSINESS_TABLES = [
   "contacts",
   "haul_outs",
   "maintenance_logs",
+  "maintenance_log_categories",
   "checklist_items",
   "checklist_completions",
   "engine_hour_readings",
@@ -1584,6 +1585,101 @@ describeWithDb("future dates (D17)", () => {
         `current_date + ${offset}`,
       ).toBe(true);
     }
+  });
+});
+
+/**
+ * D114 — les systèmes d'une intervention. La liaison suit les droits de la ligne qu'elle décrit :
+ * un membre la lit, un contributeur l'ajoute, `write` la retire — et le pro la retire sur *ses*
+ * interventions, même si un editor avait coché les systèmes pour lui. Rien ne se met à jour : une
+ * liaison s'ajoute ou se retire, et il n'y a pas de politique UPDATE pour le faire croire.
+ */
+describeWithDb("maintenance_log_categories (D114)", () => {
+  const CATEGORY2 = "00000000-0000-0000-0000-00000000ca02";
+
+  const link = (u: User, log: string, category: string, by: string) =>
+    run(
+      u,
+      "insert into public.maintenance_log_categories (log_id, category_id, boat_id, created_by) values ($1, $2, $3, $4)",
+      [log, category, BOAT, by],
+    );
+  const unlink = (u: User, log: string, category: string) =>
+    run(u, "delete from public.maintenance_log_categories where log_id = $1 and category_id = $2", [
+      log,
+      category,
+    ]);
+
+  it("an intervention's principal system is a link too, readable by every member", async () => {
+    for (const role of ["owner", "editor", "pro", "viewer", "admin"] as Role[]) {
+      expect(
+        await count(U[role], "maintenance_log_categories", "log_id = $1", [LOG_OWNER]),
+        role,
+      ).toBe(1);
+    }
+    expect(await count(U.stranger, "maintenance_log_categories", "log_id = $1", [LOG_OWNER])).toBe(
+      0,
+    );
+    expect(await count(null, "maintenance_log_categories")).toBe(-1);
+  });
+
+  it("insert follows contribute, and only under one's own name", async () => {
+    expect((await link(U.owner, LOG_OWNER, CATEGORY2, U.owner.id)).ok).toBe(true);
+    expect((await link(U.editor, LOG_OWNER, CATEGORY2, U.editor.id)).ok).toBe(true);
+    expect((await link(U.pro, LOG_PRO, CATEGORY2, U.pro.id)).ok).toBe(true);
+    expect((await link(U.pro, LOG_PRO, CATEGORY2, U.owner.id)).ok).toBe(false);
+    expect((await link(U.viewer, LOG_OWNER, CATEGORY2, U.viewer.id)).ok).toBe(false);
+    expect((await link(U.stranger, LOG_OWNER, CATEGORY2, U.stranger.id)).ok).toBe(false);
+  });
+
+  it("delete follows write, plus the pro on the interventions they wrote", async () => {
+    expect(await unlink(U.owner, LOG_OWNER, CATEGORY)).toEqual({ ok: true, rowCount: 1 });
+    expect(await unlink(U.editor, LOG_PRO, CATEGORY)).toEqual({ ok: true, rowCount: 1 });
+    expect(await unlink(U.pro, LOG_PRO, CATEGORY)).toEqual({ ok: true, rowCount: 1 });
+    // Not their line: nothing is removed, and nothing says otherwise.
+    expect(await unlink(U.pro, LOG_OWNER, CATEGORY)).toEqual({ ok: true, rowCount: 0 });
+    expect(await unlink(U.viewer, LOG_OWNER, CATEGORY)).toEqual({ ok: true, rowCount: 0 });
+  });
+
+  it("refuses a link whose boat is not the intervention's and the system's (rule 4)", async () => {
+    const other = await as(U.owner, (c) =>
+      c.query("select id from public.boats where id = $1", [BOAT2]),
+    );
+    expect(other.rowCount).toBeGreaterThanOrEqual(0);
+    const wrong = await run(
+      U.owner,
+      "insert into public.maintenance_log_categories (log_id, category_id, boat_id, created_by) values ($1, $2, $3, $4)",
+      [LOG_OWNER, CATEGORY2, BOAT2, U.owner.id],
+    );
+    expect(wrong.ok).toBe(false);
+  });
+
+  it("maintenance_logs_view lists every system, the row keeps its principal", async () => {
+    const ids = await as(U.owner, async (c) => {
+      await c.query(
+        "insert into public.maintenance_log_categories (log_id, category_id, boat_id, created_by) values ($1, $2, $3, $4)",
+        [LOG_OWNER, CATEGORY2, BOAT, U.owner.id],
+      );
+      const res = await c.query(
+        "select category_id, category_ids from public.maintenance_logs_view where id = $1",
+        [LOG_OWNER],
+      );
+      return res.rows[0] as { category_id: string; category_ids: string[] };
+    });
+    expect(ids.category_id).toBe(CATEGORY);
+    expect([...ids.category_ids].sort()).toEqual([CATEGORY, CATEGORY2].sort());
+  });
+
+  /** A line written before the liaison existed — an import — is still filed under its system. */
+  it("falls back on the row's own column when nothing is linked", async () => {
+    const ids = await as(U.owner, async (c) => {
+      await c.query("delete from public.maintenance_log_categories where log_id = $1", [LOG_OWNER]);
+      const res = await c.query(
+        "select category_ids from public.maintenance_logs_view where id = $1",
+        [LOG_OWNER],
+      );
+      return (res.rows[0] as { category_ids: string[] }).category_ids;
+    });
+    expect(ids).toEqual([CATEGORY]);
   });
 });
 

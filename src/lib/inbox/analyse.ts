@@ -218,7 +218,7 @@ async function loadContext(
         .order("sort_order"),
       admin
         .from("contacts")
-        .select("id, name, company, specialty")
+        .select("id, name, company, specialty, phone, email")
         .eq("boat_id", boatId)
         .is("deleted_at", null)
         .order("name"),
@@ -242,6 +242,8 @@ async function loadContext(
       name: row.name,
       company: row.company,
       specialty: row.specialty,
+      phone: row.phone,
+      email: row.email,
     })),
   };
 }

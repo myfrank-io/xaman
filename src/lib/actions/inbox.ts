@@ -7,11 +7,13 @@ import { getTranslations } from "next-intl/server";
 import { saveLog } from "@/lib/actions/logs";
 import { upsertPurchase } from "@/lib/actions/purchases";
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
+import { todayString } from "@/lib/format";
 import { analyseInboxItem, type AnalysisOutcome } from "@/lib/inbox/analyse";
 import { notifyInboxValidated } from "@/lib/inbox/notify";
 import { boatPath, inboxPath, logPath } from "@/lib/queries/boat-routes";
 import { ATTACHMENT_BUCKET } from "@/lib/schemas/attachments";
 import {
+  attachInboxDocumentSchema,
   createInboxUploadSchema,
   inboxEntityId,
   inboxItemRefSchema,
@@ -182,7 +184,7 @@ export async function validateInboxItem(input: unknown): Promise<
       id: entityId,
       boatId: values.boatId,
       title: values.title,
-      categoryId: values.categoryId ?? "",
+      categoryIds: values.categoryIds,
       status: "done",
       performedAt: values.date,
       cost: values.amount,
@@ -204,7 +206,7 @@ export async function validateInboxItem(input: unknown): Promise<
       purchasedAt: values.date,
       supplierContactId: values.contactId,
       supplierName: values.supplierName,
-      categoryId: values.categoryId,
+      categoryId: values.categoryIds[0] ?? null,
       bottleType: null,
       maintenanceLogId: null,
       notes,
@@ -295,6 +297,40 @@ export async function validateInboxItem(input: unknown): Promise<
     title,
     href: kind === "log" ? logPath(values.boatId, entityId) : boatPath(values.boatId, "supplies"),
   });
+}
+
+/**
+ * The document an intervention was started from, joined to it (D115).
+ *
+ * « Noter une intervention » now opens on a document: the file goes up by the same door as a
+ * mailed one, is read by the same reading, and pre-fills the form. Once the person saves, the
+ * document has to stop waiting in « À valider » and become the intervention's attachment — which
+ * is exactly what the `attach` filing does, so this is that call and nothing more. It stays a
+ * thin wrapper on purpose: one path writes the link between a document and an intervention, and
+ * its idempotency, its RLS and its notification are tested once.
+ */
+export async function attachInboxDocument(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(attachInboxDocumentSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, itemId, logId } = parsed.data;
+
+  const result = await validateInboxItem({
+    boatId,
+    itemId,
+    kind: "attach",
+    logId,
+    // Read back from the intervention by the `attach` filing; sent only because the shared
+    // schema asks for them.
+    title: "",
+    date: todayString(),
+    categoryIds: [],
+    amount: null,
+    contactId: null,
+    supplierName: null,
+    notes: null,
+    engineHours: [],
+  });
+  return result.ok ? ok(undefined) : result;
 }
 
 /**

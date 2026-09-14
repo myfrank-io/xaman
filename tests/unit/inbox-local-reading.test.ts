@@ -36,13 +36,28 @@ const context: InboxContext = {
     { id: "eng-sb", label: "Moteur tribord", propulsion: "saildrive" },
   ],
   contacts: [
-    { id: "contact-yard", name: "Chantier naval du Port", company: null, specialty: "yard" },
-    { id: "contact-elec", name: "Marc Le Gall", company: "Marine Élec", specialty: "electrician" },
+    {
+      id: "contact-yard",
+      name: "Chantier naval du Port",
+      company: null,
+      specialty: "yard",
+      phone: null,
+      email: null,
+    },
+    {
+      id: "contact-elec",
+      name: "Marc Le Gall",
+      company: "Marine Élec",
+      specialty: "electrician",
+      phone: null,
+      email: null,
+    },
   ],
 };
 
 const INVOICE_TEXT = `CHANTIER NAVAL DU PORT
 12 quai des Pêcheurs, 56000 Vannes — SIRET 123 456 789 00012
+Tél. 02 97 40 11 22 — contact@chantier-du-port.fr
 FACTURE N° F-2026-0412
 Date : 12/03/2026  Échéance : 12/04/2026
 Bateau : Xaman — moteur tribord, compteur 1 245 h
@@ -108,6 +123,14 @@ describe("the local reader on an invoice", () => {
     expect(suggestion?.currency).toBe("EUR");
     expect(suggestion?.contactId).toBe("contact-yard");
     expect(suggestion?.supplierName).toBe("Chantier naval du Port");
+  });
+
+  /** D116: the block a person would copy by hand into a fiche prestataire. */
+  it("copies the issuer's own block, and never a SIRET for a phone number", () => {
+    expect(suggestion?.supplier.name).toBe("Chantier naval du Port");
+    expect(suggestion?.supplier.phone).toBe("02 97 40 11 22");
+    expect(suggestion?.supplier.email).toBe("contact@chantier-du-port.fr");
+    expect(suggestion?.supplier.address).toBe("12 quai des Pêcheurs, 56000 Vannes");
   });
 
   it("reads the hour meter of the engine the line names", () => {

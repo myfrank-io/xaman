@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 
 import { LogActions } from "@/components/logs/LogActions";
-import { LogDetail, type LogDetailCompletion } from "@/components/logs/LogDetail";
+import {
+  LogDetail,
+  type LogDetailCategory,
+  type LogDetailCompletion,
+} from "@/components/logs/LogDetail";
 import type { LogStatus } from "@/components/common/StatusBadge";
 import { parseEngineHours } from "@/components/logs/rows";
 import { formatDate } from "@/lib/format";
@@ -65,11 +69,38 @@ export default async function LogPage({
     log.updated_by
       ? supabase.from("profiles").select("full_name, email").eq("id", log.updated_by).maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from("boat_categories").select("id, name, color, icon").eq("boat_id", boatId),
+    supabase
+      .from("boat_categories")
+      .select("id, name, color, icon, is_active")
+      .eq("boat_id", boatId),
     // Documents of the intervention with their signed URLs (E10-1); a Storage hiccup must not
     // take the whole sheet down, so it degrades to an empty gallery.
     listAttachments(supabase, boatId, { type: "maintenance_log", id: logId }).catch(() => []),
   ]);
+
+  // Tous les systèmes de l'intervention (D114), le principal en tête : c'est lui que la ligne
+  // garde dans sa colonne, et la vue les liste dans l'ordre du bateau.
+  const byId = new Map((categories ?? []).map((row) => [row.id, row]));
+  const ordered = [
+    ...(log.category_id ? [log.category_id] : []),
+    ...(log.category_ids ?? []).filter((id) => id !== log.category_id),
+  ];
+  const logCategories: LogDetailCategory[] = ordered.flatMap((id) => {
+    const category = byId.get(id);
+    return category
+      ? [
+          {
+            id: category.id,
+            name: category.name,
+            color: category.color,
+            icon: category.icon,
+            // The view only knows whether the *principal* is archived; the others are read
+            // from the list, which carries `is_active` for every one of them.
+            archived: category.is_active === false,
+          },
+        ]
+      : [];
+  });
 
   const canWrite = can(boatRole, "write");
   const canEdit = canWrite || (boatRole === "pro" && log.created_by === auth.user?.id);
@@ -96,11 +127,7 @@ export default async function LogPage({
         title: log.title ?? "",
         performedAt: log.performed_at ?? "",
         status: (log.status ?? "done") as LogStatus,
-        categoryId: log.category_id,
-        categoryName: log.category_name,
-        categoryColor: log.category_color,
-        categoryIcon: categories?.find((row) => row.id === log.category_id)?.icon ?? null,
-        categoryArchived: log.category_is_active === false,
+        categories: logCategories,
         cost: log.cost,
         notes: log.notes,
         equipmentName: log.equipment_name,
@@ -133,7 +160,7 @@ export default async function LogPage({
             log={{
               id: log.id,
               title: log.title ?? "",
-              categoryId: log.category_id,
+              categoryIds: logCategories.map((category) => category.id),
               contactId: log.contact_id,
               equipmentId: log.equipment_id,
               engineHours,

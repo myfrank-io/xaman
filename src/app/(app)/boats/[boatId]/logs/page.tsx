@@ -94,7 +94,10 @@ export default async function LogsPage({
     // No purchase drawn from the stock: the filter must return nothing, not everything.
     rowsQuery = rowsQuery.in("id", ids.length > 0 ? ids : [NO_MATCH_ID]);
   } else if (filters.category) {
-    rowsQuery = rowsQuery.eq("category_id", filters.category);
+    // `contains`, not `eq` : depuis D114 une intervention porte plusieurs systèmes, et le filtre
+    // doit la trouver sous chacun d'eux, pas seulement sous le principal. `category_ids` retombe
+    // sur la colonne seule quand la liaison est vide, donc une ligne importée reste filtrable.
+    rowsQuery = rowsQuery.contains("category_ids", [filters.category]);
   }
   if (isLogStatus(filters.status)) rowsQuery = rowsQuery.eq("status", filters.status);
   if (filters.review) rowsQuery = rowsQuery.eq("needs_review", true);

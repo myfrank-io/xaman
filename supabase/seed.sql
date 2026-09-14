@@ -50,8 +50,12 @@ insert into public.engines (id, boat_id, label, position, brand, external_ref, c
 values ('00000000-0000-0000-0000-00000000e001', '00000000-0000-0000-0000-00000000b001', 'Moteur', 'center', 'Test', 'test-engine', '00000000-0000-0000-0000-000000000011')
 on conflict (id) do nothing;
 
+-- Deux systèmes, pas un : une intervention en porte plusieurs depuis D114, et la matrice RLS de
+-- `maintenance_log_categories` a besoin d'un second pour distinguer « lié » de « à lier ».
 insert into public.boat_categories (id, boat_id, name, color, icon, sort_order, template_category_id, external_ref, created_by)
-values ('00000000-0000-0000-0000-00000000ca01', '00000000-0000-0000-0000-00000000b001', 'Moteurs', '#D97706', 'cog', 1, '00000000-0000-0000-0000-0000000000a1', 'engines', '00000000-0000-0000-0000-000000000011')
+values
+  ('00000000-0000-0000-0000-00000000ca01', '00000000-0000-0000-0000-00000000b001', 'Moteurs', '#D97706', 'cog', 1, '00000000-0000-0000-0000-0000000000a1', 'engines', '00000000-0000-0000-0000-000000000011'),
+  ('00000000-0000-0000-0000-00000000ca02', '00000000-0000-0000-0000-00000000b001', 'Coque & Pont', '#0E7490', 'ship', 2, null, 'hull_deck', '00000000-0000-0000-0000-000000000011')
 on conflict (id) do nothing;
 
 insert into public.contacts (id, boat_id, name, specialty, external_ref, created_by)
@@ -72,6 +76,14 @@ values
   ('00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-00000000b001', 'Vidange (owner)', '00000000-0000-0000-0000-00000000ca01', 'done', '2026-03-01', 120, 'test-log-owner', '00000000-0000-0000-0000-000000000011'),
   ('00000000-0000-0000-0000-000000002002', '00000000-0000-0000-0000-00000000b001', 'Vidange (pro)', '00000000-0000-0000-0000-00000000ca01', 'done', '2026-04-01', 300, 'test-log-pro', '00000000-0000-0000-0000-000000000013')
 on conflict (id) do nothing;
+
+-- Le système principal est aussi une liaison (D114) : `saveLog` écrit les deux, la reprise de
+-- `0032` aussi, et une intervention posée ici sans elle ne ressemblerait à aucune vraie ligne.
+insert into public.maintenance_log_categories (log_id, category_id, boat_id, created_by)
+values
+  ('00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-00000000ca01', '00000000-0000-0000-0000-00000000b001', '00000000-0000-0000-0000-000000000011'),
+  ('00000000-0000-0000-0000-000000002002', '00000000-0000-0000-0000-00000000ca01', '00000000-0000-0000-0000-00000000b001', '00000000-0000-0000-0000-000000000013')
+on conflict do nothing;
 
 insert into public.checklist_items (id, boat_id, category_id, label, interval_months, interval_hours, engine_id, source, template_item_id, external_ref, created_by)
 values ('00000000-0000-0000-0000-000000003001', '00000000-0000-0000-0000-00000000b001', '00000000-0000-0000-0000-00000000ca01', 'Vidange huile moteur — Moteur', 12, 250, '00000000-0000-0000-0000-00000000e001', 'template', '00000000-0000-0000-0000-0000000000a2', 'eng-oil:test-engine', '00000000-0000-0000-0000-000000000011')

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch, type FieldError } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ChevronDownIcon, ChevronRightIcon, GaugeIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, GaugeIcon } from "lucide-react";
 import type { z } from "zod";
 
 import {
@@ -13,9 +13,10 @@ import {
   pendingRows,
   type PickedAttachment,
 } from "@/components/attachments/AttachmentPicker";
-import { CategoryChips, type CategoryChoice } from "@/components/common/CategoryChips";
+import { CategoryChipsMulti, type CategoryChoice } from "@/components/common/CategoryChips";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ContactPicker } from "@/components/contacts/ContactPicker";
+import { SupplierSuggestion } from "@/components/contacts/SupplierSuggestion";
 import type { ContactOption } from "@/components/contacts/specialties";
 import { DiscardDialog } from "@/components/forms/DiscardDialog";
 import { Field } from "@/components/forms/Field";
@@ -35,6 +36,7 @@ import { TitleSuggestions } from "@/components/logs/TitleSuggestions";
 import { useTitleSuggestions } from "@/components/logs/use-title-suggestions";
 import type {
   LogFormChoice,
+  LogFormDocument,
   LogFormEngine,
   LogFormPrefill,
   LogFormValues,
@@ -49,6 +51,7 @@ import { NumericField } from "@/components/ui/numeric-field";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { saveAttachments } from "@/lib/actions/attachments";
+import { attachInboxDocument } from "@/lib/actions/inbox";
 import { saveLog, suggestChecklistItems, type ItemSuggestion } from "@/lib/actions/logs";
 import { formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
@@ -56,6 +59,7 @@ import type { AttachmentItem } from "@/lib/queries/attachments";
 import { logPath, logsPath } from "@/lib/queries/boat-routes";
 import {
   FUTURE_ALLOWED_STATUSES,
+  LOG_CATEGORIES_MAX,
   saveLogSchema,
   SEGMENT_STATUSES,
   type LogStatusValue,
@@ -68,7 +72,7 @@ type LogFormState = {
   boatId: string;
   expectedUpdatedAt?: string;
   title: string;
-  categoryId: string;
+  categoryIds: string[];
   status: LogStatusValue;
   performedAt: string;
   cost: string;
@@ -100,6 +104,7 @@ export function LogForm({
   equipment,
   haulOuts,
   attachments = [],
+  sourceDocument,
   canCreateContact,
 }: {
   boatId: string;
@@ -114,10 +119,16 @@ export function LogForm({
   haulOuts: LogFormChoice[];
   /** Documents already stored on this intervention (E10-1); empty on a creation. */
   attachments?: AttachmentItem[];
+  /**
+   * The document this intervention starts from (D115): already in the inbox, already read, and
+   * hung on the intervention the moment it is saved.
+   */
+  sourceDocument?: LogFormDocument;
   canCreateContact: boolean;
 }) {
   const t = useTranslations("logs.form");
   const ta = useTranslations("attachments");
+  const ti = useTranslations("inbox");
   const tc = useTranslations("common");
   const ts = useTranslations("logStatus");
   const errorMessage = useErrorMessage();
@@ -130,8 +141,8 @@ export function LogForm({
   // Redrawn after « Enregistrer et en saisir une autre »: each line is its own row, and the
   // upsert stays idempotent on the id the form opened with (rule 11).
   const [newId, setNewId] = useState(() => crypto.randomUUID());
-  // What this boat last wrote (D95): the category and who did the work come back on their own.
-  const lastCategory = useLastUsed<string>(boatId, "log.category");
+  // What this boat last wrote (D95): the systems and who did the work come back on their own.
+  const lastCategory = useLastUsed<string[]>(boatId, "log.categories");
   const lastContact = useLastUsed<string>(boatId, "log.contact");
   // Which of the two submit buttons was pressed, read by the submit it precedes.
   const another = useRef(false);
@@ -148,14 +159,14 @@ export function LogForm({
     boatId,
     expectedUpdatedAt: log?.updatedAt,
     title: log?.title ?? prefill?.title ?? "",
-    categoryId: log?.categoryId ?? prefill?.categoryId ?? "",
+    categoryIds: log?.categoryIds ?? prefill?.categoryIds ?? [],
     status: log?.status ?? "done",
     performedAt: log?.performedAt ?? prefill?.performedAt ?? todayString(),
-    cost: numberToInput(log?.cost ?? null),
+    cost: numberToInput(log?.cost ?? null) || (prefill?.cost ?? ""),
     contactId: log?.contactId ?? prefill?.contactId ?? null,
     equipmentId: log?.equipmentId ?? prefill?.equipmentId ?? null,
     haulOutId: log?.haulOutId ?? null,
-    notes: textToInput(log?.notes),
+    notes: textToInput(log?.notes) || (prefill?.notes ?? ""),
     engineHours: initialHours,
     checklistItemIds: log?.checklistItemIds ?? prefill?.checklistItemIds ?? [],
   };
@@ -172,7 +183,7 @@ export function LogForm({
   // useForm(), and this form re-renders on every keystroke.
   const control = form.control;
   const title = useWatch({ control, name: "title" });
-  const categoryId = useWatch({ control, name: "categoryId" });
+  const categoryIds = useWatch({ control, name: "categoryIds" });
   const status = useWatch({ control, name: "status" });
   const performedAt = useWatch({ control, name: "performedAt" });
   const hourValues = useWatch({ control, name: "engineHours" });
@@ -186,7 +197,7 @@ export function LogForm({
   const [hoursOpen, setHoursOpen] = useState(
     Boolean(prefill?.expandHours) ||
       initialHours.some((row) => row.hours !== "") ||
-      engineCategoryIds.includes(defaultValues.categoryId),
+      defaultValues.categoryIds.some((id) => engineCategoryIds.includes(id)),
   );
   const [detailsOpen, setDetailsOpen] = useState(
     Boolean(defaultValues.equipmentId || defaultValues.haulOutId),
@@ -201,6 +212,10 @@ export function LogForm({
     items: [],
   });
   const [serverError, setServerError] = useState<string | null>(null);
+  // A fiche created from the document (D116) has to reach the picker of *this* form at once,
+  // without a round trip to the server that would lose everything already typed.
+  const [extraContacts, setExtraContacts] = useState<ContactOption[]>([]);
+  const knownContacts = extraContacts.length === 0 ? contacts : [...contacts, ...extraContacts];
   // Documents (E10-1). On a creation their objects go up while the form is being typed — the id
   // of the intervention is drawn at open — and their rows are written once it exists.
   const [picked, setPicked] = useState<PickedAttachment[]>([]);
@@ -221,13 +236,11 @@ export function LogForm({
     if (log || applied.current) return;
     if (rememberedCategory === null && rememberedContact === null) return;
     applied.current = true;
-    if (
-      rememberedCategory &&
-      !prefill?.categoryId &&
-      form.getValues("categoryId") === "" &&
-      categories.some((category) => category.id === rememberedCategory)
-    ) {
-      form.setValue("categoryId", rememberedCategory, { shouldDirty: false });
+    const known = (rememberedCategory ?? []).filter((id) =>
+      categories.some((category) => category.id === id),
+    );
+    if (known.length > 0 && !prefill?.categoryIds && form.getValues("categoryIds").length === 0) {
+      form.setValue("categoryIds", known, { shouldDirty: false });
     }
     if (
       rememberedContact &&
@@ -242,7 +255,7 @@ export function LogForm({
     contacts,
     form,
     log,
-    prefill?.categoryId,
+    prefill?.categoryIds,
     prefill?.contactId,
     rememberedCategory,
     rememberedContact,
@@ -258,15 +271,16 @@ export function LogForm({
   }, [watched, saveDraft, log]);
 
   // Checklist points named by this title, in this category (E3-3b).
+  const categoryKey = categoryIds.join(",");
   useEffect(() => {
     const trimmed = title.trim();
-    if (!categoryId || trimmed.length < MIN_MATCH_CHARS) return;
+    if (categoryKey === "" || trimmed.length < MIN_MATCH_CHARS) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      suggestChecklistItems({ boatId, categoryId, title: trimmed })
+      suggestChecklistItems({ boatId, categoryIds: categoryKey.split(","), title: trimmed })
         .then((result) => {
           if (cancelled || !result.ok) return;
-          setSuggested({ key: `${categoryId}|${trimmed}`, items: result.data });
+          setSuggested({ key: `${categoryKey}|${trimmed}`, items: result.data });
           // Pre-tick a fresh entry (D3); an edited one keeps the points it already carries.
           if (log) return;
           const current = form.getValues("checklistItemIds");
@@ -285,13 +299,13 @@ export function LogForm({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [boatId, categoryId, title, form, log]);
+  }, [boatId, categoryKey, title, form, log]);
 
   const hoursByEngine: Record<string, string> = {};
   for (const row of hourValues) hoursByEngine[row.engineId] = row.hours;
 
   const matches =
-    suggested.key === `${categoryId}|${title.trim()}` && title.trim().length >= MIN_MATCH_CHARS
+    suggested.key === `${categoryKey}|${title.trim()}` && title.trim().length >= MIN_MATCH_CHARS
       ? suggested.items
       : [];
   // Le statut décide du sens de la date (D82). « Planifié » et « Urgent » se datent devant —
@@ -319,7 +333,7 @@ export function LogForm({
       boatId,
       expectedUpdatedAt: undefined,
       title: "",
-      categoryId: values.categoryId,
+      categoryIds: values.categoryIds,
       status: values.status,
       performedAt: values.performedAt,
       cost: "",
@@ -335,14 +349,14 @@ export function LogForm({
     setPicked([]);
     setFocusEngineId(null);
     setDetailsOpen(false);
-    setHoursOpen(engineCategoryIds.includes(values.categoryId));
+    setHoursOpen(values.categoryIds.some((id) => engineCategoryIds.includes(id)));
     if (values.status !== "urgent") setSegment(values.status as Segment);
     // The hand goes back where the next line starts, without a scroll.
     form.setFocus("title");
   }
 
   function remember(values: LogOutput) {
-    lastCategory.remember(values.categoryId);
+    lastCategory.remember(values.categoryIds);
     lastContact.remember(values.contactId);
   }
 
@@ -371,7 +385,9 @@ export function LogForm({
         action: saveLog,
         enqueue: outbox.enqueue,
         online,
-        allowQueue: !log,
+        // Never queued when a document opened the form (D115): the reading came from the
+        // network anyway, and a line saved on the iPad would leave its document behind.
+        allowQueue: !log && !sourceDocument,
       });
       if (outcome.status === "full") {
         setServerError(to("queueFull"));
@@ -401,6 +417,17 @@ export function LogForm({
       if (rows.length > 0) {
         const committed = await saveAttachments({ boatId, items: rows });
         if (!committed.ok) toast.error(ta("commitFailed"));
+      }
+      // The document the intervention started from joins it, by the very path « Valider » takes
+      // from « À valider » (D115). A refusal is said and nothing else: the intervention is
+      // written, and the document is still on its card, one tap from the same outcome.
+      if (sourceDocument) {
+        const joined = await attachInboxDocument({
+          boatId,
+          itemId: sourceDocument.itemId,
+          logId: result.data.logId,
+        });
+        if (!joined.ok) toast.error(ti("attachFailed"));
       }
       draft.clear();
       remember(values);
@@ -436,6 +463,25 @@ export function LogForm({
     <form onSubmit={submitForm} noValidate className="flex flex-col gap-6">
       <PageHeader title={log ? t("editTitle") : t("newTitle")} />
 
+      {/* The document the intervention was started from (D115): it is already in « À valider »,
+          and joins this intervention's attachments the moment it is saved. Saying which one, and
+          saying when the reading proposed a purchase instead, is what keeps the screen honest. */}
+      {sourceDocument ? (
+        <Alert>
+          <AlertDescription className="flex flex-col gap-1">
+            <span className="flex items-center gap-2">
+              <FileTextIcon aria-hidden className="size-4 shrink-0" />
+              <span className="truncate">
+                {t("fromDocument", { name: sourceDocument.fileName })}
+              </span>
+            </span>
+            {sourceDocument.kind === "purchase" ? (
+              <span className="text-caption text-ink-2">{ti("looksLikePurchase")}</span>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {draft.draft && !log ? (
         <Alert>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
@@ -446,7 +492,11 @@ export function LogForm({
                 size="sm"
                 onClick={() => {
                   const found = draft.draft;
-                  if (found) form.reset({ ...found, id: form.getValues("id") });
+                  // Rebased on the current defaults, never used raw: a draft written before
+                  // D114 carries `categoryId` and no `categoryIds` at all, and resetting to it
+                  // would hand the chips an undefined list. What the older shape does not name,
+                  // the form's own defaults still answer for.
+                  if (found) form.reset({ ...defaultValues, ...found, id: form.getValues("id") });
                   draft.dismiss();
                 }}
               >
@@ -494,8 +544,12 @@ export function LogForm({
             onPick={(suggestion) => {
               form.setValue("title", suggestion.title, { shouldDirty: true });
               if (suggestion.categoryId) {
-                form.setValue("categoryId", suggestion.categoryId, { shouldDirty: true });
-                if (engineCategoryIds.includes(suggestion.categoryId)) setHoursOpen(true);
+                const picked = suggestion.categoryId;
+                const current = form.getValues("categoryIds");
+                if (!current.includes(picked)) {
+                  form.setValue("categoryIds", [...current, picked], { shouldDirty: true });
+                }
+                if (engineCategoryIds.includes(picked)) setHoursOpen(true);
               }
               if (suggestion.engineId) {
                 setHoursOpen(true);
@@ -516,22 +570,26 @@ export function LogForm({
         </Label>
         <Controller
           control={form.control}
-          name="categoryId"
+          name="categoryIds"
           render={({ field }) => (
-            <CategoryChips
+            <CategoryChipsMulti
               categories={categories}
-              value={field.value}
-              onValueChange={(id) => {
-                field.onChange(id);
-                if (engineCategoryIds.includes(id)) setHoursOpen(true);
+              values={field.value}
+              onValuesChange={(ids) => {
+                field.onChange(ids);
+                if (ids.some((id) => engineCategoryIds.includes(id))) setHoursOpen(true);
               }}
+              max={LOG_CATEGORIES_MAX}
               label={t("category")}
             />
           )}
         />
-        {errors.categoryId ? (
+        <p className="text-caption text-ink-3">{t("categoryMultiHelp")}</p>
+        {errors.categoryIds ? (
           <p role="alert" className="text-caption font-medium text-state-overdue-fg">
-            {fieldError(errors.categoryId)}
+            {/* An array field carries its own issue alongside its items'; « aucun système
+                coché » is the field's, and that is the one shown. */}
+            {fieldError(errors.categoryIds as FieldError)}
           </p>
         ) : null}
       </div>
@@ -646,15 +704,30 @@ export function LogForm({
             control={form.control}
             name="contactId"
             render={({ field }) => (
-              <ContactPicker
-                id="log-contact"
-                boatId={boatId}
-                contacts={contacts}
-                value={field.value}
-                onValueChange={field.onChange}
-                canCreate={canCreateContact}
-                label={t("by")}
-              />
+              <>
+                <ContactPicker
+                  id="log-contact"
+                  boatId={boatId}
+                  contacts={knownContacts}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  canCreate={canCreateContact}
+                  label={t("by")}
+                />
+                {/* Who the document says did the work (D116): recognised here, or created with
+                    everything the invoice carries rather than retyped from it. */}
+                <SupplierSuggestion
+                  boatId={boatId}
+                  supplier={prefill?.supplier}
+                  contacts={knownContacts}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onContactCreated={(contact) =>
+                    setExtraContacts((current) => [...current, contact])
+                  }
+                  canCreate={canCreateContact}
+                />
+              </>
             )}
           />
         </div>
@@ -758,7 +831,7 @@ export function LogForm({
 
       <FormActionBar
         pending={pending}
-        queueable={!log}
+        queueable={!log && !sourceDocument}
         secondaryLabel={log ? undefined : t("saveAndNew")}
         onSecondary={
           log
