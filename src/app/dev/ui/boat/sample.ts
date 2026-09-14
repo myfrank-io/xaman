@@ -8,6 +8,7 @@ import type {
 } from "@/components/engines/EngineSheet";
 import type { EngineSummary } from "@/components/engines/EnginesTab";
 import type { CategorySummary, EquipmentSummary } from "@/components/equipment/EquipmentTab";
+import type { BoatModelData } from "@/components/boat-3d/BoatModel3D";
 import type { BoatModelOption } from "@/lib/boat-models";
 
 import { DEV_BOAT_ID } from "../DevShell";
@@ -102,11 +103,24 @@ export const SAMPLE_ENGINES: EngineSummary[] = [
   },
 ];
 
+/** The template's own word for each system, as the seeds write it (`orc50-checklist.json`). */
+const CATEGORY_REFS: Record<string, string> = {
+  engines: "engines",
+  daggerboards: "daggerboards_rudders",
+  sails: "sails_rigging",
+  hull: "hull_deck",
+  electronics: "electronics_nav",
+  energy: "energy",
+  plumbing: "plumbing_systems",
+  safety: "safety",
+};
+
 export const SAMPLE_EQUIPMENT_CATEGORIES: CategorySummary[] = SAMPLE_CATEGORIES.map((c) => ({
   id: c.id,
   name: c.name,
   color: c.color,
   icon: c.icon,
+  externalRef: CATEGORY_REFS[c.id] ?? null,
 }));
 
 export const SAMPLE_EQUIPMENT: EquipmentSummary[] = [
@@ -178,6 +192,114 @@ export const SAMPLE_EQUIPMENT: EquipmentSummary[] = [
     quantity: 1,
     categoryId: "safety",
     installedAt: "2024-04-01",
+    removedAt: null,
+  },
+  // The lines the 3D model reads: the boat is drawn with the boards, the skirts, the sprit and
+  // the sail areas the carnet records, not from a generic catamaran (E2-8).
+  {
+    id: "q9",
+    name: "Dérives sabres carbone",
+    brand: "Marsaudon Composites",
+    model: null,
+    quantity: 2,
+    categoryId: "daggerboards",
+    installedAt: "2019-05-01",
+    removedAt: null,
+  },
+  {
+    id: "q10",
+    name: "Safrans suspendus",
+    brand: null,
+    model: null,
+    quantity: 2,
+    categoryId: "daggerboards",
+    installedAt: "2019-05-01",
+    removedAt: null,
+  },
+  {
+    id: "q11",
+    name: "Jupes de flotteur allongées",
+    brand: null,
+    model: null,
+    quantity: 2,
+    categoryId: "hull",
+    installedAt: "2019-05-01",
+    removedAt: null,
+    specs: { allongement_cm: 60 },
+  },
+  {
+    id: "q12",
+    name: "Grand-voile (GV)",
+    brand: "Incidence",
+    model: "Hydranet",
+    quantity: 1,
+    categoryId: "sails",
+    installedAt: "2019-05-01",
+    removedAt: null,
+    specs: { surface_m2: 88, tissu: "Hydranet" },
+  },
+  {
+    id: "q13",
+    name: "J1 (Génois)",
+    brand: "Incidence",
+    model: "Hydranet",
+    quantity: 1,
+    categoryId: "sails",
+    installedAt: "2019-05-01",
+    removedAt: null,
+    specs: { surface_m2: 60 },
+  },
+  {
+    id: "q14",
+    name: "Code 0 (J0) sur bout-dehors",
+    brand: "Incidence",
+    model: "PX Black",
+    quantity: 1,
+    categoryId: "sails",
+    installedAt: "2021-06-01",
+    removedAt: null,
+    specs: { surface_m2: 87.5 },
+  },
+  {
+    id: "q15",
+    name: "Panneaux solaires monocristallins",
+    brand: "Victron",
+    model: null,
+    quantity: 6,
+    categoryId: "energy",
+    installedAt: "2023-02-01",
+    removedAt: null,
+    specs: { puissance_w: 990, emplacement: "Sur bossoirs" },
+  },
+  {
+    id: "q16",
+    name: "Guindeau électrique",
+    brand: "Lofrans",
+    model: null,
+    quantity: 1,
+    categoryId: "hull",
+    installedAt: "2019-05-01",
+    removedAt: null,
+  },
+  {
+    id: "q17",
+    name: "Ancre",
+    brand: "Spade",
+    model: null,
+    quantity: 1,
+    categoryId: "hull",
+    installedAt: "2019-05-01",
+    removedAt: null,
+    specs: { poids_kg: 25 },
+  },
+  {
+    id: "q18",
+    name: "Starlink",
+    brand: "Starlink",
+    model: "RUTX10",
+    quantity: 1,
+    categoryId: "electronics",
+    installedAt: "2024-01-15",
     removedAt: null,
   },
   {
@@ -403,3 +525,117 @@ export const SAMPLE_BOAT_MODELS: BoatModelOption[] = [
     draftM: null,
   },
 ];
+
+/**
+ * The 3D model's own sample (E2-8): the same boat, its systems, and a handful of points in
+ * every state so the pins, the badges and the « rien à faire » case are all on screen at once.
+ */
+export const SAMPLE_MODEL: BoatModelData = {
+  shape: {
+    type: SAMPLE_BOAT.type ?? "catamaran",
+    lengthM: SAMPLE_BOAT.length_m,
+    beamM: SAMPLE_BOAT.beam_m,
+    draftM: SAMPLE_BOAT.draft_m,
+    engines: SAMPLE_ENGINES.filter((engine) => engine.isActive).map((engine) => ({
+      id: engine.id,
+      position: engine.position,
+    })),
+  },
+  categories: SAMPLE_EQUIPMENT_CATEGORIES.map((category) => ({
+    id: category.id,
+    externalRef: category.externalRef ?? null,
+  })),
+  equipment: SAMPLE_EQUIPMENT.filter((item) => !item.removedAt).map((item) => ({
+    id: item.id,
+    name: item.name,
+    brand: item.brand,
+    model: item.model,
+    quantity: item.quantity,
+    categoryId: item.categoryId,
+    externalRef: item.externalRef ?? null,
+    specs: item.specs ?? null,
+  })),
+  points: [
+    {
+      id: "p1",
+      label: "Contrôle du gréement dormant",
+      state: "overdue",
+      daysRemaining: -126,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "sails",
+      engineId: null,
+    },
+    {
+      id: "p2",
+      label: "Lattes et chariots de grand-voile",
+      state: "soon",
+      daysRemaining: 12,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "sails",
+      engineId: null,
+    },
+    {
+      id: "p3",
+      label: "Chaîne de mouillage : marquage et manille",
+      state: "overdue",
+      daysRemaining: -18,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "hull",
+      engineId: null,
+    },
+    {
+      id: "p4",
+      label: "Anodes de saildrive",
+      state: "soon",
+      daysRemaining: 21,
+      hoursRemaining: 40,
+      hasCounter: true,
+      categoryId: "engines",
+      engineId: SAMPLE_ENGINES[0]?.id ?? null,
+    },
+    {
+      id: "p5",
+      label: "Vidange moteur",
+      state: "ok",
+      daysRemaining: 180,
+      hoursRemaining: 210,
+      hasCounter: true,
+      categoryId: "engines",
+      engineId: SAMPLE_ENGINES[1]?.id ?? null,
+    },
+    {
+      id: "p6",
+      label: "Joints de dérives",
+      state: "never",
+      daysRemaining: null,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "daggerboards",
+      engineId: null,
+    },
+    {
+      id: "p7",
+      label: "Percussion du radeau de survie",
+      state: "soon",
+      daysRemaining: 27,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "safety",
+      engineId: null,
+    },
+    {
+      id: "p8",
+      label: "Filtres du dessalinisateur",
+      state: "ok",
+      daysRemaining: 95,
+      hoursRemaining: null,
+      hasCounter: true,
+      categoryId: "plumbing",
+      engineId: null,
+    },
+  ],
+  engines: SAMPLE_ENGINES.map((engine) => ({ id: engine.id, label: engine.label })),
+};

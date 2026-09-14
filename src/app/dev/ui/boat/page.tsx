@@ -13,6 +13,7 @@ import {
   SAMPLE_ENGINES,
   SAMPLE_EQUIPMENT,
   SAMPLE_EQUIPMENT_CATEGORIES,
+  SAMPLE_MODEL,
 } from "./sample";
 
 /**
@@ -47,6 +48,8 @@ export default async function DevBoatPage({
         {!only || only === "equipment" ? (
           <EquipmentTab
             boatId={DEV_BOAT_ID}
+            boatName={SAMPLE_BOAT.name}
+            model={SAMPLE_MODEL}
             items={SAMPLE_EQUIPMENT}
             categories={SAMPLE_EQUIPMENT_CATEGORIES}
             stock={{

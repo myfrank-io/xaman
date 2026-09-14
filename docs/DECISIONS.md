@@ -2563,6 +2563,56 @@ lui faire (`AUTOPILOT.md §10`).
 heures sans `engine_scope` est refusé — une heure se lit sur un moteur ; un consommable sans nom est
 refusé, parce que c'est le stock d'E17-8 qu'il irait remplir de lignes anonymes.
 
+## 2026-09-14 — D117 : le bateau en 3D, dessiné par nous, sur l'onglet Équipements
+
+**Question.** Demande de Joseph : « sur cette page modélise le bateau qui tourne tout seul en 3D
+avec tous les éléments cliquables pour savoir quoi faire dessus ». Trois questions en une : avec
+quoi rendre de la 3D, quel bateau afficher, et à quoi un « élément » correspond dans le carnet.
+
+**Décision.**
+
+1. **Aucune bibliothèque 3D.** Le rendu est écrit dans `src/lib/boat-3d/` : un maillage de faces
+   plates, une caméra en orbite, l'algorithme du peintre, un `<canvas>` 2D. Environ 270 faces par
+   image, rien d'alloué dans la boucle d'animation.
+2. **Le bateau est paramétrique**, construit dans le navigateur à partir de ce que le carnet
+   sait : `type`, `length_m`, `beam_m`, `draft_m` et les moteurs actifs (un `engine_position` =
+   une place sous une coque). Aucun fichier de modèle n'est téléchargé. Dimensions absentes — le
+   cas normal, `boats.length_m` est facultatif — le gabarit du type est dessiné.
+2 bis. **L'inventaire dessine le bateau** (`src/lib/boat-3d/features.ts`). Ce n'est pas la photo
+   d'un ORC 50 avec un autre nom dessus : chaque trait vient d'une ligne d'`equipment`, lue par
+   ses mots et par ses `specs`. « Dérives sabres » pose des dérives, « Safrans suspendus » accroche
+   les safrans aux tableaux arrière, « Jupes de flotteur allongées » fait sortir la coque de l'eau
+   en pente longue, `surface_m2: 88` donne sa bôme à la grand-voile, `emplacement: "Sur bossoirs"`
+   met les panneaux sur le portique et non sur le roof, « Winch … pied de mât tribord » pose le
+   winch du bon côté. Un carnet vide dessine une coque, un gréement et des safrans — rien d'autre,
+   jusqu'à ce qu'on le lui dise. C'est aussi ce qui rend le document du chantier payant : chaque
+   ligne qu'il verse affine le dessin le jour même, sans migration ni retouche. Une ligne sous la
+   maquette nomme ce qu'elle doit au carnet (« Dessinée d'après le carnet : 88 m² de grand-voile ·
+   dérives · safrans suspendus … »), et le dit quand le carnet ne dit encore rien.
+3. **Un « élément » est une zone physique**, pas une catégorie : mât, grand-voile, voiles d'avant,
+   étrave, traverse, trampoline, roof, cockpit, coques, circuits, sécurité, dérives, safrans, et
+   une zone par moteur. Équipements et points de checklist y sont **routés par les mots de leur
+   libellé d'abord** (« safran » est un safran quel que soit le système où il est classé), par
+   l'`external_ref` de la catégorie ensuite, par la coque en dernier recours : rien n'est jamais
+   injoignable.
+4. **Trois chemins vers la même chose** : la maquette (glisser pour tourner, toucher pour
+   choisir), les pastilles — posées **seulement** sur ce qui est en retard ou bientôt dû — et la
+   liste à côté, qui porte toutes les zones, y compris celles qui n'ont rien à signaler.
+
+**Raison.** `three.js` pèse un demi-mégaoctet pour faire exactement ce que trois cents lignes font
+ici, et la règle 10 refuse une dépendance lourde sans raison ; au ponton en 4G, ce demi-mégaoctet
+est la différence entre un écran qui s'ouvre et un écran qui attend. Un fichier `.glb` par bateau
+aurait été pire : il faudrait le produire, l'héberger, et il mentirait sur tous les bateaux sauf
+un. Le routage par les mots avant la catégorie vient de l'inventaire de Xaman : « Safrans
+suspendus » et « Dérives sabres carbone » sont dans la **même** catégorie (`daggerboards_rudders`)
+et sont deux endroits différents du bateau — une maquette qui les confond ne sert à rien.
+
+**Ce que ça ne fait pas.** Aucune position n'est stockée en base : ni une zone, ni un trait de la
+coque. Tout est **calculé** à l'affichage, jamais saisi. Personne n'a donc à placer ses trente-six équipements sur un plan avant que l'écran serve
+à quelque chose, et un équipement ajouté demain trouve sa place tout seul. Le jour où quelqu'un
+voudra corriger un placement, ce sera une colonne de plus sur `equipment` et une exception devant
+les règles de mots — pas une refonte.
+
 ## 2026-09-14 — D118 : une intervention porte plusieurs systèmes
 
 **Question.** Le formulaire d'intervention n'accepte qu'une catégorie. Une visite de mécanicien —
