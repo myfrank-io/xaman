@@ -1180,6 +1180,15 @@ export function heuristicSuggestion(
     documentType,
     kind,
     purchaseKind,
+    /**
+     * The local reader never names a family and never proposes a batch (E17-1, D92). Recognising
+     * a delivery note from a quote is a judgement about a page, not a pattern in its text, and a
+     * wrong family would explain a line with the wrong authority — which is the one thing the
+     * family is there to get right. `unknown` is the honest answer, and an empty batch is what an
+     * invoice or a receipt produces anyway.
+     */
+    documentFamily: "unknown",
+    batch: [],
     title,
     date: date?.date ?? null,
     amount: total?.amount ?? null,

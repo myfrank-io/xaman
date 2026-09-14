@@ -207,6 +207,7 @@ async function loadContext(
     { data: engines },
     { data: contacts },
     { data: deadlineItems },
+    { data: equipmentKinds },
   ] = await Promise.all([
     admin.from("boats").select("name, type").eq("id", boatId).maybeSingle(),
     admin
@@ -236,6 +237,13 @@ async function loadContext(
       .eq("is_active", true)
       .is("interval_hours", null)
       .order("sort_order"),
+    // The families (E17-3), so an inventory document is read by family rather than by label
+    // (`AUTOPILOT.md §2.3` rule 5). Platform data, the same list for every boat.
+    admin
+      .from("equipment_kinds")
+      .select("external_ref, label, category_ref")
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
   const categoryNames = new Map((categories ?? []).map((row) => [row.id, row.name]));
   return {
@@ -246,6 +254,11 @@ async function loadContext(
       id: row.id,
       name: row.name,
       externalRef: row.external_ref,
+    })),
+    equipmentKinds: (equipmentKinds ?? []).map((row) => ({
+      externalRef: row.external_ref,
+      label: row.label,
+      categoryRef: row.category_ref,
     })),
     engines: (engines ?? []).map((row) => ({
       id: row.id,
