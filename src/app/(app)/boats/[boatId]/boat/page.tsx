@@ -20,6 +20,12 @@ import { createClient } from "@/lib/supabase/server";
  * Boat screen (tab 4, D34, D37): the identity is the heading, then two lists — the engines
  * and, with the equipment, the spare-parts stock. The tab is kept in the URL.
  */
+/** `equipment.specs` is jsonb: anything could be in there, so only a plain object survives. */
+function specsRecord(specs: unknown): Record<string, unknown> | null {
+  if (!specs || typeof specs !== "object" || Array.isArray(specs)) return null;
+  return specs as Record<string, unknown>;
+}
+
 export default async function BoatPage({
   params,
   searchParams,
@@ -61,7 +67,7 @@ export default async function BoatPage({
     supabase
       .from("equipment")
       .select(
-        "id, name, brand, model, quantity, category_id, installed_at, removed_at, external_ref",
+        "id, name, brand, model, quantity, category_id, installed_at, removed_at, external_ref, specs",
       )
       .eq("boat_id", boatId)
       .is("deleted_at", null)
@@ -135,6 +141,9 @@ export default async function BoatPage({
     installedAt: item.installed_at,
     removedAt: item.removed_at,
     externalRef: item.external_ref,
+    // `specs` is what tells the 3D model this boat has 88 m² of mainsail and its panels on the
+    // davits (E2-8): free pairs, read as text, never trusted to be of any shape.
+    specs: specsRecord(item.specs),
   }));
 
   const stockFilter: StockFilter = low === "1" ? "low" : "all";
@@ -164,6 +173,7 @@ export default async function BoatPage({
         quantity: item.quantity,
         categoryId: item.categoryId,
         externalRef: item.externalRef,
+        specs: item.specs,
       })),
     points: (statuses ?? []).map((row) => ({
       id: row.id ?? "",

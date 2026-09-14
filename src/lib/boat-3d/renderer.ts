@@ -22,7 +22,10 @@ const STEPS = 16;
 export type Ramp = {
   base: readonly string[];
   selected: readonly string[];
+  /** The three stops of the shadow: solid at the centre, gone at the rim. */
   sea: string;
+  seaFaded: string;
+  seaClear: string;
   pick: string;
 };
 
@@ -75,10 +78,13 @@ export function buildRamp(palette: Palette): Ramp {
   const hull = parseColour(palette.hull);
   const light = parseColour(palette.light, [255, 255, 255]);
   const pick = parseColour(palette.pick, [27, 94, 150]);
+  const [r, g, bl] = parseColour(palette.sea, [216, 226, 236]);
   return {
     base: ramp(hull, light, null),
     selected: ramp(hull, light, pick),
-    sea: palette.sea,
+    sea: `rgba(${r},${g},${bl},0.85)`,
+    seaFaded: `rgba(${r},${g},${bl},0.45)`,
+    seaClear: `rgba(${r},${g},${bl},0)`,
     pick: palette.pick,
   };
 }
@@ -101,11 +107,15 @@ export function drawScene(
 ): void {
   ctx.clearRect(0, 0, camera.width, camera.height);
 
-  // The water, drawn first so the whole boat sits on it. It is scenery, never a target —
-  // nothing here is clickable, the mesh alone answers a tap. An ellipse the shape of the boat
-  // rather than a disc the size of its diagonal, which would read as a puddle around it.
-  const halfBeam = mesh.footprint.x * 1.38;
-  const halfLength = mesh.footprint.z * 1.1;
+  // The shadow the boat sits on, drawn first. An ellipse the shape of the boat rather than a
+  // disc the size of its diagonal — and faded out at the edge, because a flat blue puddle under
+  // a grey hull is the one thing that makes a drawing look like a demo.
+  const halfBeam = mesh.footprint.x * 1.5;
+  const halfLength = mesh.footprint.z * 1.12;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
   ctx.beginPath();
   for (let i = 0; i < SEA_SEGMENTS; i += 1) {
     const a = (i / SEA_SEGMENTS) * Math.PI * 2;
@@ -115,9 +125,20 @@ export function drawScene(
     );
     if (i === 0) ctx.moveTo(point.x, point.y);
     else ctx.lineTo(point.x, point.y);
+    if (point.x < minX) minX = point.x;
+    if (point.x > maxX) maxX = point.x;
+    if (point.y < minY) minY = point.y;
+    if (point.y > maxY) maxY = point.y;
   }
   ctx.closePath();
-  ctx.fillStyle = o.ramp.sea;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const spread = Math.max((maxX - minX) / 2, 1);
+  const shadow = ctx.createRadialGradient(cx, cy, spread * 0.15, cx, cy, spread);
+  shadow.addColorStop(0, o.ramp.sea);
+  shadow.addColorStop(0.55, o.ramp.seaFaded);
+  shadow.addColorStop(1, o.ramp.seaClear);
+  ctx.fillStyle = shadow;
   ctx.fill();
 
   const { faces } = mesh;

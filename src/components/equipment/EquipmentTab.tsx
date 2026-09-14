@@ -35,6 +35,8 @@ export type EquipmentSummary = {
   removedAt: string | null;
   /** Seed reference, when the line came from one: the 3D model routes on it (E2-8). */
   externalRef?: string | null;
+  /** Free key/value pairs: sail areas and fittings the 3D model draws from (E2-8). */
+  specs?: Readonly<Record<string, unknown>> | null;
 };
 
 export type CategorySummary = {

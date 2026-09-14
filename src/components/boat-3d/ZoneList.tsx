@@ -63,9 +63,7 @@ export function ZoneList({
             >
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-body font-medium">{name}</span>
-                <span className="block truncate text-caption text-ink-3">
-                  {t("rowMeta", { things: zone.things.length, points: zone.points.length })}
-                </span>
+                <span className="block truncate text-caption text-ink-3">{meta(zone, t)}</span>
               </span>
               {zone.state === "overdue" || zone.state === "soon" ? (
                 <ChecklistStateBadge state={zone.state} size="sm" />
@@ -146,6 +144,17 @@ export function ZoneList({
       })}
     </div>
   );
+}
+
+/**
+ * « 3 équipements · 2 points de suivi », and « Rien de noté ici » when there is neither. Counting
+ * zeroes out loud on eleven rows is what made the list read as a form with nothing in it.
+ */
+function meta(zone: ZoneSummary, t: ReturnType<typeof useTranslations<"boat3d">>): string {
+  const parts: string[] = [];
+  if (zone.things.length > 0) parts.push(t("rowMetaThings", { count: zone.things.length }));
+  if (zone.points.length > 0) parts.push(t("rowMetaPoints", { count: zone.points.length }));
+  return parts.length > 0 ? parts.join(" · ") : t("rowMetaEmpty");
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

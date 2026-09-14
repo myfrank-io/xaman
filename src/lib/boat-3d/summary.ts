@@ -86,6 +86,8 @@ export type SummaryInput = {
     quantity: number;
     categoryId: string | null;
     externalRef?: string | null;
+    /** Free key/value pairs (`equipment.specs`): the model reads sail areas and fittings here. */
+    specs?: Readonly<Record<string, unknown>> | null;
   }[];
   points: readonly {
     id: string;

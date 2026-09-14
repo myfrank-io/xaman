@@ -2546,6 +2546,17 @@ quoi rendre de la 3D, quel bateau afficher, et à quoi un « élément » corres
    sait : `type`, `length_m`, `beam_m`, `draft_m` et les moteurs actifs (un `engine_position` =
    une place sous une coque). Aucun fichier de modèle n'est téléchargé. Dimensions absentes — le
    cas normal, `boats.length_m` est facultatif — le gabarit du type est dessiné.
+2 bis. **L'inventaire dessine le bateau** (`src/lib/boat-3d/features.ts`). Ce n'est pas la photo
+   d'un ORC 50 avec un autre nom dessus : chaque trait vient d'une ligne d'`equipment`, lue par
+   ses mots et par ses `specs`. « Dérives sabres » pose des dérives, « Safrans suspendus » accroche
+   les safrans aux tableaux arrière, « Jupes de flotteur allongées » fait sortir la coque de l'eau
+   en pente longue, `surface_m2: 88` donne sa bôme à la grand-voile, `emplacement: "Sur bossoirs"`
+   met les panneaux sur le portique et non sur le roof, « Winch … pied de mât tribord » pose le
+   winch du bon côté. Un carnet vide dessine une coque, un gréement et des safrans — rien d'autre,
+   jusqu'à ce qu'on le lui dise. C'est aussi ce qui rend le document du chantier payant : chaque
+   ligne qu'il verse affine le dessin le jour même, sans migration ni retouche. Une ligne sous la
+   maquette nomme ce qu'elle doit au carnet (« Dessinée d'après le carnet : 88 m² de grand-voile ·
+   dérives · safrans suspendus … »), et le dit quand le carnet ne dit encore rien.
 3. **Un « élément » est une zone physique**, pas une catégorie : mât, grand-voile, voiles d'avant,
    étrave, traverse, trampoline, roof, cockpit, coques, circuits, sécurité, dérives, safrans, et
    une zone par moteur. Équipements et points de checklist y sont **routés par les mots de leur
@@ -2564,8 +2575,8 @@ un. Le routage par les mots avant la catégorie vient de l'inventaire de Xaman :
 suspendus » et « Dérives sabres carbone » sont dans la **même** catégorie (`daggerboards_rudders`)
 et sont deux endroits différents du bateau — une maquette qui les confond ne sert à rien.
 
-**Ce que ça ne fait pas.** Aucune position n'est stockée en base : une zone est **calculée**, pas
-saisie. Personne n'a donc à placer ses trente-six équipements sur un plan avant que l'écran serve
+**Ce que ça ne fait pas.** Aucune position n'est stockée en base : ni une zone, ni un trait de la
+coque. Tout est **calculé** à l'affichage, jamais saisi. Personne n'a donc à placer ses trente-six équipements sur un plan avant que l'écran serve
 à quelque chose, et un équipement ajouté demain trouve sa place tout seul. Le jour où quelqu'un
 voudra corriger un placement, ce sera une colonne de plus sur `equipment` et une exception devant
 les règles de mots — pas une refonte.

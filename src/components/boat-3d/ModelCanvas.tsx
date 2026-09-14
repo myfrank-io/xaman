@@ -36,6 +36,7 @@ export function ModelCanvas({
   selected,
   onSelect,
   boatName,
+  caption,
   className,
 }: {
   mesh: BoatMesh;
@@ -43,6 +44,8 @@ export function ModelCanvas({
   selected: ZoneKey | null;
   onSelect: (zone: ZoneKey | null) => void;
   boatName: string;
+  /** What the drawing owes to the carnet, in one line under it. */
+  caption: string;
   className?: string;
 }) {
   const t = useTranslations("boat3d");
@@ -321,7 +324,7 @@ export function ModelCanvas({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <p className="text-caption text-ink-3">{t("hint")}</p>
+        <p className="min-w-0 text-caption text-ink-3">{t("hint")}</p>
         <div className="flex shrink-0 items-center">
           <ControlButton label={t("turnPort")} onClick={() => nudge(-1)}>
             <ChevronLeftIcon aria-hidden />
@@ -339,6 +342,10 @@ export function ModelCanvas({
           </ControlButton>
         </div>
       </div>
+
+      {/* Right under the drawing, where it answers the question the drawing raises: « why does
+          it look like that? ». Because that is what the carnet says the boat carries. */}
+      <p className="text-caption text-ink-3">{caption}</p>
     </div>
   );
 }

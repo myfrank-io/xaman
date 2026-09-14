@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { readFeatures, NO_FEATURES } from "../../src/lib/boat-3d/features";
 import { buildBoatMesh, meshZones, type BoatShape } from "../../src/lib/boat-3d/model";
 import { buildZoneSummaries } from "../../src/lib/boat-3d/summary";
 import { fitCamera, Projector } from "../../src/lib/boat-3d/scene";
@@ -21,11 +22,34 @@ const CAT: BoatShape = {
   ],
 };
 
-const catZones = meshZones(buildBoatMesh(CAT));
+/** The Xaman inventory, as `seed/xaman-boat.json` records it — names, references and specs. */
+const XAMAN = [
+  { name: "Dérives sabres carbone", externalRef: "daggerboards" },
+  { name: "Safrans suspendus", externalRef: "rudders" },
+  { name: "Jupes de flotteur allongées", externalRef: "skirts", specs: { allongement_cm: 60 } },
+  { name: "Grand-voile (GV)", externalRef: "sail-main", specs: { surface_m2: 88 } },
+  { name: "J1 (Génois)", externalRef: "sail-j1", specs: { surface_m2: 60 } },
+  { name: "Code 0 (J0)", externalRef: "sail-code0", specs: { surface_m2: 87.5 } },
+  { name: "Spi léger (A0)", externalRef: "sail-a0", specs: { surface_m2: 220 } },
+  { name: "Emmagasineurs Karver", externalRef: "furlers-karver" },
+  { name: "Winch électrique pied de mât tribord", externalRef: "winch-electric-st62" },
+  {
+    name: "Panneaux solaires monocristallins",
+    externalRef: "solar-panels",
+    specs: { puissance_w: 990, emplacement: "Sur bossoirs" },
+  },
+  { name: "Guindeau électrique", externalRef: "windlass" },
+  { name: "Ancre", externalRef: "anchor-spade", specs: { poids_kg: 25 } },
+  { name: "Kit de sécurité catégorie A — 10 personnes", externalRef: "safety-kit" },
+  { name: "Starlink", externalRef: "starlink" },
+  { name: "Coque sandwich PVC foam core / vinylester", externalRef: "hull-sandwich" },
+];
+
+const catZones = meshZones(buildBoatMesh({ ...CAT, features: readFeatures(XAMAN) }));
 
 describe("maillage du bateau", () => {
   it("dessine un catamaran complet, gréé, avec une zone par moteur", () => {
-    const mesh = buildBoatMesh(CAT);
+    const mesh = buildBoatMesh({ ...CAT, features: readFeatures(XAMAN) });
     const zones = meshZones(mesh);
     for (const zone of [
       "hulls",
@@ -366,5 +390,86 @@ describe("résumé par zone", () => {
       engines: [],
     });
     expect(zones.find((zone) => zone.key === "daggerboards")?.labelKey).toBe("keel");
+  });
+});
+
+describe("ce que le carnet dit du bateau", () => {
+  it("lit l'inventaire de Xaman tel qu'il est écrit", () => {
+    expect(readFeatures(XAMAN)).toEqual({
+      daggerboards: true,
+      transomRudders: true,
+      skirts: true,
+      bowsprit: true,
+      solar: "davits",
+      windlass: true,
+      anchor: true,
+      mastWinch: "starboard",
+      liferaft: true,
+      dome: true,
+      mainsailArea: 88,
+      // The working headsail, not the 87.5 m² Code 0 nor the 220 m² spinnaker.
+      headsailArea: 60,
+    });
+  });
+
+  it("ne devine rien sur un inventaire vide", () => {
+    expect(readFeatures([])).toEqual(NO_FEATURES);
+  });
+
+  it("met les panneaux là où le carnet les met", () => {
+    expect(
+      readFeatures([{ name: "Panneaux solaires", specs: { emplacement: "Sur bossoirs" } }]).solar,
+    ).toBe("davits");
+    expect(readFeatures([{ name: "Panneaux solaires sur le roof" }]).solar).toBe("roof");
+    expect(readFeatures([{ name: "Panneaux solaires" }]).solar).toBe("roof");
+    expect(readFeatures([{ name: "Batteries lithium" }]).solar).toBeNull();
+  });
+
+  it("ne suspend les safrans que si le carnet le dit", () => {
+    expect(readFeatures([{ name: "Safrans" }]).transomRudders).toBe(false);
+    expect(readFeatures([{ name: "Safrans suspendus" }]).transomRudders).toBe(true);
+  });
+
+  it("suit le côté du winch de mât", () => {
+    expect(readFeatures([{ name: "Winch de pied de mât bâbord" }]).mastWinch).toBe("port");
+    expect(readFeatures([{ name: "Winch d'écoute tribord" }]).mastWinch).toBeNull();
+  });
+});
+
+describe("le maillage suit l'inventaire", () => {
+  const drawn = (features: Parameters<typeof buildBoatMesh>[0]["features"]) =>
+    meshZones(buildBoatMesh({ ...CAT, features }));
+
+  it("ne dessine ni dérives ni bout-dehors sur un carnet vide", () => {
+    const zones = drawn(NO_FEATURES);
+    expect(zones.has("daggerboards")).toBe(false);
+    expect(zones.has("bow")).toBe(false);
+    expect(zones.has("safety")).toBe(false);
+    // The hull, the rig and the rudders are the boat itself, not its inventory.
+    expect(zones.has("hulls")).toBe(true);
+    expect(zones.has("mast")).toBe(true);
+    expect(zones.has("rudders")).toBe(true);
+    expect(zones.has("trampoline")).toBe(true);
+  });
+
+  it("les dessine dès que le carnet les porte", () => {
+    const zones = drawn(readFeatures(XAMAN));
+    expect(zones.has("daggerboards")).toBe(true);
+    expect(zones.has("bow")).toBe(true);
+    expect(zones.has("safety")).toBe(true);
+  });
+
+  it("agrandit la grand-voile quand la surface notée est plus grande", () => {
+    const boom = (area: number | null) => {
+      const mesh = buildBoatMesh({ ...CAT, features: { ...NO_FEATURES, mainsailArea: area } });
+      const main = mesh.parts.findIndex((part) => part.zone === "mainsail");
+      let aft = 0;
+      for (const face of mesh.faces) {
+        if (face.part !== main) continue;
+        for (const i of face.indices) aft = Math.min(aft, mesh.vertices[i * 3 + 2] ?? 0);
+      }
+      return aft;
+    };
+    expect(boom(120)).toBeLessThan(boom(60));
   });
 });

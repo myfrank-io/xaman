@@ -1180,7 +1180,7 @@
     }
   },
   "boat3d": {
-    "title": "Le bateau en 3D",
+    "title": "Maquette du bateau",
     "hint": "Faites glisser pour tourner. Touchez un élément.",
     "canvasLabel": "Maquette 3D de {name}, en rotation. La liste à côté nomme les mêmes éléments.",
     "pause": "Mettre la rotation en pause",
@@ -1213,7 +1213,24 @@
       "daggerboards": "Dérives",
       "keel": "Quille",
       "rudders": "Safrans"
-    }
+    },
+    "fromCarnet": "Dessinée d’après le carnet : {details}.",
+    "fromCarnetEmpty": "La maquette suit l’inventaire : chaque équipement noté affine le dessin.",
+    "detail": {
+      "mainsail": "{area} m² de grand-voile",
+      "daggerboards": "dérives",
+      "transomRudders": "safrans suspendus",
+      "skirts": "jupes allongées",
+      "bowsprit": "bout-dehors",
+      "solarDavits": "panneaux sur bossoirs",
+      "solarRoof": "panneaux sur le roof",
+      "anchor": "mouillage",
+      "liferaft": "radeau",
+      "dome": "dôme"
+    },
+    "rowMetaThings": "{count, plural, one {# équipement} other {# équipements}}",
+    "rowMetaPoints": "{count, plural, one {# point} other {# points}}",
+    "rowMetaEmpty": "Rien de noté ici"
   },
   "engines": {
     "title": "Moteurs",

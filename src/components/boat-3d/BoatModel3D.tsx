@@ -4,8 +4,10 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 
 import { ModelCanvas } from "@/components/boat-3d/ModelCanvas";
+import { modelCaption } from "@/components/boat-3d/model-caption";
 import { ZoneList } from "@/components/boat-3d/ZoneList";
 import { SectionCard } from "@/components/common/SectionCard";
+import { readFeatures } from "@/lib/boat-3d/features";
 import { buildBoatMesh, type BoatShape } from "@/lib/boat-3d/model";
 import { buildZoneSummaries, type SummaryInput } from "@/lib/boat-3d/summary";
 import type { ZoneKey } from "@/lib/boat-3d/zones";
@@ -35,7 +37,13 @@ export function BoatModel3D({
   const t = useTranslations("boat3d");
   const [selected, setSelected] = React.useState<ZoneKey | null>(null);
 
-  const mesh = React.useMemo(() => buildBoatMesh(data.shape), [data.shape]);
+  // The hull is drawn from the carnet: its dimensions, its engines, and what its inventory says
+  // it carries. An equipment added today changes the drawing today.
+  const features = React.useMemo(() => readFeatures(data.equipment), [data.equipment]);
+  const mesh = React.useMemo(
+    () => buildBoatMesh({ ...data.shape, features }),
+    [data.shape, features],
+  );
   const zones = React.useMemo(
     () =>
       buildZoneSummaries({
@@ -51,6 +59,13 @@ export function BoatModel3D({
 
   const overdue = zones.reduce((total, zone) => total + zone.overdue, 0);
   const soon = zones.reduce((total, zone) => total + zone.soon, 0);
+
+  // What the drawing owes to the carnet, named. Without it the model is « a catamaran »; with
+  // it, it is this boat — and it says plainly what loading one more document would add.
+  const caption = modelCaption(features);
+  const details = caption
+    .map((part) => t(`detail.${part.key}` as "detail.daggerboards", { area: part.area ?? 0 }))
+    .join(" · ");
 
   return (
     <SectionCard
@@ -73,6 +88,7 @@ export function BoatModel3D({
           selected={selected}
           onSelect={setSelected}
           boatName={boatName}
+          caption={caption.length > 0 ? t("fromCarnet", { details }) : t("fromCarnetEmpty")}
         />
         {/* Tall lists are capped rather than allowed to push the inventory below the fold: the
             model and its list must fit the iPad screen together. */}
