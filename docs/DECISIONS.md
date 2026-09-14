@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D122.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D123.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2800,3 +2800,43 @@ troisième étage demande ce que le schéma porte déjà sans UI : `organization
 **Découpage.** Épique **E18**, trois lots : le carnet (E18-1 à E18-5, V1, maintenant), la flotte
 (E18-6 à E18-8), l'organisation (E18-9 à E18-12, **à ne pas démarrer sans validation explicite**,
 comme E11). Le premier lot ne dépend d'aucun des deux autres et se livre seul.
+
+
+## 2026-09-14 — D122 : ce qui attend sans échéance entre quand même dans la file
+
+**Question.** Un document arrivé dans « À valider » et une pièce passée sous son seuil attendent
+une personne exactement comme un point en retard. Ni l'un ni l'autre ne porte de date. La file,
+elle, ne classait que ce qui en avait une — alors le document criait depuis un bandeau et la pièce
+attendait sur un écran que personne n'ouvre avant de partir.
+
+**Décision.** Les deux entrent dans la file (`boat_todo_queue`, `0035`), chacun avec son geste :
+
+- un **document** se range dans **« Aujourd'hui »**. Il n'a pas d'échéance, il a une *durée
+  d'attente* : sa ligne dit le jour où il est arrivé, le plus ancien passe devant, et le rang 2 le
+  place juste après les points en retard. C'est exactement ce que le bandeau disait, à ceci près
+  qu'une ligne se traite et qu'une bannière se lit ;
+- une **pièce** sous son seuil ouvre un cinquième palier, **« À racheter »**, tout en bas. Elle ne
+  tombe pas un jour : elle tombe quand on ira au shipchandler. Sa raison est ce qui manque
+  (`min_quantity − quantity`), et le stock le plus court passe devant — une boîte vide avant une
+  boîte à moitié.
+
+**Le bandeau perd son cas « documents ».** Il ne reste que ce qui n'est pas une ligne de travail :
+la mise en route inachevée, les lignes importées à vérifier, les compteurs jamais saisis.
+
+**Raison.** La file est la primitive du produit (D121) : *un objet, une raison datée, un geste*. La
+raison n'a jamais eu à être un calendrier — « depuis 3 jours » et « il en manque 2 » sont des
+raisons, et ce sont même les deux plus faciles à traiter. Ce qui compte est qu'elles se résolvent
+en un geste, et que la personne n'ait pas à se souvenir d'aller voir ailleurs. Un bandeau qui
+compte des documents demande précisément ce souvenir-là.
+
+**Les deux paliers sans calendrier sont en bas, et c'est un choix.** « Aux heures moteur » et
+« À racheter » ne se convertissent pas en jours : la conversion de la file (1 h ≈ 1,2 j) est une
+supposition sur la façon de naviguer, et une supposition sous un titre de semaine se lit comme un
+fait. Ils restent donc à part, après tout ce que le calendrier sait dater.
+
+**Ce que ça enlève à la base.** `boat_dashboard_stats` est refaite à deux colonnes — les comptes
+du bandeau. E18-1 avait retiré de l'écran les blocs qui lisaient les onze autres (états des points,
+interventions ouvertes, dépenses de l'année et des douze mois, sortie de l'eau, stock bas, moteurs
+sans relevé) : elles étaient recalculées à chaque rendu de l'écran d'arrivée pour personne. Deux
+tests qui s'en servaient comme sonde interrogent maintenant ce que l'écran lit vraiment — les
+moteurs sans relevé sur leurs tables, le stock bas sur la file elle-même.

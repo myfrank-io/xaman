@@ -140,6 +140,50 @@ describe("« Aux heures moteur » : ce qui ne tombe pas un jour", () => {
   });
 });
 
+describe("ce qui attend sans date (D122)", () => {
+  const inbox = (over = {}): UpcomingEntry => ({
+    kind: "inbox",
+    id: "d1",
+    title: "Facture chantier",
+    receivedAt: "2026-09-10",
+    ...over,
+  });
+  const part = (over = {}): UpcomingEntry => ({
+    kind: "part",
+    id: "p1",
+    title: "Filtre à huile",
+    missing: 2,
+    categoryName: "Moteurs",
+    categoryColor: "#D97706",
+    ...over,
+  });
+
+  it("files a waiting document under today, because it has waited since it arrived", () => {
+    expect(groupOf(inbox(), TODAY)).toBe("today");
+    // Même arrivé ce matin : ce qui attend une décision attend aujourd'hui.
+    expect(groupOf(inbox({ receivedAt: TODAY }), TODAY)).toBe("today");
+    expect(groupOf(inbox({ receivedAt: null }), TODAY)).toBe("today");
+  });
+
+  it("files a part under « À racheter », never under a day it does not have", () => {
+    expect(groupOf(part(), TODAY)).toBe("restock");
+  });
+
+  it("keeps the two dateless tiers at the bottom, in that order", () => {
+    const groups = groupQueue(
+      [
+        part(),
+        item({ daysRemaining: null, hoursRemaining: 40 }),
+        inbox(),
+        item({ status: "overdue", daysRemaining: -2 }),
+      ],
+      TODAY,
+    );
+    expect(groups.map((group) => group.key)).toEqual(["today", "hours", "restock"]);
+    expect(groups[0]?.entries).toHaveLength(2);
+  });
+});
+
 describe("groupQueue", () => {
   it("returns the tiers in order, keeps the queue's order inside each, and skips the empty ones", () => {
     const groups = groupQueue(

@@ -20,7 +20,6 @@ import { toDateString, todayString } from "@/lib/format";
 import { can, type BoatRole } from "@/lib/permissions";
 import { loadItemAttention, loadWeekActivity, pickNames } from "@/lib/queries/attention";
 import { newLogPath } from "@/lib/queries/boat-routes";
-import { pendingInboxCount } from "@/lib/queries/inbox";
 import { Button } from "@/components/ui/button";
 import { completionContext } from "@/lib/queries/completion-context";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
@@ -102,10 +101,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   const weekSince = toDateString(subDays(new Date(), WEEK_DAYS));
 
   /**
-   * Une seule vague. `boat_dashboard_stats` n'est plus lu que pour les deux comptes du bandeau :
-   * les colonnes que les vignettes et le récapitulatif faisaient calculer (dépenses sur douze
-   * mois, sortie de l'eau, stock, états des points) n'ont plus de lecteur ici, et la vue perd
-   * les siennes avec E18-2.
+   * Une seule vague. `boat_dashboard_stats` ne porte plus que les deux comptes du bandeau
+   * (0035) : les onze sous-requêtes que les vignettes et le récapitulatif faisaient tourner à
+   * chaque rendu n'avaient plus de lecteur. Le compte « À valider » n'est plus lu ici non
+   * plus — la file en porte chaque ligne (D122).
    *
    * La ligne du bateau fait exception : `readBoatRow` la lit entière, mais c'est **celle du
    * layout** (`cache()` de React déduplique la requête).
@@ -120,7 +119,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     { data: progress },
     attention,
     week,
-    inboxCount,
   ] = await Promise.all([
     readBoatRow(boatId),
     readBoatRole(boatId),
@@ -150,8 +148,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
     loadItemAttention(supabase, boatId),
     // Ce qui a été réglé sur sept jours : la moitié gauche de la phrase d'état.
     loadWeekActivity(supabase, boatId, weekSince),
-    // Documents waiting on « À valider » (D91): a narrow count, read here rather than in the view.
-    pendingInboxCount(supabase, boatId),
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -223,6 +219,23 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
           { name: row.category_name, color: row.category_color ?? FALLBACK_COLOR },
           row.engine_label ?? null,
         ),
+      });
+    } else if (row.kind === "inbox") {
+      entries.push({
+        kind: "inbox",
+        id: row.id,
+        title: row.title,
+        // `due_at` porte le jour d'arrivée pour un document : il attend depuis, pas jusqu'à.
+        receivedAt: row.due_at,
+      });
+    } else if (row.kind === "part") {
+      entries.push({
+        kind: "part",
+        id: row.id,
+        title: row.title,
+        missing: Number(row.severity ?? 0),
+        categoryName: row.category_name,
+        categoryColor: row.category_color,
       });
     } else {
       entries.push({
@@ -328,7 +341,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
       {/* 3 — one contextual banner */}
       <DashboardBanner
         boatId={boatId}
-        inboxCount={inboxCount}
         reviewCount={reviewCount}
         noReadingEngines={noReadingEngines}
         canContribute={canContribute}

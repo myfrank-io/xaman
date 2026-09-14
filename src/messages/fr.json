@@ -674,16 +674,21 @@
         "today": "Aujourd'hui",
         "week": "Cette semaine",
         "month": "Ce mois-ci",
-        "hours": "Aux heures moteur"
+        "hours": "Aux heures moteur",
+        "restock": "À racheter"
+      },
+      "inbox": {
+        "badge": "À valider",
+        "received": "reçu le {date}"
+      },
+      "part": {
+        "badge": "Sous le seuil",
+        "missing": "il en manque {count}"
       }
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
       "action": "Vérifier"
-    },
-    "inbox": {
-      "banner": "{count, plural, one {# document attend votre validation} other {# documents attendent votre validation}}",
-      "action": "Valider"
     },
     "markDone": "Fait",
     "state": {

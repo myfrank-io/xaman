@@ -353,14 +353,21 @@ indépendants dans cet ordre : le premier se livre seul.
   **Vérifié** : `lint`, `format:check`, `typecheck`, 557 tests (dont 10 neufs sur les paliers) et
   `build` verts ; audit tactile vert sur les cinq viewports ; captures en 1024×768, 768×1024 et
   390×844 — quatre « Fait » au-dessus de la ligne de flottaison en iPad portrait.
-- [ ] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un.** Un document « À valider »
-  (D91) et une pièce sous son seuil (D84) attendent une personne exactement comme un point en
-  retard, mais le premier est un bandeau et la seconde une carte de la Checklist. `boat_todo_queue`
-  gagne deux `kind` (`inbox`, `part`) et leur rang ; le bandeau perd son cas « documents », une
-  ligne valant mieux qu'une bannière. La même migration retire de `boat_dashboard_stats` les
-  colonnes qu'E18-1 laisse sans lecteur (dépenses 12 mois, sortie de l'eau, stock bas), chacune
-  ayant son écran. **DoD** : fonction `security invoker` (RLS inchangée), test de tri et de rang,
-  `tests/unit/rls.test.ts` étendu à la vue réécrite, `pnpm db:types` commité.
+- [x] **E18-2 (M, 2)** **La file dit tout ce qui attend quelqu'un** (D122). Un document « À
+  valider » (D91) et une pièce sous son seuil (D84) attendaient une personne exactement comme un
+  point en retard — mais le premier criait depuis un bandeau et la seconde depuis un écran qu'on
+  n'ouvre pas avant de partir. `boat_todo_queue` passe à **six rangs** (`0035`) et gagne
+  `kind = 'inbox'` et `kind = 'part'` : le document se range dans **« Aujourd'hui »** (sa raison
+  est *depuis quand* il attend, le plus ancien devant), la pièce ouvre le cinquième palier
+  **« À racheter »**, en bas avec « Aux heures moteur » — les deux qui ne tombent pas avec le
+  calendrier. La raison d'une pièce est ce qui manque (`severity = min_quantity − quantity`), et
+  le stock le plus court passe devant. Le bandeau perd son cas « documents » ; l'écran ne lit
+  plus `pendingInboxCount`. **`boat_dashboard_stats` est refaite à deux colonnes** : les onze
+  sous-requêtes que les vignettes et le récapitulatif faisaient tourner à chaque rendu n'avaient
+  plus de lecteur depuis E18-1. Les deux tests RLS qui s'en servaient comme sonde interrogent
+  maintenant ce que l'écran lit vraiment (les moteurs sans relevé sur leurs tables, le stock bas
+  sur la file). **Vérifié** : `pnpm db:types` commité, 153 tests RLS verts sur la base reconstruite
+  (dont le rang des quatre genres), 13 cas sur les paliers, lint/format/typecheck/build verts.
 - [ ] **E18-3 (M, 2)** **« Ce qui a bougé ».** Le bloc qui remplace les trois résumés : le fil
   partagé du carnet — cochages, interventions, achats, relevés d'heures, documents validés, sorties
   de l'eau — avec **qui** et **quand**, dix lignes puis « tout voir ». C'est la seule chose que le

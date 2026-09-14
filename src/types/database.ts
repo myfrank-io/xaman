@@ -1646,6 +1646,13 @@ export type Database = {
             foreignKeyName: "maintenance_log_categories_boat_id_fkey"
             columns: ["boat_id"]
             isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
             referencedRelation: "boats"
             referencedColumns: ["id"]
           },
@@ -1655,6 +1662,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "boat_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
           },
           {
             foreignKeyName: "maintenance_log_categories_created_by_fkey"
@@ -1668,6 +1682,13 @@ export type Database = {
             columns: ["log_id"]
             isOneToOne: false
             referencedRelation: "maintenance_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_logs_trash_view"
             referencedColumns: ["id"]
           },
           {
@@ -2264,54 +2285,18 @@ export type Database = {
       boat_dashboard_stats: {
         Row: {
           boat_id: string | null
-          engines_without_reading: number | null
-          expenses_12m: number | null
-          in_progress_logs: number | null
-          last_haul_out_at: string | null
-          low_stock_parts: number | null
-          months_since_haul_out: number | null
-          never_recorded_items: number | null
-          overdue_items: number | null
-          planned_logs: number | null
           review_pending_logs: number | null
           review_pending_purchases: number | null
-          soon_items: number | null
-          urgent_logs: number | null
-          ytd_expenses: number | null
         }
         Insert: {
           boat_id?: string | null
-          engines_without_reading?: never
-          expenses_12m?: never
-          in_progress_logs?: never
-          last_haul_out_at?: never
-          low_stock_parts?: never
-          months_since_haul_out?: never
-          never_recorded_items?: never
-          overdue_items?: never
-          planned_logs?: never
           review_pending_logs?: never
           review_pending_purchases?: never
-          soon_items?: never
-          urgent_logs?: never
-          ytd_expenses?: never
         }
         Update: {
           boat_id?: string | null
-          engines_without_reading?: never
-          expenses_12m?: never
-          in_progress_logs?: never
-          last_haul_out_at?: never
-          low_stock_parts?: never
-          months_since_haul_out?: never
-          never_recorded_items?: never
-          overdue_items?: never
-          planned_logs?: never
           review_pending_logs?: never
           review_pending_purchases?: never
-          soon_items?: never
-          urgent_logs?: never
-          ytd_expenses?: never
         }
         Relationships: []
       }

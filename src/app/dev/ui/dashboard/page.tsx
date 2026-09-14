@@ -169,6 +169,16 @@ const UPCOMING: UpcomingEntry[] = [
       hoursRemaining: 18,
     }),
   },
+  // Ce qui attend sans date (D122) : un document arrivé tout seul, une pièce sous son seuil.
+  { kind: "inbox", id: "u9", title: "Facture Nautic Service", receivedAt: "2026-09-12" },
+  {
+    kind: "part",
+    id: "u10",
+    title: "Filtre à huile (x2)",
+    missing: 2,
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+  },
 ];
 
 /** Ce qui a été réglé cette semaine : la phrase d'état lit cet objet. */

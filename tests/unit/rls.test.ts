@@ -1919,10 +1919,12 @@ describeWithDb("engine without an hour meter (D73)", () => {
         Number(
           (
             await c.query(
-              "select engines_without_reading from public.boat_dashboard_stats where boat_id = $1",
+              `select count(*)::int as waiting from public.engines en
+                 where en.boat_id = $1 and en.is_active and en.tracks_hours
+                   and not exists (select 1 from public.engine_current_hours ech where ech.engine_id = en.id)`,
               [BOAT],
             )
-          ).rows[0].engines_without_reading,
+          ).rows[0].waiting,
         );
       const inserted = await c.query(
         "insert into public.engines (boat_id, label, position, created_by) values ($1, 'Annexe', 'outboard', $2) returning id",
@@ -2085,6 +2087,10 @@ describeWithDb("boat_todo_queue", () => {
       ).toEqual([
         [0, "log", "Fuite bâbord"],
         [1, "item", "Point en retard"],
+        // Ce qui attend sans date entre dans la file à son tour (D122) : le document du seed,
+        // puis la pièce sous son seuil, toujours en dernier.
+        [2, "inbox", "Facture 118"],
+        [5, "part", "Filtre à huile"],
       ]);
       expect(
         rows.some((r) => r.title === "Contrôle ponctuel"),
@@ -2412,21 +2418,20 @@ describeWithDb("trash for parts and contacts (0012)", () => {
     expect(result).toBe("23505");
   });
 
-  it("the dashboard stops counting a trashed part as missing from the stock", async () => {
+  it("the queue stops asking for a trashed part", async () => {
     const counts = await as(U.owner, async (c) => {
-      const before = await c.query(
-        "select low_stock_parts from public.boat_dashboard_stats where boat_id = $1",
-        [BOAT],
-      );
+      const low = async () =>
+        Number(
+          (
+            await c.query(
+              "select count(*)::int as low from public.boat_todo_queue($1::uuid, 100) q where q.kind = 'part'",
+              [BOAT],
+            )
+          ).rows[0].low,
+        );
+      const before = await low();
       await c.query("update public.parts set deleted_at = now() where id = $1", [PART]);
-      const after = await c.query(
-        "select low_stock_parts from public.boat_dashboard_stats where boat_id = $1",
-        [BOAT],
-      );
-      return {
-        before: Number(before.rows[0]?.low_stock_parts),
-        after: Number(after.rows[0]?.low_stock_parts),
-      };
+      return { before, after: await low() };
     });
     // The seeded part is below its threshold, so it counted before and must not count after.
     expect(counts.before).toBe(1);
