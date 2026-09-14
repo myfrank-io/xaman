@@ -254,6 +254,7 @@ Les « systèmes » du bateau. Instanciés depuis le modèle, modifiables (renom
 | id | uuid | PK | |
 | boat_id | uuid | FK boats on delete cascade | |
 | category_id | uuid | FK boat_categories, null | |
+| kind_id | uuid | FK equipment_kinds on delete set null, null | la **famille** dont cet équipement est un exemplaire (E17-3, `0032`). Proposée par `matchEquipmentKind` d'après le nom, la marque et le modèle, choisie au formulaire, jamais écrasée. Null est l'état normal de ce que personne n'a rangé, et de ce qui n'est pas une famille (une cloison, un bordé) |
 | name | text | not null | « Mât carbone Lorima » |
 | brand / model / serial | text | | |
 | quantity | int | default 1 | |
@@ -264,6 +265,40 @@ Les « systèmes » du bateau. Instanciés depuis le modèle, modifiables (renom
 | external_ref | text | | seed |
 | created_by / updated_by / created_at / updated_at | | | |
 | unique | (boat_id, external_ref) | | |
+
+### 3.10 bis `equipment_kinds` — familles d'équipement (E17-3, `0032`)
+
+Table de **référence**, pas une table métier : **pas de `boat_id`**, comme `boat_models` (§3.4 bis)
+et `checklist_templates`. Lisible par tout compte connecté quand `is_active`, écrite par le seul
+admin plateforme.
+
+C'est la clé sur laquelle E17-4 accrochera les **règles d'entretien** et sur laquelle E17-5
+composera le plan (`docs/AUTOPILOT.md §4`) : ce qui décide de ce qu'un bateau doit entretenir n'est
+pas sa coque mais **ce qu'il porte**. Cette table seule n'écrit aucune règle et ne change aucun
+plan ; elle donne à un équipement le nom de ce qu'il est.
+
+| Colonne | Type | Notes |
+|---|---|---|
+| id | uuid | PK |
+| external_ref | text | not null unique — clé d'upsert (`heater-forced-air`) |
+| label | text | not null unique — affiché tel quel, français, singulier, sans marque |
+| category_ref | text | le système du bateau où cette famille vit d'habitude, par `boat_categories.external_ref`. **Pas une FK** : les catégories sont par bateau et renommables |
+| synonyms | text[] | not null default `'{}'` — ce que les gens et les documents écrivent, minuscules sans accents, **marques comprises** (sur ce matériel, la marque *est* le nom de la famille). Lu par le rapprochement, jamais affiché |
+| sort_order | int | not null default 0 |
+| is_active | boolean | not null default true — une famille se désactive, ne se supprime pas |
+| created_at / updated_at | timestamptz | |
+
+**Le rapprochement** (`src/lib/equipment-kinds.ts`) cherche chaque terme — le libellé et les
+synonymes — en **mots entiers** dans « nom marque modèle », et retient le plus long : « chauffage à
+air pulsé » l'emporte sur « chauffage ». Il **propose** et rien de plus : le formulaire montre ce
+qu'il a trouvé, et cesse de proposer dès que quelqu'un touche au champ. **Ne rien trouver est une
+réponse** : ranger un chauffage sous les règles du dessalinisateur donnerait trois points faux et
+en cacherait trois justes ; `kind_id` à null ne donne rien du tout.
+
+**Ce qui est semé** : les familles qu'un bateau réel du carnet porte aujourd'hui, plus ce que tout
+bateau a (moteurs, gréement, mouillage, sécurité). Une famille entre quand un bateau l'apporte,
+jamais « au cas où » (`docs/AUTOPILOT.md §10`) — une famille inutilisée est une ligne de plus dans
+un menu, qui rend la bonne plus dure à trouver.
 
 ### 3.11 `contacts` (annuaire des intervenants)
 

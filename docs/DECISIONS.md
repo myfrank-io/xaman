@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D115.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D116.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -2493,3 +2493,41 @@ c'est cette pièce jointe — son `(entity_type, entity_id)` — qui dit où il 
 porte une catégorie de conception, qui se lit dans `boats.navigation_zone` et **réapplique le plan**
 quand elle change. Ce n'est pas une échéance mais une lecture d'identité, et elle appartient au lot
 de la lecture d'inventaire.
+
+## 2026-09-14 — D115 : le plan suit l'équipement, et la famille se propose sans s'imposer
+
+**Question.** Sur quelle clé accrocher les règles d'entretien ? Le modèle de coque, comme
+aujourd'hui, ou autre chose ?
+
+**Décision.** Sur la **famille d'équipement**. `equipment_kinds` (`0032`) est une table de
+référence sans `boat_id` — publiée par la plateforme, lue par tout compte connecté, écrite par le
+seul admin — et `equipment.kind_id` y rattache la ligne d'un bateau. C'est la première des deux
+couches de `docs/AUTOPILOT.md §4` : E17-4 accrochera les règles sur les familles, E17-5 composera
+le plan « modèle de coque + règles des équipements présents ».
+
+La famille se **propose** : `matchEquipmentKind` cherche le libellé et les synonymes en mots
+entiers dans « nom marque modèle » et retient le terme le plus long, si bien que « chauffage à air
+pulsé » l'emporte sur « chauffage ». Le formulaire montre ce qu'il a trouvé et **cesse de proposer
+dès que quelqu'un touche au champ** ; une ligne qui a déjà une famille arrive « déjà choisie ».
+
+**Raison.** Ce qui décide de ce qu'un bateau doit entretenir n'est pas sa coque, c'est ce qu'il
+porte : deux ORC 50 diffèrent par leurs options, et deux bateaux quelconques qui portent le même
+chauffage à air pulsé demandent les mêmes trois gestes. `seed/orc50-checklist.json` montre où mène
+l'autre clé — un modèle publié à tous les ORC 50 qui nomme le Starlink, le Garmin et les Super B
+d'un seul exemplaire (`AUTOPILOT.md §1.4`). Et c'est la seule clé dont la valeur **grandit** : une
+règle écrite une fois pour un Wallas sert tous les bateaux qui en portent un.
+
+**Pourquoi les synonymes portent des marques.** Personne n'écrit « chauffage à air pulsé » : on
+écrit « Wallas 30DT », « Webasto », « chauffage fuel ». Sur ce matériel, la marque *est* le nom de
+la famille. Les synonymes sont donc ce que les gens et les documents écrivent, pas une taxonomie.
+
+**Ne rien trouver est une réponse.** Ranger un chauffage sous les règles du dessalinisateur
+donnerait au bateau trois points faux et en cacherait trois justes ; `kind_id` à null ne lui donne
+rien du tout. Le rapprochement se tait donc plutôt que de deviner, et le champ reste à « Aucune
+famille ».
+
+**Ce qui est semé, et ce qui ne l'est pas.** Les familles qu'un bateau réel du carnet porte
+aujourd'hui, plus ce que tout bateau a. Une famille entre quand un bateau l'apporte, jamais « au
+cas où » : une famille inutilisée est une ligne de plus dans un menu, qui rend la bonne plus dure à
+trouver.
+
