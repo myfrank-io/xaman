@@ -7,7 +7,7 @@ import { CategoryBar } from "@/components/common/CategoryBadge";
 import { cn } from "@/lib/utils";
 
 type ListRowProps = {
-  /** Left column: state / status badge, ≈ 100 px on a wide screen. */
+  /** Left column: state / status badge, 120 px on a wide screen. */
   lead?: React.ReactNode;
   title: React.ReactNode;
   meta?: React.ReactNode;
@@ -66,8 +66,16 @@ export function ListRow({
    */
   const content = (
     <>
-      {/* Fixed left column from `sm` so the titles line up down the list. */}
-      {lead ? <div className="hidden shrink-0 items-center sm:flex sm:w-26">{lead}</div> : null}
+      {/*
+       * Fixed left column from `sm` so the titles line up down the list.
+       *
+       * 120 px, not 104: « EN RETARD » is the widest state badge the app writes — 115 px
+       * measured, icon and uppercase tracking included — so at 104 px it ran 8 px past its own
+       * column on every list that carries a state, and the row reported a `scrollWidth` wider
+       * than its button. `min-w` rather than `w` so a label nobody foresaw pushes its own title
+       * to the right instead of spilling over it: a row out of line beats a label cut in half.
+       */}
+      {lead ? <div className="hidden shrink-0 items-center sm:flex sm:min-w-30">{lead}</div> : null}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Line one on a phone: the title, with the value beside it rather than under it. */}
         <div className="flex min-w-0 items-baseline gap-2 sm:block">
@@ -86,9 +94,14 @@ export function ListRow({
           </div>
         ) : null}
       </div>
-      {trailing ? (
-        <div className="hidden max-w-28 shrink-0 text-right sm:block">{trailing}</div>
-      ) : null}
+      {/*
+       * Sized by its content, never capped. A `max-width` here could not clip what it capped —
+       * a due label is `whitespace-nowrap` — so « 105 j de retard » (117 px) and « 426 h de
+       * retard » (123 px) simply ran out of the 112 px cap and out of the row. The column that
+       * gives way is the title, the one holding `min-w-0`: it truncates, which is what a title
+       * is for.
+       */}
+      {trailing ? <div className="hidden shrink-0 text-right sm:block">{trailing}</div> : null}
     </>
   );
   const chevron =

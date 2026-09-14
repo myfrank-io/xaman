@@ -3215,59 +3215,123 @@ indexable). L'élargir demanderait une table de 190 entrées ou l'extension refu
 qu'un carnet de bord français n'écrit pas. Le dire ici évite qu'on la rouvre à chaque ligature
 trouvée — et surtout qu'on réponde en recréant une seconde table, ce que `0036` vient de défaire.
 
-## 2026-09-14 — D131 : une question par écran, et cocher coûte un geste
+**Décision.**
 
-**Question.** Joseph, sur la checklist : « on ne comprend rien du tout, c'est pas simple, trop de
-saisies et pas simple d'usage ». `docs/REFONTE-CHECKLIST.md` a listé les défauts dans le code ; le
-parcours refait sur la maquette les a confirmés, et en a montré un que le fichier ne disait pas.
+**1. Écrire se scinde en deux, par le temps du verbe.** « Ajouter une tâche à faire » ouvre la
+création d'un point de checklist ; « Noter une intervention » ouvre le journal. Le carnet n'avait
+qu'une porte, celle de ce qui est **déjà fait** — et la note qu'on prend le plus souvent à bord est
+l'autre : « il faudra changer l'anode au printemps ». Elle obligeait à ouvrir la Checklist et à y
+trouver « Ajouter un point », c'est-à-dire à connaître le rangement de l'app avant de pouvoir s'en
+servir. Deux cartes, dans l'ordre où on y pense, chacune disant son objet et où elle mène.
 
-**Ce qu'on a vu.** Sur un iPad, l'onglet s'ouvre sur **quatre choses à la fois** : un bloc « À
-racheter », une grille de neuf systèmes, une liste plate « À traiter » à quatre onglets, et la
-même liste redite plus bas par système. Sur un téléphone, la ligne est pire que décrite : le badge
-d'état (112 px), l'échéance et le bouton « Fait » prennent leur pleine largeur, et le titre —
-le seul mot qui dit quoi faire — est coupé à trois syllabes : « Enrouleur… », « Bas-étai et… »,
-« Remplacer la… ». Les échéances lointaines s'écrivent **« dans 365 j »**, un nombre que personne
-ne lit sans le diviser par trente. Et cocher « j'ai changé l'impeller » ouvre un dialogue de cinq
-champs — date, réalisé par, heures moteur (obligatoire), valide jusqu'au, note — dont le bouton
-d'enregistrement est **sous la ligne de flottaison** : il faut faire défiler un formulaire pour
-confirmer un geste d'une seconde.
+**Ce que ça renverse.** L'audit §7.3 avait posé « un contrôle nommé par viewport » pour tuer les
+deux primaires concurrents qui menaient au **même** endroit. Ici les deux ne mènent pas au même
+endroit : ils nomment deux temps. La règle tenait contre la redondance, pas contre le choix — et
+c'est bien parce qu'elles ne sont pas deux boutons primaires, mais deux cartes, que l'écran ne
+redemande pas le geste que la sidebar porte déjà.
 
-**Décision — une question par écran.** Le tableau de bord est devenu le plan de travail (D121) :
-toute la file, rangée par palier, c'est lui qui répond à « qu'est-ce que je fais aujourd'hui ».
-La Checklist répond donc à l'autre question, et à elle seule : **« qu'est-ce qu'on suit sur ce
-bateau »** — les systèmes, ce qu'ils portent, leur avancement. La liste plate « À traiter » et ses
-quatre onglets **disparaissent** (`TodoList`, `ChecklistViewTabs` supprimés) : elle redisait depuis
-le second onglet ce que le premier dit mieux. Ce qui renverse **D21**, qui les avait institués.
+**2. « Consulter mon bateau » est la maquette.** Le bloc large sous la file est le modèle 3D d'E2-8,
+qui est déjà exactement cet objet : le bateau lui-même, ses zones, ce qu'il y a à y faire. Il
+deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). L'assemblage des lignes est **partagé**
+avec l'onglet Bateau (`toBoatModelData`) : deux assemblages auraient fini par dessiner deux bateaux
+différents du même carnet.
 
-**Décision — une seule ligne, le titre d'abord.** `TodoRow` remplace `ChecklistItemRow` partout,
-checklist et tableau de bord compris : le titre prend toute la largeur sur deux lignes, l'état est
-porté par un trait de couleur **et** par une phrase (jamais par la couleur seule, règle 12), et la
-phrase se dit en français de marin — « En retard de 79 jours », « À faire aujourd'hui », « Dans
-trois semaines », « Dans un an ». Les paliers de `due-sentence.ts` : les jours tant qu'ils se
-comptent (quinzaine), puis les semaines, les mois, les ans. Les heures restent des heures — un
-compteur tourne au rythme du moteur, pas du calendrier.
+**3. « Ce que le bateau a coûté » revient, autrement.** E18-1 avait retiré la ligne « Dépenses,
+12 derniers mois » du récapitulatif, avec les trois liens de sommaire. Elle revient comme une
+**découverte** : un montant qu'on regarde, et les trois systèmes qui le composent. C'est un
+renversement assumé de mon propre dégraissage — et il est juste : un écran qui n'a rien à faire doit
+proposer autre chose que du vide, et « où part l'argent » est la question qu'un propriétaire se pose
+sans jamais penser à ouvrir un onglet pour ça. Total et répartition comptés par la base
+(`boat_expense_totals`, D111), trois barres de part, aucun graphique (règle 10).
 
-**Décision — cocher coûte un geste.** Le dialogue posait cinq questions dont il connaissait déjà
-quatre réponses. `use-tick.ts` ne demande plus rien : la date est aujourd'hui, la personne est
-celle qui touche l'écran, les heures sont le compteur courant du moteur. Ce qui a été **supposé se
-lit dans la confirmation** (« Par Xavier, aujourd'hui, à 1482,5 h · Prochaine : 14/09/2027 »), et
-« Annuler » reste sous le pouce huit secondes. Le cochage hors ligne est conservé (E9-1b). Reste
-la seule question que l'app ne peut pas deviner : un intervalle en heures sur un moteur **jamais
-relevé** — la base l'exige (`check_completion_hours`), donc on la pose, et rien d'autre.
+**Ce que l'ordre de l'écran devient.** Écrire (les deux actes) · le bandeau · faire (la file) ·
+savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu dès qu'elle n'est pas
+vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
+flottaison.
 
-**Décision — les mots du bord.** « Point », « intervalle », « ancrage », « recaler », « ponctuel »,
-« jamais fait », « valide jusqu'au » quittent l'interface : on suit des choses, on les a « notées »
-ou pas, elles se font « tous les six mois » ou « une seule fois », un papier est « à refaire avant
-le… ». Vingt-neuf libellés réécrits.
+## 2026-09-14 — D134 : chercher est une porte du carnet, et sept réponses à la même question
 
-**Raison.** Les trois portes ne se contredisaient pas, elles se **répétaient** — et une répétition
-sans autorité est exactement ce qui fait qu'« on ne sait jamais où on est ». Quant aux cinq
-champs : ils demandaient à une personne debout sur un pont mouillé de ressaisir ce que l'app avait
-déjà sous la main. Deviner en le montrant est plus juste que demander, parce que la supposition
-est vraie dans le cas de très loin le plus fréquent — on coche ce qu'on vient de faire — et parce
-qu'une supposition affichée se corrige, quand une question posée à chaque fois se subit.
+**Question.** « C'était quand, la dernière courroie ? Combien ? Quelle référence ? » est la
+première raison d'ouvrir un carnet d'entretien. Jusqu'ici la recherche vivait **dans** le Journal,
+sur le titre et les notes d'une intervention : poser la question supposait de savoir déjà dans
+quel écran dormait la réponse — un achat, un équipement, une pièce, un intervenant, une facture.
+Une recherche qui demande de connaître le rangement de l'app n'est pas une recherche.
 
-**Ce qui n'a pas bougé.** `checklist_item_status` et `checklist_compute_status` restent la source
-de vérité des états, et `src/lib/checklist-status.ts` leur miroir testé (règle 8). Le premier jour
-reste traité par la mise en route, pas par la porte : les 93 points de l'ORC 50 n'arrivent pas en
-93 lignes rouges.
+**Décision.**
+
+1. **Sept familles, une question, un regroupement.** `search_boat()` interroge d'un coup les
+   interventions, les points du plan, les achats, les équipements, les pièces, les intervenants
+   et les documents en attente. La page **groupe** par famille et ne mélange jamais : « la
+   dernière courroie » et « la courroie qu'il faudra changer » sont deux réponses différentes à
+   la même frappe, et les fondre dans une liste unique obligerait à lire chaque ligne pour savoir
+   laquelle on tient. L'ordre des familles descend de ce qu'on a fait vers ce qui le porte.
+2. **Une porte dans le cadre, un champ sur la page.** La barre du haut et le rail portent une
+   **icône**, pas un champ. Un champ vivant dans une barre de 56 px se disputerait la place avec
+   « ‹ Retour », le nom du bateau et le « + » dès 320 px, et la page de résultats porte de toute
+   façon le sien. Un seul champ dans l'app, donc, qui prend le clavier en arrivant ; l'état vit
+   dans l'URL, de sorte qu'un résultat se partage et survit au retour arrière.
+3. **Le téléphone, l'e-mail et l'adresse d'un intervenant ne sont jamais cherchés.** Ils restent
+   lisibles sur sa fiche — la RLS ne change pas —, mais une page de résultats se montre à qui se
+   tient à côté, et taper « 06 » ne doit pas imprimer une liste de numéros. La colonne indexée le
+   dit aussi clairement que la fonction.
+4. **Un document validé ne se cherche pas comme document.** Il est devenu une intervention ou un
+   achat, et c'est sous ce nom qu'on le trouve : le montrer deux fois serait le montrer comme
+   deux choses. Seuls les documents encore en attente dans « À valider » ont une ligne.
+5. **Le pliage est stocké, pas recalculé.** Chaque famille gagne une colonne générée
+   `search_text` — la concaténation de ses colonnes cherchables, minuscules et sans accents
+   (`text_haystack`, au-dessus de `text_fold` de `0005`) — et son index trigramme. En expression
+   d'index, le pliage restait évalué **ligne à ligne** dès que le planificateur préférait entrer
+   par `boat_id`, ce qu'il fait toujours puisque toute requête filtre par bateau (règle 4) :
+   mesuré à **161 ms** sur un carnet de dix ans, passés à plier des lignes qui n'allaient pas
+   correspondre. Payé une fois à l'écriture, le même calcul tombe à **0,6 ms**. C'est la seule
+   raison pour laquelle cette migration touche sept tables.
+
+**Ce que cela remplace.** `0001` avait créé `maintenance_logs_search_idx` sur
+`title || ' ' || coalesce(notes, '')` brut. Aucune requête n'a jamais pu s'en servir : la seule
+qui le voulait est le filtre du Journal, qui demande `title ilike … or notes ilike …` — deux
+colonnes, pas leur concaténation. Vérifié au `EXPLAIN` avant de le supprimer ; il est remplacé,
+sous son nom, par l'index que cette même recherche peut enfin emprunter.
+
+**Ce que cela ne fait pas.** Le filtre du Journal (E3-2) reste tel quel. Le brancher sur
+`search_text` le rendrait insensible aux accents et servi par l'index, mais demanderait un jumeau
+TypeScript de `text_fold` à tenir à parité — une dette à ouvrir avec son ticket, pas en passant.
+
+**Budget.** Mesuré sur une base reconstruite (Postgres 16, sept familles remplies) : **1,5 à
+1,8 ms** sur un carnet de la taille de celui de Xaman, **8 à 22 ms** sur un carnet de dix ans
+(5 000 interventions, 4 000 achats, 2 000 points, 800 pièces, 500 équipements, 200 intervenants),
+**80 ms** au pire sur un mot que porte un quart d'une famille (« chantier », présent dans chaque
+nom de fournisseur du jeu d'essai). Le budget écrit est donc **≤ 100 ms** sur un carnet de dix
+ans, et il est tenu avec un ordre de grandeur de marge sur le carnet réel.
+
+## 2026-09-14 — D135 : la file s'emporte, et une feuille n'a pas de paliers
+
+**Question.** Le plan de travail vit sur l'écran d'arrivée (D121). Au ponton, l'iPad reste dans
+le sac : on a les mains prises, parfois mouillées, le réseau du port est mauvais, et ce qu'on
+voulait c'était la liste — celle qu'on emmène au bateau ou qu'on envoie au chantier. E18-5
+demandait de **réutiliser le rapport d'état** (E9-2b) plutôt que de dessiner une seconde mise en
+page.
+
+**Décision.**
+
+1. **Un second document, la même mise en page.** Le rapport d'état parle à un assureur, un
+   acheteur ou un expert ; la liste parle à soi-même ou au chantier. Contenus différents, lecteurs
+   différents — mais une seule colonne, les mêmes titres de section, les mêmes tableaux et le même
+   comportement à l'impression. Les quatre primitives partagées sortent dans
+   `src/components/report/print.tsx` ; `ReportDocument` les lui emprunte désormais. La page vit
+   sous `/report/queue`, donc sous la tranche i18n du rapport : le mot « rapport » couvre les deux.
+2. **Deux blocs, pas cinq paliers.** La file de l'écran range par *quand* — aujourd'hui, cette
+   semaine, ce mois-ci, aux heures, à racheter (D127). Sur papier, ces titres n'ont plus d'objet :
+   la feuille restera dans une poche jusqu'à ce que le travail soit fait, et « cette semaine » y
+   aura vieilli avant d'être lu. Ce qui compte alors est **pourquoi** chaque ligne est là — « en
+   retard de 41 jours », « dans 38 h », « il manque 2 » —, en toutes lettres et par ligne. Restent
+   donc **à faire** et **à racheter**, dans l'ordre d'urgence que la file donne déjà.
+3. **Une case à cocher, dessinée.** C'est la seule chose que le document ajoute à la file, et
+   c'est ce qui en fait une liste : on coche au stylo, on ressaisit au retour. `print-color-adjust`
+   garde le trait sur une imprimante qui « économiserait » les bordures claires.
+4. **Les documents à valider ne partent pas au bateau.** Le rang 2 de la file (« À valider »)
+   reste à l'écran : on ne valide pas une facture debout dans un coffre moteur, et une ligne qu'on
+   ne peut pas traiter là où on lit la feuille est une ligne qu'on raye sans l'avoir faite.
+
+**Ce que cela ne change pas.** Aucune migration : la page lit `boat_todo_queue` (E18-2) telle
+quelle, avec le même plafond de 200 lignes que le tableau de bord — une feuille qu'on emmène
+porte ce qui reste à faire, pas les vingt premières lignes.
