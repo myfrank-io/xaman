@@ -528,7 +528,7 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   absente de `SIGNED_IN_ELSEWHERE`. Page annoncée comme **programme pilote** : l'étage constructeur
   n'existe pas encore, et un chantier qui l'apprend à la démo ne revient pas.
 
-- [x] **E19-10 (S, 2)** **La présentation du chantier se lit sur le site** (D136). Le deck « Xaman
+- [x] **E19-10 (S, 2)** **La présentation du chantier se lit sur le site** (D137). Le deck « Xaman
   pour les constructeurs » — sept pages 16/9, écrites pour un chantier nommé — devient
   `/constructeurs/brochure` : sept `<section>` **redessinées avec les jetons de `globals.css`**, et
   non le PDF incrusté. Le PDF pèse 3,4 Mo parce que chacune de ses pages est une image aplatie de

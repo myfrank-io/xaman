@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * The builders' presentation, read on the site rather than sent as a PDF (E19-10, D136).
+ * The builders' presentation, read on the site rather than sent as a PDF (E19-10, D137).
  *
  * The deck exists as seven 16:9 pages. Re-drawn here rather than embedded: the PDF is 3.4 MB of
  * flattened raster — no selectable text, nothing a screen reader can read, four megabytes on a

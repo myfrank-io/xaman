@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import fr from "@/messages/fr.json";
 
 /**
- * La présentation constructeur, lue sur le site (E19-10, D136).
+ * La présentation constructeur, lue sur le site (E19-10, D137).
  *
  * Le deck arrive en PDF : sept pages 16/9 dont chaque page est une image aplatie de 500 ko. La
  * page `/constructeurs/brochure` les redessine avec les jetons de `globals.css` — donc tout le

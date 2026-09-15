@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D137.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D138.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3487,3 +3487,63 @@ retard que récemment, et jamais avec un retard à trois chiffres ; `/dev/ui` mo
 référence avec des puces en taille `sm`, que l'application n'écrit nulle part ; et la fiche d'un
 moteur ne listait que des interventions **terminées**. Les trois recettes portent désormais la
 forme qui casse, donc `tests/e2e/touch-audit.spec.ts` la mesure sur les cinq viewports.
+
+## 2026-09-15 — D137 : la présentation constructeur se lit sur le site, pas dans une pièce jointe
+
+**Question.** Le deck « Xaman pour les constructeurs » existe : sept pages 16/9, écrites pour un
+chantier nommé, envoyées en PDF. Le site public a déjà sa page chantier (`/constructeurs`, E19-1),
+qui tient en une page d'arguments. Où va la présentation, et sous quelle forme ?
+
+**Décision.**
+
+1. **Redessinée, pas incrustée.** Le PDF fait **3,4 Mo**, et pour cause : chaque page est une image
+   aplatie de 5760 × 3240 — pas une ligne de texte sélectionnable, rien qu'un lecteur d'écran
+   puisse lire, rien qu'un moteur puisse indexer, et quatre mégaoctets sur la 4G d'un port. Or ce
+   qui a été aplati, ce sont **nos propres jetons** : le crème du deck est `--background`
+   (`#f6f5f1`), son marine est `--navy`, son laiton `--brass-light`, ses titres la fonte
+   d'affichage de `.text-h1`. Redessiner ne coûte donc pas une direction artistique, cela en
+   supprime une seconde copie — et la brochure ne peut plus s'écarter du produit comme le ferait
+   une photographie de celui-ci. `/constructeurs/brochure`, sept `<section>`, aucune image.
+2. **Une brochure, pas un diaporama.** Pas de carrousel, pas de boîte 16/9 fixe : sept pages hautes
+   d'au moins un écran dans le flux du document, une barre collante de sept numéros, les flèches du
+   clavier. *Au moins* un écran, jamais exactement : une page qui déborde — c'est le cas de la
+   page 3 en 768 × 1024 — continue de défiler au lieu d'être coupée. Sans script, la barre reste
+   sept ancres vers sept `id`, ce qui est déjà tout ce qu'il faut pour lire.
+3. **Le prospect sort de l'argumentaire, sauf là où l'ôter serait malhonnête.** Le deck s'adresse à
+   un chantier nommé ; une page publique parle à tous. « Grand Large Yachting aujourd'hui » devient
+   « Votre chantier aujourd'hui », « Grand Large Services » devient « votre réseau de services », et
+   le pied de page devient « Xaman pour les constructeurs ». Le nom ne subsiste **qu'en page 4**,
+   où il est la fonction de la personne citée : une citation dont on retire l'affiliation de
+   l'auteur n'est plus une citation. `tests/unit/brochure.test.ts` tient la règle — le nom du
+   prospect n'apparaît que sous `four.role`, et un ajout ailleurs fait rougir la CI.
+4. **Elle réimprime le deck.** `@page { size: A4 landscape }` dans un `<style>` **de cette route
+   seule** : la règle est propre au document et ne se restreint à aucune classe, donc la poser dans
+   `globals.css` coucherait aussi le rapport d'état et la liste du bord (E9-2b, E18-5), qui sont
+   des documents portrait. Une page imprimée par section — mesuré : **sept pages A4 paysage, 830
+   ko**, contre 3,4 Mo pour le PDF d'origine. Deux détails s'apprennent à l'essai plutôt qu'au
+   raisonnement, et valent d'être écrits : la mise à l'échelle est **un `zoom: 0.78` sur la
+   section** plutôt qu'une douzaine de variantes `print:` sur les paddings, les titres et les
+   cartes — une règle qui réduit tout dans les mêmes proportions, ce qui est exactement ce que
+   « imprimer la planche » veut dire ; et le **pied de site part en `print:hidden`**, faute de quoi
+   il ouvre une huitième page sous les sept.
+5. **L'avertissement de pilote voyage avec elle** (E19-1). Sept pages de ce qu'un chantier pourrait
+   vendre, sans dire que l'étage constructeur s'écrit encore, c'est exactement la démo dont on ne
+   revient pas.
+
+**Ce que cela ne change pas.** Aucune migration, aucune dépendance, aucune tranche i18n : le seul
+composant client du site public reçoit ses cinq chaînes en props plutôt que d'ouvrir un
+`NextIntlClientProvider` autour de deux pages de vitrine (D110). `/constructeurs` gagne deux liens,
+rien d'autre.
+
+**Ce qui reste à faire avant la mise en ligne.** Deux choses, aucune n'étant du code. La citation de
+la page 4 (*Figaro Nautisme*, octobre 2025) est reprise du deck telle quelle : **elle n'a pas été
+vérifiée à la source**, et une citation nominative sur une page publique se vérifie avant d'y être.
+Et la boîte `constructeurs@xaman.boats`, que la page 7 appelle comme le fait déjà `/constructeurs`,
+n'existe toujours pas (E19-9).
+
+**Note de numérotation.** Cette décision a d'abord été écrite **D136** le 14 septembre. Le même
+numéro a été pris le même jour par E15-13 (« une ligne en retard tient dans ses colonnes »), qui a
+fusionné le premier ; la fusion de `main` dans cette branche a gardé son entrée et **perdu
+celle-ci**. Elle est reprise ici sous D137, avec ses citations. C'est exactement la panne que
+décrit E0-8 — le compteur a fait son travail (la collision s'est vue à la fusion), c'est la
+réparation qui coûte.

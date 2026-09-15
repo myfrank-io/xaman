@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /**
- * One page of the builders' brochure (E19-10, D136).
+ * One page of the builders' brochure (E19-10, D137).
  *
  * The deck handed over as a PDF is seven 16:9 pages, and its grammar never changes: a brass
  * eyebrow, a title set in the display face, a body, and — on the pages that argue rather than
