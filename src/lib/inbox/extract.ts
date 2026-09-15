@@ -1,13 +1,10 @@
-import path from "node:path";
-
 /**
  * The text of a document, without a model (D92).
  *
  * A PDF has, most of the time, its own text layer — an invoice printed to PDF by the yard's
  * software — and pdf.js reads it as it is, line by line. A photo goes through Tesseract, the
- * open-source OCR, with the French model shipped in the repository (`tessdata/`): nothing is
- * downloaded at run time, nothing is sent anywhere, and the reading costs what a serverless
- * second costs.
+ * open-source OCR, with the French model served from the project's own Storage: nothing is sent
+ * anywhere, and the reading costs what a serverless second costs.
  *
  * Both run in Node only: this module is imported by `analyse.ts` and by nothing the browser
  * sees. The packages stay outside the Next bundle (`serverExternalPackages`) so their workers
@@ -19,8 +16,24 @@ export type ExtractedText = {
   ocrConfidence: number | null;
 };
 
-/** Where the French OCR model lives, traced into the serverless bundle by `next.config.ts`. */
-export const TESSDATA_DIR = path.join(process.cwd(), "src", "lib", "inbox", "tessdata");
+/**
+ * Where the French model is read from: the public `ocr-assets` bucket of the project's Storage,
+ * not the deployment (D139). It is 600 Ko of open-source language data, it changes once a year,
+ * and it was copied into two serverless functions on every single deployment.
+ *
+ * `langPath` may be a URL in Node — tesseract.js tells a URL from a path with `is-url`, fetches
+ * `<langPath>/fra.traineddata.gz` and gunzips it. `scripts/push-ocr-assets.mjs` puts it there
+ * from the copy kept in the repository, which stays the source of truth.
+ *
+ * `INBOX_TESSDATA_PATH` overrides it with a **directory**, which tesseract.js reads from the file
+ * system instead: that is how the reading test (`tests/unit/inbox-local-reading.test.ts`) stays
+ * hermetic and offline, on the very copy the script uploads. Unset in the app.
+ */
+// Read at call time, not at module load: the env of a serverless instance is complete by then,
+// and a test may point it elsewhere after importing this module.
+const tessdataSource = () =>
+  process.env.INBOX_TESSDATA_PATH ??
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/ocr-assets`;
 
 export const OCR_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp"] as const;
 
@@ -85,9 +98,11 @@ async function pdfText(bytes: Buffer): Promise<string> {
 async function imageText(bytes: Buffer): Promise<ExtractedText> {
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("fra", 1, {
-    langPath: TESSDATA_DIR,
+    langPath: tessdataSource(),
     gzip: true,
-    cacheMethod: "none",
+    // The unpacked model is kept in the only directory a serverless runtime may write to, so a
+    // warm instance reads its 600 Ko from disk instead of fetching them again.
+    cachePath: "/tmp",
     logger: () => {},
     errorHandler: (error) => console.error("inbox: ocr worker", error),
   });

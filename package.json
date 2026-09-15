@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build && serwist build serwist.config.mts",
+    "build": "next build && node scripts/trim-server-trace.mjs && serwist build serwist.config.mts",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -31,6 +31,8 @@
     "gen:emails": "node scripts/gen-email-templates.mjs",
     "check:numbering": "node scripts/check-numbering.mjs",
     "emails:push": "node scripts/push-email-templates.mjs",
+    "ocr:push": "node --env-file-if-exists=.env.local scripts/push-ocr-assets.mjs",
+    "vercel:prune": "node --env-file-if-exists=.env.local scripts/vercel-prune-deployments.mjs",
     "build:sw": "serwist build serwist.config.mts",
     "test:e2e": "playwright test",
     "test:e2e:journeys": "playwright test --project=journeys-ipad --project=journeys-iphone --workers=1"
