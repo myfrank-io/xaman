@@ -1,46 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { SearchIcon } from "lucide-react";
+import { useRef } from "react";
+import { Loader2Icon, SearchIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
-import { searchPath } from "@/lib/queries/boat-routes";
-
-/** Comme le Journal (E3-2) : la frappe s'arrête, l'URL suit. Jamais de soumission. */
-const DEBOUNCE_MS = 300;
 
 /**
- * Le champ de recherche (E18-4, D134).
+ * Le champ de recherche (E18-4, D134, E18-14).
  *
- * L'état vit dans l'URL et nulle part ailleurs : un résultat se partage, se met en favori et
- * survit au retour arrière. `replace` plutôt que `push`, sinon chaque lettre tapée laisserait une
- * entrée dans l'historique et le bouton « précédent » remonterait la frappe caractère par
- * caractère.
+ * Il ne décide plus de rien : la question vit dans l'état de `SearchScreen`, qui la pose à la
+ * base et la recopie dans l'URL. Le champ l'affiche, la modifie, et sait l'effacer.
+ *
+ * `autoFocus` est ce qui manquait pour que la barre de titre tienne sa promesse : la `TopBar` est
+ * une porte (« la page de résultats porte de toute façon le sien, qui prend le clavier en
+ * arrivant »), sauf que la page ne le passait jamais. On arrivait donc sur un champ vide qu'il
+ * fallait viser une seconde fois — deux touchers pour chercher, sur un écran tenu d'une main.
  */
 export function SearchField({
-  boatId,
-  initialQuery,
+  value,
+  onChange,
+  busy = false,
   autoFocus = false,
 }: {
-  boatId: string;
-  initialQuery: string;
+  value: string;
+  onChange: (value: string) => void;
+  /** La base travaille : une roue discrète à droite, jamais un écran qui se vide. */
+  busy?: boolean;
   autoFocus?: boolean;
 }) {
   const t = useTranslations("search");
-  const router = useRouter();
-  const [query, setQuery] = useState(initialQuery);
-  const typed = useRef(false);
-
-  useEffect(() => {
-    if (!typed.current || query === initialQuery) return;
-    const timer = setTimeout(
-      () => router.replace(searchPath(boatId, query) as Parameters<typeof router.replace>[0]),
-      DEBOUNCE_MS,
-    );
-    return () => clearTimeout(timer);
-  }, [query, initialQuery, boatId, router]);
+  const field = useRef<HTMLInputElement>(null);
 
   return (
     <div className="relative">
@@ -49,19 +39,54 @@ export function SearchField({
         aria-hidden
       />
       <Input
+        ref={field}
         type="search"
-        value={query}
+        value={value}
         aria-label={t("label")}
         placeholder={t("placeholder")}
         autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
         enterKeyHint="search"
         autoFocus={autoFocus}
-        className="pl-10"
-        onChange={(event) => {
-          typed.current = true;
-          setQuery(event.target.value);
+        /**
+         * Le `×` natif de WebKit est masqué : il fait 14 px, il n'apparaît qu'au survol d'une
+         * souris que l'iPad n'a pas, et il se superposerait au nôtre. Le bouton ci-dessous fait
+         * 44 px et existe au doigt (règle 1).
+         */
+        className="pr-20 pl-10 [&::-webkit-search-cancel-button]:hidden"
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          // Échap efface la question sans quitter le champ — le clavier reste, la frappe
+          // suivante part de zéro. Sur un clavier d'iPad c'est le geste le plus court ; au doigt
+          // c'est le bouton.
+          if (event.key === "Escape" && value !== "") {
+            event.preventDefault();
+            onChange("");
+          }
         }}
       />
+      {/* La roue et la croix se suivent dans la même gouttière, jamais l'une sur l'autre : les
+          48 px de `pr-20` sont réservés pour les deux. */}
+      <div className="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-0.5">
+        <span className="flex size-4 items-center justify-center">
+          {busy ? <Loader2Icon className="size-4 animate-spin text-ink-3" aria-hidden /> : null}
+        </span>
+        {value !== "" ? (
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              field.current?.focus();
+            }}
+            className="inline-flex size-11 items-center justify-center rounded-lg tap-feedback text-ink-2 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <XIcon className="size-5" aria-hidden />
+            <span className="sr-only">{t("clear")}</span>
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

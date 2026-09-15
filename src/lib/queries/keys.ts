@@ -24,4 +24,8 @@ export const boatKeys = {
   equipment: (boatId: string) => ["boat", boatId, "equipment"] as const,
   members: (boatId: string) => ["boat", boatId, "members"] as const,
   invitations: (boatId: string) => ["boat", boatId, "invitations"] as const,
+  // La question fait partie de la clé : chaque frappe garde son propre cache, donc revenir sur
+  // « vidan » après avoir tapé « vidange » réaffiche sans rappeler la base (E18-14).
+  search: (boatId: string, query: string, limit: number) =>
+    ["boat", boatId, "search", query, limit] as const,
 };

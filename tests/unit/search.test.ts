@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   SEARCH_KINDS,
+  countSearchHits,
   groupSearchHits,
   isSearchable,
   toSearchHit,
@@ -20,6 +21,7 @@ const row = (over: Partial<Parameters<typeof toSearchHit>[0]> = {}) => ({
   id: "11111111-1111-1111-1111-111111111111",
   title: "Vidange moteur",
   subtitle: null,
+  context: null,
   happened_at: "2026-03-01",
   amount: 120,
   parent_id: null,
@@ -44,6 +46,7 @@ describe("toSearchHit", () => {
       id: "11111111-1111-1111-1111-111111111111",
       title: "Vidange moteur",
       subtitle: null,
+      context: null,
       happenedAt: "2026-03-01",
       amount: 120,
       parentId: null,
@@ -81,6 +84,7 @@ describe("groupSearchHits", () => {
     id: `${kind}-${title}`,
     title,
     subtitle: null,
+    context: null,
     happenedAt: null,
     amount: null,
     parentId: null,
@@ -123,5 +127,40 @@ describe("groupSearchHits", () => {
 
   it("says nothing when nothing matched", () => {
     expect(groupSearchHits([])).toEqual([]);
+  });
+});
+
+describe("countSearchHits", () => {
+  const hit = (kind: SearchHit["kind"], title: string): SearchHit => ({
+    kind,
+    id: `${kind}-${title}`,
+    title,
+    subtitle: null,
+    context: null,
+    happenedAt: null,
+    amount: null,
+    parentId: null,
+  });
+
+  it("compte toutes les familles ensemble, comme le dit le compteur de l'écran", () => {
+    expect(countSearchHits(groupSearchHits([hit("log", "A"), hit("part", "B")]))).toBe(2);
+    expect(countSearchHits([])).toBe(0);
+  });
+});
+
+/**
+ * Le fragment rendu par la base ne sert à rien si l'écran ne montre pas *où* ça a répondu : une
+ * intervention trouvée par ses notes affiche un titre où le mot cherché n'est pas.
+ */
+describe("toSearchHit et le fragment", () => {
+  it("garde le fragment tel que la base l'a découpé", () => {
+    expect(toSearchHit(row({ context: "…la courroie d'alternateur…" }))?.context).toBe(
+      "…la courroie d'alternateur…",
+    );
+  });
+
+  it("ne garde pas un fragment vide : il n'y a alors rien à expliquer", () => {
+    expect(toSearchHit(row({ context: "   " }))?.context).toBe(null);
+    expect(toSearchHit(row({ context: null }))?.context).toBe(null);
   });
 });

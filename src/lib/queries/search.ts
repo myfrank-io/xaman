@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { isSearchable, searchTerms } from "@/lib/search-terms";
 import type { Database } from "@/types/database";
+
+export { isSearchable, searchTerms };
 
 /**
  * Les sept familles du carnet (E18-4, D134).
@@ -28,6 +31,12 @@ export type SearchHit = {
   title: string;
   /** Ce qui distingue deux lignes du même nom : une marque, une référence, un fournisseur. */
   subtitle: string | null;
+  /**
+   * Le fragment de texte profond qui a répondu (E18-14) : les notes d'une intervention, la
+   * description d'un point, le numéro de série d'un équipement. Null quand c'est le titre ou le
+   * sous-titre qui a répondu — il n'y a alors rien à expliquer.
+   */
+  context: string | null;
   /** Le jour, quand la famille en a un. */
   happenedAt: string | null;
   /** Ce que ça a coûté, quand la ligne porte un montant. */
@@ -53,17 +62,6 @@ type RpcRow = Database["public"]["Functions"]["search_boat"]["Returns"][number];
 type SearchRow = { [K in keyof RpcRow]: RpcRow[K] | null };
 
 /**
- * En deçà de deux caractères la fonction SQL ne répond rien ; l'écran doit le savoir **avant**
- * d'appeler, pour dire « continuez à taper » plutôt que « aucun résultat » — les deux phrases ne
- * veulent pas dire la même chose à quelqu'un qui vient d'appuyer sur une touche.
- */
-export const MIN_QUERY_LENGTH = 2;
-
-export function isSearchable(query: string): boolean {
-  return query.trim().length >= MIN_QUERY_LENGTH;
-}
-
-/**
  * Une ligne de la fonction, rendue sûre pour l'écran.
  *
  * Pure, donc testable sans base. Un genre inconnu (une huitième famille ajoutée en SQL et pas
@@ -77,11 +75,13 @@ export function toSearchHit(row: SearchRow): SearchHit | null {
   const title = (row.title ?? "").trim();
   if (!kind || !row.id || title === "") return null;
   const subtitle = (row.subtitle ?? "").trim();
+  const context = (row.context ?? "").trim();
   return {
     kind,
     id: row.id,
     title,
     subtitle: subtitle === "" ? null : subtitle,
+    context: context === "" ? null : context,
     happenedAt: row.happened_at ?? null,
     amount: row.amount ?? null,
     parentId: row.parent_id ?? null,
@@ -91,8 +91,8 @@ export function toSearchHit(row: SearchRow): SearchHit | null {
 /**
  * Les lignes rangées par famille, dans l'ordre de `SEARCH_KINDS` et sans famille vide.
  *
- * Le tri **à l'intérieur** d'une famille est celui que SQL a rendu (la similarité du nom, puis la
- * date) : le regroupement ne réordonne rien, il ne fait que rassembler.
+ * Le tri **à l'intérieur** d'une famille est celui que SQL a rendu (le score, puis la date) : le
+ * regroupement ne réordonne rien, il ne fait que rassembler.
  */
 export function groupSearchHits(hits: SearchHit[]): SearchGroup[] {
   return SEARCH_KINDS.map((kind) => ({
@@ -101,12 +101,23 @@ export function groupSearchHits(hits: SearchHit[]): SearchGroup[] {
   })).filter((group) => group.hits.length > 0);
 }
 
+/** Combien de lignes, toutes familles confondues — ce que le compteur de l'écran annonce. */
+export function countSearchHits(groups: SearchGroup[]): number {
+  return groups.reduce((total, group) => total + group.hits.length, 0);
+}
+
 /**
  * Chercher dans le carnet.
  *
  * Une seule question, sept familles, et la RLS qui décide de chaque ligne : la fonction est
  * `security invoker`, donc ce qui revient est exactement ce que l'appelant pourrait atteindre
  * écran par écran.
+ *
+ * L'erreur est **levée**, jamais avalée. La première version lisait `const { data } = await …` et
+ * laissait `error` de côté : quand la fonction a manqué en production — la migration `0039` était
+ * dans le dépôt et pas dans la base —, chaque frappe recevait un 404, `data` valait `null`, et
+ * l'écran annonçait posément « aucun résultat » pour tout le carnet. Une recherche qui ne peut
+ * pas répondre doit le dire ; c'est la seule façon qu'une panne ait l'air d'une panne.
  */
 export async function loadSearch(
   supabase: SupabaseClient<Database>,
@@ -115,11 +126,12 @@ export async function loadSearch(
   limit: number,
 ): Promise<SearchGroup[]> {
   if (!isSearchable(query)) return [];
-  const { data } = await supabase.rpc("search_boat", {
+  const { data, error } = await supabase.rpc("search_boat", {
     p_boat_id: boatId,
     p_query: query.trim(),
     p_limit: limit,
   });
+  if (error) throw error;
   const hits = (data ?? []).map(toSearchHit).filter((hit): hit is SearchHit => hit !== null);
   return groupSearchHits(hits);
 }
