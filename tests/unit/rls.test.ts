@@ -1360,7 +1360,12 @@ describeWithDb("storage bucket ocr-assets (D139)", () => {
   const MODEL = "fra.traineddata.gz";
 
   it("is public, so Tesseract's worker can fetch the model without a session", async () => {
+    // Read as the service role, the one that uploads the model: `storage.buckets` carries RLS and
+    // no policy makes it readable — not Supabase's, and none of ours. A signed-in user asking for
+    // this row gets no error and no line, which is the right shape: what a client needs is the
+    // object, never the bucket's own row.
     const bucket = await as(U.owner, async (c) => {
+      await c.query("set local role service_role");
       const res = await c.query("select public from storage.buckets where id = 'ocr-assets'");
       return res.rows[0]?.public;
     });
