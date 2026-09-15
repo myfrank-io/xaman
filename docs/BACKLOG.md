@@ -32,7 +32,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E16 | E16-10 |
 | E17 | E17-13 |
 | E18 | E18-14 |
-| E19 | E19-10 |
+| E19 | E19-11 |
 | E20 | E20-4 |
 
 ---
@@ -527,6 +527,28 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   (`FleetPreview`) dont la légende dit qu'il est un dessin, route publique dans `src/proxy.ts` et
   absente de `SIGNED_IN_ELSEWHERE`. Page annoncée comme **programme pilote** : l'étage constructeur
   n'existe pas encore, et un chantier qui l'apprend à la démo ne revient pas.
+
+- [x] **E19-10 (S, 2)** **La présentation du chantier se lit sur le site** (D136). Le deck « Xaman
+  pour les constructeurs » — sept pages 16/9, écrites pour un chantier nommé — devient
+  `/constructeurs/brochure` : sept `<section>` **redessinées avec les jetons de `globals.css`**, et
+  non le PDF incrusté. Le PDF pèse 3,4 Mo parce que chacune de ses pages est une image aplatie de
+  5760 × 3240 : aucun texte sélectionnable, rien pour un lecteur d'écran, rien à indexer — alors
+  que ce qui a été aplati est notre propre direction artistique (`--background` est le crème du
+  deck, `--brass-light` son laiton, `.text-h1` sa fonte de titres). Pages hautes d'au moins un
+  écran dans le flux du document (une page qui déborde continue de défiler : c'est le cas de la
+  page 3 en 768 × 1024), barre collante de sept numéros — sept ancres vers sept `id` sans script,
+  page courante marquée et flèches du clavier avec —, repliée en « 3 / 7 » sous `sm` où neuf
+  cibles de 44 px ne tiennent pas dans 320 px. Impression : une page par section, `@page` en
+  paysage posé **sur cette route seule**, le rapport d'état et la liste du bord gardant leur boîte
+  portrait (E9-2b, E18-5). Le nom du prospect quitte l'argumentaire (« Votre chantier
+  aujourd'hui ») et ne reste qu'en page 4, où il est la fonction de la personne citée. L'annonce de
+  **programme pilote** voyage avec la brochure, comme sur la page qui la porte (E19-1).
+  **DoD** : textes dans `fr.json` (règle 7), `tests/unit/brochure.test.ts` (parité clés lues ↔
+  clés écrites, dans les deux sens, et le nom du prospect nulle part ailleurs que dans la
+  citation), route publique couverte par `tests/unit/proxy-public.test.ts`, page ajoutée à l'audit
+  tactile, vérifiée en 1024 × 768 et 768 × 1024. **Reste, et ce n'est pas du code** : la citation de
+  la page 4 (*Figaro Nautisme*, octobre 2025) est reprise du deck **sans avoir été vérifiée à la
+  source** ; et `constructeurs@xaman.boats`, que la page 7 appelle, n'existe pas encore (E19-9).
 
 ### Lot 2 — Ce qui manque au carnet avant qu'un chantier puisse le vendre — *à ne pas démarrer sans validation explicite*
 
