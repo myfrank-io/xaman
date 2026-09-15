@@ -792,18 +792,33 @@ create function purge_trash() returns int ...;
 --                                    (minuscules, sans accents) au-dessus de text_fold (0005).
 --                                    IMMUTABLE : c'est ce qui lui permet de porter une colonne
 --                                    générée. E18-4, `0039`.
+--  search_terms(q)                 : la question découpée en mots repliés, du plus long au plus
+--                                    court, six au plus. La découpe sur [^[:alnum:]] est aussi ce
+--                                    qui rend un joker LIKE intapable. Jumeau de searchTerms()
+--                                    (src/lib/search-terms.ts). E18-14, `0040`.
+--  search_rank(nom, sous-titre,    : ce que vaut une ligne pour une question, par paliers du nom
+--              question, motifs)     (≤ 1.0), du second champ (≤ 0.5) puis du texte profond ou de
+--                                    l'à-peu-près (≤ 0.4). Les textes arrivent **déjà repliés** :
+--                                    un corps sans FROM ni sous-requête est la condition pour que
+--                                    Postgres l'inline. E18-14, `0040`.
+--  search_excerpt(texte, mots, w)  : le fragment de texte profond qui a répondu, borné et élidé —
+--                                    ce qui permet à l'écran de dire pourquoi une ligne est là
+--                                    quand son titre ne le dit pas. E18-14, `0040`.
 --  search_boat(boat, q, limit)     : chercher dans le carnet — sept familles d'un coup (log,
 --                                    item, purchase, equipment, part, contact, document), une
---                                    ligne par résultat (kind, id, title, subtitle, happened_at,
---                                    amount, parent_id, score). security invoker : la RLS de
---                                    chaque table décide. Deux caractères minimum, corbeille et
---                                    points inactifs exclus, documents déjà validés exclus (ils
---                                    se trouvent sous leur nouveau nom). Le téléphone, l'e-mail
+--                                    ligne par résultat (kind, id, title, subtitle, context,
+--                                    happened_at, amount, parent_id, score). security invoker :
+--                                    la RLS de chaque table décide. Tous les mots exigés dans
+--                                    n'importe quel ordre, une faute pardonnée sur le plus long
+--                                    (word_similarity, seuil 0.45) sans lâcher les autres ; deux
+--                                    caractères minimum **sur un mot**, corbeille et points
+--                                    inactifs exclus, documents déjà validés exclus (ils se
+--                                    trouvent sous leur nouveau nom). Le téléphone, l'e-mail
 --                                    et l'adresse d'un intervenant ne sont jamais cherchés
---                                    (D134). E18-4, `0039`.
+--                                    (D134). E18-4 / E18-14, `0039`, `0040`.
 ```
 
-### 4.1 `search_text` — le texte cherchable, plié une fois (E18-4, D134, `0039`)
+### 4.1 `search_text` — le texte cherchable, plié une fois (E18-4, D134, `0039`, `0040`)
 
 Sept tables — `maintenance_logs`, `checklist_items`, `purchases`, `equipment`, `parts`,
 `contacts`, `inbox_items` — portent une colonne **générée** `search_text`, la concaténation pliée
@@ -826,6 +841,20 @@ par qui peut lire la ligne. Elle n'a donc ni politique ni privilège propres.
 le planificateur entrait par `boat_id` — ce qu'il fait toujours, puisque toute requête filtre par
 bateau (règle 4) : **161 ms** sur un carnet de dix ans, contre **0,6 ms** une fois stocké. C'est
 la raison pour laquelle `0039` touche sept tables.
+
+`0040` réemploie ces sept colonnes et leurs index sans y toucher. Il en tire deux règles
+d'écriture, mesurées sur le même carnet de dix ans, qui valent pour toute requête trigramme du
+dépôt :
+
+- **`search_text %> mot`, jamais `mot <% search_text`.** Les deux disent la même chose, mais seul
+  `%>` porte la colonne indexée **à gauche**, et c'est la seule des deux formes que l'`opfamily`
+  `gin_trgm_ops` expose (`%`, `~~`, `~`, `%>`, `%>>`, `=`, lues dans `pg_amop`). Même prédicat,
+  même résultat : **60 ms** contre **0,2 ms**.
+- **Une fonction appelée par ligne doit pouvoir être *inlinée*.** `inline_function()` refuse tout
+  corps de fonction SQL portant un FROM ou un sublink, et chaque appel devient alors une
+  invocation complète de l'exécuteur : **140 ms** pour classer 625 lignes, soit 0,22 ms par ligne.
+  D'où la forme de `search_rank()` — un seul `select`, pas de FROM, pas de sous-requête, le
+  repliage fait par l'appelant et les mots testés par `like all`, qui est un opérateur.
 
 ## 5. Politiques RLS (résumé)
 
@@ -1022,6 +1051,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - **0026** (D91) : `boats.inbox_token`, table `inbox_items` avec ses politiques, énumérations `inbox_source` / `inbox_status`. Aucune fonction : la lecture du document (`src/lib/inbox/analyse.ts` — lecteur local pdf.js / Tesseract + règles par défaut, Claude quand `ANTHROPIC_API_KEY` est posée, D92) et la réception (`src/lib/inbox/receive.ts`, webhook Resend `email.received`) vivent dans l'app avec la clé service ; la validation passe par les Server Actions des formulaires. Les deux e-mails (document à valider, document validé) sont générés par `pnpm gen:emails` comme les autres, sans gabarit Supabase.
 - **0027** (D93) : politique `inbox_items_delete` — `can_write_boat and status = 'dismissed'`. `0026` n'en avait aucune (« ignoré est un statut ») ; rouvrir un document ignoré passe par l'`update` existante, le supprimer demandait celle-ci. Aucune colonne, aucune fonction : l'action `deleteInboxItem` lit le chemin, supprime la ligne, puis retire l'objet du bucket — même ordre que `purgeAttachment`.
 - **0025** (D90) : deuxième édition du registre générique, générée depuis `seed/generic-checklists.json` par `pnpm gen:templates` (`0016` est figée) : modèle « Semi-rigide — modèle générique » (6 systèmes dont « Remorque », 62 points), points hors-bord / Z-drive / jet détaillés sur le modèle moteur, points spécifiques d'une transmission portés par leur scope (`shaft` / `saildrive` / `sterndrive` / `jet`), `zone_scope = 'offshore'` sur radeau, balise, AIS, radar, dessalinisateur et licence MMSI. Upsert sur les mêmes `external_ref` : rien n'est dupliqué, rien n'est retiré.
+- **0040** (D138) : la recherche répond à ce qu'on tape — `search_terms()`, `search_rank()`, `search_excerpt()`, et `search_boat()` refaite (drop + create : `context` s'ajoute à la liste rendue). Aucune table, aucune politique, aucune colonne : les sept `search_text` de `0039` et leurs index sont réemployés tels quels. Tous les mots de la question sont exigés dans n'importe quel ordre — « vidange babord » ne rendait rien —, une faute est pardonnée sur le plus long sans lâcher les autres, un joker `LIKE` tapé (« 100% », « % ») est devenu intapable, et le classement suit la place du mot dans la ligne au lieu d'une distance entre chaînes qui punissait les titres précis (§4.1 pour les deux règles de performance qui en sortent).
 - **0039** (D134) : `search_boat()` et `text_haystack()`, la recherche du carnet — sept familles, `security invoker`, aucune table ni politique nouvelle. Ajoute la colonne générée `search_text` et son index trigramme sur sept tables (§4.1), et **remplace** `maintenance_logs_search_idx` de `0001` : l'ancien portait sur `title || ' ' || coalesce(notes, '')` brut, qu'aucune requête ne pouvait emprunter (vérifié à l'`EXPLAIN`).
 - **0038** (D132) : vue `boat_activity`, le fil partagé du carnet — cinq faits, aucune table,
   aucune politique (`security_invoker`). Les tests RLS couvrent les trois choses qu'une union peut

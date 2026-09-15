@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D138.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D139.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3540,3 +3540,85 @@ monde. Le parcours `SPEC.md` §6.3 passe de trois taps à un.
 pas : la logique d'état reste en base (règle 8), et `src/lib/checklist-status.ts` reste à parité.
 Aucune migration. Le cochage hors ligne survit (E9-1b) : `use-tick` passe par `submitOrQueue`, et
 « Annuler » retire la ligne de la file d'attente quand elle n'est pas encore partie.
+
+## 2026-09-15 — D138 : la recherche répond à ce qu'on tape, et sait le dire
+
+**Question.** La barre de recherche « ne fonctionne pas ». Deux pannes distinctes portaient ce
+même mot, et il a fallu les séparer avant de pouvoir réparer quoi que ce soit.
+
+**Ce qui n'allait pas, d'abord — la recherche n'existait pas en production.** `0039` était dans
+le dépôt, marquée faite au backlog, et absente de la base : la liste des migrations appliquées du
+projet Supabase s'arrêtait à `0033`. `search_boat()` n'y existait pas, chaque frappe recevait un
+404, et `loadSearch` lisait `const { data } = await …` **sans regarder `error`** — donc `data`
+valait `null` et l'écran annonçait posément « Aucun résultat » pour tout le carnet. Une panne
+totale rendue invisible par une variable qu'on ne lit pas. Les migrations `0035` à `0039` ont été
+appliquées, et l'erreur du RPC est désormais **levée** : une recherche qui ne peut pas répondre
+doit le dire, sinon un carnet injoignable a l'air d'un carnet vide.
+
+**Ce qui n'allait pas, ensuite — la recherche cherchait mal.** Elle prenait la question entière
+comme une seule sous-chaîne, donc tout ce qui n'était pas un mot unique tombait à côté :
+
+| frappe | avant |
+|---|---|
+| « vidange babord » | rien, alors que « Vidange moteur bâbord » est au carnet |
+| « moteur vidange » | rien, la même ligne dans l'autre sens |
+| « videnge » | rien ; une lettre pour rien |
+| « 100% » | n'importe quelle ligne — le `%` tapé était un joker `LIKE` |
+| « % » | le carnet entier, pour la même raison |
+
+**Décision.**
+
+1. **La question devient des mots.** `search_terms()` replie et découpe sur tout ce qui n'est ni
+   lettre ni chiffre ; il faut les **tous**, dans n'importe quel ordre. Le découpage est aussi ce
+   qui rend un joker `LIKE` impossible à taper : il n'en reste rien, donc il n'y a rien à
+   échapper.
+2. **Une faute de frappe est pardonnée sur le mot le plus long**, et sur lui seul —
+   `word_similarity`, seuil 0.45. Le reste de la question continue d'être exigé : écrite comme un
+   `or` posé sur toute la condition, la frappe « secret@chantier » aurait rendu ce qui ressemble
+   à « chantier » **sans** « secret ». La faute est pardonnée sur un mot, jamais sur l'intention.
+3. **Le score dit la place du mot dans la ligne, pas la distance entre deux chaînes.** Des
+   paliers : le nom est la question (1.0), le nom commence par elle (0.9), elle ouvre un mot du
+   nom (0.8), elle est dedans (0.7), tous les mots y sont (0.6) ; puis le second champ — marque,
+   fournisseur, entreprise — plafonné à 0.5 ; puis le texte profond et l'à-peu-près, plafonnés à
+   0.4. Une ligne trouvée par son nom passe donc **toujours** devant une ligne trouvée par ses
+   notes. `similarity()` sur les chaînes entières faisait l'inverse : il punissait la longueur,
+   donc la précision — « Vidange moteur bâbord » (0.364) sortait derrière « Vidange (owner) »
+   (0.571).
+4. **Une ligne dit pourquoi elle est là.** `search_excerpt()` rend le fragment de texte profond
+   qui a répondu, et l'écran surligne les mots trouvés. « Courroie » rendait « Vidange moteur
+   bâbord » — c'est juste, la courroie est dans les notes — et on lisait un titre sans le mot
+   cherché, sans pouvoir distinguer une bonne réponse d'un bug.
+5. **La frappe et la réponse redeviennent le même geste.** La question ne vit plus *uniquement*
+   dans l'URL : chaque lettre y déclenchait un `router.replace`, donc un aller-retour RSC qui
+   re-rendait la page entière. C'est désormais un hook TanStack Query sur le client navigateur
+   (120 ms de repos de frappe, résultat précédent gardé à l'écran pendant le suivant), et l'URL
+   est réécrite derrière par `history.replaceState` — sans re-rendu serveur, donc toujours
+   partageable. Le champ prend enfin le clavier en arrivant, ce que la barre du haut promettait
+   depuis D134 sans que la page le fasse.
+
+**Ce que cela ne change pas.** Les sept familles, leur ordre et leur regroupement (D134). La
+`security invoker`, donc la RLS de chaque famille. La corbeille invisible, les points inactifs
+exclus, et le téléphone, l'e-mail et l'adresse d'un intervenant toujours hors de portée d'une
+recherche. Les colonnes `search_text` et leurs index trigrammes de `0039` sont réemployés tels
+quels.
+
+**Budget.** Deux pièges de performance ont été mesurés plutôt que devinés, sur un carnet de dix
+ans (5 000 interventions) :
+
+- **`<%` contre `%>`.** Les deux disent la même chose, mais seul `%>` porte la colonne indexée à
+  gauche, et c'est la seule des deux formes que l'`opfamily` `gin_trgm_ops` expose. Même
+  prédicat, même résultat : **60 ms** contre **0,2 ms**.
+- **Une fonction de score qu'on ne peut pas *inliner*.** Écrite avec un `from` et deux
+  sous-requêtes, `search_rank()` coûtait **140 ms** pour classer 625 lignes — 0,22 ms par ligne,
+  parce que `inline_function()` de Postgres refuse tout corps portant un FROM ou un sublink et
+  que chaque appel devenait une invocation complète de l'exécuteur. Réécrite en un seul `select`
+  sans FROM ni sous-requête — le repliage fait par l'appelant, les mots passés en motifs `LIKE`
+  et testés par `like all`, qui est un opérateur —, elle s'inline et disparaît du profil. Le
+  fragment, lui, n'est calculé qu'**après** le `limit` de chaque famille : sur cinquante-six
+  lignes au plus, jamais sur les six cents qui ont répondu.
+
+Le résultat, à la mesure : **4,7 ms** sur une frappe sélective (13 ms avant), **23 ms** sur un
+mot que porte un huitième du carnet (153 ms avant), **37 ms** au pire sur une frappe fautive
+(215 ms avant). Sur le carnet réel de Xaman — 234 lignes toutes familles confondues — c'est sous
+la milliseconde. Le budget de D134 (**≤ 100 ms** sur un carnet de dix ans) est tenu, et la
+recherche est devenue beaucoup plus tolérante en même temps qu'elle est devenue plus rapide.

@@ -2673,6 +2673,7 @@
   },
   "search": {
     "label": "Chercher",
+    "clear": "Effacer la recherche",
     "placeholder": "Une courroie, un chantier, une facture…",
     "title": "Chercher dans le carnet",
     "subtitle": "Interventions, points, achats, équipements, pièces, intervenants et documents — d'un seul coup.",
@@ -2680,6 +2681,10 @@
     "promptDescription": "Deux lettres suffisent. Les accents et les majuscules n'ont pas d'importance.",
     "empty": "Aucun résultat pour « {query} »",
     "emptyDescription": "Essayez un mot plus court, ou une autre orthographe.",
+    "searching": "Recherche…",
+    "count": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
+    "failed": "La recherche n'a pas pu aboutir",
+    "failedDescription": "Le carnet est peut-être hors de portée. Vérifiez la connexion, puis retapez votre question.",
     "families": {
       "logs": "{count, plural, one {# intervention} other {# interventions}}",
       "items": "{count, plural, one {# point de checklist} other {# points de checklist}}",

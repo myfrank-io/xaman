@@ -31,7 +31,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-14 |
 | E16 | E16-10 |
 | E17 | E17-13 |
-| E18 | E18-14 |
+| E18 | E18-15 |
 | E19 | E19-11 |
 | E20 | E20-4 |
 
@@ -412,6 +412,36 @@ indépendants dans cet ordre : le premier se livre seul.
   peut pas exécuter, un autre bateau, la corbeille, le plancher de deux caractères, et les trois
   champs privés d'un intervenant), 11 cas sur la couche pure, lint/format/typecheck/tests/build
   verts, audit tactile aux cinq viewports.
+- [x] **E18-14 (M, 3)** **La recherche répond à ce qu'on tape** (D138, `0040`). Deux pannes sous
+  un seul mot. **L'une** : `0039` était dans le dépôt et pas dans la base — les migrations
+  appliquées du projet Supabase s'arrêtaient à `0033` —, donc chaque frappe recevait un 404 que
+  `loadSearch` avalait (`const { data } = await …`, `error` jamais lu) et l'écran répondait
+  « Aucun résultat » pour tout le carnet. `0035` à `0039` appliquées, et l'erreur du RPC est
+  désormais levée : une recherche qui ne peut pas répondre doit le dire. **L'autre** : la question
+  entière servait de sous-chaîne unique, donc « vidange babord » et « moteur vidange » ne
+  rendaient rien alors que « Vidange moteur bâbord » est au carnet, « videnge » non plus, et
+  « 100% » ou « % » rendaient n'importe quoi — le `%` tapé était un joker `LIKE`.
+  **`0040`** : `search_terms()` découpe la question en mots (et rend tout joker intapables),
+  `search_boat()` les exige **tous dans le désordre** en pardonnant une faute sur le plus long
+  (`word_similarity`, seuil 0.45) sans lâcher les autres, `search_rank()` classe par **paliers du
+  nom** — nom (≤ 1.0) devant second champ (≤ 0.5) devant texte profond (≤ 0.4) —, et
+  `search_excerpt()` rend le fragment qui a répondu, que l'écran surligne. Côté écran, la frappe
+  et la réponse redeviennent le même geste : hook TanStack Query sur le client navigateur au lieu
+  d'un `router.replace` par lettre, URL réécrite derrière par `history.replaceState` (donc
+  toujours partageable), champ qui prend le clavier en arrivant, croix d'effacement à 44 px et
+  Échap qui efface.
+  **Deux pièges mesurés** plutôt que devinés, sur un carnet de dix ans : `<%` → `%>` (seule forme
+  que `gin_trgm_ops` sert, **60 ms → 0,2 ms**), et `search_rank()` rendue *inlinable* — sans FROM
+  ni sous-requête, que `inline_function()` refuse — (**140 ms → hors profil** pour 625 lignes
+  classées) ; le fragment n'est calculé qu'après le `limit` de chaque famille.
+  **Budget mesuré** : **4,7 ms** sur une frappe sélective (13 ms avant), **23 ms** sur un mot que
+  porte un huitième du carnet (153 ms avant), **37 ms** au pire sur une frappe fautive (215 ms
+  avant) — budget D134 de ≤ 100 ms à dix ans tenu, avec une recherche bien plus tolérante.
+  **Vérifié** : 19 cas SQL sur base réelle (désordre, mots tous exigés, faute pardonnée sur le
+  seul mot long, jokers tapés, fragment présent puis absent, classement nom/notes, plancher de
+  deux caractères) dont la **parité TS ↔ SQL** du découpage sur 15 frappes, 17 cas sur
+  `searchTerms`/`isSearchable`/`highlightSegments`, 4 cas de plus sur la couche pure, les 167 cas
+  RLS toujours verts, lint/typecheck/tests/build verts, écran vérifié en 1024×768 et 768×1024.
 - [x] **E18-5 (C, 1)** **La file s'emporte** (D135). Ce qui est dû et ce qu'il faut racheter, en
   une page imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au
   chantier. Réutilise le rapport d'état (E9-2b) : les quatre primitives d'impression sortent dans

@@ -1,13 +1,10 @@
 import { notFound } from "next/navigation";
-import { SearchIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
-import { SearchField } from "@/components/search/SearchField";
-import { SearchResults } from "@/components/search/SearchResults";
+import { SearchScreen } from "@/components/search/SearchScreen";
 import { readBoatRole } from "@/lib/queries/boat-context";
-import { isSearchable, loadSearch } from "@/lib/queries/search";
+import { loadSearch, type SearchGroup } from "@/lib/queries/search";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -18,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 const PER_FAMILY = 8;
 
 /**
- * Chercher dans le carnet (E18-4, D134).
+ * Chercher dans le carnet (E18-4, D134, E18-14).
  *
  * « C'était quand, la dernière courroie ? Combien ? Quelle référence ? » est la première raison
  * d'ouvrir un carnet d'entretien, et jusqu'ici la seule recherche vivait **dans** le Journal, sur
@@ -26,6 +23,10 @@ const PER_FAMILY = 8;
  * quel écran dormait la réponse — un achat, un équipement, une pièce, un intervenant.
  *
  * Une question, sept familles, et la RLS qui décide de chaque ligne.
+ *
+ * Le serveur ne rend plus que la **première** réponse, celle d'un lien partagé ou d'un favori ;
+ * la frappe est ensuite affaire du client (`SearchScreen`), qui interroge la base directement au
+ * lieu de redemander la page à chaque lettre.
  */
 export default async function SearchPage({
   params,
@@ -41,30 +42,31 @@ export default async function SearchPage({
   const [{ data: role }, t] = await Promise.all([readBoatRole(boatId), getTranslations("search")]);
   if (!role) notFound();
 
-  const groups = await loadSearch(supabase, boatId, query, PER_FAMILY);
+  /**
+   * `null` et non `[]` quand la base n'a pas pu répondre.
+   *
+   * Les deux se ressemblent et ne disent pas la même chose : `[]` est une réponse (« rien dans ce
+   * carnet »), `null` est une absence de réponse. Semer le cache du client avec `[]` lui ferait
+   * afficher « aucun résultat » pour une panne, ce qui est très exactement le défaut que ce
+   * ticket répare ailleurs. `null` le laisse redemander, et dire ce qui ne va pas s'il échoue
+   * aussi.
+   */
+  let initialGroups: SearchGroup[] | null = null;
+  try {
+    initialGroups = await loadSearch(supabase, boatId, query, PER_FAMILY);
+  } catch {
+    initialGroups = null;
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
-      <SearchField boatId={boatId} initialQuery={query} />
-      {!isSearchable(query) ? (
-        // « Continuez à taper » et « aucun résultat » ne disent pas la même chose à quelqu'un qui
-        // vient d'appuyer sur une touche : sous deux caractères, la question n'a pas été posée.
-        <EmptyState
-          icon={<SearchIcon aria-hidden />}
-          title={t("prompt")}
-          description={t("promptDescription")}
-        />
-      ) : groups.length === 0 ? (
-        <EmptyState
-          icon={<SearchIcon aria-hidden />}
-          title={t("empty", { query })}
-          description={t("emptyDescription")}
-          variant="filtered"
-        />
-      ) : (
-        <SearchResults boatId={boatId} groups={groups} />
-      )}
+      <SearchScreen
+        boatId={boatId}
+        initialQuery={query}
+        initialGroups={initialGroups}
+        perFamily={PER_FAMILY}
+      />
     </div>
   );
 }
