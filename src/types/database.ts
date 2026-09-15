@@ -2919,6 +2919,7 @@ export type Database = {
         Args: { p_boat_id: string; p_limit?: number; p_query: string }
         Returns: {
           amount: number
+          context: string
           happened_at: string
           id: string
           kind: string
@@ -2928,6 +2929,20 @@ export type Database = {
           title: string
         }[]
       }
+      search_excerpt: {
+        Args: { p_terms: string[]; p_text: string; p_width?: number }
+        Returns: string
+      }
+      search_rank: {
+        Args: {
+          p_folded_name: string
+          p_folded_query: string
+          p_folded_subtitle: string
+          p_patterns: string[]
+        }
+        Returns: number
+      }
+      search_terms: { Args: { p_query: string }; Returns: string[] }
       shares_boat_with: { Args: { p_user_id: string }; Returns: boolean }
       suggest_checklist_items: {
         Args: { p_boat_id: string; p_category_id: string; p_title: string }

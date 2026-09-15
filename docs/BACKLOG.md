@@ -31,8 +31,8 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-14 |
 | E16 | E16-10 |
 | E17 | E17-13 |
-| E18 | E18-14 |
-| E19 | E19-10 |
+| E18 | E18-15 |
+| E19 | E19-11 |
 | E20 | E20-4 |
 
 ---
@@ -232,7 +232,7 @@ annonçait « Tout est à jour » sur un carnet sans un seul point.
 - [x] **E15-10** **Une intervention porte plusieurs systèmes** (D118) : « fais en sorte qu'on puisse sélectionner différentes catégories ». Les puces de catégorie du formulaire d'intervention deviennent multiples (`CategoryChipsMulti`, rôle `checkbox`, six au plus) ; la **première cochée reste le système principal** et `maintenance_logs.category_id` ne bouge pas, donc les filtres du journal, le rapport, l'export, la grille des systèmes et « Refaire » continuent de lire ce qu'ils lisaient. Migration `0034` : table de liaison `maintenance_log_categories` (RLS calquée sur l'intervention — membre pour lire, `contribute` pour ajouter, `write` ou le pro sur *ses* lignes pour retirer, aucune politique UPDATE puisqu'une liaison s'ajoute ou se retire), trigger qui refuse un `boat_id` qui mentirait (règle 4), reprise des lignes existantes, et `maintenance_logs_view` gagne `category_ids` — qui retombe sur la colonne seule quand la liaison est vide, donc une ligne importée reste classée. `saveLog` réécrit la liste entière à chaque enregistrement ; les points de checklist proposés sont ceux de **tous** les systèmes cochés, dédoublonnés au meilleur score. La carte de « À valider » suit pour une intervention ; un achat garde son système unique. Tests : schéma (plusieurs systèmes, principal, minimum et maximum), validation d'une carte, matrice RLS de la table. Signalé à l'usage.
 - [x] **E15-11** **Une intervention commence par son document** (D119) : « l'ajout d'une nouvelle intervention doit commencer par l'importation d'un document et utilise la même techno que quand on envoie un doc par email ». `/logs/new` ouvre sur **« Commencez par le document »** (`LogDocumentStart` : appareil photo, photothèque, fichiers) **en tête du formulaire**, et le fichier passe par la **chaîne de « À valider »**, sans une ligne de lecture dupliquée — `inboxStoragePath`, `createInboxUpload`, la lecture de D91/D92 — ; ce qu'elle trouve (titre, date, montant, prestataire, heures moteur, lignes de la facture dans les notes) tombe dans les champs **restés vides**, jamais par-dessus une saisie, et l'enregistrement accroche le document à l'intervention par le rangement `attach` de D109 (`attachInboxDocument`, enveloppe mince sur `validateInboxItem`). **En tête et non devant** : une première version en faisait un écran à part avec un « Saisir sans document », et le parcours §6.2 (vidange à quai, budget sept taps) est tombé en rouge — la vidange de l'équipage n'a pas de facture et payait un tap pour atteindre un champ. Le budget est inchangé à trois taps. Les chemins qui savent déjà de quoi ils parlent sautent l'étape (`hasPrefillParams` : `?item=`, `?title=`, `?category=`, `?date=`, `?hours=`, `?contact=`, `?equipment=`, `?engine=`). Une saisie partie d'un document ne passe plus par la file hors ligne, et rien n'est perdu si la personne abandonne : le document est déjà dans « À valider ». Aucune migration. Tests : traduction du préremplissage (`mergePrefill`), paramètres qui sautent l'étape. Signalé à l'usage.
 - [x] **E15-12** **Le prestataire se lit sur le document** (D120) : « quand on importe les datas depuis une facture ou une photo, fais en sorte de repréremplir le prestataire en faisant soit le mapping avec un existant soit en proposant d'en créer un nouveau avec toutes les infos déjà remplies — numéros, mail, etc. ». La lecture renvoie le bloc entier de l'émetteur (`supplier` : nom, société, téléphone, e-mail, adresse) — le modèle par son prompt, le lecteur local par `findSupplierDetails` (en-tête et pied de page, numéro étiqueté ou de l'en-tête seulement, code postal + ville pour l'adresse) ; le champ est **défauté**, donc une ligne écrite par l'ancien prompt continue d'ouvrir sa carte. `src/lib/contacts/match.ts` rapproche sans score flou : e-mail exact, puis téléphone sur ses neuf derniers chiffres, puis nom ou raison sociale accents, casse et formes sociales ignorés — et `normaliseSuggestion` ne s'en sert que pour **remplir un `contactId` nul**, jamais pour corriger une réponse du modèle. `SupplierSuggestion` (formulaire d'intervention et carte de « À valider ») dit ce qui a été lu, sélectionne la fiche reconnue en nommant la clé qui l'a reconnue, ou ouvre **« Créer la fiche prestataire »** sur un `QuickContactDialog` **pré-rempli** — société, e-mail et adresse s'ajoutent aux trois champs habituels quand le document les porte —, et la nouvelle fiche est choisie sans quitter la saisie. `contactOptions` lit désormais l'e-mail. Aucune migration. Tests : rapprochement (e-mail, téléphone international, raison sociale, refus d'un homonyme trop court), fiche pré-remplie sans nom écrit deux fois, repli de `normaliseSuggestion`. Signalé à l'usage.
-- [x] **E15-13** **Une ligne en retard tient dans ses colonnes** (D131) : `ListRow`, la ligne partagée par tous les écrans de liste, donnait deux colonnes latérales de largeur fixe qui ne rognent rien — l'état à 104 px, la valeur plafonnée à 112 — pendant que « EN RETARD » en mesure **115** et « 105 j de retard » **117**. Sur une ligne en retard, la puce sortait de sa propre puce et l'échéance de la ligne : le bouton de la ligne rapportait un `scrollWidth` de 575 pour 570 px de large, ce que l'audit tactile appelle « un libellé plus large que son bouton » — la panne de la pastille « Sorties de l'eau » débordant de sa puce, signalée depuis le bateau. Colonne d'état à **120 px** (`sm:min-w-30`, la plus large des puces plus sa marge ; les puces de la Checklist et de la file la remplissent exactement), colonne de valeur **sans plafond** (un `max-width` ne rognait pas une échéance `whitespace-nowrap`, il la laissait sortir : « 426 h de retard » en demande 123 et « compteur inconnu » 150) ; `min-w` et non `w`, donc un libellé imprévu pousse son titre au lieu de lui passer dessus. Les titres restent alignés d'une ligne à l'autre, ce pour quoi la colonne est fixe (D88). **Pourquoi l'audit ne l'avait pas vu** : aucune recette ne montrait la forme — `/dev/ui/checklist` n'a une ligne en retard que depuis peu et jamais à trois chiffres, `/dev/ui` montrait ses lignes de référence avec des puces `sm` que l'application n'écrit nulle part, et la fiche d'un moteur ne listait que des interventions terminées. Les trois recettes portent désormais la forme qui casse (retard à 105 j, puces à la taille des listes, une intervention **urgente** sur le moteur) ; vérifié en échec sans le correctif sur les deux viewports iPad. Les autres écrans à `ListRow` sont sans colonne d'état (dates, quantités) ou déjà couverts — la fiche d'un équipement pose la même puce que celle d'un moteur. Aucune migration, aucun texte nouveau. `pnpm lint`, `typecheck`, `test` et l'audit tactile complet verts sur les cinq viewports.
+- [x] **E15-13** **Une ligne en retard tient dans ses colonnes** (D136) : `ListRow`, la ligne partagée par tous les écrans de liste, donnait deux colonnes latérales de largeur fixe qui ne rognent rien — l'état à 104 px, la valeur plafonnée à 112 — pendant que « EN RETARD » en mesure **115** et « 105 j de retard » **117**. Sur une ligne en retard, la puce sortait de sa propre puce et l'échéance de la ligne : le bouton de la ligne rapportait un `scrollWidth` de 575 pour 570 px de large, ce que l'audit tactile appelle « un libellé plus large que son bouton » — la panne de la pastille « Sorties de l'eau » débordant de sa puce, signalée depuis le bateau. Colonne d'état à **120 px** (`sm:min-w-30`, la plus large des puces plus sa marge ; les puces de la Checklist et de la file la remplissent exactement), colonne de valeur **sans plafond** (un `max-width` ne rognait pas une échéance `whitespace-nowrap`, il la laissait sortir : « 426 h de retard » en demande 123 et « compteur inconnu » 150) ; `min-w` et non `w`, donc un libellé imprévu pousse son titre au lieu de lui passer dessus. Les titres restent alignés d'une ligne à l'autre, ce pour quoi la colonne est fixe (D88). **Pourquoi l'audit ne l'avait pas vu** : aucune recette ne montrait la forme — `/dev/ui/checklist` n'a une ligne en retard que depuis peu et jamais à trois chiffres, `/dev/ui` montrait ses lignes de référence avec des puces `sm` que l'application n'écrit nulle part, et la fiche d'un moteur ne listait que des interventions terminées. Les trois recettes portent désormais la forme qui casse (retard à 105 j, puces à la taille des listes, une intervention **urgente** sur le moteur) ; vérifié en échec sans le correctif sur les deux viewports iPad. Les autres écrans à `ListRow` sont sans colonne d'état (dates, quantités) ou déjà couverts — la fiche d'un équipement pose la même puce que celle d'un moteur. Aucune migration, aucun texte nouveau. `pnpm lint`, `typecheck`, `test` et l'audit tactile complet verts sur les cinq viewports.
 
 ## E16 — Simplification (audit du 8 septembre 2026)
 
@@ -412,6 +412,36 @@ indépendants dans cet ordre : le premier se livre seul.
   peut pas exécuter, un autre bateau, la corbeille, le plancher de deux caractères, et les trois
   champs privés d'un intervenant), 11 cas sur la couche pure, lint/format/typecheck/tests/build
   verts, audit tactile aux cinq viewports.
+- [x] **E18-14 (M, 3)** **La recherche répond à ce qu'on tape** (D138, `0040`). Deux pannes sous
+  un seul mot. **L'une** : `0039` était dans le dépôt et pas dans la base — les migrations
+  appliquées du projet Supabase s'arrêtaient à `0033` —, donc chaque frappe recevait un 404 que
+  `loadSearch` avalait (`const { data } = await …`, `error` jamais lu) et l'écran répondait
+  « Aucun résultat » pour tout le carnet. `0035` à `0039` appliquées, et l'erreur du RPC est
+  désormais levée : une recherche qui ne peut pas répondre doit le dire. **L'autre** : la question
+  entière servait de sous-chaîne unique, donc « vidange babord » et « moteur vidange » ne
+  rendaient rien alors que « Vidange moteur bâbord » est au carnet, « videnge » non plus, et
+  « 100% » ou « % » rendaient n'importe quoi — le `%` tapé était un joker `LIKE`.
+  **`0040`** : `search_terms()` découpe la question en mots (et rend tout joker intapables),
+  `search_boat()` les exige **tous dans le désordre** en pardonnant une faute sur le plus long
+  (`word_similarity`, seuil 0.45) sans lâcher les autres, `search_rank()` classe par **paliers du
+  nom** — nom (≤ 1.0) devant second champ (≤ 0.5) devant texte profond (≤ 0.4) —, et
+  `search_excerpt()` rend le fragment qui a répondu, que l'écran surligne. Côté écran, la frappe
+  et la réponse redeviennent le même geste : hook TanStack Query sur le client navigateur au lieu
+  d'un `router.replace` par lettre, URL réécrite derrière par `history.replaceState` (donc
+  toujours partageable), champ qui prend le clavier en arrivant, croix d'effacement à 44 px et
+  Échap qui efface.
+  **Deux pièges mesurés** plutôt que devinés, sur un carnet de dix ans : `<%` → `%>` (seule forme
+  que `gin_trgm_ops` sert, **60 ms → 0,2 ms**), et `search_rank()` rendue *inlinable* — sans FROM
+  ni sous-requête, que `inline_function()` refuse — (**140 ms → hors profil** pour 625 lignes
+  classées) ; le fragment n'est calculé qu'après le `limit` de chaque famille.
+  **Budget mesuré** : **4,7 ms** sur une frappe sélective (13 ms avant), **23 ms** sur un mot que
+  porte un huitième du carnet (153 ms avant), **37 ms** au pire sur une frappe fautive (215 ms
+  avant) — budget D134 de ≤ 100 ms à dix ans tenu, avec une recherche bien plus tolérante.
+  **Vérifié** : 19 cas SQL sur base réelle (désordre, mots tous exigés, faute pardonnée sur le
+  seul mot long, jokers tapés, fragment présent puis absent, classement nom/notes, plancher de
+  deux caractères) dont la **parité TS ↔ SQL** du découpage sur 15 frappes, 17 cas sur
+  `searchTerms`/`isSearchable`/`highlightSegments`, 4 cas de plus sur la couche pure, les 167 cas
+  RLS toujours verts, lint/typecheck/tests/build verts, écran vérifié en 1024×768 et 768×1024.
 - [x] **E18-5 (C, 1)** **La file s'emporte** (D135). Ce qui est dû et ce qu'il faut racheter, en
   une page imprimable et partageable — la liste qu'on emmène au bateau ou qu'on envoie au
   chantier. Réutilise le rapport d'état (E9-2b) : les quatre primitives d'impression sortent dans
@@ -528,6 +558,28 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   absente de `SIGNED_IN_ELSEWHERE`. Page annoncée comme **programme pilote** : l'étage constructeur
   n'existe pas encore, et un chantier qui l'apprend à la démo ne revient pas.
 
+- [x] **E19-10 (S, 2)** **La présentation du chantier se lit sur le site** (D136). Le deck « Xaman
+  pour les constructeurs » — sept pages 16/9, écrites pour un chantier nommé — devient
+  `/constructeurs/brochure` : sept `<section>` **redessinées avec les jetons de `globals.css`**, et
+  non le PDF incrusté. Le PDF pèse 3,4 Mo parce que chacune de ses pages est une image aplatie de
+  5760 × 3240 : aucun texte sélectionnable, rien pour un lecteur d'écran, rien à indexer — alors
+  que ce qui a été aplati est notre propre direction artistique (`--background` est le crème du
+  deck, `--brass-light` son laiton, `.text-h1` sa fonte de titres). Pages hautes d'au moins un
+  écran dans le flux du document (une page qui déborde continue de défiler : c'est le cas de la
+  page 3 en 768 × 1024), barre collante de sept numéros — sept ancres vers sept `id` sans script,
+  page courante marquée et flèches du clavier avec —, repliée en « 3 / 7 » sous `sm` où neuf
+  cibles de 44 px ne tiennent pas dans 320 px. Impression : une page par section, `@page` en
+  paysage posé **sur cette route seule**, le rapport d'état et la liste du bord gardant leur boîte
+  portrait (E9-2b, E18-5). Le nom du prospect quitte l'argumentaire (« Votre chantier
+  aujourd'hui ») et ne reste qu'en page 4, où il est la fonction de la personne citée. L'annonce de
+  **programme pilote** voyage avec la brochure, comme sur la page qui la porte (E19-1).
+  **DoD** : textes dans `fr.json` (règle 7), `tests/unit/brochure.test.ts` (parité clés lues ↔
+  clés écrites, dans les deux sens, et le nom du prospect nulle part ailleurs que dans la
+  citation), route publique couverte par `tests/unit/proxy-public.test.ts`, page ajoutée à l'audit
+  tactile, vérifiée en 1024 × 768 et 768 × 1024. **Reste, et ce n'est pas du code** : la citation de
+  la page 4 (*Figaro Nautisme*, octobre 2025) est reprise du deck **sans avoir été vérifiée à la
+  source** ; et `constructeurs@xaman.boats`, que la page 7 appelle, n'existe pas encore (E19-9).
+
 ### Lot 2 — Ce qui manque au carnet avant qu'un chantier puisse le vendre — *à ne pas démarrer sans validation explicite*
 
 - [ ] **E19-2 (M, 3)** **Les garanties n'existent pas.** Ni date de mise en service, ni durée, ni
@@ -584,12 +636,12 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   sont ouverts, aucune page de tarifs n'est écrite (D126) : une grille avec des « à partir de »
   inventés est exactement ce que la règle interdit.
 
-## E20 — La checklist se comprend (refonte, D131)
+## E20 — La checklist se comprend (refonte, D137)
 
 > Retour de Joseph : « on ne comprend rien du tout, c'est pas simple, trop de saisies et pas
 > simple d'usage ». Le brief est `docs/REFONTE-CHECKLIST.md`, le constat d'usage et les arbitrages
-> sont dans D131. Principe : **une question par écran**, et **cocher coûte un geste**.
+> sont dans D137. Principe : **une question par écran**, et **cocher coûte un geste**.
 
-- [x] **E20-1 (M, 3)** **Une question par écran, une seule ligne** (D131). L'onglet Checklist cesse d'être trois portes : la liste plate « À traiter » et ses quatre onglets sont supprimées (`TodoList`, `ChecklistViewTabs`), et l'onglet répond à « qu'est-ce qu'on suit sur ce bateau » — le tableau de bord répondant depuis D121 à « qu'est-ce que je fais aujourd'hui ». `TodoRow` remplace `ChecklistItemRow` **partout**, tableau de bord compris : titre sur toute la largeur (deux lignes), état porté par un trait de couleur **et** par la phrase, case de 44 px. `due-sentence.ts` écrit l'échéance en français de marin — « En retard de 79 jours », « À faire aujourd'hui », « Dans trois semaines », « Dans un an » — au lieu de « dans 365 j » ; les heures restent des heures. **DoD** : `tests/unit/checklist-due-sentence.test.ts` couvre les paliers, le retard, les heures sans compteur et la parité clé ↔ `fr.json` ; maquette `/dev/ui/checklist` ; audit tactile vert.
-- [x] **E20-2 (M, 2)** **Cocher coûte un geste** (D131). `use-tick.ts` écrit la réalisation sans rien demander — aujourd'hui, la personne connectée, le compteur courant du moteur — et **dit ce qu'il a supposé** dans le toast, qui porte « Annuler » huit secondes. Le cochage hors ligne est conservé (E9-1b, `submitOrQueue`). `CompleteItemDialog` n'est plus le chemin par défaut : il ne s'ouvre que pour la seule chose indevinable, un intervalle en heures sur un moteur jamais relevé, que la base exige (`check_completion_hours`). **DoD** : `tests/e2e/journeys/checklist.spec.ts` réécrit sur le nouveau geste, budget **1 tap** au lieu de 3.
-- [x] **E20-3 (M, 1)** **Les mots du bord** (D131). « Point », « intervalle », « ancrage », « recaler », « ponctuel », « jamais fait », « valide jusqu'au » quittent l'interface : 29 libellés de `checklist.*` réécrits (« Jamais noté », « à refaire avant le… », « À faire une seule fois », « Mettre le carnet à jour », « Retiré du suivi »). Le tableau de bord suit, puisqu'il porte la même ligne : « Tout ce qui est à faire », « # en retard », « # choses réglées ». **DoD** : aucune de ces sept formes ne subsiste sous `checklist.*` ni sous `dashboard.upcoming.*` / `dashboard.state.*` dans `fr.json`.
+- [x] **E20-1 (M, 3)** **Une question par écran, une seule ligne** (D137). L'onglet Checklist cesse d'être trois portes : la liste plate « À traiter » et ses quatre onglets sont supprimées (`TodoList`, `ChecklistViewTabs`), et l'onglet répond à « qu'est-ce qu'on suit sur ce bateau » — le tableau de bord répondant depuis D121 à « qu'est-ce que je fais aujourd'hui ». `TodoRow` remplace `ChecklistItemRow` **partout**, tableau de bord compris : titre sur toute la largeur (deux lignes), état porté par un trait de couleur **et** par la phrase, case de 44 px. `due-sentence.ts` écrit l'échéance en français de marin — « En retard de 79 jours », « À faire aujourd'hui », « Dans trois semaines », « Dans un an » — au lieu de « dans 365 j » ; les heures restent des heures. **DoD** : `tests/unit/checklist-due-sentence.test.ts` couvre les paliers, le retard, les heures sans compteur et la parité clé ↔ `fr.json` ; maquette `/dev/ui/checklist` ; audit tactile vert.
+- [x] **E20-2 (M, 2)** **Cocher coûte un geste** (D137). `use-tick.ts` écrit la réalisation sans rien demander — aujourd'hui, la personne connectée, le compteur courant du moteur — et **dit ce qu'il a supposé** dans le toast, qui porte « Annuler » huit secondes. Le cochage hors ligne est conservé (E9-1b, `submitOrQueue`). `CompleteItemDialog` n'est plus le chemin par défaut : il ne s'ouvre que pour la seule chose indevinable, un intervalle en heures sur un moteur jamais relevé, que la base exige (`check_completion_hours`). **DoD** : `tests/e2e/journeys/checklist.spec.ts` réécrit sur le nouveau geste, budget **1 tap** au lieu de 3.
+- [x] **E20-3 (M, 1)** **Les mots du bord** (D137). « Point », « intervalle », « ancrage », « recaler », « ponctuel », « jamais fait », « valide jusqu'au » quittent l'interface : 29 libellés de `checklist.*` réécrits (« Jamais noté », « à refaire avant le… », « À faire une seule fois », « Mettre le carnet à jour », « Retiré du suivi »). Le tableau de bord suit, puisqu'il porte la même ligne : « Tout ce qui est à faire », « # en retard », « # choses réglées ». **DoD** : aucune de ces sept formes ne subsiste sous `checklist.*` ni sous `dashboard.upcoming.*` / `dashboard.state.*` dans `fr.json`.
