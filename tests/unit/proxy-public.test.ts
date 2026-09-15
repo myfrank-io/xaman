@@ -45,4 +45,13 @@ describe("who gets past the session gate", () => {
   it("lets the builders' page through", () => {
     expect(isPublic("/constructeurs")).toBe(true);
   });
+
+  /**
+   * And the deck under it (E19-10). `/constructeurs` is a prefix, so this costs no line in
+   * `proxy.ts` — which is exactly why it is worth a test: the day someone narrows the prefix to
+   * an exact match, the brochure goes behind the gate without a word.
+   */
+  it("lets the brochure through", () => {
+    expect(isPublic("/constructeurs/brochure")).toBe(true);
+  });
 });

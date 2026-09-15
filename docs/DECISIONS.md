@@ -3215,6 +3215,40 @@ indexable). L'élargir demanderait une table de 190 entrées ou l'extension refu
 qu'un carnet de bord français n'écrit pas. Le dire ici évite qu'on la rouvre à chaque ligature
 trouvée — et surtout qu'on réponde en recréant une seconde table, ce que `0036` vient de défaire.
 
+**Décision.**
+
+**1. Écrire se scinde en deux, par le temps du verbe.** « Ajouter une tâche à faire » ouvre la
+création d'un point de checklist ; « Noter une intervention » ouvre le journal. Le carnet n'avait
+qu'une porte, celle de ce qui est **déjà fait** — et la note qu'on prend le plus souvent à bord est
+l'autre : « il faudra changer l'anode au printemps ». Elle obligeait à ouvrir la Checklist et à y
+trouver « Ajouter un point », c'est-à-dire à connaître le rangement de l'app avant de pouvoir s'en
+servir. Deux cartes, dans l'ordre où on y pense, chacune disant son objet et où elle mène.
+
+**Ce que ça renverse.** L'audit §7.3 avait posé « un contrôle nommé par viewport » pour tuer les
+deux primaires concurrents qui menaient au **même** endroit. Ici les deux ne mènent pas au même
+endroit : ils nomment deux temps. La règle tenait contre la redondance, pas contre le choix — et
+c'est bien parce qu'elles ne sont pas deux boutons primaires, mais deux cartes, que l'écran ne
+redemande pas le geste que la sidebar porte déjà.
+
+**2. « Consulter mon bateau » est la maquette.** Le bloc large sous la file est le modèle 3D d'E2-8,
+qui est déjà exactement cet objet : le bateau lui-même, ses zones, ce qu'il y a à y faire. Il
+deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). L'assemblage des lignes est **partagé**
+avec l'onglet Bateau (`toBoatModelData`) : deux assemblages auraient fini par dessiner deux bateaux
+différents du même carnet.
+
+**3. « Ce que le bateau a coûté » revient, autrement.** E18-1 avait retiré la ligne « Dépenses,
+12 derniers mois » du récapitulatif, avec les trois liens de sommaire. Elle revient comme une
+**découverte** : un montant qu'on regarde, et les trois systèmes qui le composent. C'est un
+renversement assumé de mon propre dégraissage — et il est juste : un écran qui n'a rien à faire doit
+proposer autre chose que du vide, et « où part l'argent » est la question qu'un propriétaire se pose
+sans jamais penser à ouvrir un onglet pour ça. Total et répartition comptés par la base
+(`boat_expense_totals`, D111), trois barres de part, aucun graphique (règle 10).
+
+**Ce que l'ordre de l'écran devient.** Écrire (les deux actes) · le bandeau · faire (la file) ·
+savoir (ce qui a bougé, le bateau, l'argent). La file reste le premier contenu dès qu'elle n'est pas
+vide : les trois blocs sont dessous, et « À faire maintenant » ne descend jamais sous la ligne de
+flottaison.
+
 ## 2026-09-14 — D131 : ce qui attend sans échéance entre quand même dans la file
 
 **Question.** Un document arrivé dans « À valider » et une pièce passée sous son seuil attendent
@@ -3417,4 +3451,39 @@ page.
 quelle, avec le même plafond de 200 lignes que le tableau de bord — une feuille qu'on emmène
 porte ce qui reste à faire, pas les vingt premières lignes.
 
-## 2026-09-14 — D136 : une question par écran, et cocher coûte un geste
+## 2026-09-14 — D136 : une colonne de liste large de ce qu'elle porte, et une valeur jamais plafonnée
+
+**Question.** La ligne de liste partagée (`ListRow`) donne deux colonnes latérales de largeur
+fixe : l'état à gauche, la valeur à droite. Aucune des deux ne rogne son contenu, et sur une ligne
+**en retard** les deux sont trop étroites — « EN RETARD » demande 115 px dans 104, « 105 j de
+retard » 117 px dans 112. Élargir, laisser la colonne se dimensionner, ou raccourcir la phrase ?
+
+**Décision.** Élargir la gauche, déplafonner la droite.
+
+- **Colonne d'état : 120 px** (`sm:min-w-30`), au lieu de 104. C'est la largeur de la plus large
+  des puces que l'application écrit — « EN RETARD », icône et capitales comprises — plus sa marge.
+  La puce d'un point de checklist et celle d'une intervention de la file la remplissent
+  exactement (`min-w-30` sur la puce) ; celles qui se dimensionnent d'elles-mêmes, comme sur la
+  fiche d'un moteur, s'y rangent à gauche. Les titres continuent de s'aligner d'une ligne à
+  l'autre, ce pour quoi la colonne est fixe (D88).
+- **Colonne de valeur : plus de plafond.** Un `max-width` ne rognait rien — une échéance est
+  `whitespace-nowrap` — donc il ne faisait que laisser le texte sortir : « 105 j de retard »
+  (117 px) et « 426 h de retard » (123 px) dépassaient les 112 px du plafond, et « compteur
+  inconnu » les aurait dépassés de 40. La colonne qui cède est le titre, la seule qui porte
+  `min-w-0` : il se tronque, ce qui est son métier.
+
+**`min-w` et non `w`.** Une largeur fixe recrée la panne le jour où un libellé dépasse la mesure
+d'aujourd'hui. Avec un minimum, un libellé imprévu **pousse** son titre vers la droite au lieu de
+lui passer dessus : une ligne désalignée se voit et se corrige, un mot coupé en deux se lit faux.
+
+**Ce qui n'est pas retenu.** *Raccourcir la phrase* (« 105 j » au lieu de « 105 j de retard »,
+comme le fait déjà la file du tableau de bord en `compact`) : la Checklist est l'écran où l'on
+compare des retards entre eux, et le mot qui les nomme y vaut ses 40 px. *Rogner la colonne*
+(`truncate`) : un nombre coupé est pire qu'un nombre absent. *Réduire la puce à la taille `sm`* :
+elle porte le seul signal rouge de la liste, on ne l'affaiblit pas pour gagner 25 px.
+
+**Pourquoi l'audit ne l'avait pas vu.** La recette `/dev/ui/checklist` n'a porté une ligne en
+retard que récemment, et jamais avec un retard à trois chiffres ; `/dev/ui` montrait ses lignes de
+référence avec des puces en taille `sm`, que l'application n'écrit nulle part ; et la fiche d'un
+moteur ne listait que des interventions **terminées**. Les trois recettes portent désormais la
+forme qui casse, donc `tests/e2e/touch-audit.spec.ts` la mesure sur les cinq viewports.

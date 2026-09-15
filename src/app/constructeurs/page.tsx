@@ -76,6 +76,15 @@ export default async function BuildersPage() {
               <Button asChild size="xl" variant="secondary">
                 <a href={mailto}>{t("hero.primary")}</a>
               </Button>
+              {/* The deck, read on the site rather than sent as an attachment (E19-10). */}
+              <Button
+                asChild
+                size="xl"
+                variant="outline"
+                className="border-on-navy-border bg-transparent text-on-navy hover:bg-on-navy-surface hover:text-on-navy"
+              >
+                <Link href="/constructeurs/brochure">{t("hero.brochure")}</Link>
+              </Button>
               <Button
                 asChild
                 size="xl"
@@ -174,6 +183,14 @@ export default async function BuildersPage() {
           <div className="flex flex-wrap justify-center gap-3">
             <Button asChild size="xl" variant="secondary">
               <a href={mailto}>{t("cta.button")}</a>
+            </Button>
+            <Button
+              asChild
+              size="xl"
+              variant="outline"
+              className="border-on-navy-border bg-transparent text-on-navy hover:bg-on-navy-surface hover:text-on-navy"
+            >
+              <Link href="/constructeurs/brochure">{t("cta.brochure")}</Link>
             </Button>
             <Button
               asChild
