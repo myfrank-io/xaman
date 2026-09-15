@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D137.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D138.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3487,3 +3487,56 @@ retard que récemment, et jamais avec un retard à trois chiffres ; `/dev/ui` mo
 référence avec des puces en taille `sm`, que l'application n'écrit nulle part ; et la fiche d'un
 moteur ne listait que des interventions **terminées**. Les trois recettes portent désormais la
 forme qui casse, donc `tests/e2e/touch-audit.spec.ts` la mesure sur les cinq viewports.
+
+## 2026-09-14 — D137 : une question par écran, et cocher coûte un geste
+
+**Question.** « On ne comprend rien du tout, c'est pas simple, trop de saisies et pas simple
+d'usage » — Joseph, sur l'écran qui est le différenciateur du produit (`SPEC.md` §3). Le brief
+`docs/REFONTE-CHECKLIST.md` en tire six constats ; trois tiennent au produit et se tranchent ici.
+
+**Décision.**
+
+1. **Une porte par question, et la liste plate disparaît.** L'onglet Checklist avait trois
+   portes pour les mêmes lignes : la grille des systèmes, une liste plate « À traiter » à quatre
+   onglets, et — un onglet plus loin — la file du tableau de bord. Aucune ne faisait autorité.
+   Depuis que l'écran d'arrivée est devenu le plan de travail (D121), le partage est net :
+   **« À bord » répond à « qu'est-ce que je fais aujourd'hui »**, **« Checklist » répond à
+   « qu'est-ce qu'on suit sur ce bateau »**. La liste plate redisait la première depuis le second :
+   `TodoList` et `ChecklistViewTabs` sont supprimés. Cela **renverse `AUDIT.md` D21**, qui posait
+   l'onglet « À traiter » à côté de la grille — il datait d'avant la file.
+2. **Une seule ligne, dans toute l'app.** `ChecklistItemRow` donnait 112 px à un badge en
+   capitales, une colonne à l'échéance, 88 px à un bouton « Fait », et ce qui restait au titre :
+   sur un téléphone on lisait « Enrouleur… », « Bas-étai et… ». Le seul mot qui dit quoi faire
+   était le seul illisible. `TodoRow` le remplace **partout**, tableau de bord compris : le titre
+   prend toute la largeur sur deux lignes au plus, l'état se porte par **un trait de couleur et
+   par la phrase** — jamais par la couleur seule (règle 12) —, et l'action est une case ronde de
+   44 px.
+3. **L'échéance s'écrit en français de marin.** « dans 365 j » est exact et illisible : le lecteur
+   doit diviser par trente pour savoir s'il doit s'en occuper. `due-sentence.ts` pose les paliers —
+   aujourd'hui, demain, en jours jusqu'à deux semaines, en semaines jusqu'à deux mois, en mois
+   jusqu'à onze, en années au-delà — et rend une clé que `fr.json` écrit (règle 7). **Les heures
+   restent des heures** : un compteur tourne au rythme du moteur, pas du calendrier, et
+   « dans trois semaines » serait un mensonge sur un bateau qui ne sort pas.
+4. **Cocher ne pose plus de question.** Le dialogue en posait cinq dont il connaissait déjà
+   quatre réponses : la date, c'est aujourd'hui ; la personne, c'est celle qui touche l'écran ;
+   les heures, c'est le compteur relevé deux écrans plus loin ; la note, il n'y en a pas.
+   `use-tick.ts` écrit donc la réalisation sans rien demander et **dit ce qu'il a supposé** dans
+   la confirmation — « Par Xavier, à 1482,5 h · Prochaine : 14/09/2027 » —, « Annuler » restant
+   sous le pouce huit secondes. `CompleteItemDialog` n'est plus le chemin par défaut : il ne
+   s'ouvre que pour la seule chose indevinable, un intervalle en heures sur un moteur jamais
+   relevé, que la base exige (`check_completion_hours`).
+5. **Les mots de la base quittent l'écran.** « Point », « intervalle », « ancrage », « recaler »,
+   « ponctuel », « jamais fait », « valide jusqu'au » : 29 libellés réécrits (« Jamais noté »,
+   « à refaire avant le… », « À faire une seule fois », « Mettre le carnet à jour », « Retiré du
+   suivi »). Le tableau de bord suit, puisqu'il porte désormais la même ligne.
+
+**Raison.** Deviner en le montrant vaut mieux que demander. La personne qui coche à l'instant —
+de loin le cas le plus fréquent — n'a rien à saisir ; celle dont la supposition est fausse le voit
+tout de suite et corrige depuis la ligne, où la réalisation est écrite. Le coût d'une erreur est
+un tap sur « Annuler » ; le coût de la question était cinq champs à chaque fois, pour tout le
+monde. Le parcours `SPEC.md` §6.3 passe de trois taps à un.
+
+**Ce que cela ne change pas.** `checklist_item_status` et `checklist_compute_status` ne bougent
+pas : la logique d'état reste en base (règle 8), et `src/lib/checklist-status.ts` reste à parité.
+Aucune migration. Le cochage hors ligne survit (E9-1b) : `use-tick` passe par `submitOrQueue`, et
+« Annuler » retire la ligne de la file d'attente quand elle n'est pas encore partie.
