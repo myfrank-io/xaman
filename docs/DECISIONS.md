@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D139.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D140.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3622,3 +3622,68 @@ mot que porte un huitième du carnet (153 ms avant), **37 ms** au pire sur une f
 (215 ms avant). Sur le carnet réel de Xaman — 234 lignes toutes familles confondues — c'est sous
 la milliseconde. Le budget de D134 (**≤ 100 ms** sur un carnet de dix ans) est tenu, et la
 recherche est devenue beaucoup plus tolérante en même temps qu'elle est devenue plus rapide.
+
+## 2026-09-15 — D139 : un déploiement ne transporte que ce qu'il ouvre, et ne se garde pas éternellement
+
+**Question.** Le compte Vercel portait **9,92 Go** de Functions Storage et **6,78 Go** de
+Deployment Storage, tous projets confondus, sur un plan Hobby. La courbe ne monte pas : elle fait
+des marches. Plate jusqu'au 3 septembre, elle passe de 1,8 à 4,4 Go les 7 et 8, ne bouge plus
+pendant cinq jours, puis prend **5,4 Go le 14 septembre** — une seule journée, 93 commits.
+
+Deux facteurs se multiplient, et il fallait les mesurer séparément : **ce que pèse un
+déploiement** et **combien on en fait**. Un déploiement Vercel est conservé jusqu'à ce que
+quelqu'un l'efface, avec sa copie de chaque fonction qu'il a construite.
+
+**Ce que pesait un déploiement.** Mesuré sur les fichiers de tracing (`*.nft.json`), qui sont
+exactement ce que Vercel recopie dans chaque lambda :
+
+| route | avant | après |
+|---|---|---|
+| `/boats/[boatId]/inbox` | 61,3 Mo | **17,3 Mo** |
+| `/api/webhooks/resend` | 59,7 Mo | **15,7 Mo** |
+| union de toutes les routes | 70,4 Mo | **26,4 Mo** |
+
+Les deux routes lourdes sont celles qui savent lire un document (D92). Voici ce qu'elles
+transportaient, et pourquoi rien de tout cela ne pouvait être ouvert :
+
+| ce qui partait, par route | poids | pourquoi c'était mort |
+|---|---|---|
+| les six cœurs OCR non-LSTM | 23,5 Mo | `extract.ts` appelle `createWorker(…, 1, …)` — OEM 1, LSTM seul. `getCore` ne peut **jamais** requérir les autres. |
+| les trois cœurs LSTM en build navigateur (`*.wasm.js`) | 11,2 Mo | en Node, le loader requiert le petit `.js`, qui lit le `.wasm` à côté. Ces trois-là ne sont que *nommés*, quand tesseract.js fabrique une URL pour un navigateur. |
+| `pdf.worker.mjs.map` | 5,2 Mo | une source map — plus grosse que les 2,3 Mo de code qu'elle décrit. Node n'en lit une que lancé avec `--enable-source-maps`, ce qu'aucun runtime serverless ne fait. |
+| `zlibjs` | 3,6 Mo | le gunzip du navigateur. `worker-script/node/gunzip.js` est `require('zlib').gunzipSync`, celui de Node. |
+| le modèle français, deux fois | 1,2 Mo | 600 Ko de données de langue, recopiées dans chaque fonction à chaque déploiement, pour un fichier qui change une fois l'an. |
+
+**Décision, en trois temps.**
+
+1. **Le modèle OCR part chez Supabase** — bucket public `ocr-assets` (`0041`), lu par URL
+   (`langPath`), mis en cache dans `/tmp` pour qu'une instance chaude ne le retélécharge pas.
+   C'est le seul des cinq actifs qui *pouvait* partir : en Node, le cœur wasm est résolu par un
+   `require` depuis `node_modules` et pdf.js est un module importé — ni l'un ni l'autre ne se
+   charge depuis une URL. La copie du dépôt reste la source, `pnpm ocr:push` l'y pousse.
+2. **Le reste est retiré du tracing.** Les cœurs inutiles quittent `outputFileTracingIncludes`.
+   Pour ce que le tracer ajoute de lui-même — la source map, les builds navigateur —,
+   `outputFileTracingExcludes` serait l'outil prévu : **il est inopérant sous Turbopack**, qui
+   honore les includes et ignore les excludes (vérifié sur ce dépôt avec toutes les formes de
+   glob et de clé de route). `scripts/trim-server-trace.mjs` le fait donc après le build, sur le
+   fichier que Vercel lit vraiment, et un test unitaire fixe la règle dans les deux sens : ce qui
+   part, et ce qui doit rester.
+3. **On ne déploie plus ce qui ne change pas ce qui est déployé.** `vercel.json` gagne un
+   `ignoreCommand` : un commit qui ne touche que `docs/`, `tests/`, `seed/`, les migrations ou un
+   `.md` ne construit pas. C'est une liste **noire**, pas blanche, et `main` n'est jamais ignorée
+   — une préversion en retard silencieux sur sa branche est la panne qu'on a déjà payée (voir
+   `NEXT_PUBLIC_BUILD`), donc le doute construit.
+
+**Et les 16 Go déjà là.** Aucun changement de code ne les enlève : ils sont dans des
+déploiements passés, qui se suppriment un par un. `scripts/vercel-prune-deployments.mjs` le fait
+— garde la production en ligne, trois rollbacks et tout ce qui a moins de deux jours, efface le
+reste — en essai à blanc par défaut, parce que c'est irréversible.
+
+**Ce qui n'est pas retenu.** Porter la lecture de documents dans une Edge Function Supabase, ce
+qui sortirait les 33 Mo restants de Vercel pour de bon : la limite de bundle est de 5 Mo en
+déploiement par l'API (20 Mo en local), le cœur wasm seul en fait 6,5, et il faudrait vérifier
+sur le runtime Deno réel que tesseract.js s'y charge — une migration à l'aveugle, sur le chemin
+qui pré-remplit le carnet depuis une photo. Ne garder qu'**une** variante de cœur (relaxedsimd,
+celle que demande le runtime de Vercel) plutôt que les trois : 13 Mo de plus, contre un
+`MODULE_NOT_FOUND` le jour où Vercel change de processeur. Les trois variantes LSTM coûtent
+8,4 Mo et sont justes quel que soit le CPU.

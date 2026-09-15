@@ -21,6 +21,21 @@ import fr from "../../src/messages/fr.json";
  */
 const FIXTURES = path.join(__dirname, "..", "fixtures", "inbox");
 
+/**
+ * The OCR model is served from Supabase Storage in the app (D139). Here it is read straight from
+ * the copy kept in the repository — the one `pnpm ocr:push` uploads — so the test neither needs
+ * a project nor a network.
+ */
+process.env.INBOX_TESSDATA_PATH = path.join(
+  __dirname,
+  "..",
+  "..",
+  "src",
+  "lib",
+  "inbox",
+  "tessdata",
+);
+
 const context: InboxContext = {
   boatName: "Xaman",
   boatType: "catamaran",
@@ -247,7 +262,7 @@ describe("the text of a document", () => {
     expect(s?.contactId).toBe("contact-yard");
   });
 
-  it("reads a photo with the French OCR model shipped in the repository", async () => {
+  it("reads a photo with the French OCR model, read from the repository copy", async () => {
     const bytes = await readFile(path.join(FIXTURES, "invoice.png"));
     const { text, ocrConfidence } = await extractText(bytes, "image/png");
     expect(ocrConfidence).toBeGreaterThan(70);
