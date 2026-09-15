@@ -4,7 +4,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { searchTerms } from "@/lib/search-terms";
 
 /**
- * Ce que la recherche répond, sur une vraie base (E18-14, D136).
+ * Ce que la recherche répond, sur une vraie base (E18-14, D138).
  *
  * `tests/unit/search.test.ts` couvre la couche TypeScript et `rls.test.ts` dit qui a le droit de
  * lire quoi. Il restait le milieu — ce que `search_boat()` trouve et dans quel ordre — et c'est

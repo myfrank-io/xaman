@@ -1,4 +1,4 @@
--- 0040_search_boat_terms.sql — E18-14 / D136: la recherche répond à ce qu'on tape.
+-- 0040_search_boat_terms.sql — E18-14 / D138: la recherche répond à ce qu'on tape.
 --
 -- Ce qui n'allait pas
 -- -------------------
@@ -46,7 +46,7 @@
 -- Un appel — n'importe lequel — charge la bibliothèque et le paramètre devient un vrai GUC,
 -- `USERSET`, que le rôle pose sans privilège particulier. C'est donc la première ligne du
 -- fichier, et c'est exactement le genre d'écart local/production qui a fait que `0039` vivait
--- dans le dépôt sans jamais avoir été appliquée (D136).
+-- dans le dépôt sans jamais avoir été appliquée (D138).
 do $$ begin perform extensions.similarity('a', 'a'); end $$;
 
 -- ---------------------------------------------------------------------------------------------
