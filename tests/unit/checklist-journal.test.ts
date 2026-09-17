@@ -375,6 +375,30 @@ describeWithDb("« Confier au chantier » (D141)", () => {
   });
 });
 
+describeWithDb("the derivation is the database's alone (0043)", () => {
+  it("cannot be called by a signed-in user through RPC, yet fires for them as a trigger", async () => {
+    const out = await as(PRO, async (c) => {
+      const grants = await c.query(
+        `select has_function_privilege('public.sync_log_completion(uuid)', 'execute') as sync,
+                has_function_privilege('public.sync_log_completion_from_log()', 'execute') as from_log,
+                has_function_privilege('public.sync_log_completion_from_reading()', 'execute') as from_reading,
+                has_function_privilege('public.maintenance_logs_check_item_boat()', 'execute') as boat_check`,
+      );
+      // The trigger runs whatever the caller may execute: the pro's own tick still ticks.
+      await insertLog(c, PRO, { id: LOG, status: "done", performedAt: "2026-09-10" });
+      await insertReading(c, PRO, LOG, 700, "2026-09-10");
+      return { grants: grants.rows[0], ticked: (await completionsOf(c, LOG)).length };
+    });
+    expect(out.grants).toEqual({
+      sync: false,
+      from_log: false,
+      from_reading: false,
+      boat_check: false,
+    });
+    expect(out.ticked).toBe(1);
+  });
+});
+
 describeWithDb("the feed says a fact once (D140)", () => {
   it("does not repeat as a completion what an intervention already tells", async () => {
     const kinds = await as(OWNER, async (c) => {

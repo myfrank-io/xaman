@@ -822,7 +822,9 @@ create function purge_trash() returns int ...;
 -- Le faire d'un point (D140, `0042`). La réalisation d'une intervention qui porte checklist_item_id se déduit
 -- d'elle : terminée et vivante → upsert de checklist_completions (date, heures du relevé pour le moteur du
 -- point, nom du prestataire) sur (maintenance_log_id, checklist_item_id) ; ouverte, à la corbeille, ou relevé
--- exigé absent → suppression. security definer (la réalisation reflète une ligne déjà autorisée).
+-- exigé absent → suppression. security definer (la réalisation reflète une ligne déjà autorisée) ;
+-- EXECUTE retiré à anon et authenticated (`0043`, comme `0009` pour les fonctions internes) : seuls ses
+-- triggers l'appellent, jamais un RPC.
 create function sync_log_completion(p_log_id uuid) returns void ...;
 -- Ses deux triggers : sync_log_completion (after insert / update of status, performed_at, deleted_at,
 -- checklist_item_id, contact_id, updated_by on maintenance_logs ; un re-pointage retire ce que l'ancien point
