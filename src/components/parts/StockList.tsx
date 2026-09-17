@@ -31,8 +31,10 @@ export type StockItem = {
   minQuantity: number;
   unit: string;
   location: string | null;
+  categoryId: string | null;
   categoryName: string | null;
   categoryColor: string | null;
+  supplierContactId: string | null;
   supplierName: string | null;
   checkedAt: string | null;
 };

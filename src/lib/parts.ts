@@ -13,11 +13,23 @@ export function isStockFilter(value: string | null | undefined): value is StockF
 export type StockLine = { quantity: number; minQuantity: number };
 
 /**
- * Low stock (SPEC §5, D10): a threshold is set (> 0) and the quantity is at or under it.
- * Mirrors `boat_dashboard_stats.low_stock_parts` (0003), which counts the same lines.
+ * Low stock (SPEC §5, D10, D143): a threshold is set (> 0) and the quantity is **under** it.
+ * Mirrors rank 5 of `boat_todo_queue` (`0045`), which lists the same lines.
+ *
+ * Strictly under since D143: a threshold is the level one wants to keep in reserve, so holding
+ * exactly it is not a shortage — and « Racheté », which buys what is short, has to clear the line
+ * it was meant to clear.
  */
 export function isLowStock({ quantity, minQuantity }: StockLine): boolean {
-  return minQuantity > 0 && quantity <= minQuantity;
+  return minQuantity > 0 && quantity < minQuantity;
+}
+
+/**
+ * What « Racheté » buys (D143): what the line is short of, never less than one unit. Buying it
+ * puts the part back at its threshold, which is exactly where its owner asked it to be.
+ */
+export function restockQuantity({ quantity, minQuantity }: StockLine): number {
+  return Math.max(1, Math.round((minQuantity - quantity) * 100) / 100);
 }
 
 /** Whole months since the line was last counted; null when it never was. */

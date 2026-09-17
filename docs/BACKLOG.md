@@ -26,7 +26,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E9 | E9-7 |
 | E10 | E10-5 |
 | E12 | E12-9 |
-| E13 | E13-18 |
+| E13 | E13-19 |
 | E14 | E14-8 |
 | E15 | E15-14 |
 | E16 | E16-10 |
@@ -696,3 +696,19 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   `tests/unit/backfill-past-ticks.test.ts` rejoue **le fichier de migration lui-même** (forme de la
   ligne, relevé déplacé, relevé réécrit quand il manquait, cas laissés intacts, fil qui ne redit
   rien, seconde exécution sans effet) ; `DATA-MODEL.md` à jour ; migration appliquée en production.
+- [x] **E13-18 (M, 2)** **Racheter une pièce, c'est noter un achat** (D143). Signalé à l'usage :
+  « les pièces à racheter, c'est vraiment l'enfer à utiliser ». Un bouton **« Racheté »** par ligne,
+  un tap : il écrit l'achat (nom de la pièce, son système, son fournisseur, aujourd'hui, les unités
+  qui manquaient, montant nul), la base remet ces unités au stock (`apply_purchase_to_stock`,
+  migration `0045`), la ligne quitte la liste, la confirmation dit ce qu'elle a supposé et
+  « Annuler » met l'achat à la corbeille — le stock repart avec lui. `purchases.part_id`, présent
+  depuis `0001` et jamais utilisé, porte enfin le lien ; `upsertPurchase` le transmet, mais
+  **facultatif**, pour qu'éditer la ligne dans Dépenses ne la décroche pas du stock. Le seuil
+  devient un plancher qu'on a le droit d'atteindre (`quantity < min_quantity` dans `isLowStock`
+  **et** au rang 5 de `boat_todo_queue`), sans quoi acheter ce qui manque ne vide jamais la ligne.
+  Le `+ / −` quitte « À racheter » et reste sur le stock, où l'on compte (D137). Le geste passe par
+  la file hors ligne (E9-1b) : on achète à l'accastillage, pas au mouillage. **DoD** :
+  `tests/unit/purchase-stock.test.ts` (unités qui entrent, corbeille et restauration, recompte,
+  repointage, achat sans pièce, bateau étranger, éditeur vs pro, privilèges, file du tableau de
+  bord), `tests/unit/parts.test.ts` étendu au nouveau seuil et à `restockQuantity`, galerie
+  `/dev/ui/checklist`, audit tactile vert, migration appliquée en production.

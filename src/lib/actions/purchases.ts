@@ -13,10 +13,14 @@ import { createClient } from "@/lib/supabase/server";
 import { currentUserId } from "@/lib/supabase/user";
 
 // A purchase shows up on the expenses tab, in the dashboard recap and, when linked, on the log.
+// Since D143 it may also be stock coming in, and the stock is read by « À racheter » on the
+// checklist screen and by the stock list under Bateau.
 function revalidatePurchaseScreens(boatId: string, maintenanceLogId?: string | null) {
   revalidatePath(boatPath(boatId, "supplies"));
   revalidatePath(boatPath(boatId, "dashboard"));
   revalidatePath(boatPath(boatId, "trash"));
+  revalidatePath(boatPath(boatId, "boat"));
+  revalidatePath(boatPath(boatId, "checklist"));
   if (maintenanceLogId) revalidatePath(logPath(boatId, maintenanceLogId));
 }
 
@@ -62,6 +66,10 @@ export async function upsertPurchase(
       maintenance_log_id: values.maintenanceLogId,
       notes: values.notes,
       needs_review: values.needsReview,
+      // Absent means « leave it alone » (D143): the purchase form does not carry the link, so
+      // editing a line written by « Racheté » neither unhooks it from the stock nor moves it.
+      ...(values.partId === undefined ? {} : { part_id: values.partId }),
+      ...(values.quantity === undefined ? {} : { quantity: values.quantity }),
       deleted_at: null,
       updated_by: userId,
       ...(existing ? {} : { created_by: userId }),

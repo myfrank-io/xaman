@@ -1454,17 +1454,24 @@
   },
   "restock": {
     "title": "À racheter",
-    "subtitle": "Les pièces au seuil ou en dessous, à racheter avant la prochaine sortie.",
+    "subtitle": "Ce qui manque en réserve. « Racheté » note l'achat et remet la pièce au stock ; le prix se complète dans Dépenses.",
     "count": "{count, plural, one {# pièce à racheter} other {# pièces à racheter}}",
     "supplier": "chez {name}",
     "empty": "Rien à racheter.",
-    "emptyHint": "Notez ici ce qu'il faut racheter : la pièce entre au stock (0 en réserve) et reste dans cette liste jusqu'à ce que vous en ajoutiez.",
+    "emptyHint": "Notez ici ce qu'il faut racheter : la pièce entre au stock (0 en réserve) et reste dans cette liste jusqu'à ce que vous l'ayez rachetée.",
     "seeStock": "Voir le stock",
     "add": "Noter une pièce à racheter",
     "addTitle": "Noter une pièce à racheter",
     "addHelp": "La pièce entre au stock avec 0 en réserve et un seuil de 1 : elle apparaît aussitôt ici et dans le stock. Complétez la fiche (seuil, emplacement, fournisseur) depuis Bateau › Équipements.",
     "nameLabel": "Désignation",
-    "added": "« {name} » ajoutée à la liste"
+    "added": "« {name} » ajoutée à la liste",
+    "buyBack": "Racheté",
+    "buyBackLabel": "Marquer « {name} » comme racheté",
+    "bought": "Racheté : {name}",
+    "boughtQuantity": "{quantity} {unit}",
+    "boughtStock": "stock à {quantity} {unit}",
+    "undo": "Annuler",
+    "undone": "Rachat annulé"
   },
   "categories": {
     "title": "Catégories",
