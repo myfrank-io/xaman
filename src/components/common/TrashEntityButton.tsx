@@ -1,12 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
-import { undoToast } from "@/components/common/UndoToast";
+import { useTrashUndo } from "@/components/common/use-trash-undo";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { trashContact } from "@/lib/actions/contacts";
@@ -15,7 +13,6 @@ import { trashPart } from "@/lib/actions/parts";
 import { trashPurchase } from "@/lib/actions/purchases";
 import type { ActionResult } from "@/lib/actions/result";
 import { restoreContact, restoreHaulOut, restorePart, restorePurchase } from "@/lib/actions/trash";
-import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatPath, stockPath, suppliesPath } from "@/lib/queries/boat-routes";
 
 export type TrashEntityKind = "haulOut" | "purchase" | "part" | "contact";
@@ -59,14 +56,51 @@ const KINDS: Record<TrashEntityKind, EntityTrash> = {
 };
 
 /**
- * « Mettre à la corbeille » of a haul-out, a purchase, a part or a provider — one button for the
- * four, because they only ever differed by the action, the namespace and the redirect.
+ * Mettre une de ces quatre choses à la corbeille, d'où qu'on le demande.
  *
  * No confirmation (rule 13): the act is a soft delete carrying an 8 s « Annuler » *and* thirty
  * days in `/trash`. An AlertDialog in front of something that reversible is a speed bump, not a
  * safety net — the undo is. What the dialog used to say that the toast cannot infer, the caller
  * passes as `description`: the name of the part, the reference counts of a provider.
+ *
+ * `leave` says what to do once the row is gone: a detail screen must go somewhere (its list),
+ * a **list row** must stay exactly where it is (D144) — the person is working down a list, and
+ * being thrown to the top of another screen for each line is how one loses one's place.
  */
+export function useTrashEntity({
+  boatId,
+  id,
+  kind,
+  description,
+  leave = true,
+}: {
+  boatId: string;
+  id: string;
+  kind: TrashEntityKind;
+  description?: string;
+  leave?: boolean;
+}) {
+  const entity = KINDS[kind];
+  const t = useTranslations(entity.namespace);
+  const tc = useTranslations("common");
+  const router = useRouter();
+  const { trash, pending } = useTrashUndo({
+    trash: () => entity.trash(boatId, id),
+    restore: () => entity.restore({ boatId, id }),
+    done: t("done"),
+    restored: t("restored"),
+    undoLabel: tc("undo"),
+    description,
+    onDone: () => {
+      if (leave) router.push(entity.listPath(boatId) as Parameters<typeof router.push>[0]);
+      router.refresh();
+    },
+  });
+
+  return { trash, pending, label: t("action") };
+}
+
+/** Le même geste en bouton, pour les écrans de détail. */
 export function TrashEntityButton({
   boatId,
   id,
@@ -79,44 +113,12 @@ export function TrashEntityButton({
   /** One line under the toast title: what the person needs to know about what just left. */
   description?: string;
 }) {
-  const entity = KINDS[kind];
-  const t = useTranslations(entity.namespace);
-  const tc = useTranslations("common");
-  const errorMessage = useErrorMessage();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
-  function trash() {
-    startTransition(async () => {
-      const result = await entity.trash(boatId, id);
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
-        return;
-      }
-      undoToast({
-        message: t("done"),
-        description,
-        undoLabel: tc("undo"),
-        onUndo: () => {
-          void entity.restore({ boatId, id }).then((restored) => {
-            if (!restored.ok) {
-              toast.error(errorMessage(restored.error));
-              return;
-            }
-            toast.success(t("restored"));
-            router.refresh();
-          });
-        },
-      });
-      router.push(entity.listPath(boatId) as Parameters<typeof router.push>[0]);
-      router.refresh();
-    });
-  }
+  const { trash, pending, label } = useTrashEntity({ boatId, id, kind, description });
 
   return (
     <Button type="button" variant="outline" disabled={pending} aria-busy={pending} onClick={trash}>
       {pending ? <Spinner /> : <Trash2Icon />}
-      {t("action")}
+      {label}
     </Button>
   );
 }

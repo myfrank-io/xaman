@@ -1,5 +1,8 @@
-import { getTranslations } from "next-intl/server";
+"use client";
 
+import { useTranslations } from "next-intl";
+
+import { ActivityRowMenu } from "@/components/activity/ActivityRowMenu";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { ListRow } from "@/components/common/ListRow";
 import { formatCurrency, formatDate, formatHours } from "@/lib/format";
@@ -20,12 +23,21 @@ const KIND_KEY = {
  * C'est la seule chose que le papier ne sait pas faire — dire ce que l'autre a fait depuis la
  * dernière fois — et c'est ce qui remplace les trois résumés d'autres onglets qu'E18-1 a retirés.
  *
- * Les lignes ne mènent nulle part, volontairement : un fait n'est pas une porte. Un relevé
- * d'heures n'a pas d'écran à lui, et une moitié de lignes cliquables aurait fait croire que
- * l'autre moitié est cassée. Les écrans sont à un tap, dans la barre.
+ * Le corps de la ligne ne mène toujours nulle part : un fait n'est pas une porte, et une moitié
+ * de lignes cliquables ferait croire que l'autre moitié est cassée. Ce qui change avec D144,
+ * c'est qu'on peut **agir dessus** : un menu par ligne ouvre l'écran du fait quand il en a un et
+ * le retire du carnet. Corriger une erreur ne demande plus de savoir où la ligne habite.
  */
-export async function ActivityList({ rows }: { rows: ActivityRow[] }) {
-  const t = await getTranslations("dashboard.activity");
+export function ActivityList({
+  boatId,
+  rows,
+  canWrite,
+}: {
+  boatId: string;
+  rows: ActivityRow[];
+  canWrite: boolean;
+}) {
+  const t = useTranslations("dashboard.activity");
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
@@ -56,6 +68,7 @@ export async function ActivityList({ rows }: { rows: ActivityRow[] }) {
               <span className="num text-caption text-ink-2">{formatHours(row.hours)}</span>
             ) : null
           }
+          action={<ActivityRowMenu boatId={boatId} row={row} canWrite={canWrite} />}
         />
       ))}
     </div>

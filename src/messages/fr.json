@@ -715,7 +715,18 @@
       },
       "screenTitle": "Ce qui a bougé",
       "screenSubtitle": "Tout ce qui a été noté sur ce carnet, le plus récent d'abord.",
-      "more": "Charger plus"
+      "more": "Charger plus",
+      "row": {
+        "actions": "Actions sur « {title} »",
+        "open": "Ouvrir la fiche",
+        "trash": "Mettre à la corbeille",
+        "trashed": "Mis à la corbeille",
+        "restored": "Remis dans le carnet",
+        "delete": "Supprimer",
+        "deleted": "Supprimé",
+        "confirmTitle": "Supprimer cette ligne ?",
+        "confirmDescription": "« {title} » sera effacé définitivement : cette ligne-là ne passe pas par la corbeille."
+      }
     },
     "review": {
       "banner": "{count, plural, one {# ligne importée du carnet papier attend une vérification} other {# lignes importées du carnet papier attendent une vérification}}",
@@ -2684,6 +2695,7 @@
     },
     "increment": "Ajouter 1 : {name}",
     "decrement": "Retirer 1 : {name}",
+    "rowActions": "Actions sur « {name} »",
     "fields": {
       "name": "Désignation",
       "reference": "Référence",

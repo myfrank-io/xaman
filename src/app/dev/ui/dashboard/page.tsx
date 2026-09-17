@@ -342,7 +342,7 @@ export default async function DevDashboardPage() {
           actionLabel={t("activity.all")}
           bare
         >
-          <ActivityList rows={ACTIVITY} />
+          <ActivityList boatId={DEV_BOAT_ID} rows={ACTIVITY} canWrite />
         </SectionCard>
 
         {/* 6 — consulter mon bateau : la maquette d'E2-8 (D133) */}
