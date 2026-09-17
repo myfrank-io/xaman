@@ -8,6 +8,8 @@ import { toChecklistRow, type StatusViewRow } from "@/components/checklist/rows"
 import { BoatModel3D } from "@/components/boat-3d/BoatModel3D";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SectionCard } from "@/components/common/SectionCard";
+import { inboundDomain } from "@/lib/inbox/receive";
+import { inboxAddress } from "@/lib/schemas/inbox";
 import { ActivityList } from "@/components/dashboard/ActivityList";
 import { ExpensesTeaser } from "@/components/dashboard/ExpensesTeaser";
 import { WriteActions } from "@/components/dashboard/WriteActions";
@@ -209,6 +211,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
   ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
+  // L'adresse du carnet (D91) n'existe que si le domaine de réception est configuré (D145).
+  const mailDomain = inboundDomain();
   const canWrite = can(boatRole, "write");
   const canContribute = can(boatRole, "contribute");
 
@@ -400,7 +404,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
 
       {/* 2 — écrire : deux actes, séparés par le temps du verbe (D133). Ce qu'il faudra faire
           était la porte qui manquait : le bouton nommé ne prenait que ce qui est déjà fait. */}
-      {canContribute ? <WriteActions boatId={boatId} /> : null}
+      {canContribute ? (
+        <WriteActions
+          boatId={boatId}
+          inboxAddress={mailDomain ? inboxAddress(boat.name, boat.inbox_token, mailDomain) : null}
+        />
+      ) : null}
 
       {/* 3 — one contextual banner */}
       <DashboardBanner

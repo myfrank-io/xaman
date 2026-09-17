@@ -31,7 +31,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-14 |
 | E16 | E16-10 |
 | E17 | E17-13 |
-| E18 | E18-15 |
+| E18 | E18-16 |
 | E19 | E19-12 |
 | E20 | E20-6 |
 
@@ -724,3 +724,11 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   `tests/unit/activity-row-actions.test.ts` (les cinq faits couverts, corbeille vs effacement,
   écran de chaque sorte, aucune ligne sans geste), tranches i18n intactes, galeries
   `/dev/ui/dashboard` et `/dev/ui/supplies`, audit tactile vert.
+- [x] **E18-15 (M, 1)** **L'adresse du carnet est sur l'écran d'arrivée** (D145). L'adresse e-mail
+  du bateau (D91) était rangée dans la feuille « Plus » et dans l'accordéon d'identité : personne
+  ne la voyait, donc personne ne s'en servait, alors que c'est l'entrée la moins coûteuse de
+  l'application. Elle devient le **troisième acte du bloc « écrire »** (D133), pleine largeur sous
+  « ce qu'il faudra faire » et « ce qui vient d'être fait » : l'adresse est la ligne de la carte,
+  la carte mène à « À valider », le bouton copie l'adresse. Présente seulement si
+  `INBOUND_EMAIL_DOMAIN` est configuré et pour qui peut contribuer. **DoD** : galerie
+  `/dev/ui/dashboard` avec l'adresse, audit tactile vert, vérifié en 1024×768, 768×1024 et 390×844.

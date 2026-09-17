@@ -308,7 +308,7 @@ export default async function DevDashboardPage() {
         </header>
 
         {/* 2 — écrire : deux actes, séparés par le temps du verbe (D133) */}
-        <WriteActions boatId={DEV_BOAT_ID} />
+        <WriteActions boatId={DEV_BOAT_ID} inboxAddress="xaman-7f3a9c21@carnet.xaman.boats" />
 
         {/* 3 — contextual banner (a single one, by priority) */}
         <Alert variant="warning" className="items-center">
