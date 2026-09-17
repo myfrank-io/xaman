@@ -693,7 +693,10 @@
       "todoTitle": "Ajouter une tâche à faire",
       "todoHint": "Un point de checklist, qui reviendra tout seul",
       "doneTitle": "Noter une intervention",
-      "doneHint": "Ce qui vient d'être fait, dans le journal"
+      "doneHint": "Ce qui vient d'être fait, dans le journal",
+      "mailTitle": "Envoyer un document",
+      "mailCopy": "Copier l'adresse du carnet",
+      "mailCopied": "Adresse copiée"
     },
     "expenses": {
       "title": "Ce que le bateau a coûté",

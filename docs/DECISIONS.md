@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D145.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D146.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3942,3 +3942,35 @@ pas d'écran, et le fil ne porte ni le système d'un point coché ni le moteur d
 qui retombe sur une liste est pire que pas de lien. *Un balayage pour supprimer* : invisible, et
 indécouvrable par quelqu'un qui n'est pas à l'aise avec un écran tactile. *Une confirmation
 partout* : elle apprend à taper « Confirmer » sans lire, et c'est ce qui fait les vraies pertes.
+
+## 2026-09-17 — D145 : l'adresse du carnet est sur l'écran d'arrivée
+
+**Question.** Chaque bateau a son adresse e-mail depuis D91 : ce qu'on lui envoie arrive dans
+« À valider », lu et pré-rempli, et un tap en fait une intervention ou un achat. C'est l'entrée la
+moins coûteuse de toute l'application — on transfère une facture reçue par mail, on n'ouvre rien —
+et elle était rangée aux deux endroits où personne ne la cherche : dans la feuille « Plus », et
+dans l'accordéon d'identité du bateau. Une porte qu'on ne voit pas n'existe pas. Où la mettre sur
+le tableau de bord ?
+
+**Décision.** Dans le bloc **« écrire »** (D133), en troisième acte, pleine largeur sous les deux
+autres. Les deux premières cartes disent ce qu'on **fera** et ce qui **vient d'être fait** ; la
+troisième dit ce qui **arrive tout seul**. C'est la même question — comment quelque chose entre
+dans le carnet — donc c'est là qu'on la cherche.
+
+**L'adresse est la ligne de la carte**, lisible sans rien ouvrir : c'est elle, la promesse. La
+carte mène à « À valider », où se trouvent l'appareil photo et ce qui attend ; le bouton à droite
+**copie l'adresse**, parce que ce qu'on veut vraiment, c'est l'avoir dans l'application Mail sans
+la recopier à la main. Un bouton à côté d'un lien, jamais un bouton dans un lien.
+
+**Pourquoi pas ailleurs.** *Dans le bandeau sombre, sous le nom du bateau* : c'est l'endroit le
+plus visible, et le plus mauvais — la bande porte l'identité et les compteurs, une adresse
+technique y devient du bruit permanent, et copier depuis une bande sombre demande un bouton de
+plus dans le seul endroit qui doit rester calme. *Une carte à elle seule* : un huitième bloc sur un
+écran qu'on vient de simplifier. *Un bandeau contextuel* : il n'y a rien à signaler, et le bandeau
+est déjà pris par ce qui attend une décision. *Ne la montrer qu'aux carnets neufs* : c'est
+justement l'usage qui s'installe avec le temps, pas celui des premiers jours.
+
+**Ce qui ne change pas.** La carte n'apparaît que si `INBOUND_EMAIL_DOMAIN` est configuré — sans
+domaine de réception, la porte n'existe pas — et seulement pour qui peut écrire dans le carnet
+(`canContribute`), comme les deux autres actes. L'adresse reste également sur « À valider » et sur
+la fiche du bateau : ce sont les endroits où on la cherche une fois qu'on la connaît.
