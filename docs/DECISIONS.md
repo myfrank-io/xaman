@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D143.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D144.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3859,3 +3859,51 @@ travail qui n'a lieu qu'une fois et que personne n'a de raison de doser. *Un dra
 sur les lignes écrites ici* : une colonne de plus pour une distinction que rien dans l'app ne lit.
 *Laisser le propriétaire re-saisir son historique dans le journal* : c'est lui demander de taper
 deux fois ce que la base sait déjà.
+
+## 2026-09-17 — D143 : racheter une pièce, c'est noter un achat — et le seuil est un plancher
+
+**Question.** « Les pièces à racheter, c'est vraiment l'enfer à utiliser. » Trois choses dans la
+même liste : remettre quatre filtres au coffre demandait quatre taps sur « + » ; l'achat — le
+fournisseur, le prix, la facture — se retapait ensuite dans Dépenses, la double saisie que D63
+avait pourtant promis de ne jamais demander ; et une pièce pile à son seuil restait « à racheter »
+même quand on venait d'acheter ce qui manquait, donc le geste ne vidait jamais la ligne.
+
+**Décision.** Le même nœud que D140 a dénoué pour la checklist, dénoué ici :
+
+> « Racheter une pièce, c'est noter un achat ; un achat de pièce, c'est du stock qui rentre. »
+
+Un bouton par ligne, **« Racheté »**, un tap. Il écrit l'achat que la virée à l'accastillage a
+produit — le nom de la pièce, son système, son fournisseur, aujourd'hui, les unités qui manquaient
+— et la base remet ces unités au coffre (`apply_purchase_to_stock`, `0045`). La ligne quitte la
+liste, la confirmation **dit ce qu'elle a supposé** — « 2 pc · chez Marsaudon · stock à 2 » — et
+« Annuler » reste sous le pouce huit secondes : il met l'achat à la corbeille, et le stock repart
+avec lui. La colonne `purchases.part_id` existait depuis `0001` et ne voulait rien dire pour
+personne ; elle veut dire ça.
+
+Le prix n'y est pas, et c'est voulu : c'est la seule chose qu'un ticket sait et que le geste ne
+sait pas. La ligne entre à montant nul — « inconnu » n'est pas « gratuit » (ux-flows §4.2) — et se
+complète depuis Dépenses, ou toute seule quand le ticket arrive par « À valider » (D91).
+
+**Le seuil est un plancher qu'on a le droit d'atteindre.** La liste lisait `quantity <=
+min_quantity` : tenir exactement ce qu'on veut garder en réserve comptait comme un manque. Acheter
+ce qui manquait laissait donc la ligne en place, et le geste avait l'air cassé. Depuis D143 c'est
+`quantity < min_quantity`, dans `isLowStock` **et** au rang 5 de `boat_todo_queue` (règle 8) : un
+seuil est le niveau qu'on veut en réserve, pas une alerte de plus.
+
+**Le `+ / −` quitte cette liste.** Il reste là où l'on *compte* le stock, sous Bateau. Une question
+par écran (D137) : ici, on rachète. Le stock reste une quantité comptée — on consomme une pièce
+sans rien acheter — ce qu'il cesse d'être, c'est un second endroit où saisir ce qu'une facture dit
+déjà.
+
+**Ce qui ne change pas.** « Noter une pièce à racheter » (D63) écrit toujours la ligne de stock
+elle-même, jamais une liste parallèle. Un achat sans pièce ne touche à rien. Un achat écrit avant
+cette décision ne bouge pas : il ne nomme aucune pièce. Le formulaire d'achat ne porte ni la pièce
+ni la quantité, et c'est pour ça que les deux sont **facultatives** côté serveur : éditer une ligne
+écrite par « Racheté » ne doit ni la décrocher du stock ni déplacer les unités.
+
+**Ce qui n'est pas retenu.** *Un état « commandé »* : un cinquième statut à peindre partout, sur un
+écran dont le reproche est justement d'être trop compliqué ; à reprendre si l'attente d'une
+livraison devient le vrai problème. *Marquer le rachat « à vérifier »* (D91) : un achat sans prix
+est un fait, pas une erreur, et le bandeau des lignes à vérifier n'est pas une liste de courses.
+*Demander la quantité au tap* : ce qui manque se calcule, et la confirmation le dit — deviner en le
+montrant vaut mieux que demander (D137).

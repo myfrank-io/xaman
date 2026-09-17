@@ -42,8 +42,12 @@ export async function loadStockItems(
         minQuantity: row.min_quantity,
         unit: row.unit,
         location: row.location,
+        categoryId: row.category_id,
         categoryName: category?.name ?? null,
         categoryColor: category?.color ?? null,
+        // The id as well as the name: « Racheté » writes the purchase in the supplier's name
+        // and under the part's system, without a second read (D143).
+        supplierContactId: row.supplier_contact_id,
         supplierName: row.supplier_contact_id
           ? (contactNames.get(row.supplier_contact_id) ?? null)
           : null,

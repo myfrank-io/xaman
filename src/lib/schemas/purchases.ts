@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  decimal,
   expectedUpdatedAt,
   nullableDecimal,
   nullableText,
@@ -27,6 +28,8 @@ export function purchaseKindLabelKey(kind: PurchaseKind): VisiblePurchaseKind {
 }
 
 export const PURCHASE_AMOUNT_MAX = 9_999_999.99;
+/** Units of one line: the stock movement a purchase of a part carries (D143). */
+export const PURCHASE_QUANTITY_MAX = 999_999;
 
 const emptyToNull = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? null : value;
@@ -35,8 +38,10 @@ const optionalUuid = z.preprocess(emptyToNull, uuid.nullable());
 
 /**
  * Create or edit a purchase (E5-2, rule 11: upsert on the id drawn when the form opened).
- * No quantity and no currency in the UI: the columns keep their defaults (audit, E5-2).
- * An empty amount stays null — « inconnu » is not « gratuit » (ux-flows §4.2).
+ * No currency in the UI, and no quantity in the *form*: the columns keep their defaults
+ * (audit, E5-2). Since D143 « Racheté » sends both `partId` and `quantity`, because there a
+ * purchase *is* stock coming in. An empty amount stays null — « inconnu » is not « gratuit »
+ * (ux-flows §4.2).
  */
 export const upsertPurchaseSchema = z.object({
   id: uuid,
@@ -54,6 +59,15 @@ export const upsertPurchaseSchema = z.object({
   notes: nullableText(2000),
   /** Set on save: a line the user has just typed is not « à vérifier ». */
   needsReview: z.boolean().default(false),
+  /**
+   * The part this purchase restocks (D143), and how many units it brought in. Both are
+   * **optional**, and absent means « leave them as they are »: the purchase form does not carry
+   * them, so editing a line written by « Racheté » must not silently unhook it from the stock.
+   */
+  partId: optionalUuid.optional(),
+  quantity: decimal({ scale: 2, max: PURCHASE_QUANTITY_MAX })
+    .refine((value) => value > 0, { message: "invalid" })
+    .optional(),
 });
 
 const purchaseRef = z.object({ boatId: uuid, purchaseId: uuid });

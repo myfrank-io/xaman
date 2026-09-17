@@ -6,21 +6,49 @@ import {
   isLowStock,
   isStockFilter,
   monthsSinceCheck,
+  restockQuantity,
   sortStock,
 } from "@/lib/parts";
 
 const TODAY = "2026-09-02";
 
 describe("isLowStock", () => {
-  it("flags a quantity at or under a positive threshold", () => {
+  it("flags a quantity under a positive threshold", () => {
     expect(isLowStock({ quantity: 1, minQuantity: 2 })).toBe(true);
-    expect(isLowStock({ quantity: 2, minQuantity: 2 })).toBe(true);
     expect(isLowStock({ quantity: 0, minQuantity: 1 })).toBe(true);
+  });
+
+  // D143: a threshold is the level one wants in reserve, so holding exactly it is not a
+  // shortage — otherwise « Racheté », which buys what is short, would never clear the line.
+  it("leaves alone a line that holds exactly its threshold", () => {
+    expect(isLowStock({ quantity: 2, minQuantity: 2 })).toBe(false);
   });
 
   it("never flags a line without threshold, even at zero", () => {
     expect(isLowStock({ quantity: 0, minQuantity: 0 })).toBe(false);
     expect(isLowStock({ quantity: 3, minQuantity: 2 })).toBe(false);
+  });
+});
+
+describe("restockQuantity", () => {
+  it("buys what the line is short of, so buying it clears the line", () => {
+    for (const line of [
+      { quantity: 0, minQuantity: 1 },
+      { quantity: 1, minQuantity: 4 },
+      { quantity: 1.5, minQuantity: 3 },
+    ]) {
+      const bought = restockQuantity(line);
+      expect(isLowStock({ ...line, quantity: line.quantity + bought })).toBe(false);
+    }
+  });
+
+  it("never buys less than one unit", () => {
+    expect(restockQuantity({ quantity: 2, minQuantity: 2 })).toBe(1);
+    expect(restockQuantity({ quantity: 5, minQuantity: 1 })).toBe(1);
+  });
+
+  it("counts in units, not in floating-point noise", () => {
+    expect(restockQuantity({ quantity: 0.1, minQuantity: 3 })).toBe(2.9);
   });
 });
 
