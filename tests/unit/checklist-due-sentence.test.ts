@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { dueSentence, type DueInput } from "../../src/components/checklist/due-sentence";
+import {
+  dueSentence,
+  handedSentence,
+  type DueInput,
+  type HandedInput,
+} from "../../src/components/checklist/due-sentence";
 import fr from "../../src/messages/fr.json";
 
 function input(over: Partial<DueInput> = {}): DueInput {
@@ -112,5 +117,45 @@ describe("quand une chose est à faire", () => {
     // Et l'inverse : une clé écrite que rien ne rend est une phrase morte dans le fichier.
     const produced = new Set(cases.map((one) => dueSentence(one).key));
     expect(Object.keys(written).filter((key) => !produced.has(key as never))).toEqual([]);
+  });
+});
+
+/**
+ * La phrase d'un point que quelqu'un a en main (D140, D141) : elle remplace l'échéance sur la
+ * ligne, et nomme le prestataire quand il y en a un.
+ */
+describe("quand quelqu'un a le point en main", () => {
+  it("nomme le chantier et la date quand il y a un chantier", () => {
+    expect(
+      handedSentence({ status: "planned", date: "24/09/2026", contactName: "Marsaudon" }),
+    ).toEqual({ key: "plannedWith", values: { date: "24/09/2026", name: "Marsaudon" } });
+  });
+
+  it("dit seulement la date quand personne n'est nommé", () => {
+    expect(handedSentence({ status: "planned", date: "24/09/2026", contactName: null })).toEqual({
+      key: "planned",
+      values: { date: "24/09/2026" },
+    });
+    // Un nom vide n'est pas un nom.
+    expect(handedSentence({ status: "urgent", date: "24/09/2026", contactName: "  " })).toEqual({
+      key: "urgent",
+      values: { date: "24/09/2026" },
+    });
+  });
+
+  it("ne rend jamais une clé que fr.json n'écrit pas, et n'en laisse aucune morte (règle 7)", () => {
+    const written = fr.checklist.handed as Record<string, string>;
+    const cases: HandedInput[] = [];
+    for (const status of ["planned", "in_progress", "urgent"] as const) {
+      cases.push({ status, date: "24/09/2026", contactName: null });
+      cases.push({ status, date: "24/09/2026", contactName: "Marsaudon" });
+    }
+    const produced = new Set<string>();
+    for (const one of cases) {
+      const sentence = handedSentence(one);
+      expect(written[sentence.key], sentence.key).toBeTruthy();
+      produced.add(sentence.key);
+    }
+    expect(Object.keys(written).filter((key) => !produced.has(key))).toEqual([]);
   });
 });

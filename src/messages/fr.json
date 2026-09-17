@@ -456,7 +456,8 @@
     "invitation_duration_required": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour une durée de 90 jours au plus.",
     "part_not_found": "Cette pièce n'existe plus.",
     "attachment_owner_not_found": "La ligne à laquelle ce document devait être rattaché n'existe plus.",
-    "boat_limit": "Vous avez atteint le nombre maximal de bateaux. Contactez-nous pour en ouvrir d'autres."
+    "boat_limit": "Vous avez atteint le nombre maximal de bateaux. Contactez-nous pour en ouvrir d'autres.",
+    "contact_not_found": "Cet intervenant n'existe plus dans l'annuaire."
   },
   "members": {
     "title": "Membres",
@@ -900,7 +901,8 @@
         "by": "Réalisé par",
         "equipment": "Équipement",
         "haulOut": "Sortie de l'eau",
-        "notes": "Notes"
+        "notes": "Notes",
+        "checklistItem": "Point de checklist"
       },
       "sections": {
         "hours": "Heures moteur relevées",
@@ -1049,7 +1051,14 @@
       "plusOneYear": "+ 1 an",
       "plusTwoYears": "+ 2 ans",
       "nextDue": "Prochaine : {next}",
-      "nextDueBoth": "{date} ou {hours}"
+      "nextDueBoth": "{date} ou {hours}",
+      "finishedPlanned": "Fait · {label} — l'intervention prévue est terminée",
+      "undoneTrashed": "Réalisation annulée · l'intervention est à la corbeille",
+      "undoneReopened": "Réalisation annulée · l'intervention redevient prévue",
+      "trashTitle": "Mettre cette intervention à la corbeille ?",
+      "trashDescription": "La réalisation du {date} est une intervention du journal : elle part à la corbeille avec ses heures moteur, et le point n'est plus coché. Elle peut être restaurée pendant 30 jours.",
+      "trashConfirm": "Mettre à la corbeille",
+      "trashed": "Intervention mise à la corbeille"
     },
     "form": {
       "new": "Nouvelle ligne à suivre",
@@ -1139,6 +1148,31 @@
       "label": "Marquer « {label} » comme fait",
       "guessed": "Par {name}, aujourd'hui",
       "guessedWithHours": "Par {name}, aujourd'hui, à {hours} h"
+    },
+    "handed": {
+      "planned": "Prévu le {date}",
+      "plannedWith": "Confié à {name} · prévu le {date}",
+      "inProgress": "En cours",
+      "inProgressWith": "En cours · {name}",
+      "urgent": "Urgent · prévu le {date}",
+      "urgentWith": "Urgent · confié à {name} pour le {date}"
+    },
+    "handoff": {
+      "action": "Confier au chantier",
+      "title": "Confier au chantier",
+      "to": "À qui",
+      "message": "Un mot pour le chantier",
+      "messagePlaceholder": "Créneau souhaité, accès au bateau, pièces déjà à bord…",
+      "willEmail": "{name} reçoit un e-mail avec le bateau, le système, l'échéance, les heures moteur et la dernière fois. La réponse vous arrive directement.",
+      "noEmail": "{name} n'a pas d'adresse e-mail dans l'annuaire : la demande est notée au journal, à transmettre par téléphone.",
+      "submit": "Envoyer la demande",
+      "savedEmailed": "Confié à {name} · e-mail envoyé · prévu le {date}",
+      "savedNotSent": "Confié à {name} · prévu le {date} · l'e-mail n'est pas parti",
+      "savedNoEmail": "Confié à {name} · prévu le {date} · pas d'adresse e-mail",
+      "viewLog": "Voir l'intervention prévue",
+      "noContacts": "Aucun intervenant dans l'annuaire. Ajoutez d'abord votre chantier : la demande partira à son adresse.",
+      "addContact": "Ajouter un intervenant",
+      "close": "Fermer"
     }
   },
   "validation": {

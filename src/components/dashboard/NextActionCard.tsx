@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useTranslations } from "next-intl";
 
+import { handedSentence } from "@/components/checklist/due-sentence";
 import type { ChecklistRow } from "@/components/checklist/rows";
 import { hasCounter, isDueToday } from "@/components/checklist/rows";
 import { CategoryDot } from "@/components/common/CategoryBadge";
@@ -74,14 +75,24 @@ export function NextActionCard({
 }) {
   const t = useTranslations("dashboard");
   const tu = useTranslations("dashboard.upcoming");
+  const tch = useTranslations("checklist");
 
   if (entry.kind === "item") {
     const row: ChecklistRow = entry.row;
+    // Quelqu'un a le point en main (D140, D141) : la carte le dit à côté de l'échéance, et le
+    // titre mène au point déplié, où l'intervention prévue se lit.
+    const handed = row.openLog
+      ? handedSentence({
+          status: row.openLog.status,
+          date: formatDate(row.openLog.at),
+          contactName: row.openLog.contactName,
+        })
+      : null;
     return (
       <Shell
         overline={t("next.title")}
         title={row.label}
-        href={categoryPath(boatId, row.categoryId)}
+        href={categoryPath(boatId, row.categoryId, { open: row.id })}
         reason={
           <>
             <ChecklistStateBadge state={row.status} dueToday={isDueToday(row)} />
@@ -96,6 +107,11 @@ export function NextActionCard({
             {/* D1 / D2 : une échéance encore assise sur le calage grossier de la mise en route
                 n'a pas la valeur d'une échéance née d'un cochage. Elle le dit, sans crier. */}
             {row.hasCompletion ? null : <span>{t("next.estimated")}</span>}
+            {handed ? (
+              <span className="font-medium text-foreground">
+                {tch(`handed.${handed.key}`, handed.values)}
+              </span>
+            ) : null}
           </>
         }
         action={
@@ -110,7 +126,9 @@ export function NextActionCard({
             </Button>
           ) : (
             <Button asChild size="xl" variant="outline" className="w-full sm:w-auto">
-              <Link href={categoryPath(boatId, row.categoryId) as Route}>{t("next.open")}</Link>
+              <Link href={categoryPath(boatId, row.categoryId, { open: row.id }) as Route}>
+                {t("next.open")}
+              </Link>
             </Button>
           )
         }

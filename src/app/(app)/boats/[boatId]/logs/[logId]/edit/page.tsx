@@ -37,7 +37,7 @@ export default async function EditLogPage({
     supabase
       .from("maintenance_logs")
       .select(
-        "id, title, category_id, status, performed_at, cost, contact_id, equipment_id, haul_out_id, notes, created_by, updated_at",
+        "id, title, category_id, status, performed_at, cost, contact_id, equipment_id, haul_out_id, notes, checklist_item_id, created_by, updated_at",
       )
       .eq("id", logId)
       .eq("boat_id", boatId)
@@ -85,6 +85,7 @@ export default async function EditLogPage({
     notes: log.notes,
     engineHours: (readings ?? []).map((row) => ({ engineId: row.engine_id, hours: row.hours })),
     checklistItemIds: (completions ?? []).map((row) => row.checklist_item_id),
+    checklistItemId: log.checklist_item_id,
     updatedAt: log.updated_at,
   };
 

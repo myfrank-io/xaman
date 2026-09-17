@@ -19,7 +19,16 @@ export function mailerConfigured(): boolean {
   return (process.env.RESEND_API_KEY ?? "") !== "";
 }
 
-export type Mail = { to: string; subject: string; html: string };
+export type Mail = {
+  to: string;
+  subject: string;
+  html: string;
+  /**
+   * Where a reply goes when the message is written on someone's behalf (D141): the yard answers
+   * the owner, not `noreply@`. Absent on every e-mail the app sends for itself.
+   */
+  replyTo?: string;
+};
 
 /**
  * Accepted by the mailer is not received by anyone: the id the provider answers with is what
@@ -29,7 +38,7 @@ export type Mail = { to: string; subject: string; html: string };
  */
 export type SendResult = { sent: true; id: string | null } | { sent: false };
 
-export async function sendMail({ to, subject, html }: Mail): Promise<SendResult> {
+export async function sendMail({ to, subject, html, replyTo }: Mail): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY ?? "";
   if (!key) return { sent: false };
   try {
@@ -41,6 +50,7 @@ export async function sendMail({ to, subject, html }: Mail): Promise<SendResult>
         to: [to],
         subject,
         html,
+        ...(replyTo ? { reply_to: replyTo } : {}),
       }),
     });
     if (res.ok) {

@@ -28,6 +28,11 @@ export type LogDetailData = {
   cost: number | null;
   notes: string | null;
   equipmentName: string | null;
+  /**
+   * The checklist point this intervention is the doing of (D140): the tick that wrote it, or
+   * the point handed to the yard (D141). Null on a line that is not the doing of one point.
+   */
+  checklistItem: { id: string; label: string; categoryId: string | null } | null;
   needsReview: boolean;
   createdByName: string | null;
   createdAt: string;
@@ -177,6 +182,26 @@ export function LogDetail({
           )}
         </Fact>
         {log.equipmentName ? <Fact label={t("fields.equipment")}>{log.equipmentName}</Fact> : null}
+        {/* Le point que cette intervention fait (D140) : le plan et le récit sont à un tap
+            l'un de l'autre, dans les deux sens. */}
+        {log.checklistItem ? (
+          <Fact label={t("fields.checklistItem")}>
+            {log.checklistItem.categoryId ? (
+              <Link
+                href={
+                  categoryPath(boatId, log.checklistItem.categoryId, {
+                    open: log.checklistItem.id,
+                  }) as Route
+                }
+                className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline"
+              >
+                {log.checklistItem.label}
+              </Link>
+            ) : (
+              log.checklistItem.label
+            )}
+          </Fact>
+        ) : null}
         {haulOut ? (
           <Fact label={t("fields.haulOut")}>
             <Link

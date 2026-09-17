@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { CheckIcon } from "lucide-react";
 
-import { dueSentence } from "@/components/checklist/due-sentence";
+import { dueSentence, handedSentence } from "@/components/checklist/due-sentence";
 import { hasCounter, isPunctual, type ChecklistRow } from "@/components/checklist/rows";
 import { Spinner } from "@/components/ui/spinner";
+import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,6 +24,10 @@ import { cn } from "@/lib/utils";
  * en dessous — « En retard de 79 jours », « À faire aujourd'hui », « Dans trois semaines » —, si
  * bien que la couleur ne porte jamais seule l'information. Et l'action est une case à cocher de
  * 44 px : cocher, c'est cocher, pas ouvrir un formulaire.
+ *
+ * Quand quelqu'un a le point en main (D140, D141) — une intervention prévue, confiée au chantier —
+ * la phrase le dit à la place de l'échéance : « Confié à Marsaudon · prévu le 24/09 ». Le trait
+ * garde la couleur de l'échéance ; la case reste, et la cocher termine cette intervention-là.
  */
 const TONE_BAR: Record<string, string> = {
   overdue: "bg-danger",
@@ -69,7 +74,16 @@ export function TodoRow({
     punctual: isPunctual(row),
     hasCompletion: row.hasCompletion,
   });
-  const sentence = t(`due.${due.key}`, due.values ?? {});
+  const handed = row.openLog
+    ? handedSentence({
+        status: row.openLog.status,
+        date: formatDate(row.openLog.at),
+        contactName: row.openLog.contactName,
+      })
+    : null;
+  const sentence = handed
+    ? t(`handed.${handed.key}`, handed.values)
+    : t(`due.${due.key}`, due.values ?? {});
   const line = withCategory ? `${sentence} · ${row.categoryName}` : sentence;
 
   return (
@@ -85,15 +99,15 @@ export function TodoRow({
               dans les deux cas c'est le titre qu'on touche, jamais une ligne de plus sous lui. */}
           {href ? (
             <Link href={href as Route} className={OPEN_AREA}>
-              <RowText label={row.label} line={line} tone={due.tone} />
+              <RowText label={row.label} line={line} tone={handed ? "calm" : due.tone} />
             </Link>
           ) : onOpen ? (
             <button type="button" onClick={onOpen} aria-expanded={open} className={OPEN_AREA}>
-              <RowText label={row.label} line={line} tone={due.tone} />
+              <RowText label={row.label} line={line} tone={handed ? "calm" : due.tone} />
             </button>
           ) : (
             <div className="py-2">
-              <RowText label={row.label} line={line} tone={due.tone} />
+              <RowText label={row.label} line={line} tone={handed ? "calm" : due.tone} />
             </div>
           )}
         </div>

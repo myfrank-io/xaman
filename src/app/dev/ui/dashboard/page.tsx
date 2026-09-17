@@ -67,6 +67,7 @@ function sampleRow(over: Partial<ChecklistRow> & Pick<ChecklistRow, "id" | "labe
     dueHours: null,
     daysRemaining: -126,
     hoursRemaining: null,
+    openLog: null,
     ...over,
   };
 }

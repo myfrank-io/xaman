@@ -63,6 +63,13 @@ export const saveLogSchema = z
     engineHours: z.array(engineHoursEntry).max(20),
     // checklist points ticked by this intervention (completions carry maintenance_log_id)
     checklistItemIds: z.array(uuid).max(20),
+    /**
+     * The point this intervention IS the doing of (D140): the tick that wrote it, « Confier au
+     * chantier », or « + Ajouter les détails » from a point. The database derives that point's
+     * completion from the row; the list above is for the other points a visit also covers.
+     * Optional so a line queued or drafted before D140 still saves; absent means « unchanged ».
+     */
+    checklistItemId: z.preprocess(emptyToNull, uuid.nullable()).optional(),
   })
   .superRefine((value, ctx) => {
     const future = value.performedAt > addDays(toIsoDate(), 1);

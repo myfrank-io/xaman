@@ -31,5 +31,6 @@ export function toCompletable(row: ChecklistRow, readDates?: EngineReadDates): C
     lastCompletedByName: row.lastCompletedByName,
     lastEngineHours: row.lastEngineHours,
     fixedDueAt: row.fixedDueAt,
+    openLogId: row.openLog?.id ?? null,
   };
 }

@@ -3,7 +3,14 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { DevShell } from "../DevShell";
 import { DevDialogs, type DevDialogKey } from "./DevDialogs";
 
-const KEYS: DevDialogKey[] = ["complete", "hours", "edit-reading", "contact", "recurring"];
+const KEYS: DevDialogKey[] = [
+  "complete",
+  "hours",
+  "edit-reading",
+  "contact",
+  "recurring",
+  "handoff",
+];
 
 /**
  * Visual acceptance of the dialogs. Each is closed on load, so the touch audit had never
@@ -23,7 +30,7 @@ export default async function DevDialogsPage({
       <div className="flex flex-col gap-6 pb-16">
         <PageHeader
           title="Dialogues"
-          subtitle="Ajoutez ?d=complete, hours, edit-reading, contact ou recurring."
+          subtitle="Ajoutez ?d=complete, hours, edit-reading, contact, recurring ou handoff."
         />
         <DevDialogs which={which} />
       </div>

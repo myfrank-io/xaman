@@ -46,6 +46,7 @@ export default async function LogPage({
     { data: updatedBy },
     { data: categories },
     attachments,
+    { data: linkedItem },
   ] = await Promise.all([
     supabase
       .from("checklist_completions")
@@ -76,6 +77,14 @@ export default async function LogPage({
     // Documents of the intervention with their signed URLs (E10-1); a Storage hiccup must not
     // take the whole sheet down, so it degrades to an empty gallery.
     listAttachments(supabase, boatId, { type: "maintenance_log", id: logId }).catch(() => []),
+    // The point this line is the doing of (D140): its system says where the link leads.
+    log.checklist_item_id
+      ? supabase
+          .from("checklist_items")
+          .select("id, label, category_id")
+          .eq("id", log.checklist_item_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   // Tous les systèmes de l'intervention (D118), le principal en tête : c'est lui que la ligne
@@ -131,6 +140,9 @@ export default async function LogPage({
         cost: log.cost,
         notes: log.notes,
         equipmentName: log.equipment_name,
+        checklistItem: linkedItem
+          ? { id: linkedItem.id, label: linkedItem.label, categoryId: linkedItem.category_id }
+          : null,
         needsReview: log.needs_review ?? false,
         createdByName: log.created_by_name,
         createdAt: log.created_at ?? "",

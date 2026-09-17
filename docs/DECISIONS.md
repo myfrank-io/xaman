@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D140.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D142.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3687,3 +3687,132 @@ qui pré-remplit le carnet depuis une photo. Ne garder qu'**une** variante de c�
 celle que demande le runtime de Vercel) plutôt que les trois : 13 Mo de plus, contre un
 `MODULE_NOT_FOUND` le jour où Vercel change de processeur. Les trois variantes LSTM coûtent
 8,4 Mo et sont justes quel que soit le CPU.
+
+## 2026-09-17 — D140 : la checklist et le journal sont une seule chose — cocher écrit une intervention
+
+**Question.** « Lie complètement la checklist aux interventions : aujourd'hui les deux sont
+complètement scindés, ce qui rend l'utilisation de l'app très complexe. » Le brief de la refonte
+l'avait écrit en sixième constat (`docs/REFONTE-CHECKLIST.md`) : cocher un point et noter une
+intervention sont deux gestes séparés, et rien à l'écran ne dit lequel choisir ni ce que l'autre
+implique. E20 a rendu chacun des deux simple ; il ne les a pas réunis.
+
+**Le constat.** Deux tables disaient « c'est fait » sans se lire. Un cochage écrivait une
+`checklist_completions` que le Journal ne montrait jamais : la vidange cochée le samedi n'existait
+pas pour celui qui ouvre le Journal le lundi. Une intervention ne touchait la checklist que si la
+personne recochait les points dans le formulaire (« Points de checklist concernés »), et rien ne
+disait, depuis un point, qu'une intervention le concernait — encore moins qu'une intervention
+**prévue** l'attendait. Les annulations divergeaient : « Annuler » un cochage supprimait une ligne
+que personne n'avait vue ; mettre une intervention à la corbeille laissait ses cochages en place, et
+la purge à trente jours les rendait orphelins. Le fil « ce qui a bougé » disait deux fois la même
+vidange, une fois par table.
+
+**Décision.** *Un point de checklist est une intervention qui revient ; une intervention est un
+point de checklist qui a eu lieu.* Six conséquences, dont quatre en base (règle 8).
+
+1. **Cocher écrit une intervention.** Le geste d'E20-2 ne change pas — un tap, aujourd'hui, la
+   personne connectée, le compteur — mais ce qu'il écrit est une ligne du Journal : le libellé du
+   point pour titre, son système, le jour, le relevé, et `maintenance_logs.checklist_item_id` qui
+   dit de quel point elle est le faire. Le Journal devient **la seule histoire** ; l'historique d'un
+   point est la liste de ses interventions, et la date de chaque ligne y mène.
+2. **La réalisation se déduit de l'intervention, en base.** `sync_log_completion()` (migration
+   `0042`) écrit la `checklist_completions` d'une intervention qui porte un point quand elle est
+   `done` et vivante — à sa date, aux heures de son relevé pour le moteur du point, au nom de son
+   prestataire (D32, figé D31) — et la retire quand elle repasse prévue ou part à la corbeille ; la
+   restauration la recrée ; la date suit la ligne. Le trigger écoute aussi les relevés que la ligne
+   porte : sur un point compté en heures, la base refuse une réalisation sans heures
+   (`check_completion_hours`), et `saveLog` écrit la ligne avant ses relevés.
+3. **Une intervention prévue sur un point se voit sur le point.** `checklist_item_status` gagne
+   l'intervention ouverte du point (`open_log_*`) : la ligne dit « Confié à Marsaudon · prévu le
+   24/09 » à la place d'un retard que quelqu'un a déjà pris en charge — le trait de couleur garde
+   l'urgence de l'échéance, la phrase dit ce qui va se passer. La file (`boat_todo_queue`) montre
+   le point **une fois** : une ligne prévue dont le point est déjà dans la file est portée par lui.
+4. **Cocher un point déjà en main termine l'intervention prévue** au lieu d'en écrire une seconde
+   pour le même travail : le plan devient le récit, sur la même ligne.
+5. **« Annuler » met l'intervention à la corbeille**, et la réalisation tombe avec elle (règle 9 :
+   rien ne se supprime en dur, la corbeille garde trente jours). Un `pro` peut le faire **sur sa
+   propre ligne pendant 24 h** — le miroir exact de D15, qui lui laissait déjà annuler sa propre
+   réalisation dans cette fenêtre ; passé ce délai, la règle « un pro ne met rien à la corbeille »
+   reprend. « Supprimer » dans l'historique d'un point suit la même voie quand la réalisation a une
+   intervention derrière elle.
+6. **Un fait se dit une fois.** `boat_activity` et la phrase d'état ne comptent plus une réalisation
+   qui a une intervention : la ligne de l'intervention le dit, avec le coût, le prestataire et les
+   documents que la réalisation n'a pas.
+
+**Raison.** Le brief demandait de retirer, pas d'ajouter. Deux histoires de la même vidange, c'est
+une de trop ; les faire converger sur celle que le carnet papier a toujours tenue — la ligne du
+journal — est la simplification que les deux refontes précédentes avaient préparée sans la faire.
+Et c'est le socle de D141 : une intervention *prévue* sur un point est exactement ce que le
+chantier reçoit quand on lui confie un travail.
+
+**Ce qui ne change pas.** `checklist_compute_status` ne bouge pas d'une ligne, la vue garde ses
+colonnes et n'en gagne que quatre, la copie TS reste à parité. Le formulaire d'intervention garde
+« Points de checklist concernés » : une visite du mécano couvre trois points, et la ligne n'est le
+faire que d'un seul. Les réalisations importées, ou écrites avant cette décision, restent des
+réalisations sans intervention — elles se lisent, se suppriment et se comptent comme avant. Le
+cochage hors ligne survit (E9-1b) : l'entrée de la file d'attente porte l'identifiant de la ligne.
+
+**Ce qui n'est pas retenu.** *Supprimer `checklist_completions` et lire la dernière intervention
+par point* : la table porte l'import du carnet papier, les cochages d'avant, et « valide jusqu'au »
+(D11), que le journal n'a pas à connaître. *Une intervention par point coché dans le formulaire* :
+une visite reste une ligne, ses autres points restent des réalisations liées, comme avant. *Cacher
+les cochages dans le journal sous un filtre* : c'était garder deux histoires et en masquer une.
+
+## 2026-09-17 — D141 : « Confier au chantier » — le SAV du chantier se commande depuis le carnet
+
+**Question.** Le deck « Xaman pour les constructeurs » (D125, D126, E19-10) pose les problèmes du
+chantier : le jour de la livraison il perd la relation ; quinze ans d'entretien sur ses coques sont
+facturés ailleurs — « Grand Large Services, ou le mécano du port » ; il ne réentend l'acheteur qu'à
+la panne, hors garantie, sans preuve. Comment le carnet ouvre-t-il au chantier un pan de revenu qui
+n'existe pas aujourd'hui, et quelle est la plus petite chose qui le fasse ?
+
+**Le constat.** Le service après-vente d'un chantier est aujourd'hui *réactif* : il attend l'appel,
+et l'appel vient à la panne. Or le carnet sait, coque par coque, **ce qui est dû et quand** — c'est
+la checklist, aux dates et aux heures moteur. Chaque point qui tombe est un travail que quelqu'un va
+facturer dans les semaines qui viennent, et ce travail va au mécano du ponton pour une seule raison :
+il est là quand la question se pose. Le constructeur automobile a résolu exactement ce problème avec
+le rappel d'entretien qui ramène la voiture au réseau ; l'après-vente y est la première marge du
+concessionnaire. Il manque au bateau le geste qui pose la question au chantier au moment où elle se
+pose.
+
+**Décision.** Sur un point de la checklist, un bouton : **« Confier au chantier »**. Une feuille — à
+qui (le chantier de l'annuaire d'abord, la roulette des intervenants sinon), un mot, envoyer. Ce que
+ça écrit n'est pas un nouvel objet : **une intervention prévue sur ce point** (D140), au nom du
+prestataire, datée de l'échéance (ou d'aujourd'hui si elle est passée). Ce que ça envoie : un
+e-mail au chantier avec tout ce que le coup de téléphone n'a jamais eu — le bateau, le modèle et la
+coque, le système, le retard exact, les heures moteur, la dernière fois, le mot du propriétaire, et
+l'adresse à qui répondre (`reply-to`). La ligne du point dit alors « Confié à … · prévu le … », la
+file la montre une fois ; le jour où le travail est fait — coché par le propriétaire, ou écrit par le
+chantier invité en `pro` — la même ligne devient « terminé » et la base coche le point.
+
+**Pourquoi c'est un revenu, et pour qui.** Pour le chantier : chaque demande est un travail
+qualifié — pièces et main-d'œuvre — sur une coque qu'il connaît, arrivé **avant** la panne, sans
+commercial ; sur quinze ans, c'est l'après-vente que le deck disait perdue. Le plan d'entretien qu'il
+publie pour son modèle (E18-12) devient son carnet de commandes. Pour le propriétaire : un tap et
+le chantier a le travail, sans appel ni oubli, et le carnet garde la trace. Pour Xaman : rien n'est
+facturé ici (D125 — le propriétaire ne paie pas) ; ce que le chantier obtient par l'option de service
+est *aussi* ceci, et un chantier qui reçoit trois demandes d'un carnet qu'il ne connaît pas découvre
+Xaman par le seul e-mail qui lui rapporte quelque chose — la dernière ligne du message mène à
+`/constructeurs`.
+
+**Ce qu'est le MVP, et ce qu'il n'est pas.** Il est : le bouton, la feuille, la ligne prévue,
+l'e-mail, la ligne du point qui le dit, la file qui ne le redit pas, et le retour à « fait » par le
+cochage ou par l'intervention. Il n'est pas : un écran côté chantier (il n'a pas de compte, il n'en a
+pas besoin — il répond par mail) ; un statut « demandé » ou une table de demandes (l'état de
+l'intervention **est** l'état de la demande : prévue, en cours, terminée) ; un devis, un prix, une
+acceptation (E19-9 n'a rien tranché, et la règle de D126 interdit d'inventer) ; un contrat ou une
+organisation (E19 lot 2 et 3). « Le chantier » est un contact de l'annuaire du bateau — celui dont
+le métier dit constructeur, sinon chantier, sinon celui qu'on choisit. Sans e-mail dans l'annuaire, la
+demande est notée au journal, à transmettre par téléphone : le carnet garde la trace, le propriétaire
+garde le téléphone.
+
+**Ce qui n'est pas retenu.** *Un statut `requested` sur l'intervention* : un cinquième état à
+peindre partout pour dire ce que « prévue au nom du chantier » dit déjà. *Une table
+`service_requests`* : un objet de plus, une corbeille de plus, une RLS de plus, pour une ligne que
+le journal sait tenir. *Le bouton sur chaque ligne de la file* : un objet, une raison, **un** geste
+(D121) — la remise se fait depuis le point déplié, où l'historique et le plan se lisent, et la carte
+« À faire maintenant » y mène en un tap. *Rendre le chantier lecteur du carnet par la demande* :
+D121 tient — rien sans invitation datée, et un e-mail n'ouvre aucune porte.
+
+**Ce qui reste à trancher.** Ce que le chantier voit de la suite (une réponse, un devis) quand
+E19-5 lui donnera un accès concédé ; le prix de l'option (E19-9) ; et si la demande doit un jour
+partir aussi vers `constructeurs@xaman.boats` pour qu'on sache lesquelles sont restées sans réponse.

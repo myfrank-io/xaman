@@ -163,7 +163,9 @@ export function UpcomingList({
       <TodoRow
         key={entryKey(entry)}
         row={entry.row}
-        href={categoryPath(boatId, entry.row.categoryId)}
+        // Le titre mène au point lui-même, déplié (D140) : c'est là que se lisent son
+        // historique et son intervention prévue, et là que « Confier au chantier » se trouve.
+        href={categoryPath(boatId, entry.row.categoryId, { open: entry.row.id })}
         onTick={canContribute ? tick : undefined}
         busy={busy === entry.row.id}
       />

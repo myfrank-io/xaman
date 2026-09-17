@@ -100,6 +100,8 @@ export const BOAT_SECTIONS = {
     "checklist",
     "checklistState",
     "common",
+    // « Confier au chantier » (D141) groupe l'annuaire par métier, avec les mots de l'annuaire.
+    "contacts",
     "errors",
     "import",
     "offline",

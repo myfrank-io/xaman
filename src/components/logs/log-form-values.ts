@@ -31,6 +31,8 @@ export type LogFormValues = {
   engineHours: { engineId: string; hours: number }[];
   /** Checklist points already ticked by this intervention. */
   checklistItemIds: string[];
+  /** The point this intervention is the doing of (D140), kept through an edit. */
+  checklistItemId: string | null;
   updatedAt: string;
 };
 
@@ -45,6 +47,8 @@ export type LogFormPrefill = {
   performedAt?: string;
   hours?: { engineId: string; hours: string }[];
   checklistItemIds?: string[];
+  /** `?item=`: the new line IS the doing of this point (D140), not merely a tick of it. */
+  checklistItemId?: string;
   contactId?: string;
   equipmentId?: string;
   /** Read on the document the intervention starts from (D119): cost, notes, provider. */

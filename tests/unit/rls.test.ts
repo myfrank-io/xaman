@@ -1077,15 +1077,38 @@ describeWithDb("update", () => {
     expect(await setTitle(U.stranger, LOG_OWNER)).toEqual({ ok: true, rowCount: 0 });
   });
 
-  it("maintenance_logs: a pro cannot move even their own row to the trash; owner/editor can", async () => {
+  /**
+   * D140 (mirror of D15): a tick is now an intervention, and « Annuler » on the toast trashes
+   * it. A pro may therefore take back their own line for 24 hours — and not a minute longer:
+   * after that the line is the owner's history, and the old rule holds.
+   */
+  it("maintenance_logs: a pro trashes their own row within 24 h only; owner/editor always", async () => {
     const trash = (u: User, id: string) =>
       run(u, "update public.maintenance_logs set deleted_at = now() where id = $1", [id]);
-    const pro = await trash(U.pro, LOG_PRO);
-    expect(pro.ok).toBe(false);
-    if (!pro.ok) expect(pro.code).toBe("42501");
+    // The seed wrote the pro's line a moment ago: within the window.
+    expect(await trash(U.pro, LOG_PRO)).toEqual({ ok: true, rowCount: 1 });
+    expect(await trash(U.pro, LOG_OWNER)).toEqual({ ok: true, rowCount: 0 });
     expect(await trash(U.owner, LOG_PRO)).toEqual({ ok: true, rowCount: 1 });
     expect(await trash(U.editor, LOG_OWNER)).toEqual({ ok: true, rowCount: 1 });
     expect(await trash(U.viewer, LOG_OWNER)).toEqual({ ok: true, rowCount: 0 });
+
+    const old = await as(U.pro, async (c) => {
+      await c.query("set local role service_role");
+      await c.query(
+        "update public.maintenance_logs set created_at = now() - interval '25 hours' where id = $1",
+        [LOG_PRO],
+      );
+      await c.query("set local role authenticated");
+      try {
+        await c.query("update public.maintenance_logs set deleted_at = now() where id = $1", [
+          LOG_PRO,
+        ]);
+        return { ok: true as const };
+      } catch (e) {
+        return { ok: false as const, code: (e as { code?: string }).code ?? "" };
+      }
+    });
+    expect(old).toEqual({ ok: false, code: "42501" });
   });
 
   it("a pro cannot hand their row over to someone else or to another boat", async () => {

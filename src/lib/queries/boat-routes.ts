@@ -111,8 +111,17 @@ export function logsReviewPath(
   return withQuery(`${boatPath(boatId, "logs")}/review`, query);
 }
 
-export function categoryPath(boatId: string, categoryId: string): string {
-  return `${boatPath(boatId, "checklist")}/${categoryId}`;
+/**
+ * A system of the checklist. `open` names the point whose detail unfolds on arrival (D140): the
+ * card « À faire maintenant » and the detail of an intervention lead to the point, not to the
+ * top of a list where it has to be found again.
+ */
+export function categoryPath(
+  boatId: string,
+  categoryId: string,
+  query?: Record<string, string | number | undefined>,
+): string {
+  return withQuery(`${boatPath(boatId, "checklist")}/${categoryId}`, query);
 }
 
 /**

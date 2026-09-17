@@ -13,6 +13,7 @@ import {
 import { payload, subjectsFromConfig } from "../../scripts/push-email-templates.mjs";
 
 import { SAMPLE_VALUES, renderEmailPreview, unresolvedPlaceholders } from "@/lib/email-preview";
+import { handOverEmail } from "@/lib/email/handoff";
 import { invitationEmail } from "@/lib/email/invitation";
 import { recoveryEmail } from "@/lib/email/recovery";
 import { unresolvedPlaceholders as unresolvedIn } from "@/lib/email/render";
@@ -96,6 +97,64 @@ describe("auth e-mail templates", () => {
     // The link is the invitation's own address, not an auth verification URL: opening it
     // creates nobody's account, /invite/[token] asks for the sign-in.
     expect(body).toContain("https://xaman.boats/invite/tok");
+    expect(unresolvedIn(body, {})).toEqual([]);
+  });
+
+  /**
+   * D141. The hand-over to the yard carries what the phone call never had, and every value in
+   * it was typed by someone or read from the carnet: it is escaped, the owner's line breaks are
+   * kept, and the one door the mail opens is the builders' page.
+   */
+  it("fill the hand-over the app sends to the yard, escaped and complete", () => {
+    const { subject, html: body } = handOverEmail({
+      boatName: "Xaman",
+      boatModel: "Marsaudon Composites ORC 50 n° 25",
+      itemLabel: "Vidange moteur bâbord",
+      categoryName: "Moteurs & Propulsion",
+      dueLabel: "En retard de 12 jours",
+      hoursLabel: "1 482,5 h · Bâbord",
+      lastDoneLabel: "14/06/2025 · à 1 204 h · Chantier du Guip",
+      message: "Un créneau <avant> le 1er octobre ?\nMerci",
+      requesterName: "Xavier",
+      requesterEmail: "xavier@exemple.fr",
+      appUrl: "https://xaman.boats",
+    });
+    expect(subject).toBe("Demande d'intervention — Xaman · Vidange moteur bâbord");
+    for (const value of [
+      "Marsaudon Composites ORC 50 n° 25",
+      "Vidange moteur bâbord",
+      "Moteurs &amp; Propulsion",
+      "En retard de 12 jours",
+      "1 482,5 h · Bâbord",
+      "Chantier du Guip",
+      "mailto:xavier@exemple.fr",
+      "https://xaman.boats/constructeurs",
+    ]) {
+      expect(body).toContain(value);
+    }
+    expect(body).toContain("&lt;avant&gt;");
+    expect(body).not.toContain("<avant>");
+    expect(body).toContain("?<br />Merci");
+    expect(unresolvedIn(body, {})).toEqual([]);
+  });
+
+  it("say what the carnet does not know rather than print an empty fact", () => {
+    const { html: body } = handOverEmail({
+      boatName: "Xaman",
+      boatModel: null,
+      itemLabel: "Anodes de safran",
+      categoryName: null,
+      dueLabel: "Dans 3 semaines",
+      hoursLabel: null,
+      lastDoneLabel: null,
+      message: null,
+      requesterName: "xavier@exemple.fr",
+      requesterEmail: "xavier@exemple.fr",
+      appUrl: "https://xaman.boats",
+    });
+    expect(body).toContain("Compteur non relevé");
+    expect(body).toContain("Jamais noté dans le carnet");
+    expect(body).toContain("Non renseigné");
     expect(unresolvedIn(body, {})).toEqual([]);
   });
 

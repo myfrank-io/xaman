@@ -34,9 +34,48 @@ export type ChecklistRow = {
   dueHours: number | null;
   daysRemaining: number | null;
   hoursRemaining: number | null;
+  /**
+   * The intervention someone has in hand for this point (D140, D141): planned, in progress or
+   * urgent. Null when nobody has taken it. The line says it instead of a bare delay, and a
+   * tick finishes this line rather than writing a second one.
+   */
+  openLog: OpenLog | null;
+};
+
+export type OpenLogStatus = Exclude<Database["public"]["Enums"]["log_status"], "done">;
+
+export type OpenLog = {
+  id: string;
+  status: OpenLogStatus;
+  /** `yyyy-MM-dd`: the planned date (`maintenance_logs.performed_at`). */
+  at: string;
+  /** Who it was handed to, when it was handed to someone of the directory. */
+  contactName: string | null;
 };
 
 export type StatusViewRow = Database["public"]["Views"]["checklist_item_status"]["Row"];
+
+/** The four view columns of the open intervention, as one object or nothing. */
+export function toOpenLog(
+  row: Pick<
+    StatusViewRow,
+    "open_log_id" | "open_log_status" | "open_log_at" | "open_log_contact_name"
+  >,
+): OpenLog | null {
+  if (
+    !row.open_log_id ||
+    !row.open_log_status ||
+    row.open_log_status === "done" ||
+    !row.open_log_at
+  )
+    return null;
+  return {
+    id: row.open_log_id,
+    status: row.open_log_status,
+    at: row.open_log_at,
+    contactName: row.open_log_contact_name,
+  };
+}
 
 export function toChecklistRow(
   row: StatusViewRow,
@@ -72,6 +111,7 @@ export function toChecklistRow(
     dueHours: row.due_hours,
     daysRemaining: row.days_remaining,
     hoursRemaining: row.hours_remaining,
+    openLog: toOpenLog(row),
   };
 }
 
@@ -167,5 +207,12 @@ export function applyCompletion(
     dueHours: status.dueHours,
     daysRemaining: status.daysRemaining,
     hoursRemaining: status.hoursRemaining,
+    // The tick finished whatever was planned on the point (D140): nothing is in hand any more.
+    openLog: null,
   };
+}
+
+/** The point handed over, before the server says so (« Confier au chantier », D141). */
+export function applyOpenLog(row: ChecklistRow, openLog: OpenLog): ChecklistRow {
+  return { ...row, openLog };
 }

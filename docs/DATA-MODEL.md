@@ -453,6 +453,7 @@ Suppression : mise à la corbeille (`deleted_at`), restaurable 30 jours. Toutes 
 | currency | char(3) | not null default 'EUR' | |
 | contact_id | uuid | FK contacts on delete set null, null | prestataire ; null = fait par l'équipage |
 | haul_out_id | uuid | FK haul_outs on delete set null, null | intervention réalisée pendant une sortie de l'eau |
+| checklist_item_id | uuid | FK checklist_items on delete set null, null | **le point dont cette intervention est le faire** (D140, `0042`) : le cochage qui l'a écrite, « Confier au chantier » (D141), « + Ajouter les détails ». Même bateau que le point, vérifié par le trigger `maintenance_logs_item_boat` (`checklist_item_boat_mismatch`, `23514`). Null sur une ligne qui n'est le faire d'aucun point (elle peut quand même en cocher plusieurs par `checklist_completions`) |
 | notes | text | | |
 | needs_review | boolean | not null default false | import carnet papier |
 | pending_engine_hours | jsonb | null | `{ "<engine_id>": <hours> }` — heures importées non validées ; consommé par `mark_log_reviewed` qui crée les relevés (source `import`) puis vide la colonne |
@@ -479,6 +480,8 @@ Index : `(boat_id, category_id)`. La table porte **tous** les systèmes, le prin
 RLS : `select` pour tout membre, `insert` pour `can_contribute_boat` avec `created_by = auth.uid()`, `delete` pour `can_write_boat` **ou** le `pro` sur une intervention dont il est l'auteur. Pas de politique `update` : une liaison s'ajoute ou se retire, et `saveLog` réécrit l'ensemble à chaque enregistrement.
 
 Heures moteur d'une intervention = lignes `engine_hour_readings` avec `maintenance_log_id = id` (une par moteur renseigné).
+
+**La réalisation d'une intervention qui porte un point se déduit d'elle (D140, `0042`).** `sync_log_completion(p_log_id)` — appelée par le trigger `sync_log_completion` sur `maintenance_logs` (insert, et update de `status`, `performed_at`, `deleted_at`, `checklist_item_id`, `contact_id`, `updated_by`) et par `sync_log_completion_from_reading` sur `engine_hour_readings` — écrit la `checklist_completions` de `(maintenance_log_id, checklist_item_id)` quand la ligne est `done` et `deleted_at is null` : `completed_at = performed_at`, `engine_hours` = le relevé de la ligne pour le moteur du point, `completed_by_name` = le nom du prestataire (D32), `completed_by = coalesce(updated_by, created_by)` ; elle la **retire** quand la ligne repasse ouverte ou part à la corbeille, et quand le relevé qu'un point compté en heures exige n'est pas (plus) là — la base refuse une réalisation sans heures (`check_completion_hours`), donc elle attend le relevé plutôt que d'échouer. Un re-pointage vers un autre point retire ce que l'ancien tenait de cette ligne. `security definer` : la réalisation reflète une intervention que l'appelant avait déjà le droit d'écrire. Un `pro` peut mettre **sa propre ligne** à la corbeille pendant 24 h après sa création (miroir de D15) — c'est ce qui permet « Annuler » après un cochage.
 
 ### 3.13 `checklist_templates`, `checklist_template_categories`, `checklist_template_items`
 Modèles globaux, lisibles par tout utilisateur connecté, modifiables par l'admin plateforme (V2 : par l'organisation propriétaire).
@@ -555,10 +558,10 @@ Les points sans aucun intervalle sont **autorisés** (contrôle ponctuel) : l'é
 | completed_by_name | text | null | si fait par quelqu'un qui n'est pas membre (« Chantier X ») |
 | engine_hours | numeric(8,1) | null | heures du moteur lié au moment du cochage. **Obligatoire si le point a un `interval_hours`** (validation zod + trigger `check_completion_hours`) — sauf sur un moteur sans compteur (`engines.tracks_hours = false`, D73). Crée un `engine_hour_readings` (source 'checklist') sauf si `maintenance_log_id` est renseigné (l'intervention porte déjà ses relevés) |
 | note | text | | |
-| maintenance_log_id | uuid | FK maintenance_logs on delete set null, null | |
+| maintenance_log_id | uuid | FK maintenance_logs on delete set null, null | l'intervention qui l'a cochée. Depuis D140 (`0042`) **tout cochage écrit une intervention** et la réalisation en est déduite (`sync_log_completion`, §3.12) ; une réalisation sans intervention est une ligne importée, ou écrite avant D140 |
 | created_by / updated_by / created_at / updated_at | | | |
 
-Index : `(checklist_item_id, completed_at desc)`.
+Index : `(checklist_item_id, completed_at desc)` ; unique `(maintenance_log_id, checklist_item_id)` (`0013`) — la clé sur laquelle `sync_log_completion` et `saveLog` font leur `upsert`.
 
 ### 3.16 `purchases` (achats, gaz, consommables)
 
@@ -816,6 +819,21 @@ create function purge_trash() returns int ...;
 --                                    trouvent sous leur nouveau nom). Le téléphone, l'e-mail
 --                                    et l'adresse d'un intervenant ne sont jamais cherchés
 --                                    (D134). E18-4 / E18-14, `0039`, `0040`.
+-- Le faire d'un point (D140, `0042`). La réalisation d'une intervention qui porte checklist_item_id se déduit
+-- d'elle : terminée et vivante → upsert de checklist_completions (date, heures du relevé pour le moteur du
+-- point, nom du prestataire) sur (maintenance_log_id, checklist_item_id) ; ouverte, à la corbeille, ou relevé
+-- exigé absent → suppression. security definer (la réalisation reflète une ligne déjà autorisée) ;
+-- EXECUTE retiré à anon et authenticated (`0043`, comme `0009` pour les fonctions internes) : seuls ses
+-- triggers l'appellent, jamais un RPC.
+create function sync_log_completion(p_log_id uuid) returns void ...;
+-- Ses deux triggers : sync_log_completion (after insert / update of status, performed_at, deleted_at,
+-- checklist_item_id, contact_id, updated_by on maintenance_logs ; un re-pointage retire ce que l'ancien point
+-- tenait de la ligne) et sync_log_completion_from_reading (after insert / update / delete on engine_hour_readings
+-- portant maintenance_log_id).
+create function sync_log_completion_from_log() returns trigger ...;
+create function sync_log_completion_from_reading() returns trigger ...;
+-- Le point d'une intervention est un point du même bateau (règle 4) : checklist_item_boat_mismatch (23514) sinon.
+create function maintenance_logs_check_item_boat() returns trigger ...;
 ```
 
 ### 4.1 `search_text` — le texte cherchable, plié une fois (E18-4, D134, `0039`, `0040`)
@@ -864,7 +882,7 @@ RLS **activée sur toutes les tables**. Modèle général pour une table métier
 |---|---|
 | select | `is_boat_member(boat_id)` |
 | insert | `can_write_boat(boat_id)` — ou, pour `maintenance_logs`, `checklist_completions`, `engine_hour_readings`, `attachments` : `can_contribute_boat(boat_id) and created_by = auth.uid()` |
-| update | `can_write_boat(boat_id)` — ou, pour les mêmes quatre tables : `using (boat_role(boat_id) = 'pro' and created_by = auth.uid())` **`with check (deleted_at is null)`** sur `maintenance_logs` et, depuis `0011`, sur `attachments` (un pro ne peut pas mettre à la corbeille, même ce qu'il a ajouté) |
+| update | `can_write_boat(boat_id)` — ou, pour les mêmes quatre tables : `using (boat_role(boat_id) = 'pro' and created_by = auth.uid())` **`with check (deleted_at is null)`** sur `attachments` depuis `0011`, et sur `maintenance_logs` **sauf pendant les 24 h qui suivent la création de la ligne** (`0042`, D140 — le miroir de D15 : un cochage est une intervention, et « Annuler » la met à la corbeille) ; passé ce délai un pro ne met rien à la corbeille, même ce qu'il a écrit |
 | delete | `can_write_boat(boat_id)` (les pro ne suppriment pas, même leurs lignes) |
 
 Les tables sans contribution `pro` (`purchases`, `parts`, `haul_outs`, `contacts`, `equipment`, `engines`, `boat_categories`, `checklist_items`) suivent strictement `can_write_boat` pour insert/update/delete. La mise à la corbeille de `parts` et `contacts` (`0012`) est un `update` : elle est donc déjà réservée à owner / editor sans politique nouvelle, et un `pro` ou un `viewer` n'y touche aucune ligne.
@@ -910,12 +928,13 @@ Pour chaque `checklist_items` actif dont la catégorie est active :
   - `'overdue'` si `days_remaining < 0` **ou** `hours_remaining < 0` ;
   - `'soon'` si `days_remaining <= 30` **ou** `hours_remaining <= 25` ;
   - `'ok'` sinon (y compris points sans intervalle déjà faits).
+- `open_log_id`, `open_log_status`, `open_log_at`, `open_log_contact_name` (D140, D141, `0042`) : **l'intervention que quelqu'un a en main pour ce point** — la plus pressante des lignes vivantes non terminées qui portent `checklist_item_id = id` (`urgent`, puis `in_progress`, puis `planned`, la date la plus proche d'abord), avec sa date prévue et le nom de son prestataire. Null quand personne ne l'a prise. La ligne du point dit « Confié à … · prévu le … » à la place de l'échéance, et `boat_todo_queue` ne liste pas la ligne prévue d'un point déjà dans la file. La logique d'état ci-dessus n'en dépend pas.
 - `checklist_category_progress` : par catégorie active, `total`, `ok_count`, `soon_count`, `overdue_count`, `never_count`, `progress = (ok_count + soon_count)::numeric / nullif(total, 0)` (null → « — »).
 
 La même logique est implémentée en TypeScript dans `src/lib/checklist-status.ts` **uniquement** pour l'optimistic UI, avec un test de parité sur un jeu de cas partagé (`tests/fixtures/checklist-status-cases.json`) : jamais fait, mois seul, heures seul, les deux (première atteinte), compteur inconnu, sans intervalle, **fins de mois** (31/01 + 1 mois, 31/08 + 6 mois, année bissextile) — côté TS avec `date-fns/addMonths`.
 
 ### 6.3 `maintenance_logs_view`
-`maintenance_logs` non supprimés, joints à `boat_categories` (nom, couleur), `contacts` (nom), `profiles` (nom du créateur), avec `engine_hours` agrégé en JSON `[{engine_id, label, hours}]` depuis `engine_hour_readings`, `completions_count`, `attachments_count`. Utilisée par la liste, le détail et l'export. Une variante `maintenance_logs_trash_view` expose les lignes supprimées (< 30 jours).
+`maintenance_logs` non supprimés, joints à `boat_categories` (nom, couleur), `contacts` (nom), `profiles` (nom du créateur), avec `engine_hours` agrégé en JSON `[{engine_id, label, hours}]` depuis `engine_hour_readings`, `completions_count`, `attachments_count`, et depuis `0042` `checklist_item_id` et `checklist_item_label` (le point dont la ligne est le faire, D140). Utilisée par la liste, le détail et l'export. Une variante `maintenance_logs_trash_view` expose les lignes supprimées (< 30 jours).
 
 ### 6.4 `boat_invitations_safe`
 `boat_invitations` sans la colonne `token`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur. Depuis `0023` (D79) elle expose aussi `delivery_status`, `delivery_reason` et `delivery_updated_at` — jamais `email_id` ni `delivery_detail`.
@@ -928,9 +947,11 @@ Par bateau : `review_pending_logs`, `review_pending_purchases` — et rien d'aut
 
 ### 6.6 bis `boat_activity` (le fil du carnet — D132, `0038`)
 Union de cinq faits, `security_invoker` (chaque table source décide, comme sur son propre écran) :
-cochages (`checklist_completions`), interventions **terminées** non supprimées, achats non
-supprimés, relevés d'heures **saisis à la main** (`source = 'manual'` : ceux que l'app dérive d'une
-intervention ou d'un cochage sont déjà dits par leur ligne, D5), sorties de l'eau non supprimées.
+cochages **sans intervention derrière eux** (`checklist_completions` où `maintenance_log_id is
+null` — depuis D140 un cochage écrit une intervention, et c'est elle qui le raconte, `0042`),
+interventions **terminées** non supprimées, achats non supprimés, relevés d'heures **saisis à la
+main** (`source = 'manual'` : ceux que l'app dérive d'une intervention ou d'un cochage sont déjà
+dits par leur ligne, D5), sorties de l'eau non supprimées.
 
 Colonnes : `boat_id`, `kind ('completion'|'log'|'purchase'|'reading'|'haul_out')`, `id`,
 `happened_at` (le jour du fait, pas celui de la saisie), `title`, `who`, `category_name`,
@@ -1020,7 +1041,7 @@ Fonction `stable`, **security invoker** (la RLS de l'appelant s'applique : un é
 | 0 | interventions `urgent` | `performed_at` (la plus ancienne d'abord) |
 | 1 | points `overdue` | `-severity` — **retard relatif** `greatest((today − due_at)/max(interval_months×30, 30), (current_hours − due_hours)/max(interval_hours, 25))` |
 | 2 | documents `received` / `analysing` / `ready` de « À valider » (D131) | `received_at` (le plus ancien d'abord) |
-| 3 | interventions `in_progress` puis `planned` dont `performed_at ≤ today + 30 j` | `+1 000 000` pour `planned`, puis `performed_at` |
+| 3 | interventions `in_progress` puis `planned` dont `performed_at ≤ today + 30 j` — **sauf** celles dont le point (`checklist_item_id`) est lui-même dans la file, `overdue` ou `soon` : sa ligne les porte (D140, `0042`) | `+1 000 000` pour `planned`, puis `performed_at` |
 | 4 | points `soon` | `least(days_remaining, hours_remaining × 1,2)` — 1 h moteur ≈ 1,2 jour (seuils 30 j / 25 h) |
 | 5 | pièces sous leur seuil, corbeille exclue (D10, D131) | `-severity` — ce qui manque (`min_quantity − quantity`), le stock le plus court d'abord |
 

@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import { CompleteItemDialog } from "@/components/checklist/CompleteItemDialog";
+import { HandOverDialog } from "@/components/checklist/HandOverDialog";
+import type { ChecklistRow } from "@/components/checklist/rows";
 import { QuickContactDialog } from "@/components/contacts/QuickContactDialog";
 import { EditReadingDialog } from "@/components/engines/EditReadingDialog";
 import { HourReadingDialog } from "@/components/engines/HourReadingDialog";
@@ -11,7 +13,8 @@ import { Button } from "@/components/ui/button";
 
 const BOAT = "00000000-0000-4000-8000-000000000000";
 
-export type DevDialogKey = "complete" | "hours" | "edit-reading" | "contact" | "recurring";
+export type DevDialogKey =
+  "complete" | "hours" | "edit-reading" | "contact" | "recurring" | "handoff";
 
 const LABELS: Record<DevDialogKey, string> = {
   complete: "Marquer comme fait",
@@ -19,7 +22,60 @@ const LABELS: Record<DevDialogKey, string> = {
   "edit-reading": "Modifier un relevé",
   contact: "Nouveau prestataire",
   recurring: "Point récurrent",
+  handoff: "Confier au chantier",
 };
+
+/** Le point que la feuille « Confier au chantier » reçoit (D141) : en retard, aux heures. */
+const HANDOFF_ROW: ChecklistRow = {
+  id: "i-handoff",
+  label: "Vidange moteur bâbord",
+  description: null,
+  actions: [],
+  categoryId: "c-engines",
+  categoryName: "Moteurs & Propulsion",
+  categoryColor: "#D97706",
+  engineId: "e1",
+  engineLabel: "Bâbord",
+  engineTracksHours: true,
+  intervalMonths: 12,
+  intervalHours: 250,
+  sortOrder: 1,
+  anchorDate: null,
+  anchorHours: null,
+  counterResetAt: null,
+  currentHours: 1482.5,
+  hasCompletion: true,
+  lastCompletionId: null,
+  lastCompletedAt: "2025-09-14",
+  lastCompletedByName: "Chantier Naval du Guip",
+  lastEngineHours: 1204,
+  fixedDueAt: null,
+  status: "overdue",
+  dueAt: "2026-09-14",
+  dueHours: 1454,
+  daysRemaining: -3,
+  hoursRemaining: -28.5,
+  openLog: null,
+};
+
+const HANDOFF_CONTACTS = [
+  {
+    id: "c1",
+    name: "Marsaudon Composites",
+    specialty: "Chantier constructeur",
+    company: "Marsaudon Composites SAS",
+    phone: "02 97 83 01 31",
+    email: "contact@marsaudon-composites.com",
+  },
+  {
+    id: "c2",
+    name: "Motoriste Yanmar Lorient",
+    specialty: "Motoriste",
+    company: null,
+    phone: null,
+    email: null,
+  },
+];
 
 /**
  * One dialog at a time, chosen by `?d=`.
@@ -72,6 +128,15 @@ export function DevDialogs({ which }: { which: DevDialogKey | null }) {
         currentUserId="m1"
         currentUserName="Xavier Marin"
         onOpenChange={(next) => setOpen(next ? "complete" : null)}
+      />
+
+      <HandOverDialog
+        boatId={BOAT}
+        row={open === "handoff" ? HANDOFF_ROW : null}
+        contacts={HANDOFF_CONTACTS}
+        defaultContactId="c1"
+        canCreateContact
+        onOpenChange={(next) => setOpen(next ? "handoff" : null)}
       />
 
       <HourReadingDialog

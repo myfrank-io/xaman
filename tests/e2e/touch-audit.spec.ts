@@ -76,6 +76,8 @@ const PAGES = [
   "/dev/ui/dialogs?d=edit-reading",
   "/dev/ui/dialogs?d=contact",
   "/dev/ui/dialogs?d=recurring",
+  // « Confier au chantier » (D141): a select, a textarea and a notice above the keyboard.
+  "/dev/ui/dialogs?d=handoff",
   "/dev/ui/supplies?dialog=1",
   // The breakdown once one of its rows has been tapped (D77): the row marked as the active
   // filter is a state no other URL of the gallery reaches.

@@ -36,8 +36,16 @@ export type SavedLog = {
 export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
   const parsed = parseInput(saveLogSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { id, boatId, expectedUpdatedAt, engineHours, checklistItemIds, categoryIds, ...values } =
-    parsed.data;
+  const {
+    id,
+    boatId,
+    expectedUpdatedAt,
+    engineHours,
+    checklistItemIds,
+    checklistItemId,
+    categoryIds,
+    ...values
+  } = parsed.data;
 
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
@@ -55,8 +63,13 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
   }
 
   // ---- what the ticked points will need, decided before anything is written ---------------
-  // Only work that is done acknowledges a checklist point.
-  const ticked = values.status === "done" ? checklistItemIds : [];
+  // Only work that is done acknowledges a checklist point. The point the line IS the doing of
+  // (D140) is one of them: the database derives its completion from the row, and listing it
+  // here is what lets the hours check below cover it before the first write.
+  const ticked =
+    values.status === "done"
+      ? [...new Set([...checklistItemIds, ...(checklistItemId ? [checklistItemId] : [])])]
+      : [];
   const filled = engineHours.filter(
     (entry): entry is { engineId: string; hours: number } => entry.hours !== null,
   );
@@ -112,6 +125,8 @@ export async function saveLog(input: unknown): Promise<ActionResult<SavedLog>> {
     equipment_id: values.equipmentId,
     haul_out_id: values.haulOutId,
     notes: values.notes,
+    // Absent means « unchanged » (a draft or a queued line written before D140); null unlinks.
+    ...(checklistItemId === undefined ? {} : { checklist_item_id: checklistItemId }),
     updated_by: userId,
   };
 
@@ -390,6 +405,16 @@ export async function createRecurringFromLog(
     { onConflict: "id", ignoreDuplicates: true },
   );
   if (itemError) return fail(dbErrorKey(itemError));
+
+  // The intervention becomes the doing of the point it just created (D140): the database
+  // derives the first completion from the line itself — date, hours of the chosen engine,
+  // provider — and keeps deriving it if the line is edited or trashed later.
+  const { error: linkError } = await supabase
+    .from("maintenance_logs")
+    .update({ checklist_item_id: itemId, updated_by: userId })
+    .eq("id", logId)
+    .eq("boat_id", boatId);
+  if (linkError) return fail(dbErrorKey(linkError));
 
   const { error: completionError } = await supabase.from("checklist_completions").upsert(
     {

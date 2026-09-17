@@ -32,8 +32,8 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E16 | E16-10 |
 | E17 | E17-13 |
 | E18 | E18-15 |
-| E19 | E19-11 |
-| E20 | E20-4 |
+| E19 | E19-12 |
+| E20 | E20-5 |
 
 ---
 
@@ -582,6 +582,23 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   la page 4 (*Figaro Nautisme*, octobre 2025) est reprise du deck **sans avoir été vérifiée à la
   source** ; et `constructeurs@xaman.boats`, que la page 7 appelle, n'existe pas encore (E19-9).
 
+### Lot 1 bis — Le SAV se commande depuis le carnet *(MVP demandé le 2026-09-17, livré)*
+
+- [x] **E19-11 (M, 2)** **« Confier au chantier »** (D141). Démarré sur demande explicite (« trouve
+  le moyen d'ouvrir tout un pan de revenu en plus pour eux grâce au SAV, et dev une feature MVP très
+  simple »). Sur un point de la checklist déplié : un bouton, une feuille — à qui (le chantier de
+  l'annuaire d'abord, `pickYardContact`), un mot, envoyer. `handOverItem` écrit une **intervention
+  prévue sur ce point** (`checklist_item_id`, D140) au nom du prestataire, datée de l'échéance, et
+  envoie au chantier l'e-mail `handoff` (gabarit généré, `reply-to` = le demandeur) : bateau,
+  modèle et coque, système, retard, heures moteur, dernière fois, message. La ligne du point dit
+  « Confié à … · prévu le … » (`open_log_*` de `checklist_item_status`), la carte « À faire
+  maintenant » aussi, la file ne redit pas la ligne prévue ; cocher le point termine l'intervention
+  prévue. Sans e-mail dans l'annuaire, la demande est notée au journal, à transmettre par
+  téléphone. **DoD** : migration `0042`, RLS et test base (`tests/unit/checklist-journal.test.ts`),
+  gabarit d'e-mail testé (échappement, aucun `{{` restant), textes dans `fr.json`, maquette
+  `/dev/ui/dialogs?d=handoff` dans l'audit tactile, `DATA-MODEL.md` à jour. **Hors MVP** (D141) :
+  écran côté chantier, devis et prix (E19-9), statut « demandé », contrat (lot 2).
+
 ### Lot 2 — Ce qui manque au carnet avant qu'un chantier puisse le vendre — *à ne pas démarrer sans validation explicite*
 
 - [ ] **E19-2 (M, 3)** **Les garanties n'existent pas.** Ni date de mise en service, ni durée, ni
@@ -647,3 +664,21 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
 - [x] **E20-1 (M, 3)** **Une question par écran, une seule ligne** (D137). L'onglet Checklist cesse d'être trois portes : la liste plate « À traiter » et ses quatre onglets sont supprimées (`TodoList`, `ChecklistViewTabs`), et l'onglet répond à « qu'est-ce qu'on suit sur ce bateau » — le tableau de bord répondant depuis D121 à « qu'est-ce que je fais aujourd'hui ». `TodoRow` remplace `ChecklistItemRow` **partout**, tableau de bord compris : titre sur toute la largeur (deux lignes), état porté par un trait de couleur **et** par la phrase, case de 44 px. `due-sentence.ts` écrit l'échéance en français de marin — « En retard de 79 jours », « À faire aujourd'hui », « Dans trois semaines », « Dans un an » — au lieu de « dans 365 j » ; les heures restent des heures. **DoD** : `tests/unit/checklist-due-sentence.test.ts` couvre les paliers, le retard, les heures sans compteur et la parité clé ↔ `fr.json` ; maquette `/dev/ui/checklist` ; audit tactile vert.
 - [x] **E20-2 (M, 2)** **Cocher coûte un geste** (D137). `use-tick.ts` écrit la réalisation sans rien demander — aujourd'hui, la personne connectée, le compteur courant du moteur — et **dit ce qu'il a supposé** dans le toast, qui porte « Annuler » huit secondes. Le cochage hors ligne est conservé (E9-1b, `submitOrQueue`). `CompleteItemDialog` n'est plus le chemin par défaut : il ne s'ouvre que pour la seule chose indevinable, un intervalle en heures sur un moteur jamais relevé, que la base exige (`check_completion_hours`). **DoD** : `tests/e2e/journeys/checklist.spec.ts` réécrit sur le nouveau geste, budget **1 tap** au lieu de 3.
 - [x] **E20-3 (M, 1)** **Les mots du bord** (D137). « Point », « intervalle », « ancrage », « recaler », « ponctuel », « jamais fait », « valide jusqu'au » quittent l'interface : 29 libellés de `checklist.*` réécrits (« Jamais noté », « à refaire avant le… », « À faire une seule fois », « Mettre le carnet à jour », « Retiré du suivi »). Le tableau de bord suit, puisqu'il porte la même ligne : « Tout ce qui est à faire », « # en retard », « # choses réglées ». **DoD** : aucune de ces sept formes ne subsiste sous `checklist.*` ni sous `dashboard.upcoming.*` / `dashboard.state.*` dans `fr.json`.
+- [x] **E20-4 (M, 3)** **Cocher, c'est noter une intervention** (D140). Le sixième constat du brief,
+  le seul qu'E20 n'avait pas pris : deux façons de dire « c'est fait » qui ne se lisaient pas.
+  Migration `0042` : `maintenance_logs.checklist_item_id` (le point dont la ligne est le faire,
+  même bateau vérifié par trigger), `sync_log_completion()` qui **déduit la réalisation de
+  l'intervention** — terminée et vivante → cochée à sa date, aux heures de son relevé, au nom de son
+  prestataire ; prévue, à la corbeille → non ; restaurée → à nouveau — en écoutant la ligne et ses
+  relevés ; `checklist_item_status` + `open_log_*` ; `maintenance_logs_view` + `checklist_item_id`
+  ; `boat_todo_queue` ne liste plus une ligne prévue dont le point est déjà dans la file ;
+  `boat_activity` ne redit pas une réalisation que son intervention raconte ; un `pro` met sa
+  propre ligne à la corbeille pendant 24 h (miroir de D15). Côté app : `use-tick` et le dialogue
+  écrivent une intervention (titre = le point, système, jour, relevé), « Annuler » la met à la
+  corbeille, cocher un point confié termine l'intervention prévue, l'historique d'un point mène à
+  ses interventions et sa « Supprimer » passe par la corbeille, la fiche d'une intervention nomme
+  son point, `?open=` déplie le point à l'arrivée, `saveLog` et « En faire un entretien récurrent »
+  portent le lien. **DoD** : `tests/unit/checklist-journal.test.ts` (trigger dans les deux sens,
+  corbeille, restauration, purge, re-pointage, bateau étranger, file, fil), test RLS du pro 24 h
+  réécrit, parité `checklist-status` intacte, types régénérés, `DATA-MODEL.md` à jour, galerie
+  `/dev/ui/checklist` avec une ligne confiée.

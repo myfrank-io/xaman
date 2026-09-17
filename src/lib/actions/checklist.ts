@@ -23,39 +23,155 @@ function revalidateBoat(boatId: string) {
   revalidatePath(`/boats/${boatId}`, "layout");
 }
 
-// « Fait » (E4-5). The database requires engine hours on hour-based items and derives the
-// reading (sync_engine_hours_from_completion). Idempotent on the id drawn by the dialog.
-export async function completeChecklistItem(
-  input: unknown,
-): Promise<ActionResult<{ completionId: string }>> {
+export type TickedItem = {
+  /** The completion the database derived from the intervention. */
+  completionId: string;
+  /** The intervention the tick wrote — or finished, when the point was already in someone's hands. */
+  logId: string;
+};
+
+/**
+ * « Fait » (E4-5, D140): a tick writes an intervention.
+ *
+ * The checklist and the journal used to be two ways of saying « c'est fait » that never met: a
+ * completion nobody saw in the journal, an intervention that only touched the checklist if the
+ * points were re-ticked in the form. Now the tick writes the line the journal shows — the point's
+ * label as title, its system, the day, the counter read — and the database derives the point's
+ * completion from that line (`sync_log_completion`). One history, told once.
+ *
+ * When the point already carries a planned intervention (« Confié au chantier », D141), the tick
+ * finishes *that* line rather than writing a second one for the same job: the plan becomes the
+ * record. Idempotent on the id drawn by the gesture (rule 11): a replay from the offline queue
+ * finds its row and writes nothing twice.
+ */
+export async function completeChecklistItem(input: unknown): Promise<ActionResult<TickedItem>> {
   const parsed = parseInput(completeItemSchema, input);
   if (!parsed.ok) return parsed.result;
-  const { id, boatId, itemId, ...values } = parsed.data;
+  const { boatId, itemId, openLogId, ...values } = parsed.data;
+  // Entries queued before D140 carry the completion's id only: it serves as the line's id.
+  const drawnLogId = parsed.data.logId ?? parsed.data.id ?? crypto.randomUUID();
 
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
   if (!userId) return fail("errors.forbidden");
 
-  const { error } = await supabase.from("checklist_completions").upsert(
-    {
-      id,
-      boat_id: boatId,
-      checklist_item_id: itemId,
-      completed_at: values.completedAt,
-      completed_by: values.completedByName ? null : (values.completedBy ?? userId),
-      completed_by_name: values.completedByName,
-      engine_hours: values.engineHours,
-      next_due_at: values.nextDueAt,
-      note: values.note,
-      created_by: userId,
-      updated_by: userId,
-    },
-    { onConflict: "id", ignoreDuplicates: true },
-  );
-  if (error) return fail(dbErrorKey(error));
+  const { data: item, error: itemError } = await supabase
+    .from("checklist_items")
+    .select("id, label, category_id, engine_id")
+    .eq("id", itemId)
+    .eq("boat_id", boatId)
+    .maybeSingle();
+  if (itemError) return fail(dbErrorKey(itemError));
+  if (!item) return fail("errors.checklist_item_not_found");
+
+  // ---- the intervention: the planned one finished, or a fresh line ------------------------
+  let logId = drawnLogId;
+  if (openLogId) {
+    const { data: open, error: openError } = await supabase
+      .from("maintenance_logs")
+      .select("id, notes")
+      .eq("id", openLogId)
+      .eq("boat_id", boatId)
+      .eq("checklist_item_id", itemId)
+      .is("deleted_at", null)
+      .neq("status", "done")
+      .maybeSingle();
+    if (openError) return fail(dbErrorKey(openError));
+    if (open) {
+      const { error } = await supabase
+        .from("maintenance_logs")
+        .update({
+          status: "done",
+          performed_at: values.completedAt,
+          // A note typed on the tick lands on the line when the line has none of its own.
+          ...(values.note && !open.notes ? { notes: values.note } : {}),
+          updated_by: userId,
+        })
+        .eq("id", open.id)
+        .eq("boat_id", boatId);
+      if (error) return fail(dbErrorKey(error));
+      logId = open.id;
+    }
+  }
+  if (logId === drawnLogId) {
+    const { error } = await supabase.from("maintenance_logs").upsert(
+      {
+        id: logId,
+        boat_id: boatId,
+        title: item.label,
+        category_id: item.category_id,
+        status: "done",
+        performed_at: values.completedAt,
+        notes: values.note,
+        checklist_item_id: item.id,
+        created_by: userId,
+        updated_by: userId,
+      },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
+    if (error) return fail(dbErrorKey(error));
+    if (item.category_id) {
+      const { error: linkError } = await supabase
+        .from("maintenance_log_categories")
+        .upsert(
+          { log_id: logId, category_id: item.category_id, boat_id: boatId, created_by: userId },
+          { onConflict: "log_id,category_id", ignoreDuplicates: true },
+        );
+      if (linkError) return fail(dbErrorKey(linkError));
+    }
+  }
+
+  // ---- the counter read on the tick travels with the line (D5) ----------------------------
+  // The completion takes its hours from there: on an hour-based point the database holds the
+  // completion back until this reading lands (check_completion_hours).
+  if (values.engineHours !== null && item.engine_id) {
+    const { error } = await supabase.from("engine_hour_readings").upsert(
+      {
+        boat_id: boatId,
+        engine_id: item.engine_id,
+        hours: values.engineHours,
+        read_at: values.completedAt,
+        source: "maintenance_log",
+        maintenance_log_id: logId,
+        created_by: userId,
+        updated_by: userId,
+      },
+      { onConflict: "maintenance_log_id,engine_id" },
+    );
+    if (error) return fail(dbErrorKey(error));
+  }
+
+  // ---- the completion, derived by the database; what only the gesture knows goes on it ----
+  const { data: completion, error: completionError } = await supabase
+    .from("checklist_completions")
+    .select("id")
+    .eq("maintenance_log_id", logId)
+    .eq("checklist_item_id", itemId)
+    .maybeSingle();
+  if (completionError) return fail(dbErrorKey(completionError));
+  // The one reason the database holds a completion back: hours it needs and did not get.
+  if (!completion) return fail("errors.engine_hours_required");
+
+  const extras = {
+    ...(values.nextDueAt ? { next_due_at: values.nextDueAt } : {}),
+    ...(values.note ? { note: values.note } : {}),
+    ...(values.completedByName
+      ? { completed_by_name: values.completedByName, completed_by: null }
+      : values.completedBy && values.completedBy !== userId
+        ? { completed_by: values.completedBy }
+        : {}),
+  };
+  if (Object.keys(extras).length > 0) {
+    const { error } = await supabase
+      .from("checklist_completions")
+      .update({ ...extras, updated_by: userId })
+      .eq("id", completion.id)
+      .eq("boat_id", boatId);
+    if (error) return fail(dbErrorKey(error));
+  }
 
   revalidateBoat(boatId);
-  return ok({ completionId: id });
+  return ok({ completionId: completion.id, logId });
 }
 
 // D15: undo from the toast or delete from the history. RLS: owner/editor, or the pro author

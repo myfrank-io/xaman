@@ -64,6 +64,7 @@ function row(over: Partial<ChecklistRow> & Pick<ChecklistRow, "id" | "label">): 
     dueHours: null,
     daysRemaining: 189,
     hoursRemaining: null,
+    openLog: null,
     ...over,
   };
 }
@@ -131,6 +132,8 @@ const ROWS: ChecklistRow[] = [
       "Remonter et tester les deux vitesses",
     ],
   }),
+  // Confié au chantier (D141) : la ligne dit qui l'a en main et pour quand, à la place de
+  // l'échéance ; le trait garde la couleur de l'échéance.
   row({
     id: "s4",
     label: "Foc / Génois (coutures, lattes)",
@@ -139,6 +142,12 @@ const ROWS: ChecklistRow[] = [
     daysRemaining: 8,
     status: "soon",
     sortOrder: 4,
+    openLog: {
+      id: "l-s4",
+      status: "planned",
+      at: "2026-09-24",
+      contactName: "Voilerie Le Bihan",
+    },
   }),
   row({
     id: "s5",
@@ -176,6 +185,7 @@ const COMPLETIONS: CompletionRow[] = [
     createdBy: "u-xav",
     createdAt: "2025-06-15T10:00:00Z",
   },
+  // Un cochage écrit une intervention (D140) : la date de la ligne y mène.
   {
     id: "c2",
     itemId: "s5",
@@ -184,8 +194,28 @@ const COMPLETIONS: CompletionRow[] = [
     engineHours: null,
     nextDueAt: null,
     note: null,
+    maintenanceLogId: "l-c2",
     createdBy: "u-emm",
     createdAt: "2026-08-20T09:00:00Z",
+  },
+];
+
+const CONTACTS = [
+  {
+    id: "ct-yard",
+    name: "Marsaudon Composites",
+    specialty: "Chantier constructeur",
+    company: "Marsaudon Composites SAS",
+    phone: "02 97 83 01 31",
+    email: "contact@marsaudon-composites.com",
+  },
+  {
+    id: "ct-sails",
+    name: "Voilerie Le Bihan",
+    specialty: "Voilier",
+    company: null,
+    phone: null,
+    email: null,
   },
 ];
 
@@ -225,6 +255,8 @@ export default async function DevChecklistPage() {
           disabledItems={[{ id: "d1", label: "Spi symétrique (vendu)" }]}
           progress={0.85}
           members={MEMBERS}
+          contacts={CONTACTS}
+          yardContactId="ct-yard"
           currentUserId="u-xav"
           currentUserName="Xavier Marin"
           canWrite
