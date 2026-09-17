@@ -483,6 +483,24 @@ Heures moteur d'une intervention = lignes `engine_hour_readings` avec `maintenan
 
 **La réalisation d'une intervention qui porte un point se déduit d'elle (D140, `0042`).** `sync_log_completion(p_log_id)` — appelée par le trigger `sync_log_completion` sur `maintenance_logs` (insert, et update de `status`, `performed_at`, `deleted_at`, `checklist_item_id`, `contact_id`, `updated_by`) et par `sync_log_completion_from_reading` sur `engine_hour_readings` — écrit la `checklist_completions` de `(maintenance_log_id, checklist_item_id)` quand la ligne est `done` et `deleted_at is null` : `completed_at = performed_at`, `engine_hours` = le relevé de la ligne pour le moteur du point, `completed_by_name` = le nom du prestataire (D32), `completed_by = coalesce(updated_by, created_by)` ; elle la **retire** quand la ligne repasse ouverte ou part à la corbeille, et quand le relevé qu'un point compté en heures exige n'est pas (plus) là — la base refuse une réalisation sans heures (`check_completion_hours`), donc elle attend le relevé plutôt que d'échouer. Un re-pointage vers un autre point retire ce que l'ancien tenait de cette ligne. `security definer` : la réalisation reflète une intervention que l'appelant avait déjà le droit d'écrire. Un `pro` peut mettre **sa propre ligne** à la corbeille pendant 24 h après sa création (miroir de D15) — c'est ce qui permet « Annuler » après un cochage.
 
+**Les cochages d'avant D140 ont rejoint le journal (D142, `0044`).** Migration de données, jouée
+une fois : pour chaque `checklist_completions` sans `maintenance_log_id`, elle écrit l'intervention
+que le même cochage écrirait aujourd'hui — `title` = le libellé du point (tronqué à 160), son
+`category_id` **et** sa liaison `maintenance_log_categories` (D118), `status = 'done'`,
+`performed_at = completed_at`, `notes = note`, `contact_id` quand l'annuaire du bateau contient
+exactement un contact vivant du nom figé, `created_at`/`updated_at` **ceux de la réalisation** (le
+fil lit `created_at`) — puis pose `maintenance_log_id`, puis `checklist_item_id` sur la ligne,
+dernier geste qui passe la main à `sync_log_completion()`. L'intervention **reprend l'identifiant de
+la réalisation** : c'est la convention de `completeChecklistItem` pour rejouer un cochage mis en
+file avant D140, donc une entrée hors ligne retombe sur cette ligne au lieu d'en créer une
+seconde. Le relevé d'heures écrit par `sync_engine_hours_from_completion()` **change de porteur**
+(`maintenance_log_id` posé, `source = 'maintenance_log'`) au lieu d'être doublé ; s'il manque, il
+est réécrit depuis la réalisation, faute de quoi la déduction décocherait un point compté en
+heures. Deux formes sont écartées et restent de simples réalisations : `engine_hours` sur un point
+sans moteur, et une réalisation dont l'identifiant serait déjà celui d'une ligne. Ré-exécutable
+(`maintenance_log_id is null` fait le tri) et vérifiée en fin de course : une réalisation perdue
+annule toute la migration.
+
 ### 3.13 `checklist_templates`, `checklist_template_categories`, `checklist_template_items`
 Modèles globaux, lisibles par tout utilisateur connecté, modifiables par l'admin plateforme (V2 : par l'organisation propriétaire).
 
@@ -558,7 +576,7 @@ Les points sans aucun intervalle sont **autorisés** (contrôle ponctuel) : l'é
 | completed_by_name | text | null | si fait par quelqu'un qui n'est pas membre (« Chantier X ») |
 | engine_hours | numeric(8,1) | null | heures du moteur lié au moment du cochage. **Obligatoire si le point a un `interval_hours`** (validation zod + trigger `check_completion_hours`) — sauf sur un moteur sans compteur (`engines.tracks_hours = false`, D73). Crée un `engine_hour_readings` (source 'checklist') sauf si `maintenance_log_id` est renseigné (l'intervention porte déjà ses relevés) |
 | note | text | | |
-| maintenance_log_id | uuid | FK maintenance_logs on delete set null, null | l'intervention qui l'a cochée. Depuis D140 (`0042`) **tout cochage écrit une intervention** et la réalisation en est déduite (`sync_log_completion`, §3.12) ; une réalisation sans intervention est une ligne importée, ou écrite avant D140 |
+| maintenance_log_id | uuid | FK maintenance_logs on delete set null, null | l'intervention qui l'a cochée. Depuis D140 (`0042`) **tout cochage écrit une intervention** et la réalisation en est déduite (`sync_log_completion`, §3.12) ; depuis `0044` (D142) les cochages écrits **avant** D140 ont reçu la leur, en reprenant leur propre identifiant. Une réalisation sans intervention est donc une ligne importée, ou l'une des deux formes que `0044` laisse intactes (des heures sur un point sans moteur, un identifiant déjà porté par une ligne) |
 | created_by / updated_by / created_at / updated_at | | | |
 
 Index : `(checklist_item_id, completed_at desc)` ; unique `(maintenance_log_id, checklist_item_id)` (`0013`) — la clé sur laquelle `sync_log_completion` et `saveLog` font leur `upsert`.

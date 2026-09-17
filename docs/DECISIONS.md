@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D142.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D143.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3750,6 +3750,8 @@ colonnes et n'en gagne que quatre, la copie TS reste à parité. Le formulaire d
 faire que d'un seul. Les réalisations importées, ou écrites avant cette décision, restent des
 réalisations sans intervention — elles se lisent, se suppriment et se comptent comme avant. Le
 cochage hors ligne survit (E9-1b) : l'entrée de la file d'attente porte l'identifiant de la ligne.
+*(Les réalisations écrites avant cette décision n'ont finalement pas été laissées de côté :
+**D142** les fait rejoindre le journal.)*
 
 **Ce qui n'est pas retenu.** *Supprimer `checklist_completions` et lire la dernière intervention
 par point* : la table porte l'import du carnet papier, les cochages d'avant, et « valide jusqu'au »
@@ -3816,3 +3818,44 @@ D121 tient — rien sans invitation datée, et un e-mail n'ouvre aucune porte.
 **Ce qui reste à trancher.** Ce que le chantier voit de la suite (une réponse, un devis) quand
 E19-5 lui donnera un accès concédé ; le prix de l'option (E19-9) ; et si la demande doit un jour
 partir aussi vers `constructeurs@xaman.boats` pour qu'on sache lesquelles sont restées sans réponse.
+
+## 2026-09-17 — D142 : l'histoire d'avant rejoint le journal — un cochage passé est une intervention
+
+**Question.** D140 a fait du cochage une intervention, et n'a rien dit de ce qui avait été coché
+avant lui. Chaque point coché jusque-là n'avait laissé qu'une ligne dans `checklist_completions`,
+que le journal ne montrait pas : le carnet racontait donc encore deux histoires selon l'écran
+ouvert — « fait le 17/08 » sur le point, rien dans les interventions. D140 annonçait laisser ces
+lignes telles quelles. Fallait-il s'y tenir ?
+
+**Décision.** Non. La migration `0044` écrit la moitié manquante. Pour chaque cochage sans
+intervention, elle écrit **la ligne que le même cochage écrirait aujourd'hui** — le libellé du
+point en titre, son système (colonne et liaison D118), le jour, la note, le relevé d'heures — puis
+lui remet la réalisation, puis nomme le point sur la ligne. À partir de ce dernier geste la base la
+déduit comme toutes les autres (`sync_log_completion`) : une seule histoire, tenue au même endroit.
+
+L'intervention prend **l'identifiant de la réalisation**. Ce n'est pas un hasard :
+`completeChecklistItem` s'en sert déjà comme identifiant de ligne quand il rejoue un cochage mis en
+file avant D140 (`logId ?? id ?? randomUUID()`), si bien qu'une entrée restée dans une file hors
+ligne retombe sur la ligne écrite ici au lieu d'en écrire une seconde.
+
+**Ce qui ne bouge pas.** La date de la réalisation, ses heures, son « valide jusqu'au » (D11), sa
+note, son auteur et son **nom figé** (D31) : la déduction ne réécrit que la date et les heures, qui
+sont les siennes. Le `created_at` de l'intervention est celui de la réalisation, pas celui de la
+migration — `boat_activity` le lit, et l'histoire d'un carnet papier n'a pas à ressortir en
+activité de la semaine. Le relevé d'heures qu'un cochage avait écrit **change de porteur au lieu de
+se dédoubler** : l'historique du moteur garde une ligne, à la même date. Quand l'annuaire du bateau
+contient exactement un prestataire portant le nom figé, la ligne le nomme — le fil dit alors ce
+qu'il disait déjà ; sinon elle reste au nom de qui l'a écrite, comme un cochage d'aujourd'hui.
+
+**Ce qui reste un cochage.** Deux formes, laissées intactes plutôt que risquées : des **heures sur
+un point sans moteur** (l'intervention n'a nulle part où les porter, et la déduction, n'en trouvant
+pas, les effacerait) et une réalisation dont l'identifiant serait déjà celui d'une ligne
+(impossible en pratique, fatal si on le suppose). Elles restent des réalisations sans intervention,
+et le fil continue de les raconter lui-même. La migration se termine par une vérification : si
+l'une des lignes reprises avait perdu sa réalisation en chemin, tout revient en arrière.
+
+**Ce qui n'est pas retenu.** *Un écran « rattraper l'historique »* : un bouton à comprendre, pour un
+travail qui n'a lieu qu'une fois et que personne n'a de raison de doser. *Un drapeau `backfilled`
+sur les lignes écrites ici* : une colonne de plus pour une distinction que rien dans l'app ne lit.
+*Laisser le propriétaire re-saisir son historique dans le journal* : c'est lui demander de taper
+deux fois ce que la base sait déjà.
