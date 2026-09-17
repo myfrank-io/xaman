@@ -6,8 +6,9 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ChevronLeftIcon, Trash2Icon } from "lucide-react";
+import { ChevronLeftIcon, SendIcon, Trash2Icon } from "lucide-react";
 
+import { HandOverDialog } from "@/components/checklist/HandOverDialog";
 import { TodoRow } from "@/components/checklist/TodoRow";
 import { useTick } from "@/components/checklist/use-tick";
 import {
@@ -18,11 +19,13 @@ import {
 } from "@/components/checklist/CompleteItemDialog";
 import {
   applyCompletion,
+  applyOpenLog,
   countAttention,
   isPunctual,
   isTodo,
   sortRows,
   type ChecklistRow,
+  type OpenLog,
 } from "@/components/checklist/rows";
 import { toCompletable, type EngineReadDates } from "@/components/checklist/completable";
 import { StepsChecklist, clearSteps } from "@/components/checklist/StepsChecklist";
@@ -31,6 +34,7 @@ import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
+import type { ContactOption } from "@/components/contacts/specialties";
 import {
   Accordion,
   AccordionContent,
@@ -40,6 +44,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { deleteCompletion, setChecklistItemActive } from "@/lib/actions/checklist";
+import { trashLog } from "@/lib/actions/logs";
 import { formatDate, formatHours, formatPercent } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import {
@@ -60,7 +65,11 @@ export type CompletionRow = {
   note: string | null;
   createdBy: string | null;
   createdAt: string;
-  /** The intervention this completion wrote, when it wrote one: the way back to the history. */
+  /**
+   * The intervention this completion was derived from (D140) — every tick since then writes
+   * one — or the one it was ticked from in the form. Null on a completion imported, or written
+   * before D140. The date of the line leads to it, and removing it means trashing it.
+   */
   maintenanceLogId?: string | null;
 };
 
@@ -82,6 +91,10 @@ const PRO_UNDO_HOURS = 24;
  * offline that will not be there for hours), `removed` while an undone one still is. Each entry
  * lifts itself as soon as the props agree — no timers, no reconciliation, and a refresh coming
  * from anywhere lands immediately.
+ *
+ * Since D140 the completion the server writes carries a different id from the one drawn here
+ * (the database derives it from the intervention), so the two overlays match on the
+ * intervention's id as well as on the completion's.
  */
 type PendingCompletion = {
   itemId: string;
@@ -100,11 +113,14 @@ export function CategoryItems({
   disabledItems,
   progress,
   members,
+  contacts = [],
+  yardContactId = null,
   currentUserId,
   currentUserName,
   canWrite,
   canContribute,
   filter,
+  initialOpen = null,
   engineReadDates,
 }: {
   boatId: string;
@@ -114,11 +130,17 @@ export function CategoryItems({
   disabledItems: DisabledItem[];
   progress: number | null;
   members: CompletionMember[];
+  /** The boat's directory, for « Confier au chantier » (D141). */
+  contacts?: ContactOption[];
+  /** The yard of the directory, offered first in the sheet. */
+  yardContactId?: string | null;
   currentUserId: string;
   currentUserName: string;
   canWrite: boolean;
   canContribute: boolean;
   filter: "all" | "todo";
+  /** The point whose detail unfolds on arrival (`?open=`, D140). */
+  initialOpen?: string | null;
   /** When each engine was last read, so a fresh reading fills the hours by itself. */
   engineReadDates?: EngineReadDates;
 }) {
@@ -128,49 +150,79 @@ export function CategoryItems({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [added, setAdded] = useState<Map<string, PendingCompletion>>(() => new Map());
+  // Completion ids and intervention ids this device has undone or removed, while the props
+  // still carry them.
   const [removed, setRemoved] = useState<Set<string>>(() => new Set());
-  const [expanded, setExpanded] = useState<string | null>(null);
+  // Points handed over from here, before the server says so (D141): by item id.
+  const [handed, setHanded] = useState<Map<string, OpenLog>>(() => new Map());
+  const [expanded, setExpanded] = useState<string | null>(initialOpen);
   const [completing, setCompleting] = useState<CompletableItem | null>(null);
+  const [handingOver, setHandingOver] = useState<ChecklistRow | null>(null);
   const [deleting, setDeleting] = useState<CompletionRow | null>(null);
   const [showAll, setShowAll] = useState<Set<string>>(new Set());
 
-  // What the server currently says, by completion id: the arbiter of both overlays.
-  const serverCompletionIds = useMemo(
-    () => new Set(initialCompletions.map((completion) => completion.id)),
-    [initialCompletions],
-  );
+  // What the server currently says, by completion id and by intervention id: the arbiter of
+  // both overlays.
+  const serverIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const completion of initialCompletions) {
+      ids.add(completion.id);
+      if (completion.maintenanceLogId) ids.add(completion.maintenanceLogId);
+    }
+    return ids;
+  }, [initialCompletions]);
 
-  // No effect prunes the two overlays: an entry the props have caught up with is simply
-  // filtered out below, and setting state from an effect is exactly the cascade the React
-  // compiler refuses. They only ever hold what this device did on this screen.
+  const serverHas = (completion: CompletionRow) =>
+    serverIds.has(completion.id) ||
+    (completion.maintenanceLogId !== null &&
+      completion.maintenanceLogId !== undefined &&
+      serverIds.has(completion.maintenanceLogId));
+  const isRemoved = (completion: CompletionRow) =>
+    removed.has(completion.id) ||
+    (completion.maintenanceLogId !== null &&
+      completion.maintenanceLogId !== undefined &&
+      removed.has(completion.maintenanceLogId));
+
+  // No effect prunes the overlays: an entry the props have caught up with is simply filtered
+  // out below, and setting state from an effect is exactly the cascade the React compiler
+  // refuses. They only ever hold what this device did on this screen.
   const pendingTicks = useMemo(
-    () => [...added.values()].filter((entry) => !serverCompletionIds.has(entry.row.id)),
-    [added, serverCompletionIds],
+    () => [...added.values()].filter((entry) => !serverHas(entry.row)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- serverHas reads serverIds only
+    [added, serverIds],
   );
 
   const completions = useMemo(
     () => [
       ...pendingTicks.map((entry) => entry.row),
-      ...initialCompletions.filter((completion) => !removed.has(completion.id)),
+      ...initialCompletions.filter((completion) => !isRemoved(completion)),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isRemoved reads removed only
     [pendingTicks, initialCompletions, removed],
   );
 
   const rows = useMemo(() => {
-    if (pendingTicks.length === 0 && removed.size === 0) return initialRows;
+    if (pendingTicks.length === 0 && removed.size === 0 && handed.size === 0) return initialRows;
     const byItem = new Map(pendingTicks.map((entry) => [entry.itemId, entry]));
     return initialRows.map((row) => {
       const tick = byItem.get(row.id);
       if (tick) return applyCompletion(row, tick.saved);
       // Undone here, still acknowledged in the props: the refresh has not landed yet, so the
       // row is put back the way it was before the tick rather than showing as done.
-      if (row.lastCompletionId && removed.has(row.lastCompletionId)) {
-        const before = added.get(row.lastCompletionId)?.before;
+      const last = row.lastCompletionId
+        ? initialCompletions.find((completion) => completion.id === row.lastCompletionId)
+        : undefined;
+      if (last && isRemoved(last)) {
+        const before = [...added.values()].find((entry) => entry.itemId === row.id)?.before;
         if (before) return before;
       }
+      // Handed over here: the line says so until the server's row carries it.
+      const openLog = handed.get(row.id);
+      if (openLog && !row.openLog) return applyOpenLog(row, openLog);
       return row;
     });
-  }, [initialRows, pendingTicks, removed, added]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isRemoved reads removed only
+  }, [initialRows, initialCompletions, pendingTicks, removed, added, handed]);
 
   const interval = rows.filter((row) => !isPunctual(row));
   const punctual = rows.filter(isPunctual);
@@ -202,11 +254,18 @@ export function CategoryItems({
           engineHours: completion.engineHours,
           nextDueAt: completion.nextDueAt,
           note: null,
-          maintenanceLogId: null,
+          maintenanceLogId: completion.logId,
           createdBy: currentUserId,
           createdAt: new Date().toISOString(),
         },
       });
+      return next;
+    });
+    // A tick finishes whatever was planned on the point (D140).
+    setHanded((current) => {
+      if (!current.has(item.id)) return current;
+      const next = new Map(current);
+      next.delete(item.id);
       return next;
     });
     clearSteps(item.id);
@@ -216,26 +275,41 @@ export function CategoryItems({
    * A completion that is not there any more: « Annuler » on the toast, or « Supprimer » in the
    * history. It leaves the optimistic overlay, and enters `removed` when the props still carry
    * it — the deletion is already done server-side, the refresh that will say so is on its way.
+   * Keyed by the completion's id or by its intervention's: the server knows the second, this
+   * device drew the first.
    */
-  function forget(completionId: string) {
-    const stillInProps = serverCompletionIds.has(completionId);
+  function forget(key: string) {
+    const stillInProps = serverIds.has(key);
     setRemoved((current) => {
-      if (!stillInProps || current.has(completionId)) return current;
+      if (!stillInProps || current.has(key)) return current;
       const next = new Set(current);
-      next.add(completionId);
+      next.add(key);
       return next;
     });
     setAdded((current) => {
       // Kept while the props still show it: its `before` is what puts the row back meanwhile.
-      if (stillInProps || !current.has(completionId)) return current;
+      if (stillInProps) return current;
       const next = new Map(current);
-      next.delete(completionId);
-      return next;
+      for (const [id, entry] of current) {
+        if (id === key || entry.row.maintenanceLogId === key) next.delete(id);
+      }
+      return next.size === current.size ? current : next;
     });
   }
 
-  function onUndone(_item: CompletableItem, completionId: string) {
+  function forgetItem(itemId: string) {
+    for (const [completionId, entry] of added) {
+      if (entry.itemId !== itemId) continue;
+      forget(completionId);
+      if (entry.row.maintenanceLogId) forget(entry.row.maintenanceLogId);
+    }
+  }
+
+  function onUndone(item: CompletableItem, completionId: string) {
+    const entry = added.get(completionId);
     forget(completionId);
+    if (entry?.row.maintenanceLogId) forget(entry.row.maintenanceLogId);
+    else forgetItem(item.id);
   }
 
   // Cocher en un geste, ici comme sur la porte (E20-2). La superposition optimiste est celle
@@ -244,13 +318,13 @@ export function CategoryItems({
   const { tick, busy } = useTick(boatId, {
     currentUserName,
     onTicked: (row, ticked) => onCompleted(toCompletable(row, engineReadDates), ticked),
-    onUndone: (row) => {
-      for (const [completionId, entry] of added) {
-        if (entry.itemId === row.id) forget(completionId);
-      }
-    },
+    onUndone: (row) => forgetItem(row.id),
     onNeedsCounter: (row) => setCompleting(toCompletable(row, engineReadDates)),
   });
+
+  function onHandedOver(row: ChecklistRow, openLog: OpenLog) {
+    setHanded((current) => new Map(current).set(row.id, openLog));
+  }
 
   function canDelete(completion: CompletionRow): boolean {
     if (canWrite) return true;
@@ -259,18 +333,26 @@ export function CategoryItems({
     return age < PRO_UNDO_HOURS * 3_600_000;
   }
 
+  /**
+   * « Supprimer » in the history. A completion derived from an intervention (D140) is that
+   * intervention: it goes to the trash, with its hours, for thirty days (rule 9). A completion
+   * without one — imported, or written before D140 — is deleted as D15 always allowed.
+   */
   function confirmDelete() {
     if (!deleting) return;
     const target = deleting;
     setDeleting(null);
     startTransition(async () => {
-      const result = await deleteCompletion({ boatId, completionId: target.id });
+      const result = target.maintenanceLogId
+        ? await trashLog({ boatId, logId: target.maintenanceLogId })
+        : await deleteCompletion({ boatId, completionId: target.id });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
-      toast.success(t("complete.deleted"));
+      toast.success(target.maintenanceLogId ? t("complete.trashed") : t("complete.deleted"));
       forget(target.id);
+      if (target.maintenanceLogId) forget(target.maintenanceLogId);
       router.refresh();
     });
   }
@@ -292,7 +374,7 @@ export function CategoryItems({
     const history = completions.filter((completion) => completion.itemId === row.id);
     const shown = showAll.has(row.id) ? history : history.slice(0, HISTORY_PREVIEW);
     return (
-      <div key={row.id} className={cn(open && "bg-surface-2")}>
+      <div key={row.id} id={`item-${row.id}`} className={cn(open && "bg-surface-2")}>
         {/* La même ligne que la porte (E20-1) : le titre d'abord, l'échéance en toutes lettres
             dessous, et la case de 44 px qui coche en un geste. La page d'un système écrivait
             « dans 365 j » — une durée que personne ne lit en jours. */}
@@ -384,13 +466,29 @@ export function CategoryItems({
                 </div>
               ) : null}
             </div>
-            {canWrite ? (
+            {/* Ce que le point devient (D140, D141) : confié — l'intervention prévue se lit ; à
+                confier — un tap et le chantier a le travail ; et « Modifier » pour le plan. */}
+            {canContribute || canWrite ? (
               <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline">
-                  <Link href={editChecklistItemPath(boatId, category.id, row.id) as Route}>
-                    {t("item.edit")}
-                  </Link>
-                </Button>
+                {row.openLog ? (
+                  <Button asChild variant="outline">
+                    <Link href={logPath(boatId, row.openLog.id) as Route}>
+                      {t("handoff.viewLog")}
+                    </Link>
+                  </Button>
+                ) : canContribute ? (
+                  <Button type="button" variant="outline" onClick={() => setHandingOver(row)}>
+                    <SendIcon />
+                    {t("handoff.action")}
+                  </Button>
+                ) : null}
+                {canWrite ? (
+                  <Button asChild variant="outline">
+                    <Link href={editChecklistItemPath(boatId, category.id, row.id) as Route}>
+                      {t("item.edit")}
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -531,16 +629,27 @@ export function CategoryItems({
         onCompleted={onCompleted}
         onUndone={onUndone}
       />
+      <HandOverDialog
+        boatId={boatId}
+        row={handingOver}
+        contacts={contacts}
+        defaultContactId={yardContactId}
+        canCreateContact={canWrite}
+        onOpenChange={(open) => (open ? undefined : setHandingOver(null))}
+        onHandedOver={onHandedOver}
+      />
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(open) => (open ? undefined : setDeleting(null))}
-        title={t("complete.deleteTitle")}
+        title={deleting?.maintenanceLogId ? t("complete.trashTitle") : t("complete.deleteTitle")}
         description={
           deleting
-            ? t("complete.deleteDescription", { date: formatDate(deleting.completedAt) })
+            ? deleting.maintenanceLogId
+              ? t("complete.trashDescription", { date: formatDate(deleting.completedAt) })
+              : t("complete.deleteDescription", { date: formatDate(deleting.completedAt) })
             : undefined
         }
-        confirmLabel={tc("delete")}
+        confirmLabel={deleting?.maintenanceLogId ? t("complete.trashConfirm") : tc("delete")}
         pending={pending}
         onConfirm={confirmDelete}
       />

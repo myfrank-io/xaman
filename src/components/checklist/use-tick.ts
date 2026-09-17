@@ -11,12 +11,16 @@ import { undoToast } from "@/components/common/UndoToast";
 import { useOnline } from "@/components/common/use-online";
 import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useOutbox } from "@/components/offline/use-outbox";
-import { completeChecklistItem, deleteCompletion } from "@/lib/actions/checklist";
+import { completeChecklistItem } from "@/lib/actions/checklist";
+import { trashLog } from "@/lib/actions/logs";
 import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 
 export type Ticked = {
+  /** The optimistic key of the completion; the database draws the real one from the line. */
   id: string;
+  /** The intervention the tick writes — or finishes, when the point was already in hand (D140). */
+  logId: string;
   completedAt: string;
   completedByName: string;
   engineHours: number | null;
@@ -36,6 +40,11 @@ export type Ticked = {
  * le pouce pendant huit secondes. Deviner en le montrant vaut mieux que demander : la personne
  * qui coche à l'instant, cas de loin le plus fréquent, n'a rien à faire ; celle dont la supposition
  * est fausse le voit tout de suite et corrige depuis la ligne, où la réalisation est écrite.
+ *
+ * Depuis D140, cocher **écrit une intervention** : c'est elle que le journal montre, et c'est
+ * d'elle que la base déduit la réalisation. Un point déjà confié au chantier (D141) porte une
+ * intervention prévue : la cocher termine celle-là, au lieu d'en écrire une seconde. Et
+ * « Annuler » met l'intervention à la corbeille — la réalisation tombe avec elle.
  *
  * Reste le seul cas où l'on ne sait pas : un point à intervalle d'heures dont le moteur n'a
  * jamais été relevé. La base l'exige (`check_completion_hours`), donc on pose **une** question,
@@ -77,12 +86,16 @@ export function useTick(
         return;
       }
 
+      // L'intervention que le geste écrit, tirée ici pour qu'un rejeu n'en écrive qu'une (règle 11).
+      const logId = crypto.randomUUID();
       const completionId = crypto.randomUUID();
       const completedAt = todayString();
+      const openLog = row.openLog;
       const ticked: Ticked = {
         id: completionId,
+        logId: openLog?.id ?? logId,
         completedAt,
-        completedByName: options.currentUserName,
+        completedByName: openLog?.contactName ?? options.currentUserName,
         engineHours,
         nextDueAt: null,
       };
@@ -94,10 +107,10 @@ export function useTick(
         const outcome = await submitOrQueue({
           kind: "completion",
           boatId,
-          id: completionId,
+          id: logId,
           label: row.label,
           values: {
-            id: completionId,
+            logId,
             boatId,
             itemId: row.id,
             completedAt,
@@ -106,6 +119,7 @@ export function useTick(
             engineHours,
             nextDueAt: null,
             note: null,
+            openLogId: openLog?.id ?? null,
           },
           action: completeChecklistItem,
           enqueue: outbox.enqueue,
@@ -141,34 +155,41 @@ export function useTick(
             sentence: (values) => tc("nextDue", values),
           },
         );
+        // Un point confié au chantier est fait par le chantier : c'est son nom que la
+        // réalisation portera (D32), et c'est lui que la confirmation nomme.
+        const name = openLog?.contactName ?? options.currentUserName;
         const guessed =
           engineHours !== null
-            ? t("tick.guessedWithHours", {
-                name: options.currentUserName,
-                hours: formatHours(engineHours),
-              })
-            : t("tick.guessed", { name: options.currentUserName });
+            ? t("tick.guessedWithHours", { name, hours: formatHours(engineHours) })
+            : t("tick.guessed", { name });
         const description = [guessed, promise].filter(Boolean).join(" · ");
+        const savedLogId = outcome.status === "sent" ? outcome.data.logId : logId;
 
         undoToast({
           message:
-            outcome.status === "queued" ? to("savedOnDevice") : tc("saved", { label: row.label }),
+            outcome.status === "queued"
+              ? to("savedOnDevice")
+              : openLog
+                ? tc("finishedPlanned", { label: row.label })
+                : tc("saved", { label: row.label }),
           description,
           undoLabel: tc("undo"),
           onUndo: () => {
             if (outcome.status === "queued") {
-              outbox.discard(completionId);
+              outbox.discard(logId);
               options.onUndone?.(row);
               toast.success(tc("undone"));
               return;
             }
-            void deleteCompletion({ boatId, completionId }).then((undone) => {
+            // Annuler, c'est mettre l'intervention à la corbeille : la réalisation tombe avec
+            // elle, et la corbeille garde trente jours ce qui aurait été un vrai geste (règle 9).
+            void trashLog({ boatId, logId: savedLogId }).then((undone) => {
               if (!undone.ok) {
                 toast.error(errorMessage(undone.error));
                 return;
               }
               options.onUndone?.(row);
-              toast.success(tc("undone"));
+              toast.success(openLog ? tc("undoneReopened") : tc("undoneTrashed"));
               router.refresh();
             });
           },

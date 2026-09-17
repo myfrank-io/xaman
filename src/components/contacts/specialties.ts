@@ -66,3 +66,15 @@ export function normalise(value: string): string {
 export function contactLabel(contact: ContactOption): string {
   return contact.company ? `${contact.name} — ${contact.company}` : contact.name;
 }
+
+/**
+ * « Le chantier » of a boat, for « Confier au chantier » (D141): the provider whose trade says
+ * builder first — the yard that built the hull is the one the option is about — then any yard,
+ * else nobody. The trade is free text since D96, so this reads the word, not the key; a boat
+ * without a yard in its directory hands the point to whoever it chooses in the sheet.
+ */
+export function pickYardContact<T extends ContactOption>(contacts: readonly T[]): T | null {
+  const builder = contacts.find((contact) => /constructeur|builder/i.test(contact.specialty));
+  if (builder) return builder;
+  return contacts.find((contact) => /chantier|yard/i.test(contact.specialty)) ?? null;
+}

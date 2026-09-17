@@ -84,6 +84,8 @@ type LogFormState = {
   notes: string;
   engineHours: { engineId: string; hours: string }[];
   checklistItemIds: string[];
+  /** The point this line is the doing of (D140); carried, never typed. */
+  checklistItemId: string | null;
 };
 type LogOutput = z.output<typeof saveLogSchema>;
 
@@ -172,6 +174,7 @@ export function LogForm({
     notes: textToInput(log?.notes) || (prefill?.notes ?? ""),
     engineHours: initialHours,
     checklistItemIds: log?.checklistItemIds ?? prefill?.checklistItemIds ?? [],
+    checklistItemId: log?.checklistItemId ?? prefill?.checklistItemId ?? null,
   };
 
   const form = useForm<LogFormState, unknown, LogOutput>({
@@ -394,6 +397,7 @@ export function LogForm({
       notes: "",
       engineHours: engines.map((engine) => ({ engineId: engine.id, hours: "" })),
       checklistItemIds: [],
+      checklistItemId: null,
     });
     decided.current = new Set();
     setSuggested({ key: "", items: [] });

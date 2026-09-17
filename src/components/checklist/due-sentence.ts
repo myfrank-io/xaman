@@ -102,3 +102,40 @@ export function dueSentence(input: DueInput): DueSentence {
 function soonTone(status: DueInput["status"]): DueSentence["tone"] {
   return status === "soon" ? "soon" : "calm";
 }
+
+/**
+ * La phrase d'un point que quelqu'un a en main (D140, D141) : une intervention prévue, en cours
+ * ou urgente le porte. Elle remplace la phrase d'échéance sur la ligne — « En retard de 12
+ * jours » sous une vidange confiée au chantier pour la semaine prochaine dit vrai et n'apprend
+ * rien ; « Confié à Marsaudon · prévu le 24/09 » dit ce qui va se passer. Le trait de couleur,
+ * lui, garde l'urgence de l'échéance : c'est la phrase qui rassure, pas la couleur qui ment.
+ *
+ * Même contrat que `dueSentence` : une clé sous `checklist.handed.*`, ses arguments, et
+ * `fr.json` écrit la phrase (règle 7).
+ */
+export type HandedSentence = {
+  key: "plannedWith" | "planned" | "inProgressWith" | "inProgress" | "urgentWith" | "urgent";
+  values: Record<string, string>;
+};
+
+export type HandedInput = {
+  status: "planned" | "in_progress" | "urgent";
+  /** La date prévue, déjà écrite comme on l'affiche (« 24/09/2026 »). */
+  date: string;
+  contactName: string | null;
+};
+
+export function handedSentence(input: HandedInput): HandedSentence {
+  const name = input.contactName?.trim() ?? "";
+  const keys: Record<
+    HandedInput["status"],
+    { alone: HandedSentence["key"]; withName: HandedSentence["key"] }
+  > = {
+    planned: { alone: "planned", withName: "plannedWith" },
+    in_progress: { alone: "inProgress", withName: "inProgressWith" },
+    urgent: { alone: "urgent", withName: "urgentWith" },
+  };
+  const key = keys[input.status];
+  if (name === "") return { key: key.alone, values: { date: input.date } };
+  return { key: key.withName, values: { date: input.date, name } };
+}

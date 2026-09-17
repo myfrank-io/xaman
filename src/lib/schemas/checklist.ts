@@ -16,10 +16,19 @@ export const INTERVAL_MONTH_PRESETS = [3, 6, 12, 24, 36] as const;
 
 const emptyToNull = (value: unknown) => (value === "" ? null : value);
 
-// « Marquer comme fait » (E4-5). The optional fixed expiry wins over the interval (D11).
+/**
+ * « Marquer comme fait » (E4-5, D140). The optional fixed expiry wins over the interval (D11).
+ *
+ * Since D140 a tick writes an intervention, and the completion is derived from it by the
+ * database: `logId` is the id of that intervention, drawn when the gesture starts so a replay
+ * from the offline queue is a no-op (rule 11). `id` is what the gesture used to draw for the
+ * completion itself; it is still accepted so an entry queued before D140 replays, and stands in
+ * for `logId` when that one is missing.
+ */
 export const completeItemSchema = z
   .object({
-    id: uuid,
+    id: uuid.optional(),
+    logId: uuid.optional(),
     boatId: uuid,
     itemId: uuid,
     completedAt: pastOrTodayDate,
@@ -28,6 +37,11 @@ export const completeItemSchema = z
     engineHours: nullableDecimal({ scale: 1, max: ENGINE_HOURS_MAX }),
     nextDueAt: z.preprocess(emptyToNull, isoDate.nullable()),
     note: nullableText(2000),
+    /**
+     * The intervention already planned on this point (« Confié au chantier », D141), if any:
+     * ticking finishes *that* line instead of writing a second one for the same job.
+     */
+    openLogId: z.preprocess(emptyToNull, uuid.nullable()).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.nextDueAt && value.nextDueAt <= value.completedAt) {

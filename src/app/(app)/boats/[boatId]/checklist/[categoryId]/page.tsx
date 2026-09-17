@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { CategoryItems, type CompletionRow } from "@/components/checklist/CategoryItems";
 import type { EngineReadDates } from "@/components/checklist/completable";
 import { toChecklistRow } from "@/components/checklist/rows";
+import { pickYardContact } from "@/components/contacts/specialties";
 import { can, type BoatRole } from "@/lib/permissions";
 import { completionContext } from "@/lib/queries/completion-context";
+import { contactOptions } from "@/lib/queries/contacts";
 import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,9 +15,9 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ boatId: string; categoryId: string }>;
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; open?: string }>;
 }) {
-  const [{ boatId, categoryId }, { filter }] = await Promise.all([params, searchParams]);
+  const [{ boatId, categoryId }, { filter, open }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const [
     { data: role },
@@ -26,6 +28,7 @@ export default async function CategoryPage({
     { data: engines },
     { data: readings },
     context,
+    contacts,
   ] = await Promise.all([
     readBoatRole(boatId),
     supabase
@@ -55,6 +58,8 @@ export default async function CategoryPage({
     supabase.from("engines").select("id, label").eq("boat_id", boatId),
     supabase.from("engine_current_hours").select("engine_id, read_at").eq("boat_id", boatId),
     completionContext(supabase, boatId),
+    // The directory, for « Confier au chantier » (D141): who the point can be handed to.
+    contactOptions(supabase, boatId),
   ]);
   if (!role || !category) notFound();
   const boatRole = role as BoatRole;
@@ -116,11 +121,14 @@ export default async function CategoryPage({
       disabledItems={(disabled ?? []).map((item) => ({ id: item.id, label: item.label }))}
       progress={progress?.progress ?? null}
       members={context.members}
+      contacts={contacts}
+      yardContactId={pickYardContact(contacts)?.id ?? null}
       currentUserId={context.currentUserId}
       currentUserName={context.currentUserName}
       canWrite={can(boatRole, "write")}
       canContribute={can(boatRole, "contribute")}
       filter={filter === "todo" ? "todo" : "all"}
+      initialOpen={open && rows.some((row) => row.id === open) ? open : null}
     />
   );
 }

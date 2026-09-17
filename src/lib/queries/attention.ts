@@ -174,10 +174,13 @@ export async function loadWeekActivity(
   since: string,
 ): Promise<WeekActivity> {
   const [completions, logs] = await Promise.all([
+    // Un cochage qui a écrit une intervention (D140) est déjà compté par elle, une ligne plus
+    // bas : ici ne restent que les réalisations sans intervention derrière elles.
     supabase
       .from("checklist_completions")
       .select("completed_by_name", { count: "exact" })
       .eq("boat_id", boatId)
+      .is("maintenance_log_id", null)
       .gte("completed_at", since)
       .order("completed_at", { ascending: false })
       .limit(NAME_SAMPLE),

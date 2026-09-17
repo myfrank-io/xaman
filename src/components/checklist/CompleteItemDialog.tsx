@@ -31,7 +31,8 @@ import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useOnline } from "@/components/common/use-online";
 import { useOutbox } from "@/components/offline/use-outbox";
 import { addYearsTo, nextDueSentence } from "@/components/checklist/next-due";
-import { completeChecklistItem, deleteCompletion } from "@/lib/actions/checklist";
+import { completeChecklistItem } from "@/lib/actions/checklist";
+import { trashLog } from "@/lib/actions/logs";
 import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { addDays } from "@/lib/numbers";
@@ -60,12 +61,20 @@ export type CompletableItem = {
    * on the object. Optional so a screen that does not read it simply gets no « Valide jusqu'au ».
    */
   fixedDueAt?: string | null;
+  /**
+   * The intervention already planned on this point (« Confié au chantier », D141): the tick
+   * finishes it instead of writing a second line for the same job.
+   */
+  openLogId?: string | null;
 };
 
 export type CompletionMember = { id: string; name: string };
 
 export type SavedCompletion = {
+  /** The optimistic key of the completion; the database draws the real one from the line. */
   id: string;
+  /** The intervention the tick wrote, or finished (D140). */
+  logId: string;
   completedAt: string;
   completedByName: string;
   engineHours: number | null;
@@ -79,6 +88,11 @@ type FieldErrors = Partial<
 /**
  * « Marquer comme fait » (ux-flows §3b): 2 taps without hours, 3 with. Hours are required
  * when the item counts engine hours (zod + database trigger). The 8 s toast carries the undo.
+ *
+ * Since E20-2 the dialog is no longer the default path — `use-tick` writes the tick in one
+ * gesture — and only opens for what cannot be guessed: an hour-based point whose engine was
+ * never read. Since D140 what it saves is an intervention, like the tick; « Annuler » puts that
+ * intervention in the trash and the completion goes with it.
  */
 export function CompleteItemDialog({
   boatId,
@@ -189,6 +203,8 @@ function CompleteForm({
   const punctual = item.intervalMonths === null && item.intervalHours === null;
 
   const [completionId] = useState(() => crypto.randomUUID());
+  // The intervention the tick writes (D140), drawn at open so a replay writes one line (rule 11).
+  const [logId] = useState(() => crypto.randomUUID());
   const [completedAt, setCompletedAt] = useState(today);
   // « Réalisé par » opens on the last answer given on this boat (D95). Read once: the dialog is
   // mounted by the tap that opens it, so storage is already there. A member who has left the
@@ -221,7 +237,7 @@ function CompleteForm({
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const parsed = completeItemSchema.safeParse({
-      id: completionId,
+      logId,
       boatId,
       itemId: item.id,
       completedAt,
@@ -230,6 +246,7 @@ function CompleteForm({
       engineHours: hoursRequired || hours.trim() !== "" ? hours : null,
       nextDueAt,
       note,
+      openLogId: item.openLogId ?? null,
     });
     if (!parsed.success) {
       const next: FieldErrors = {};
@@ -260,7 +277,7 @@ function CompleteForm({
       const outcome = await submitOrQueue({
         kind: "completion",
         boatId,
-        id: completionId,
+        id: logId,
         label: item.label,
         values: parsed.data,
         action: completeChecklistItem,
@@ -297,6 +314,7 @@ function CompleteForm({
       );
       const saved: SavedCompletion = {
         id: completionId,
+        logId: outcome.status === "sent" ? outcome.data.logId : logId,
         completedAt: parsed.data.completedAt,
         completedByName: byName,
         engineHours: parsed.data.engineHours,
@@ -310,7 +328,7 @@ function CompleteForm({
           description: nextDue ?? undefined,
           undoLabel: t("undo"),
           onUndo: () => {
-            outbox.discard(completionId);
+            outbox.discard(logId);
             onUndone?.(item, completionId);
             toast.success(t("undone"));
           },
@@ -318,17 +336,21 @@ function CompleteForm({
         return;
       }
       undoToast({
-        message: t("saved", { label: item.label }),
+        message: item.openLogId
+          ? t("finishedPlanned", { label: item.label })
+          : t("saved", { label: item.label }),
         description: nextDue ?? undefined,
         undoLabel: t("undo"),
         onUndo: () => {
-          void deleteCompletion({ boatId, completionId }).then((undo) => {
+          // The tick is an intervention (D140): undoing it is putting that line in the trash,
+          // and the completion the database derived from it goes with it.
+          void trashLog({ boatId, logId: saved.logId }).then((undo) => {
             if (!undo.ok) {
               toast.error(errorMessage(undo.error));
               return;
             }
             onUndone?.(item, completionId);
-            toast.success(t("undone"));
+            toast.success(item.openLogId ? t("undoneReopened") : t("undoneTrashed"));
             router.refresh();
           });
         },

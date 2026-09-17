@@ -112,6 +112,8 @@ export default async function NewLogPage({
     prefill.categoryIds =
       prefill.categoryIds ?? (item.category_id ? [item.category_id] : undefined);
     prefill.checklistItemIds = [item.id];
+    // The line IS the doing of the point (D140): the database derives its completion from it.
+    prefill.checklistItemId = item.id;
     prefill.expandHours = Boolean(item.engine_id);
   }
   if (prefill.hours && prefill.hours.length > 0) prefill.expandHours = true;

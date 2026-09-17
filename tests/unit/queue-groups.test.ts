@@ -44,6 +44,7 @@ function row(over: Partial<ChecklistRow> = {}): ChecklistRow {
     dueHours: null,
     daysRemaining: 10,
     hoursRemaining: null,
+    openLog: null,
     ...over,
   };
 }

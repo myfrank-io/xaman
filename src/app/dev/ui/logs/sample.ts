@@ -208,6 +208,12 @@ export const DEV_LOG_DETAIL: LogDetailData = {
   cost: 620,
   notes: "Huile 15W40, filtres neufs. Courroie alternateur SB retendue.",
   equipmentName: "Moteur SB · Yanmar 4JH45",
+  // Le point que la ligne fait (D140) : la fiche y mène, déplié.
+  checklistItem: {
+    id: "item-oil-sb",
+    label: "Vidange huile moteur — Moteur SB",
+    categoryId: ENGINES_CATEGORY.id,
+  },
   needsReview: false,
   createdByName: "Xavier Marin",
   createdAt: "2026-03-06T18:20:00.000Z",

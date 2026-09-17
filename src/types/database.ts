@@ -597,6 +597,13 @@ export type Database = {
             foreignKeyName: "checklist_completions_maintenance_log_id_fkey"
             columns: ["maintenance_log_id"]
             isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["open_log_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
             referencedRelation: "maintenance_logs"
             referencedColumns: ["id"]
           },
@@ -1121,6 +1128,13 @@ export type Database = {
             foreignKeyName: "engine_hour_readings_maintenance_log_id_fkey"
             columns: ["maintenance_log_id"]
             isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["open_log_id"]
+          },
+          {
+            foreignKeyName: "engine_hour_readings_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
             referencedRelation: "maintenance_logs"
             referencedColumns: ["id"]
           },
@@ -1611,6 +1625,13 @@ export type Database = {
             foreignKeyName: "inbox_items_log_id_fkey"
             columns: ["log_id"]
             isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["open_log_id"]
+          },
+          {
+            foreignKeyName: "inbox_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
             referencedRelation: "maintenance_logs"
             referencedColumns: ["id"]
           },
@@ -1713,6 +1734,13 @@ export type Database = {
             foreignKeyName: "maintenance_log_categories_log_id_fkey"
             columns: ["log_id"]
             isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["open_log_id"]
+          },
+          {
+            foreignKeyName: "maintenance_log_categories_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
             referencedRelation: "maintenance_logs"
             referencedColumns: ["id"]
           },
@@ -1736,6 +1764,7 @@ export type Database = {
         Row: {
           boat_id: string
           category_id: string | null
+          checklist_item_id: string | null
           contact_id: string | null
           cost: number | null
           created_at: string
@@ -1759,6 +1788,7 @@ export type Database = {
         Insert: {
           boat_id: string
           category_id?: string | null
+          checklist_item_id?: string | null
           contact_id?: string | null
           cost?: number | null
           created_at?: string
@@ -1782,6 +1812,7 @@ export type Database = {
         Update: {
           boat_id?: string
           category_id?: string | null
+          checklist_item_id?: string | null
           contact_id?: string | null
           cost?: number | null
           created_at?: string
@@ -1830,6 +1861,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "checklist_category_progress"
             referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "maintenance_logs_contact_id_fkey"
@@ -2281,6 +2326,13 @@ export type Database = {
             foreignKeyName: "purchases_maintenance_log_id_fkey"
             columns: ["maintenance_log_id"]
             isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["open_log_id"]
+          },
+          {
+            foreignKeyName: "purchases_maintenance_log_id_fkey"
+            columns: ["maintenance_log_id"]
+            isOneToOne: false
             referencedRelation: "maintenance_logs"
             referencedColumns: ["id"]
           },
@@ -2472,6 +2524,10 @@ export type Database = {
           last_completion_id: string | null
           last_engine_hours: number | null
           last_note: string | null
+          open_log_at: string | null
+          open_log_contact_name: string | null
+          open_log_id: string | null
+          open_log_status: Database["public"]["Enums"]["log_status"] | null
           reference_at: string | null
           reference_hours: number | null
           sort_order: number | null
@@ -2679,6 +2735,8 @@ export type Database = {
           category_ids: string[] | null
           category_is_active: boolean | null
           category_name: string | null
+          checklist_item_id: string | null
+          checklist_item_label: string | null
           completions_count: number | null
           contact_id: string | null
           contact_name: string | null
@@ -2731,6 +2789,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "checklist_category_progress"
             referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "maintenance_logs_contact_id_fkey"
@@ -2965,6 +3037,7 @@ export type Database = {
           status: Database["public"]["Enums"]["checklist_state"]
         }[]
       }
+      sync_log_completion: { Args: { p_log_id: string }; Returns: undefined }
       text_fold: { Args: { p_text: string }; Returns: string }
       text_haystack: { Args: { p_parts: string[] }; Returns: string }
       weekly_digest_payload: {
