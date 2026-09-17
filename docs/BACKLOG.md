@@ -33,7 +33,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E17 | E17-13 |
 | E18 | E18-15 |
 | E19 | E19-12 |
-| E20 | E20-5 |
+| E20 | E20-6 |
 
 ---
 
@@ -682,3 +682,17 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   corbeille, restauration, purge, re-pointage, bateau étranger, file, fil), test RLS du pro 24 h
   réécrit, parité `checklist-status` intacte, types régénérés, `DATA-MODEL.md` à jour, galerie
   `/dev/ui/checklist` avec une ligne confiée.
+- [x] **E20-5 (M, 1)** **L'histoire d'avant rejoint le journal** (D142). D140 n'avait rien dit des
+  points cochés avant lui : ils restaient une réalisation invisible du journal, et le carnet
+  racontait toujours deux histoires selon l'écran ouvert. Migration `0044` : pour chaque cochage
+  sans intervention, la ligne que le même cochage écrirait aujourd'hui (titre = le point, système
+  en colonne **et** en liaison D118, jour, note, prestataire quand le nom figé est celui d'un
+  contact de l'annuaire), la réalisation remise à cette ligne, puis le point nommé dessus — après
+  quoi la base la déduit comme les autres. L'intervention prend l'identifiant de la réalisation (la
+  convention de `completeChecklistItem` pour rejouer un cochage d'avant D140), le relevé d'heures
+  **change de porteur au lieu de se dédoubler**, et `created_at` reste celui du cochage pour que le
+  fil ne remonte pas l'histoire du carnet papier en activité de la semaine. Deux formes restent des
+  réalisations : des heures sur un point sans moteur, et un identifiant déjà pris. **DoD** :
+  `tests/unit/backfill-past-ticks.test.ts` rejoue **le fichier de migration lui-même** (forme de la
+  ligne, relevé déplacé, relevé réécrit quand il manquait, cas laissés intacts, fil qui ne redit
+  rien, seconde exécution sans effet) ; `DATA-MODEL.md` à jour ; migration appliquée en production.
