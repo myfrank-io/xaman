@@ -14,6 +14,7 @@ import { useOnline } from "@/components/common/use-online";
 import { submitOrQueue } from "@/components/forms/submit-or-queue";
 import { useOutbox } from "@/components/offline/use-outbox";
 import type { StockItem } from "@/components/parts/StockList";
+import { StockRowMenu } from "@/components/parts/StockRowMenu";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { trashPurchase, upsertPurchase } from "@/lib/actions/purchases";
@@ -223,17 +224,21 @@ export function RestockChecklist({
             }
             action={
               canWrite ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  aria-label={t("buyBackLabel", { name: part.name })}
-                  disabled={working}
-                  aria-busy={working}
-                  onClick={() => buyBack(part)}
-                >
-                  {working ? <Spinner className="size-4" /> : <ShoppingCartIcon />}
-                  {t("buyBack")}
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={t("buyBackLabel", { name: part.name })}
+                    disabled={working}
+                    aria-busy={working}
+                    onClick={() => buyBack(part)}
+                  >
+                    {working ? <Spinner className="size-4" /> : <ShoppingCartIcon />}
+                    {t("buyBack")}
+                  </Button>
+                  {/* Notée par erreur, en double, un essai : ça se retire d'ici (D144). */}
+                  <StockRowMenu boatId={boatId} partId={part.id} name={part.name} />
+                </div>
               ) : undefined
             }
           />

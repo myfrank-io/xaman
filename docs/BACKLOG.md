@@ -26,7 +26,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E9 | E9-7 |
 | E10 | E10-5 |
 | E12 | E12-9 |
-| E13 | E13-19 |
+| E13 | E13-20 |
 | E14 | E14-8 |
 | E15 | E15-14 |
 | E16 | E16-10 |
@@ -712,3 +712,15 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   repointage, achat sans pièce, bateau étranger, éditeur vs pro, privilèges, file du tableau de
   bord), `tests/unit/parts.test.ts` étendu au nouveau seuil et à `restockQuantity`, galerie
   `/dev/ui/checklist`, audit tactile vert, migration appliquée en production.
+- [x] **E13-19 (M, 1)** **Une ligne se corrige là où on la voit** (D144). Signalé à l'usage :
+  « je veux pouvoir supprimer tout ça ici, c'est toujours pas assez simple ; pense au mec qui fait
+  des erreurs, qui n'est pas à l'aise avec l'outil informatique ». Un menu par ligne sur « Ce qui a
+  bougé » (tableau de bord **et** écran complet), sur le stock et sur « À racheter » : **ouvrir**
+  la fiche du fait quand il en a une (intervention, achat, sortie de l'eau), **retirer** la ligne.
+  Corbeille sans question et « Annuler » huit secondes pour les objets du carnet ; confirmation
+  pour les deux faits dérivés qui s'effacent pour de bon (point coché, relevé d'heures). La liste
+  reste où elle est : `useTrashUndo` porte le geste sans espace de traduction, et `leave` dit à
+  `useTrashEntity` si la fiche s'en va ou si la liste reste. **DoD** :
+  `tests/unit/activity-row-actions.test.ts` (les cinq faits couverts, corbeille vs effacement,
+  écran de chaque sorte, aucune ligne sans geste), tranches i18n intactes, galeries
+  `/dev/ui/dashboard` et `/dev/ui/supplies`, audit tactile vert.

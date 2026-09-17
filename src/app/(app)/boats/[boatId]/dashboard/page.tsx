@@ -456,7 +456,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
           actionLabel={t("activity.all")}
           bare
         >
-          <ActivityList rows={activity} />
+          <ActivityList boatId={boatId} rows={activity} canWrite={canWrite} />
         </SectionCard>
       ) : null}
 

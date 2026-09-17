@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { CategoryDot } from "@/components/common/CategoryBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ListRow } from "@/components/common/ListRow";
+import { StockRowMenu } from "@/components/parts/StockRowMenu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -254,6 +255,8 @@ export function StockList({
                       >
                         <PlusIcon />
                       </Button>
+                      {/* Modifier, ou retirer : depuis la ligne, jamais depuis un autre écran. */}
+                      <StockRowMenu boatId={boatId} partId={part.id} name={part.name} />
                     </div>
                   ) : undefined
                 }

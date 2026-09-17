@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D144.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D145.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3907,3 +3907,38 @@ livraison devient le vrai problème. *Marquer le rachat « à vérifier »* (D91
 est un fait, pas une erreur, et le bandeau des lignes à vérifier n'est pas une liste de courses.
 *Demander la quantité au tap* : ce qui manque se calcule, et la confirmation le dit — deviner en le
 montrant vaut mieux que demander (D137).
+
+## 2026-09-17 — D144 : une ligne se corrige là où on la voit
+
+**Question.** « Je veux pouvoir supprimer tout ça ici, c'est toujours pas assez simple. Pense au
+mec qui fait des erreurs, qui veut changer des trucs, qui n'est pas à l'aise avec l'outil
+informatique. » Deux listes le montraient bien. « Ce qui a bougé » racontait cinq sortes de faits
+et ne laissait rien en faire : pour corriger une saisie il fallait deviner dans quel écran elle
+vivait, la retrouver dans une autre liste, ouvrir sa fiche. Le stock, lui, donnait un « + » et un
+« − » mais aucun moyen de retirer une ligne — le bouton existait, sur la fiche de la pièce, qu'on
+n'atteignait qu'en sachant que la ligne s'ouvrait, ce que rien ne disait.
+
+**Décision.** Chaque ligne de ces listes porte son propre menu : **ouvrir** la fiche du fait quand
+il en a une, et **retirer** la ligne. Rien d'autre — deux gestes, jamais un tiroir.
+
+Ce qui est un objet du carnet part à la corbeille sans question : intervention, achat, sortie de
+l'eau, pièce. « Annuler » reste huit secondes sous le pouce et la corbeille garde trente jours
+(règle 9) ; une confirmation devant quelque chose d'aussi réversible est un ralentisseur, pas un
+filet (règle 13). Ce qui est **dérivé** s'efface pour de bon — un point coché, un relevé d'heures
+— et ces deux-là, et eux seuls, demandent confirmation, parce que là il n'y a pas de filet.
+
+Et la liste ne bouge pas sous le doigt : retirer une ligne depuis une liste y laisse la personne,
+là où le même geste depuis une fiche la ramène à sa liste. On travaille une liste ligne à ligne ;
+être renvoyé en haut d'un autre écran à chaque ligne, c'est perdre sa place.
+
+**Ce qui ne change pas.** Le corps de la ligne du fil ne mène toujours nulle part : un fait n'est
+pas une porte, et une moitié de lignes cliquables ferait croire que l'autre moitié est cassée
+(D132). Le « + / − » reste sur le stock : c'est le geste de *compter*, pas celui de corriger. Les
+droits ne bougent pas — le menu ne propose que ce que la personne a le droit de faire, et ne
+s'affiche pas du tout quand il n'y a ni fiche à ouvrir ni droit d'écrire.
+
+**Ce qui n'est pas retenu.** *Rendre toute la ligne du fil cliquable* : deux des cinq faits n'ont
+pas d'écran, et le fil ne porte ni le système d'un point coché ni le moteur d'un relevé — un lien
+qui retombe sur une liste est pire que pas de lien. *Un balayage pour supprimer* : invisible, et
+indécouvrable par quelqu'un qui n'est pas à l'aise avec un écran tactile. *Une confirmation
+partout* : elle apprend à taper « Confirmer » sans lire, et c'est ce qui fait les vraies pertes.

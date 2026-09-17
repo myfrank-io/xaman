@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ActivityList } from "@/components/dashboard/ActivityList";
 import { Button } from "@/components/ui/button";
+import { can, type BoatRole } from "@/lib/permissions";
 import { loadActivity } from "@/lib/queries/activity";
 import { activityPath } from "@/lib/queries/boat-routes";
 import { readBoatRole } from "@/lib/queries/boat-context";
@@ -49,7 +50,7 @@ export default async function ActivityPage({
         <EmptyState icon={<HistoryIcon aria-hidden />} title={t("empty")} />
       ) : (
         <>
-          <ActivityList rows={rows} />
+          <ActivityList boatId={boatId} rows={rows} canWrite={can(role as BoatRole, "write")} />
           {rows.length === limit && limit < MAX_ROWS ? (
             <div>
               <Button asChild variant="outline">
