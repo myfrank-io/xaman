@@ -33,7 +33,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E17 | E17-13 |
 | E18 | E18-17 |
 | E19 | E19-12 |
-| E20 | E20-6 |
+| E20 | E20-7 |
 
 ---
 
@@ -743,3 +743,16 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   jamais `data-copied={false}`, retour au repos, animation neutralisée sous mouvement réduit),
   galeries `/dev/ui/dashboard`, `/dev/ui/inbox` et `/dev/ui/boat` (à laquelle l'adresse du carnet
   manquait, donc le bouton de la fiche n'y était pas), vérifié en 1024×768 et 768×1024.
+- [x] **E20-6 (M, 1)** **La progression par catégorie agrège avant de joindre** (D147, 0046).
+  L'application était lente à charger partout : `checklist_category_progress` — lue par la
+  checklist **et** par le tableau de bord — joignait les catégories aux points sans agréger
+  d'abord, si bien que le filtre `boat_id` ne descendait pas dans `checklist_item_status`. Sur la
+  production d'un seul bateau, 1127 calculs de statut pour rendre 7 lignes ; sur une flotte, le
+  statut de tous les bateaux à chaque lecture. `pg_stat_statements` : 2098 appels, 146 ms de
+  moyenne, 307 s cumulées, requête la plus coûteuse de la base. La vue groupe désormais les
+  points par catégorie dans une CTE, puis joint. **Mesuré** (production, rôle `authenticated`,
+  RLS active) : 274,6 ms → 24,4 ms ; sur 40 bateaux, 58 ms → 3,5 ms. Résultat identique ligne à
+  ligne. **DoD** : `tests/unit/checklist-progress-plan.test.ts` (le plan ne lit que les points du
+  bateau demandé, et ne recalcule pas le statut une fois par catégorie — vérifié échouant sur
+  l'ancienne définition), `tests/unit/rls.test.ts` vert (170 cas), suite complète verte contre une
+  vraie base (1024 cas, zéro ignoré), migration `0046` appliquée de 0001 à 0046 sur Postgres nu.
