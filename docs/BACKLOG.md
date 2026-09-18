@@ -31,7 +31,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E15 | E15-14 |
 | E16 | E16-10 |
 | E17 | E17-13 |
-| E18 | E18-16 |
+| E18 | E18-17 |
 | E19 | E19-12 |
 | E20 | E20-6 |
 
@@ -732,3 +732,14 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   la carte mène à « À valider », le bouton copie l'adresse. Présente seulement si
   `INBOUND_EMAIL_DOMAIN` est configuré et pour qui peut contribuer. **DoD** : galerie
   `/dev/ui/dashboard` avec l'adresse, audit tactile vert, vérifié en 1024×768, 768×1024 et 390×844.
+- [x] **E18-16 (M, 1)** **Un « copier » répond sous le doigt** (D146). Les quatre boutons qui
+  copient une ligne (l'adresse du carnet sur le tableau de bord, sur « À valider » et sur la fiche
+  du bateau ; le lien d'invitation) passent par un `CopyButton` unique : la coche remplace le
+  copieur en place, le bouton prend la teinte de ce qui est passé, un anneau le quitte une fois,
+  et tout revient au repos au bout d'une seconde et demie. Le toast reste — il dit la phrase et
+  l'annonce. L'animation vit dans `globals.css` (`copy-swap`, `copy-halo`), pilotée par
+  `data-copied`, donc `prefers-reduced-motion` la neutralise en un seul endroit. **DoD** :
+  `tests/unit/copy-feedback.test.ts` (aucune écriture dans le presse-papiers hors du composant,
+  jamais `data-copied={false}`, retour au repos, animation neutralisée sous mouvement réduit),
+  galeries `/dev/ui/dashboard`, `/dev/ui/inbox` et `/dev/ui/boat` (à laquelle l'adresse du carnet
+  manquait, donc le bouton de la fiche n'y était pas), vérifié en 1024×768 et 768×1024.

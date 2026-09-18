@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CopyIcon, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import type { z } from "zod";
 
 import type { Boat } from "@/components/boat/BoatProvider";
@@ -24,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -332,20 +333,13 @@ export function BoatIdentity({
                       {inboxAddress}
                     </p>
                     <p className="mt-1 text-caption text-ink-3">{t("inboxAddressHelp")}</p>
-                    <Button
-                      type="button"
-                      variant="outline"
+                    <CopyButton
                       size="sm"
                       className="mt-2"
-                      onClick={() => {
-                        void navigator.clipboard
-                          ?.writeText(inboxAddress)
-                          .then(() => toast.success(t("inboxCopied")));
-                      }}
-                    >
-                      <CopyIcon />
-                      {t("inboxCopy")}
-                    </Button>
+                      value={inboxAddress}
+                      label={t("inboxCopy")}
+                      onCopied={() => toast.success(t("inboxCopied"))}
+                    />
                   </div>
                 ) : null}
                 <p className="text-caption text-ink-3">

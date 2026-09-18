@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { CopyIcon, MailIcon } from "lucide-react";
+import { MailIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { boatPath } from "@/lib/queries/boat-routes";
 
 /**
@@ -26,15 +26,6 @@ import { boatPath } from "@/lib/queries/boat-routes";
 export function InboxAddressAct({ boatId, address }: { boatId: string; address: string }) {
   const t = useTranslations("dashboard.write");
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(address);
-      toast.success(t("mailCopied"), { description: address });
-    } catch {
-      // Pas de presse-papiers (vieux WebView) : l'adresse est à l'écran, sélectionnable.
-    }
-  }
-
   return (
     <div className="flex min-h-20 items-center gap-3 rounded-xl border border-border-strong bg-surface p-4 shadow-sm">
       <Link
@@ -50,15 +41,14 @@ export function InboxAddressAct({ boatId, address }: { boatId: string; address: 
           <span className="num text-caption break-all text-ink-2 select-all">{address}</span>
         </span>
       </Link>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label={t("mailCopy")}
-        onClick={() => void copy()}
-      >
-        <CopyIcon />
-      </Button>
+      {/* Sans presse-papiers (vieux WebView) rien ne se passe : l'adresse est à l'écran,
+          sélectionnable. */}
+      <CopyButton
+        iconOnly
+        value={address}
+        label={t("mailCopy")}
+        onCopied={() => toast.success(t("mailCopied"), { description: address })}
+      />
     </div>
   );
 }
