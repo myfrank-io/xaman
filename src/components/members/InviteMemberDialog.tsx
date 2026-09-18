@@ -6,11 +6,12 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CopyIcon, Share2Icon, UserPlusIcon } from "lucide-react";
+import { Share2Icon, UserPlusIcon } from "lucide-react";
 
 import { Field } from "@/components/forms/Field";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
   Dialog,
   DialogClose,
@@ -122,16 +123,6 @@ export function InviteMemberDialog({
     });
   }
 
-  async function copyLink() {
-    if (!sent) return;
-    try {
-      await navigator.clipboard.writeText(sent.url);
-      toast.success(t("invite.linkCopied"));
-    } catch {
-      toast.error(te("errors.unknown"));
-    }
-  }
-
   async function share() {
     if (!sent) return;
     try {
@@ -186,10 +177,12 @@ export function InviteMemberDialog({
               className="num"
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={copyLink}>
-                <CopyIcon />
-                {t("invite.copyLink")}
-              </Button>
+              <CopyButton
+                value={sent.url}
+                label={t("invite.copyLink")}
+                onCopied={() => toast.success(t("invite.linkCopied"))}
+                onCopyFailed={() => toast.error(te("errors.unknown"))}
+              />
               {canShare ? (
                 <Button type="button" variant="outline" onClick={share}>
                   <Share2Icon />

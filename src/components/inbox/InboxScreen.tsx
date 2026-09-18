@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { CopyIcon, InboxIcon, MailIcon } from "lucide-react";
+import { InboxIcon, MailIcon } from "lucide-react";
 
 import type { CategoryChoice } from "@/components/common/CategoryChips";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -19,7 +19,7 @@ import {
 } from "@/components/inbox/inbox-draft";
 import { InboxItemCard } from "@/components/inbox/InboxItemCard";
 import { InboxValidateAll } from "@/components/inbox/InboxValidateAll";
-import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import type { InboxItem } from "@/lib/queries/inbox";
 
 /** The fallback that stands in for Realtime while `inbox_items` is not published: see below. */
@@ -105,16 +105,6 @@ export function InboxScreen({
     engineIds: engines.map((engine) => engine.id),
   });
 
-  async function copyAddress() {
-    if (!inboxAddress) return;
-    try {
-      await navigator.clipboard.writeText(inboxAddress);
-      toast.success(t("address.copied"));
-    } catch {
-      // No clipboard (an old WebView): the address is on screen, selectable.
-    }
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
@@ -136,10 +126,13 @@ export function InboxScreen({
               {inboxAddress}
             </p>
             <div>
-              <Button type="button" variant="outline" onClick={() => void copyAddress()}>
-                <CopyIcon />
-                {t("address.copy")}
-              </Button>
+              {/* No clipboard (an old WebView): nothing happens, the address is on screen
+                  and selectable. */}
+              <CopyButton
+                value={inboxAddress}
+                label={t("address.copy")}
+                onCopied={() => toast.success(t("address.copied"))}
+              />
             </div>
           </section>
         ) : null}

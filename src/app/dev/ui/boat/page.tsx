@@ -36,6 +36,7 @@ export default async function DevBoatPage({
           canEdit
           templateName="ORC 50 (Marsaudon)"
           models={SAMPLE_BOAT_MODELS}
+          inboxAddress="xaman-7f3a9c21@carnet.xaman.boats"
         />
         <BoatTabs
           boatId={DEV_BOAT_ID}

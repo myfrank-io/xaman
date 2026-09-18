@@ -409,6 +409,9 @@
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Slight overshoot, for something that *arrives* rather than slides in: the check of a
+     copy, a badge that appears. Never on a layout, where the rebound reads as a glitch. */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --spacing-tap: 2.75rem; /* 44 px - minimum touch target     */
   --spacing-tap-comfort: 3rem; /* 48 px - wet fingers         */
@@ -663,6 +666,63 @@
   }
 }
 
+/* Copy feedback (D146). The clipboard says nothing on its own: a tap on « copier » looks
+   exactly like a tap that did nothing. So the copier swaps for a check, in place.
+
+   The two icons share one grid cell, so the button keeps its width during the swap, and only
+   opacity and scale move — no layout, nothing that could reflow a card mid-tap. Driven by
+   `data-copied` on the button, which `CopyButton` holds for a second and a half. */
+@utility copy-swap {
+  --copy-swap-away: 0.5;
+  display: grid;
+  place-items: center;
+
+  & > * {
+    grid-area: 1 / 1;
+    transition:
+      transform var(--duration-fast) var(--ease-spring),
+      opacity var(--duration-fast) var(--ease-out);
+  }
+  /* At rest, the copier alone; the check waits, small and transparent, under it. */
+  & > [data-copy-check] {
+    transform: scale(var(--copy-swap-away));
+    opacity: 0;
+  }
+  [data-copied] & > [data-copy-idle] {
+    transform: scale(var(--copy-swap-away));
+    opacity: 0;
+  }
+  [data-copied] & > [data-copy-check] {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* The ring that leaves the button at the moment of the copy: 300 ms, then nothing. It is the
+   only part of the feedback visible from an arm's length away, iPad flat on the chart table. */
+@keyframes copy-halo {
+  from {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@utility copy-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--success);
+  opacity: 0;
+  pointer-events: none;
+  [data-copied] & {
+    animation: copy-halo var(--duration-slow) var(--ease-out);
+  }
+}
+
 /* Category colour injected from the database:
    `style={{ ['--cat']: category.color }}` then `class="cat-scope"`.
    color-mix() is supported by Safari from iPadOS 16.2. */
@@ -678,6 +738,20 @@
   }
   .pressable:active {
     transform: none;
+  }
+  /* The icons still swap — that is the message — but at once: two icons cross-fading in the
+     same cell overlap into a smudge, and the ring stays home. */
+  .copy-swap {
+    --copy-swap-away: 1;
+  }
+  .copy-swap > * {
+    transition: none;
+  }
+  .copy-halo {
+    animation: none;
+  }
+  [data-copied] .copy-halo {
+    animation: none;
   }
 }
 

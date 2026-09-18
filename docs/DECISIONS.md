@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D146.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D147.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -3974,3 +3974,42 @@ justement l'usage qui s'installe avec le temps, pas celui des premiers jours.
 domaine de réception, la porte n'existe pas — et seulement pour qui peut écrire dans le carnet
 (`canContribute`), comme les deux autres actes. L'adresse reste également sur « À valider » et sur
 la fiche du bateau : ce sont les endroits où on la cherche une fois qu'on la connaît.
+
+
+## 2026-09-18 — D146 : un « copier » répond sous le doigt
+
+**Question.** Quatre écrans portent un bouton qui copie une ligne — l'adresse du carnet sur le
+tableau de bord, sur « À valider » et sur la fiche du bateau, le lien d'invitation dans la feuille
+des membres. Le presse-papiers, lui, ne dit rien : un tap qui a copié et un tap qui n'a rien fait
+se ressemblent exactement. Chacun des quatre posait un toast, et s'arrêtait là. Sur un iPad à plat
+sur la table à cartes, le toast apparaît à l'autre bout de 1024 px, loin du doigt qui vient de
+poser la question — et le doute (« est-ce que ça a marché ? ») coûte un deuxième tap, qui recopie
+la même chose sans plus rien dire.
+
+**Décision.** Un composant unique, `CopyButton`, qui **répond là où la question a été posée**. Au
+tap : le copieur cède la place à une coche, le bouton prend la teinte verte de ce qui est passé,
+et un anneau le quitte une fois. Une seconde et demie plus tard tout revient au repos — une coche
+qui reste devient un état, et ce bouton n'en a pas : il copie, il ne retient rien.
+
+**Les deux icônes partagent une cellule de grille**, donc le bouton ne change pas de largeur
+pendant l'échange : rien ne bouge autour, aucune carte ne se réagence sous le doigt. Seules
+l'opacité et l'échelle changent, avec un léger dépassement (`--ease-spring`) qui fait *arriver* la
+coche au lieu de la faire glisser.
+
+**Le toast reste** : il dit la phrase et l'annonce aux lecteurs d'écran, le bouton dit la couleur.
+Les deux ne font pas double emploi — l'un nomme ce qui a été copié, l'autre confirme le geste.
+
+**Un composant, pas quatre boutons.** Le retour n'est pas visible à la lecture d'un appel : un
+cinquième bouton écrit à la main passerait les revues sans que personne remarque qu'il est muet.
+`tests/unit/copy-feedback.test.ts` refuse donc toute écriture dans le presse-papiers hors du
+composant.
+
+**Sous `prefers-reduced-motion`**, l'échange devient instantané et l'anneau ne part pas : le
+message (« c'est copié ») reste, le mouvement s'en va. Le fondu croisé n'est pas une solution de
+repli — deux icônes qui se traversent dans la même cellule se brouillent —, donc la coche
+remplace le copieur d'un coup.
+
+**Pourquoi pas autrement.** *Changer le libellé en « Adresse copiée »* : le bouton change de
+largeur, la barre d'actions se réagence sous le doigt, et la phrase est déjà dans le toast.
+*Garder la coche jusqu'au prochain écran* : elle devient un état que le bouton ne porte pas, et
+qui ment dès qu'on revient. *Seulement le toast* : c'est ce qu'on avait, et c'est loin du doigt.
