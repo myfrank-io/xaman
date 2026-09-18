@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D147.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D148.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4013,3 +4013,65 @@ remplace le copieur d'un coup.
 largeur, la barre d'actions se réagence sous le doigt, et la phrase est déjà dans le toast.
 *Garder la coche jusqu'au prochain écran* : elle devient un état que le bouton ne porte pas, et
 qui ment dès qu'on revient. *Seulement le toast* : c'est ce qu'on avait, et c'est loin du doigt.
+
+
+## 2026-09-18 — D147 : une vue qui compte agrège avant de joindre
+
+**Question.** L'application est devenue lente partout, et lente **à charger** : non pas poussive
+sous le doigt, mais longue à afficher. `pg_stat_statements` en production a nommé le coupable sans
+ambiguïté — `checklist_category_progress`, 2098 appels à 146 ms de moyenne, 307 s cumulées, la
+requête la plus coûteuse de la base. Sur un carnet d'**un seul bateau**, 162 points et 23
+interventions. Rien dans ce volume ne justifie 146 ms.
+
+**Ce qui se passait.** La vue joignait les catégories aux points sans agréger d'abord :
+
+```sql
+from public.boat_categories c
+left join public.checklist_item_status s on s.category_id = c.id
+group by c.id, ...
+```
+
+`checklist_item_status` est une vue : le planificateur l'intègre à la requête, et le `where
+boat_id = …` de l'appelant **ne descend pas dedans** — il ne filtre que les catégories. Le statut
+est donc calculé pour des points qu'on jettera. Selon les statistiques, cela prenait deux formes,
+et les deux ont été mesurées : sur la production d'un seul bateau, un `Nested Loop` qui rejouait
+les 161 points **pour chacune des 7 catégories** — 1127 calculs de statut, 1127 balayages de
+`maintenance_logs`, 1071 lignes jetées par le filtre de jointure ; et sur une flotte de
+40 bateaux, le calcul du statut des 8051 points de **tous** les bateaux pour en rendre huit.
+
+Le tout traverse la RLS à chaque ligne, puisque les vues sont en `security_invoker` et que les
+politiques appellent `is_boat_member(boat_id)` et consorts par ligne : mesuré, ×4,4 (40 ms sans
+RLS, 180 ms avec). Et cette vue est lue par la checklist **et** par le tableau de bord — d'où
+« lent partout ».
+
+**Décision.** La vue **agrège d'abord, joint ensuite** : une CTE groupe les points par catégorie,
+puis on joint le résultat aux catégories. Le prédicat `boat_id` descend enfin dans la lecture des
+points (`Bitmap Index Scan` au lieu d'un balayage complet), le calcul de statut passe de 1127 à
+161, et la RLS avec lui.
+
+Mesuré sur la base de production, rôle `authenticated`, RLS active : **274,6 ms → 24,4 ms**
+(×11). Sur une flotte de 40 bateaux : 8051 lignes en 58 ms → 200 lignes en 3,5 ms (×16). Résultat
+vérifié **identique ligne à ligne** (`except` dans les deux sens, zéro écart) : mêmes colonnes,
+mêmes types, mêmes valeurs.
+
+**Ce n'est pas un index.** `maintenance_logs_checklist_item_idx` existe déjà, et à 23 lignes le
+planificateur préfère le balayage — à raison. Ajouter un index n'aurait rien changé : le coût
+n'était pas dans l'accès, il était dans le **nombre de fois** où l'accès avait lieu. C'est la
+forme de la requête qui était en cause, pas le chemin d'accès.
+
+**Ce qu'on n'a pas fait.** *Matérialiser la vue* : il faudrait la rafraîchir à chaque coche, à
+chaque intervention, à chaque relevé d'heures — on échangerait une lenteur de lecture contre une
+lenteur d'écriture et un risque de vue périmée sur l'écran qui doit être juste. *Remonter le
+calcul dans TypeScript* : la règle 8 dit l'inverse, et pour de bonnes raisons — la copie TS existe
+pour l'optimistic UI, pas pour porter la vérité. *Envelopper `auth.uid()` dans `(select …)` dans
+les politiques* (les 16 avertissements `auth_rls_initplan` du conseiller Supabase) : c'est une
+vraie amélioration, mais elle porte surtout sur les politiques d'**écriture**, et elle ne réglait
+pas le facteur mille de la lecture. Elle reste à faire, séparément.
+
+**Le garde-fou.** Rien dans le SQL ne dit qu'on est passé du carré au linéaire : les deux versions
+rendent exactement les mêmes lignes, et seul le plan les sépare — un diff relu à l'œil ne voit
+rien. `tests/unit/checklist-progress-plan.test.ts` lit donc le plan. Il ne mesure pas un temps
+(une machine de CI chargée rendrait le test capricieux) mais **la largeur des balayages** : pour
+répondre sur un bateau, la vue ne doit pas lire les points des autres. Vérifié dans les deux
+sens — le cas échoue sur l'ancienne définition (4201 points lus pour en vouloir 200) et passe sur
+la nouvelle.
