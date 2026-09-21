@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import type { Route } from "next";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { CheckCheckIcon, ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
+import { CheckCheckIcon, SearchIcon, XIcon } from "lucide-react";
 import {
   CompleteItemDialog,
   type CompletableItem,
@@ -25,11 +23,9 @@ import {
 import { ChecklistWorkRow } from "./ChecklistWorkRow";
 import { clearSteps } from "./StepsChecklist";
 import { useTick } from "./use-tick";
-import { CategoryIcon } from "@/components/common/CategoryBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { todayString } from "@/lib/format";
-import { newChecklistItemPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 type Category = { id: string; name: string; color: string; icon: string | null };
@@ -66,7 +62,6 @@ export function ChecklistBoard({
   const categoryId = params.get("system") ?? "";
   const search = params.get("q") ?? "";
   const expanded = params.get("open");
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [completing, setCompleting] = useState<CompletableItem | null>(null);
   const [overlays, setOverlays] = useState<Map<string, CompletionOverlay>>(() => new Map());
   const [receipts, setReceipts] = useState<Map<string, Receipt>>(() => new Map());
@@ -301,77 +296,36 @@ export function ChecklistBoard({
           </div>
         </div>
       ) : null}
-      {categories.map((category) => {
-        const items = visible.filter((row) => row.categoryId === category.id);
-        if (!items.length) return null;
-        const closed = collapsed.has(category.id) && !search;
-        return (
-          <section
-            key={category.id}
-            aria-label={category.name}
-            className="overflow-hidden rounded-xl border border-border bg-surface"
-          >
-            <h2>
-              <button
-                type="button"
-                className="flex min-h-14 w-full items-center gap-3 border-b border-border bg-surface-2/70 px-4 py-2 text-left"
-                aria-expanded={!closed}
-                aria-controls={`category-${category.id}`}
-                onClick={() =>
-                  setCollapsed((current) => {
-                    const next = new Set(current);
-                    if (next.has(category.id)) next.delete(category.id);
-                    else next.add(category.id);
-                    return next;
-                  })
-                }
-              >
-                <CategoryIcon color={category.color} icon={category.icon} />
-                <span className="flex-1 text-body font-semibold">{category.name}</span>
-                <span className="num text-caption text-ink-2">{items.length}</span>
-                <ChevronDownIcon
-                  className={cn("size-4 text-ink-3", closed && "-rotate-90")}
-                  aria-hidden
-                />
-              </button>
-            </h2>
-            <ul id={`category-${category.id}`} hidden={closed} className="divide-y divide-border">
-              {items.map((row) => (
-                <ChecklistWorkRow
-                  key={row.id}
-                  boatId={boatId}
-                  row={row}
-                  open={expanded === row.id}
-                  busy={busyIds.has(row.id)}
-                  recent={pinned.has(row.id) && !overlays.get(row.id)?.undone}
-                  undoing={undoing.has(row.id)}
-                  canContribute={canContribute}
-                  canWrite={canWrite}
-                  onOpen={() => select({ open: expanded === row.id ? null : row.id })}
-                  onTick={() => complete(row)}
-                  onDetails={() => setCompleting(toCompletable(row, engineReadDates))}
-                  undoTrashesPlanned={receipts.get(row.id)?.trashesPlanned}
-                  onUndo={
-                    receipts.has(row.id)
-                      ? () => {
-                          void undo(row);
-                        }
-                      : undefined
-                  }
-                />
-              ))}
-            </ul>
-          </section>
-        );
-      })}
-      {canWrite && categoryId ? (
-        <div>
-          <Button asChild variant="outline">
-            <Link href={newChecklistItemPath(boatId, categoryId) as Route}>
-              {t("work.addInSystem")}
-            </Link>
-          </Button>
-        </div>
+      {visible.length > 0 ? (
+        <ul
+          aria-label={t("title")}
+          className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface"
+        >
+          {visible.map((row) => (
+            <ChecklistWorkRow
+              key={row.id}
+              boatId={boatId}
+              row={row}
+              open={expanded === row.id}
+              busy={busyIds.has(row.id)}
+              recent={pinned.has(row.id) && !overlays.get(row.id)?.undone}
+              undoing={undoing.has(row.id)}
+              canContribute={canContribute}
+              canWrite={canWrite}
+              onOpen={() => select({ open: expanded === row.id ? null : row.id })}
+              onTick={() => complete(row)}
+              onDetails={() => setCompleting(toCompletable(row, engineReadDates))}
+              undoTrashesPlanned={receipts.get(row.id)?.trashesPlanned}
+              onUndo={
+                receipts.has(row.id)
+                  ? () => {
+                      void undo(row);
+                    }
+                  : undefined
+              }
+            />
+          ))}
+        </ul>
       ) : null}
       <CompleteItemDialog
         boatId={boatId}

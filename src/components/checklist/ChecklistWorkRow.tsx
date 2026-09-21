@@ -167,6 +167,7 @@ export function ChecklistWorkRow({
           id={`details-${row.id}`}
           className="flex flex-col gap-5 border-t border-border px-4 py-5 sm:pl-[4.75rem]"
         >
+          <p className="text-caption font-medium text-ink-3">{row.categoryName}</p>
           {row.description ? (
             <p className="max-w-prose text-body whitespace-pre-wrap text-ink-2">
               {row.description}

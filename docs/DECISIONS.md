@@ -4114,3 +4114,7 @@ de retrait porte explicitement « Mettre à la corbeille » : le comportement ex
 l’intervention au panier et ne la remet pas à l’état « prévue ». On cesse donc de promettre
 une réouverture dans la confirmation. Un cochage hors ligne, encore en attente, reste annulable
 sans toucher à l’intervention prévue.
+
+À la demande de Joseph, la liste est continue : aucun bloc ni accordéon par catégorie.
+La vue « À faire » respecte l’urgence à l’échelle du bateau, tous systèmes confondus.
+Le système reste disponible en filtre et dans le détail d’un contrôle.

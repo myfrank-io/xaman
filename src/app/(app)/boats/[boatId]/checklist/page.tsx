@@ -28,7 +28,7 @@ import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
-/** The maintenance checks themselves, grouped by system (D148). */
+/** A single working list of maintenance checks, with optional system filtering (D149). */
 export default async function ChecklistPage({
   params,
   searchParams,

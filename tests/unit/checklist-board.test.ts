@@ -102,11 +102,11 @@ describe("checklist landing page", () => {
       ),
     ).toBe(true);
   });
-  it("orders the most overdue points before closer ones", () => {
+  it("orders the most overdue points before closer ones across systems", () => {
     const items = [
-      row({ id: "soon", status: "soon", daysRemaining: 2 }),
-      row({ id: "late", status: "overdue", daysRemaining: -100 }),
-      row({ id: "late2", status: "overdue", daysRemaining: -10 }),
+      row({ id: "soon", categoryId: "engines", status: "soon", daysRemaining: 2 }),
+      row({ id: "late", categoryId: "sails", status: "overdue", daysRemaining: -100 }),
+      row({ id: "late2", categoryId: "safety", status: "overdue", daysRemaining: -10 }),
     ];
     expect(
       filterChecklist(items, { filter: "todo", categoryId: "", search: "" }).map((item) => item.id),

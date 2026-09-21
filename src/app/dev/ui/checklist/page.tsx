@@ -180,6 +180,34 @@ const ROWS: ChecklistRow[] = [
   }),
 ];
 
+// The landing list must interleave systems by urgency, not render one block per system.
+const BOARD_ROWS = [
+  ...ROWS,
+  row({
+    id: "safety-check",
+    label: "Contrôler les gilets gonflables",
+    lastCompletedAt: "2025-09-09",
+    categoryId: SAMPLE_CATEGORIES[7].id,
+    categoryName: SAMPLE_CATEGORIES[7].name,
+    categoryColor: SAMPLE_CATEGORIES[7].color,
+    status: "overdue",
+    daysRemaining: -12,
+    dueAt: "2026-09-09",
+  }),
+  row({
+    id: "engine-check",
+    label: "Vérifier le niveau d’huile — moteur bâbord",
+    lastCompletedAt: "2026-08-24",
+    intervalMonths: 1,
+    categoryId: SAMPLE_CATEGORIES[0].id,
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+    status: "soon",
+    daysRemaining: 3,
+    dueAt: "2026-09-24",
+  }),
+];
+
 const COMPLETIONS: CompletionRow[] = [
   {
     id: "c1",
@@ -259,7 +287,7 @@ export default async function DevChecklistPage() {
             <ChecklistBoard
               boatId={DEV_BOAT_ID}
               categories={PROGRESS}
-              rows={ROWS}
+              rows={BOARD_ROWS}
               members={MEMBERS}
               currentUserId="u-xav"
               currentUserName="Xavier Marin"

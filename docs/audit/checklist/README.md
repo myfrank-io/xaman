@@ -9,6 +9,7 @@ le réaliser, puis garder une trace fiable dans le carnet.
 | Constat | Conséquence | Comportement livré |
 |---|---|---|
 | La première refonte surchargeait chaque ligne et plaçait un pourcentage global en tête | Les contrôles passaient après les indicateurs | Lignes compactes, échéance lisible, consignes et historique dépliables |
+| Les blocs par catégorie imposaient une lecture système par système | Un contrôle urgent pouvait se retrouver après des contrôles moins urgents d'un autre système | Une liste continue, ordonnée par urgence dans « À faire » ; système disponible en filtre et dans le détail |
 | « Jamais noté » était mélangé aux travaux à traiter | L'absence d'historique devenait une fausse urgence | Vues « À faire », « Tout le plan » et « Sans historique » distinctes |
 | Cocher ouvrait systématiquement un formulaire | Trop de manipulations pour une opération quotidienne | Un appui note aujourd'hui et la personne connectée ; date, auteur et note restent modifiables dans le détail |
 | Le contrôle pouvait quitter la liste après enregistrement | Perte du point de repère sous le doigt | La ligne garde sa place jusqu'au changement de filtre, avec confirmation et annulation |
