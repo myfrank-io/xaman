@@ -1067,6 +1067,8 @@
       "nextDue": "Prochaine : {next}",
       "nextDueBoth": "{date} ou {hours}",
       "finishedPlanned": "Fait · {label} — l'intervention prévue est terminée",
+      "plannedHelp": "La réalisation terminera l’intervention prévue avec ce prestataire.",
+      "editPlanned": "Modifier l’intervention prévue",
       "undoneTrashed": "Réalisation annulée · l'intervention est à la corbeille",
       "undoneReopened": "Réalisation annulée · l'intervention redevient prévue",
       "trashTitle": "Mettre cette intervention à la corbeille ?",
@@ -1130,7 +1132,7 @@
       "kept": "{kept} / {total} suivis",
       "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
     },
-    "subtitle": "Contrôlez, cochez, gardez une trace de chaque entretien.",
+    "subtitle": "L’entretien de votre bateau, point par point.",
     "plan": {
       "title": "Choisissez un plan d'entretien",
       "intro": "Les systèmes de votre bateau sont en place. Un modèle les remplit avec ce qu'il y a à suivre, les échéances et les gestes détaillés.",
@@ -1209,6 +1211,41 @@
       "checkedLabel": "À jour : {label}",
       "due": "Échéance : {date}",
       "dueHours": "Échéance moteur : {hours}"
+    },
+    "work": {
+      "filters": {
+        "todo": "À faire",
+        "all": "Tout le plan",
+        "unrecorded": "Sans historique"
+      },
+      "search": "Trouver un contrôle, un équipement…",
+      "clearSearch": "Effacer la recherche",
+      "noRecord": "Dernière réalisation inconnue",
+      "lastDone": "Dernière réalisation",
+      "schedule": "Rythme d’entretien",
+      "punctual": "Contrôle ponctuel",
+      "saving": "Enregistrement…",
+      "justDone": "Réalisation enregistrée",
+      "undo": "Annuler ce cochage",
+      "tick": "Noter « {label} » fait aujourd’hui",
+      "reviewDone": "Consulter « {label} », déjà réalisé",
+      "doneToday": "Fait aujourd’hui",
+      "otherDate": "Autre date, personne ou note",
+      "recordAgain": "Noter une nouvelle réalisation",
+      "history": "Historique et suivi",
+      "edit": "Modifier le point",
+      "unrecordedHelp": "Ces points n’ont pas encore de réalisation dans le carnet. Cela ne signifie pas qu’ils sont en retard. Renseignez la dernière date connue, ou cochez-les lorsque vous les réalisez.",
+      "readOnly": "Consultation seule. Les membres autorisés peuvent noter les réalisations.",
+      "noResults": "Aucun contrôle trouvé",
+      "noResultsHelp": "Essayez un autre mot ou élargissez la recherche à tous les systèmes.",
+      "nothingDue": "Aucune échéance proche",
+      "nothingDueHelp": "Aucun point suivi n’est à échéance dans les 30 jours ou les 25 prochaines heures moteur. Le plan complet reste disponible pour vos contrôles à bord.",
+      "historyComplete": "Chaque point a un historique",
+      "historyCompleteHelp": "Vous pouvez consulter les réalisations et les prochains contrôles dans le plan d’entretien.",
+      "clearFilters": "Effacer les filtres",
+      "recordHistory": "Renseigner les {count} points sans historique",
+      "seePlan": "Voir tout le plan",
+      "addInSystem": "Ajouter un point à ce système"
     }
   },
   "validation": {

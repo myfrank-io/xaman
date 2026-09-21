@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D149.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D150.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4089,3 +4089,32 @@ une case déjà cochée ne supprime jamais un historique. Les détails restent a
 libellé et permettent une nouvelle réalisation. Le stock passe après les contrôles.
 Cela remplace le choix de E20-1 de limiter la page d'entrée à un répertoire de systèmes.
 Aucun changement du schéma ni du calcul des échéances.
+
+## 2026-09-21 — D149 : la checklist accompagne le travail à bord
+
+Après retour de Joseph, la checklist distingue les échéances proches ou dépassées (« À faire »),
+le plan complet et les points sans réalisation connue. L’absence d’historique ne devient pas
+une urgence. Le pourcentage global introduit en D148 disparaît : il mélangeait des échéances
+hétérogènes et prenait la place du travail.
+
+Le titre déplie les consignes sur place. Une case non cochée note une réalisation aujourd’hui,
+par la personne connectée ; la réponse et l’annulation restent sur la ligne. Les points faits
+pendant la consultation gardent leur place jusqu’au changement de filtre, pour éviter le saut
+sous le doigt. Une case déjà cochée ouvre le détail et ne supprime jamais une ancienne réalisation.
+Une autre date, un auteur différent ou une note restent possibles depuis le détail.
+
+Une échéance fixe, une intervention déjà confiée ou des heures non relevées aujourd’hui demandent
+le dialogue de réalisation : ne jamais dater un compteur ancien comme s’il venait d’être relevé.
+Les doublons de taps sont bloqués avant le départ réseau. Recherche, filtre et système sont dans
+l’URL afin de conserver le contexte au retour de l’historique ou de l’édition.
+
+Pour un travail déjà confié, le prestataire de l’intervention est affiché et conservé ; le lien
+de détail modifie cette même intervention. La reprise ne crée pas une seconde fiche. L’action
+de retrait porte explicitement « Mettre à la corbeille » : le comportement existant met
+l’intervention au panier et ne la remet pas à l’état « prévue ». On cesse donc de promettre
+une réouverture dans la confirmation. Un cochage hors ligne, encore en attente, reste annulable
+sans toucher à l’intervention prévue.
+
+À la demande de Joseph, la liste est continue : aucun bloc ni accordéon par catégorie.
+La vue « À faire » respecte l’urgence à l’échelle du bateau, tous systèmes confondus.
+Le système reste disponible en filtre et dans le détail d’un contrôle.

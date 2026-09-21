@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 
 export type Ticked = {
+  queued?: boolean;
   /** The optimistic key of the completion; the database draws the real one from the line. */
   id: string;
   /** The intervention the tick writes — or finishes, when the point was already in hand (D140). */
@@ -57,6 +58,8 @@ export function useTick(
     /** Ce que la ligne devient dans la liste, tout de suite, sans attendre le serveur. */
     onTicked?: (row: ChecklistRow, ticked: Ticked) => void;
     onUndone?: (row: ChecklistRow) => void;
+    /** An acknowledged tick, with the same undo operation as its toast. */
+    onSaved?: (row: ChecklistRow, saved: Ticked, undo: () => Promise<boolean>) => void;
     /** Le point demande un compteur que personne n'a jamais relevé : à l'écran de le demander. */
     onNeedsCounter?: (row: ChecklistRow) => void;
   },
@@ -70,11 +73,14 @@ export function useTick(
   const { online } = useOnline();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
+  const inFlight = useRef(new Set<string>());
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
 
   const tick = useCallback(
     (row: ChecklistRow, override?: { engineHours?: number | null }) => {
+      if (inFlight.current.has(row.id)) return;
       // Ce que la base exige, et la seule chose que l'app ne peut pas inventer.
-      const needsHours = row.intervalHours !== null;
+      const needsHours = row.intervalHours !== null && row.engineTracksHours;
       const engineHours =
         override?.engineHours !== undefined
           ? override.engineHours
@@ -100,6 +106,8 @@ export function useTick(
         nextDueAt: null,
       };
       // La ligne bouge avant l'aller-retour : le geste doit répondre à la vitesse du doigt.
+      inFlight.current.add(row.id);
+      setBusyIds(new Set(inFlight.current));
       options.onTicked?.(row, ticked);
       setBusy(row.id);
 
@@ -127,6 +135,8 @@ export function useTick(
           // Cocher est le seul geste qui doit survivre à une liaison morte (E9-1b).
           allowQueue: true,
         });
+        inFlight.current.delete(row.id);
+        setBusyIds(new Set(inFlight.current));
         setBusy(null);
         if (outcome.status === "full") {
           options.onUndone?.(row);
@@ -165,6 +175,43 @@ export function useTick(
         const description = [guessed, promise].filter(Boolean).join(" · ");
         const savedLogId = outcome.status === "sent" ? outcome.data.logId : logId;
 
+        let undoing = false;
+        let wasUndone = false;
+        const undo = async (): Promise<boolean> => {
+          if (undoing || wasUndone) return false;
+          undoing = true;
+          try {
+            if (outcome.status === "queued") {
+              outbox.discard(logId);
+            } else {
+              const result = await trashLog({ boatId, logId: savedLogId });
+              if (!result.ok) {
+                toast.error(errorMessage(result.error));
+                return false;
+              }
+            }
+            wasUndone = true;
+            options.onUndone?.(row);
+            toast.success(outcome.status === "queued" ? tc("undone") : tc("undoneTrashed"));
+            router.refresh();
+            return true;
+          } catch {
+            toast.error(errorMessage("errors.unknown"));
+            return false;
+          } finally {
+            undoing = false;
+          }
+        };
+        options.onSaved?.(
+          row,
+          {
+            ...ticked,
+            queued: outcome.status === "queued",
+            id: outcome.status === "sent" ? outcome.data.completionId : completionId,
+            logId: savedLogId,
+          },
+          undo,
+        );
         undoToast({
           message:
             outcome.status === "queued"
@@ -173,25 +220,9 @@ export function useTick(
                 ? tc("finishedPlanned", { label: row.label })
                 : tc("saved", { label: row.label }),
           description,
-          undoLabel: tc("undo"),
+          undoLabel: tc(openLog && outcome.status !== "queued" ? "trashConfirm" : "undo"),
           onUndo: () => {
-            if (outcome.status === "queued") {
-              outbox.discard(logId);
-              options.onUndone?.(row);
-              toast.success(tc("undone"));
-              return;
-            }
-            // Annuler, c'est mettre l'intervention à la corbeille : la réalisation tombe avec
-            // elle, et la corbeille garde trente jours ce qui aurait été un vrai geste (règle 9).
-            void trashLog({ boatId, logId: savedLogId }).then((undone) => {
-              if (!undone.ok) {
-                toast.error(errorMessage(undone.error));
-                return;
-              }
-              options.onUndone?.(row);
-              toast.success(openLog ? tc("undoneReopened") : tc("undoneTrashed"));
-              router.refresh();
-            });
+            void undo();
           },
         });
         if (outcome.status !== "queued") router.refresh();
@@ -200,5 +231,5 @@ export function useTick(
     [boatId, errorMessage, online, options, outbox, router, t, tc, to],
   );
 
-  return { tick, busy, pending };
+  return { tick, busy, busyIds, pending };
 }

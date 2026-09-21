@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -27,7 +28,7 @@ import { loadStockItems, toRestockList } from "@/lib/queries/stock";
 import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
-/** The maintenance checks themselves, grouped by system (D148). */
+/** A single working list of maintenance checks, with optional system filtering (D149). */
 export default async function ChecklistPage({
   params,
   searchParams,
@@ -144,33 +145,30 @@ export default async function ChecklistPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <ChecklistBoard
-        boatId={boatId}
-        categories={categories}
-        rows={rows}
-        members={context.members}
-        currentUserId={context.currentUserId}
-        currentUserName={context.currentUserName}
-        canContribute={can(boatRole, "contribute")}
-        engineReadDates={engineReadDates}
-        initialFilter={view === "todo" ? "todo" : "all"}
-      />
-      {can(boatRole, "write") || lowParts.length > 0 ? (
+      <Suspense>
+        <ChecklistBoard
+          boatId={boatId}
+          categories={categories}
+          rows={rows}
+          members={context.members}
+          currentUserId={context.currentUserId}
+          currentUserName={context.currentUserName}
+          canContribute={can(boatRole, "contribute")}
+          canWrite={can(boatRole, "write")}
+          engineReadDates={engineReadDates}
+          initialFilter={view === "all" ? "all" : view === "unrecorded" ? "unrecorded" : "todo"}
+        />
+      </Suspense>
+      {lowParts.length > 0 ? (
         <SectionCard
           title={tr("title")}
           action={can(boatRole, "write") ? <QuickRestockAdd boatId={boatId} /> : undefined}
           actionHref={can(boatRole, "write") ? undefined : stockPath(boatId)}
           actionLabel={can(boatRole, "write") ? undefined : tr("seeStock")}
-          footer={lowParts.length > 0 ? tr("subtitle") : undefined}
+          footer={tr("subtitle")}
           bare
         >
-          {lowParts.length > 0 ? (
-            <RestockChecklist boatId={boatId} parts={lowParts} canWrite={can(boatRole, "write")} />
-          ) : (
-            <p className="rounded-xl border border-border bg-surface p-4 text-body text-ink-2 shadow-sm">
-              {tr("emptyHint")}
-            </p>
-          )}
+          <RestockChecklist boatId={boatId} parts={lowParts} canWrite={can(boatRole, "write")} />
         </SectionCard>
       ) : null}
     </div>

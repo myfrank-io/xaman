@@ -1,5 +1,9 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { PlusIcon } from "lucide-react";
 
 import { CategoryItems, type CompletionRow } from "@/components/checklist/CategoryItems";
 import { type CategoryProgress } from "@/components/checklist/ChecklistGrid";
@@ -9,7 +13,9 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 import { QuickRestockAdd } from "@/components/parts/QuickRestockAdd";
 import { RestockChecklist } from "@/components/parts/RestockChecklist";
+import { Button } from "@/components/ui/button";
 import { devUiEnabled } from "@/lib/dev-ui";
+import { importPath, newChecklistItemPath } from "@/lib/queries/boat-routes";
 import { toRestockList } from "@/lib/queries/stock";
 
 import { DevShell } from "../DevShell";
@@ -174,6 +180,34 @@ const ROWS: ChecklistRow[] = [
   }),
 ];
 
+// The landing list must interleave systems by urgency, not render one block per system.
+const BOARD_ROWS = [
+  ...ROWS,
+  row({
+    id: "safety-check",
+    label: "Contrôler les gilets gonflables",
+    lastCompletedAt: "2025-09-09",
+    categoryId: SAMPLE_CATEGORIES[7].id,
+    categoryName: SAMPLE_CATEGORIES[7].name,
+    categoryColor: SAMPLE_CATEGORIES[7].color,
+    status: "overdue",
+    daysRemaining: -12,
+    dueAt: "2026-09-09",
+  }),
+  row({
+    id: "engine-check",
+    label: "Vérifier le niveau d’huile — moteur bâbord",
+    lastCompletedAt: "2026-08-24",
+    intervalMonths: 1,
+    categoryId: SAMPLE_CATEGORIES[0].id,
+    categoryName: SAMPLE_CATEGORIES[0].name,
+    categoryColor: SAMPLE_CATEGORIES[0].color,
+    status: "soon",
+    daysRemaining: 3,
+    dueAt: "2026-09-24",
+  }),
+];
+
 const COMPLETIONS: CompletionRow[] = [
   {
     id: "c1",
@@ -224,6 +258,7 @@ const CONTACTS = [
 export default async function DevChecklistPage() {
   if (!devUiEnabled()) notFound();
   const t = await getTranslations("checklist");
+  const ti = await getTranslations("import");
   const tr = await getTranslations("restock");
   const lowParts = toRestockList(SAMPLE_PARTS);
   return (
@@ -231,16 +266,35 @@ export default async function DevChecklistPage() {
       <div className="flex flex-col gap-12">
         {/* 1 — L'onglet Checklist : le plan du bateau, système par système, et le stock. */}
         <section className="flex flex-col gap-6">
-          <PageHeader title={t("title")} subtitle={t("subtitle")} />
-          <ChecklistBoard
-            boatId={DEV_BOAT_ID}
-            categories={PROGRESS}
-            rows={ROWS}
-            members={MEMBERS}
-            currentUserId="u-xav"
-            currentUserName="Xavier Marin"
-            canContribute
+          <PageHeader
+            title={t("title")}
+            subtitle={t("subtitle")}
+            actions={
+              <>
+                <Button asChild variant="outline">
+                  <Link href={importPath(DEV_BOAT_ID, "completions") as Route}>{ti("action")}</Link>
+                </Button>
+                <Button asChild>
+                  <Link href={newChecklistItemPath(DEV_BOAT_ID) as Route}>
+                    <PlusIcon />
+                    {t("addItem")}
+                  </Link>
+                </Button>
+              </>
+            }
           />
+          <Suspense>
+            <ChecklistBoard
+              boatId={DEV_BOAT_ID}
+              categories={PROGRESS}
+              rows={BOARD_ROWS}
+              members={MEMBERS}
+              currentUserId="u-xav"
+              currentUserName="Xavier Marin"
+              canContribute
+              canWrite
+            />
+          </Suspense>
           <SectionCard
             title={tr("title")}
             action={<QuickRestockAdd boatId={DEV_BOAT_ID} />}
