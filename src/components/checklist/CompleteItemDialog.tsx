@@ -36,7 +36,7 @@ import { trashLog } from "@/lib/actions/logs";
 import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { addDays } from "@/lib/numbers";
-import { newLogPath } from "@/lib/queries/boat-routes";
+import { editLogPath, newLogPath } from "@/lib/queries/boat-routes";
 import { completeItemSchema } from "@/lib/schemas/checklist";
 
 export type CompletableItem = {
@@ -66,11 +66,13 @@ export type CompletableItem = {
    * finishes it instead of writing a second line for the same job.
    */
   openLogId?: string | null;
+  openLogContactName?: string | null;
 };
 
 export type CompletionMember = { id: string; name: string };
 
 export type SavedCompletion = {
+  queued?: boolean;
   /** The optimistic key of the completion; the database draws the real one from the line. */
   id: string;
   /** The intervention the tick wrote, or finished (D140). */
@@ -249,8 +251,9 @@ function CompleteForm({
       boatId,
       itemId: item.id,
       completedAt,
-      completedBy: by === "other" ? null : by === "me" ? currentUserId : by,
-      completedByName: by === "other" ? otherName : null,
+      completedBy:
+        item.openLogContactName || by === "other" ? null : by === "me" ? currentUserId : by,
+      completedByName: item.openLogContactName ?? (by === "other" ? otherName : null),
       engineHours: hoursRequired || hours.trim() !== "" ? hours : null,
       nextDueAt,
       note,
@@ -274,11 +277,12 @@ function CompleteForm({
     }
     setErrors({});
     const byName =
-      by === "other"
+      item.openLogContactName ??
+      (by === "other"
         ? otherName
         : by === "me"
           ? currentUserName
-          : (members.find((member) => member.id === by)?.name ?? "");
+          : (members.find((member) => member.id === by)?.name ?? ""));
     startTransition(async () => {
       // Ticking a point is the one gesture that must survive a dead link (E9-1b): offline it
       // is kept on the iPad, the row shows as done, and « Annuler » drops it from the queue.
@@ -303,7 +307,8 @@ function CompleteForm({
       }
       // Written on the save and never on a keystroke: an abandoned dialog teaches nothing (D95).
       // « Quelqu'un d'autre » is a name for one job, not a habit: it clears the memory.
-      writeLastUsed(boatId, "completion.by", by === "other" ? null : by);
+      if (!item.openLogContactName)
+        writeLastUsed(boatId, "completion.by", by === "other" ? null : by);
       // What the tick has just promised, read back in the toast that confirms it.
       const nextDue = nextDueSentence(
         {
@@ -321,6 +326,7 @@ function CompleteForm({
         },
       );
       const saved: SavedCompletion = {
+        queued: outcome.status === "queued",
         id: outcome.status === "sent" ? outcome.data.completionId : completionId,
         logId: outcome.status === "sent" ? outcome.data.logId : logId,
         completedAt: parsed.data.completedAt,
@@ -344,13 +350,7 @@ function CompleteForm({
           }
           wasUndone = true;
           onUndone?.(item, completionId);
-          toast.success(
-            outcome.status === "queued"
-              ? t("undone")
-              : item.openLogId
-                ? t("undoneReopened")
-                : t("undoneTrashed"),
-          );
+          toast.success(outcome.status === "queued" ? t("undone") : t("undoneTrashed"));
           router.refresh();
           return true;
         } catch {
@@ -370,7 +370,7 @@ function CompleteForm({
               ? t("finishedPlanned", { label: item.label })
               : t("saved", { label: item.label }),
         description: nextDue ?? undefined,
-        undoLabel: t("undo"),
+        undoLabel: t(item.openLogId && outcome.status !== "queued" ? "trashConfirm" : "undo"),
         onUndo: () => {
           void undo();
         },
@@ -393,25 +393,32 @@ function CompleteForm({
       {/* A boat has two or three people: the answer is a row of chips, not a wheel to spin
           on the gesture people repeat every week. « Autre » keeps the free-text line. */}
       <Field id="complete-by" label={t("by")} group>
-        <ToggleGroup
-          type="single"
-          value={by}
-          aria-labelledby="complete-by-label"
-          className="flex-wrap justify-start"
-          onValueChange={(next) => next && setBy(next)}
-        >
-          <ToggleGroupItem value="me">{t("me")}</ToggleGroupItem>
-          {members
-            .filter((member) => member.id !== currentUserId)
-            .map((member) => (
-              <ToggleGroupItem key={member.id} value={member.id}>
-                {member.name}
-              </ToggleGroupItem>
-            ))}
-          <ToggleGroupItem value="other">{t("otherChip")}</ToggleGroupItem>
-        </ToggleGroup>
+        {item.openLogContactName ? (
+          <div>
+            <p className="text-body font-medium">{item.openLogContactName}</p>
+            <p className="mt-1 text-caption text-ink-2">{t("plannedHelp")}</p>
+          </div>
+        ) : (
+          <ToggleGroup
+            type="single"
+            value={by}
+            aria-labelledby="complete-by-label"
+            className="flex-wrap justify-start"
+            onValueChange={(next) => next && setBy(next)}
+          >
+            <ToggleGroupItem value="me">{t("me")}</ToggleGroupItem>
+            {members
+              .filter((member) => member.id !== currentUserId)
+              .map((member) => (
+                <ToggleGroupItem key={member.id} value={member.id}>
+                  {member.name}
+                </ToggleGroupItem>
+              ))}
+            <ToggleGroupItem value="other">{t("otherChip")}</ToggleGroupItem>
+          </ToggleGroup>
+        )}
       </Field>
-      {by === "other" ? (
+      {by === "other" && !item.openLogContactName ? (
         <Field id="complete-other" label={t("otherName")} required error={errors.completedByName}>
           <Input
             id="complete-other"
@@ -522,19 +529,21 @@ function CompleteForm({
           intervention form opens with the point ticked, the date and the hours already typed. */}
       <Link
         href={
-          newLogPath(boatId, {
-            item: item.id,
-            date: completedAt,
-            // a comma separates the pairs in `?hours=`: the decimal one travels as a dot
-            hours:
-              engine && hours.trim() !== ""
-                ? `${engine.id}:${hours.trim().replace(",", ".")}`
-                : undefined,
-          }) as Route
+          (item.openLogId
+            ? editLogPath(boatId, item.openLogId)
+            : newLogPath(boatId, {
+                item: item.id,
+                date: completedAt,
+                // a comma separates the pairs in `?hours=`: the decimal one travels as a dot
+                hours:
+                  engine && hours.trim() !== ""
+                    ? `${engine.id}:${hours.trim().replace(",", ".")}`
+                    : undefined,
+              })) as Route
         }
         className="inline-flex min-h-11 items-center self-start text-label font-medium text-primary underline-offset-4 hover:underline"
       >
-        {t("addDetails")}
+        {t(item.openLogId ? "editPlanned" : "addDetails")}
       </Link>
       <p className="text-caption text-ink-3">
         {item.lastCompletedAt

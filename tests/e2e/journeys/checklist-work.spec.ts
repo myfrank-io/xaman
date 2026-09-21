@@ -193,4 +193,55 @@ test.describe("E4-13 working through the checklist", () => {
     ).toHaveCount(0);
     expect(await logs(request, item.id)).toHaveLength(0);
   });
+
+  test("a planned job keeps its provider and its existing intervention", async ({
+    page,
+    request,
+  }) => {
+    const item = await point(request);
+    const contact = randomUUID();
+    const logId = randomUUID();
+    const provider = "Voilerie de recette";
+    await insert(request, "contacts", {
+      id: contact,
+      boat_id: SEED.boat,
+      name: provider,
+      specialty: "Voilier",
+    });
+    await insert(request, "maintenance_logs", {
+      id: logId,
+      boat_id: SEED.boat,
+      title: item.label,
+      category_id: categoryId,
+      checklist_item_id: item.id,
+      contact_id: contact,
+      status: "planned",
+      performed_at: "2026-12-01",
+    });
+    await enter(page, request, item.label);
+    const line = page.locator(`[data-item-id="${item.id}"]`);
+    await line.getByRole("checkbox").tap();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(provider, { exact: true })).toBeVisible();
+    await expect(
+      dialog.getByRole("radio", { name: fr.checklist.complete.me, exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      dialog.getByRole("link", { name: fr.checklist.complete.editPlanned }),
+    ).toHaveAttribute("href", `/boats/${SEED.boat}/logs/${logId}/edit`);
+    await dialog.getByRole("button", { name: fr.common.save, exact: true }).tap();
+    await expect(dialog).toBeHidden();
+    expect(await logs(request, item.id)).toMatchObject([{ id: logId }]);
+    const completion = await request.get(
+      `${SUPABASE_URL}/rest/v1/checklist_completions?boat_id=eq.${SEED.boat}&checklist_item_id=eq.${item.id}&select=completed_by_name`,
+      { headers },
+    );
+    expect(await completion.json()).toMatchObject([{ completed_by_name: provider }]);
+    // Trashing the pre-existing job is explicitly named; it must never promise to reopen it.
+    await expect(
+      line.getByRole("button", { name: fr.checklist.work.undo, exact: true }),
+    ).toHaveCount(0);
+    await line.getByRole("button", { name: fr.checklist.complete.trashConfirm, exact: true }).tap();
+    await expect.poll(async () => (await logs(request, item.id)).length).toBe(0);
+  });
 });

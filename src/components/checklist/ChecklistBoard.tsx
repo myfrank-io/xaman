@@ -33,7 +33,7 @@ import { newChecklistItemPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 type Category = { id: string; name: string; color: string; icon: string | null };
-type Receipt = { undo: () => Promise<boolean> };
+type Receipt = { undo: () => Promise<boolean>; trashesPlanned: boolean };
 
 export function ChecklistBoard({
   boatId,
@@ -94,7 +94,13 @@ export function ChecklistBoard({
   ) {
     const before = serverRows.find((row) => row.id === item.id);
     if (!before) return;
-    if (undo) setReceipts((current) => new Map(current).set(item.id, { undo }));
+    if (undo)
+      setReceipts((current) =>
+        new Map(current).set(item.id, {
+          undo,
+          trashesPlanned: Boolean(before.openLog) && !completion.queued,
+        }),
+      );
     const historical = Boolean(
       before.lastCompletedAt && completion.completedAt < before.lastCompletedAt,
     );
@@ -130,9 +136,7 @@ export function ChecklistBoard({
     onUndone,
     onNeedsCounter: (row) => setCompleting(toCompletable(row, engineReadDates)),
     onSaved: (row, saved, undo) => {
-      onCompleted(row, saved);
-      clearSteps(row.id);
-      setReceipts((current) => new Map(current).set(row.id, { undo }));
+      onCompleted(row, saved, undo);
     },
   });
   function complete(row: ChecklistRow) {
@@ -346,6 +350,7 @@ export function ChecklistBoard({
                   onOpen={() => select({ open: expanded === row.id ? null : row.id })}
                   onTick={() => complete(row)}
                   onDetails={() => setCompleting(toCompletable(row, engineReadDates))}
+                  undoTrashesPlanned={receipts.get(row.id)?.trashesPlanned}
                   onUndo={
                     receipts.has(row.id)
                       ? () => {

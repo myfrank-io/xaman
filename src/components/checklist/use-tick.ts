@@ -17,6 +17,7 @@ import { formatDate, formatHours, todayString } from "@/lib/format";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 
 export type Ticked = {
+  queued?: boolean;
   /** The optimistic key of the completion; the database draws the real one from the line. */
   id: string;
   /** The intervention the tick writes — or finishes, when the point was already in hand (D140). */
@@ -191,13 +192,7 @@ export function useTick(
             }
             wasUndone = true;
             options.onUndone?.(row);
-            toast.success(
-              outcome.status === "queued"
-                ? tc("undone")
-                : openLog
-                  ? tc("undoneReopened")
-                  : tc("undoneTrashed"),
-            );
+            toast.success(outcome.status === "queued" ? tc("undone") : tc("undoneTrashed"));
             router.refresh();
             return true;
           } catch {
@@ -211,6 +206,7 @@ export function useTick(
           row,
           {
             ...ticked,
+            queued: outcome.status === "queued",
             id: outcome.status === "sent" ? outcome.data.completionId : completionId,
             logId: savedLogId,
           },
@@ -224,7 +220,7 @@ export function useTick(
                 ? tc("finishedPlanned", { label: row.label })
                 : tc("saved", { label: row.label }),
           description,
-          undoLabel: tc("undo"),
+          undoLabel: tc(openLog && outcome.status !== "queued" ? "trashConfirm" : "undo"),
           onUndo: () => {
             void undo();
           },

@@ -4107,3 +4107,10 @@ Une échéance fixe, une intervention déjà confiée ou des heures non relevée
 le dialogue de réalisation : ne jamais dater un compteur ancien comme s’il venait d’être relevé.
 Les doublons de taps sont bloqués avant le départ réseau. Recherche, filtre et système sont dans
 l’URL afin de conserver le contexte au retour de l’historique ou de l’édition.
+
+Pour un travail déjà confié, le prestataire de l’intervention est affiché et conservé ; le lien
+de détail modifie cette même intervention. La reprise ne crée pas une seconde fiche. L’action
+de retrait porte explicitement « Mettre à la corbeille » : le comportement existant met
+l’intervention au panier et ne la remet pas à l’état « prévue ». On cesse donc de promettre
+une réouverture dans la confirmation. Un cochage hors ligne, encore en attente, reste annulable
+sans toucher à l’intervention prévue.

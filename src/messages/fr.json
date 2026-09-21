@@ -1067,6 +1067,8 @@
       "nextDue": "Prochaine : {next}",
       "nextDueBoth": "{date} ou {hours}",
       "finishedPlanned": "Fait · {label} — l'intervention prévue est terminée",
+      "plannedHelp": "La réalisation terminera l’intervention prévue avec ce prestataire.",
+      "editPlanned": "Modifier l’intervention prévue",
       "undoneTrashed": "Réalisation annulée · l'intervention est à la corbeille",
       "undoneReopened": "Réalisation annulée · l'intervention redevient prévue",
       "trashTitle": "Mettre cette intervention à la corbeille ?",

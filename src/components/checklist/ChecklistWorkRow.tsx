@@ -34,6 +34,7 @@ export function ChecklistWorkRow({
   onTick,
   onDetails,
   onUndo,
+  undoTrashesPlanned = false,
 }: {
   boatId: string;
   row: ChecklistRow;
@@ -47,6 +48,7 @@ export function ChecklistWorkRow({
   onTick: () => void;
   onDetails: () => void;
   onUndo?: () => void;
+  undoTrashesPlanned?: boolean;
 }) {
   const t = useTranslations("checklist");
   const tu = useTranslations("units");
@@ -150,7 +152,7 @@ export function ChecklistWorkRow({
               className="mb-2 inline-flex min-h-11 items-center gap-2 text-label font-medium text-ink-2 underline underline-offset-4"
             >
               <Undo2Icon className="size-4" aria-hidden />
-              {t("work.undo")}
+              {t(undoTrashesPlanned ? "complete.trashConfirm" : "work.undo")}
             </button>
           ) : null}
         </div>
