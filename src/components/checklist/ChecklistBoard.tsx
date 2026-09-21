@@ -169,7 +169,7 @@ export function ChecklistBoard({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <div
-          className="flex min-w-0 flex-wrap gap-x-5 border-b border-border"
+          className="flex min-w-0 flex-wrap gap-x-1 border-b border-border sm:gap-x-5"
           role="group"
           aria-label={t("board.filterLabel")}
         >
@@ -180,7 +180,7 @@ export function ChecklistBoard({
               aria-pressed={filter === value}
               onClick={() => select({ view: value })}
               className={cn(
-                "inline-flex min-h-12 items-center gap-2 border-b-2 px-1 text-label",
+                "inline-flex min-h-12 items-center gap-1 border-b-2 px-1 text-label sm:gap-2",
                 filter === value
                   ? "border-primary font-semibold text-foreground"
                   : "border-transparent text-ink-2",

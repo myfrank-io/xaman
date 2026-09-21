@@ -111,6 +111,9 @@ test.describe("E4-13 working through the checklist", () => {
       line.getByRole("button", { name: fr.checklist.work.undo, exact: true }),
     ).toBeVisible();
     await line.getByRole("button", { name: fr.checklist.work.undo, exact: true }).tap();
+    await expect(
+      line.getByRole("button", { name: fr.checklist.work.undo, exact: true }),
+    ).toBeHidden();
     expect(await logs(request, item.id)).toHaveLength(0);
   });
 
@@ -150,7 +153,7 @@ test.describe("E4-13 working through the checklist", () => {
   });
 
   test("missing history is not urgency and context survives reload", async ({ page, request }) => {
-    const item = await point(request, { interval_months: null, anchor_date: null });
+    const item = await point(request, { interval_months: null });
     await enter(page, request, item.label);
     await expect(page.locator(`[data-item-id="${item.id}"]`)).toHaveCount(0);
     await page

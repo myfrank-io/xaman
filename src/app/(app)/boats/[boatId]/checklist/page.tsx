@@ -165,16 +165,10 @@ export default async function ChecklistPage({
           action={can(boatRole, "write") ? <QuickRestockAdd boatId={boatId} /> : undefined}
           actionHref={can(boatRole, "write") ? undefined : stockPath(boatId)}
           actionLabel={can(boatRole, "write") ? undefined : tr("seeStock")}
-          footer={lowParts.length > 0 ? tr("subtitle") : undefined}
+          footer={tr("subtitle")}
           bare
         >
-          {lowParts.length > 0 ? (
-            <RestockChecklist boatId={boatId} parts={lowParts} canWrite={can(boatRole, "write")} />
-          ) : (
-            <p className="rounded-xl border border-border bg-surface p-4 text-body text-ink-2 shadow-sm">
-              {tr("emptyHint")}
-            </p>
-          )}
+          <RestockChecklist boatId={boatId} parts={lowParts} canWrite={can(boatRole, "write")} />
         </SectionCard>
       ) : null}
     </div>
