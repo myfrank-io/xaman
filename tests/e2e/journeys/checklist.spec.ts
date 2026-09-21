@@ -19,14 +19,12 @@ test.describe("§6.3 spring check", () => {
   test.skip(!hasStack, skipReason);
 
   test("ticks a checklist point within the tap budget", async ({ page, request }) => {
-    await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist`);
-    await expect(page.getByRole("link", { name: new RegExp(SEED.category) }).first()).toBeVisible();
-
-    // Reaching the system is navigation, not the act of ticking: the budget is the tick itself.
+    await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist?view=all`);
     await page
-      .getByRole("link", { name: new RegExp(SEED.category) })
+      .getByRole("button", { name: new RegExp(SEED.item) })
       .first()
       .tap();
+    await page.getByRole("link", { name: fr.checklist.work.history, exact: true }).tap();
     await expect(page.getByText(SEED.item).first()).toBeVisible();
 
     const taps = new TapCounter(page);
@@ -64,17 +62,14 @@ test.describe("§6.3 spring check", () => {
     await expect(page.getByText(label).first()).toBeVisible({ timeout: 15_000 });
 
     // E4-12: the newly added point is actionable from the landing page itself.
-    await page.goto(`/boats/${SEED.boat}/checklist`);
+    await page.goto(`/boats/${SEED.boat}/checklist?view=all`);
     await page.getByRole("textbox", { name: fr.checklist.board.search }).fill(label);
-    const tickLabel = fr.checklist.tick.label.replace("{label}", label);
+    const tickLabel = fr.checklist.work.tick.replace("{label}", label);
     const checkbox = page.getByRole("checkbox", { name: tickLabel, exact: true });
     await expect(checkbox).toHaveAttribute("aria-checked", "false");
     await checkbox.tap();
-    const dialog = page.getByRole("dialog", { name: fr.checklist.complete.title });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: fr.common.save, exact: true }).tap();
-    await expect(dialog).toBeHidden();
-    const checkedLabel = fr.checklist.board.checkedLabel.replace("{label}", label);
+    await expect(page.getByRole("dialog")).toBeHidden();
+    const checkedLabel = fr.checklist.work.reviewDone.replace("{label}", label);
     await expect(page.getByRole("checkbox", { name: checkedLabel, exact: true })).toHaveAttribute(
       "aria-checked",
       "true",

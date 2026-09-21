@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -144,18 +145,21 @@ export default async function ChecklistPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <ChecklistBoard
-        boatId={boatId}
-        categories={categories}
-        rows={rows}
-        members={context.members}
-        currentUserId={context.currentUserId}
-        currentUserName={context.currentUserName}
-        canContribute={can(boatRole, "contribute")}
-        engineReadDates={engineReadDates}
-        initialFilter={view === "todo" ? "todo" : "all"}
-      />
-      {can(boatRole, "write") || lowParts.length > 0 ? (
+      <Suspense>
+        <ChecklistBoard
+          boatId={boatId}
+          categories={categories}
+          rows={rows}
+          members={context.members}
+          currentUserId={context.currentUserId}
+          currentUserName={context.currentUserName}
+          canContribute={can(boatRole, "contribute")}
+          canWrite={can(boatRole, "write")}
+          engineReadDates={engineReadDates}
+          initialFilter={view === "all" ? "all" : view === "unrecorded" ? "unrecorded" : "todo"}
+        />
+      </Suspense>
+      {lowParts.length > 0 ? (
         <SectionCard
           title={tr("title")}
           action={can(boatRole, "write") ? <QuickRestockAdd boatId={boatId} /> : undefined}

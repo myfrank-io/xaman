@@ -1,6 +1,7 @@
-import type { ChecklistRow } from "./rows";
+import { sortRows, type ChecklistRow } from "./rows";
+import type { EngineReadDates } from "./completable";
 
-export type ChecklistFilter = "all" | "todo" | "checked";
+export type ChecklistFilter = "all" | "todo" | "unrecorded" | "checked";
 
 // An estimated anchor is not evidence that a check was performed. Upcoming checks reopen.
 export function isChecklistChecked(row: ChecklistRow): boolean {
@@ -17,15 +18,16 @@ export function filterChecklist(
       .replace(/[\u0300-\u036f]/g, "")
       .toLocaleLowerCase("fr");
   const query = normalize(options.search.trim());
-  return rows
+  const filtered = rows
     .filter(
       (row) =>
         (!options.categoryId || row.categoryId === options.categoryId) &&
-        (options.filter === "all" || isChecklistChecked(row) === (options.filter === "checked")) &&
+        matchesChecklistFilter(row, options.filter) &&
         (!query ||
           normalize(`${row.label} ${row.categoryName} ${row.engineLabel ?? ""}`).includes(query)),
     )
     .sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label, "fr"));
+  return options.filter === "todo" ? sortRows(filtered, true) : filtered;
 }
 
 export type CompletionOverlay = {
@@ -46,4 +48,24 @@ export function overlayCompletion(row: ChecklistRow, overlay?: CompletionOverlay
     row.lastEngineHours === overlay.completed.lastEngineHours &&
     row.lastCompletedByName === overlay.completed.lastCompletedByName;
   return matches && row.lastCompletionId !== overlay.before.lastCompletionId ? overlay.before : row;
+}
+
+// Missing history is not an urgent job. SQL deadlines and planned work remain authoritative.
+export function matchesChecklistFilter(row: ChecklistRow, filter: ChecklistFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "checked") return isChecklistChecked(row);
+  if (filter === "unrecorded") return !row.hasCompletion;
+  return row.status === "overdue" || row.status === "soon" || row.openLog !== null;
+}
+
+export function needsCompletionDetails(
+  row: ChecklistRow,
+  dates: EngineReadDates,
+  today: string,
+): boolean {
+  if (row.fixedDueAt || row.openLog) return true;
+  if (row.engineTracksHours && row.intervalHours !== null) {
+    return row.currentHours === null || !row.engineId || dates[row.engineId] !== today;
+  }
+  return false;
 }

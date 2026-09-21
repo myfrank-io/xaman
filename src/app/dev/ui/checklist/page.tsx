@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
@@ -232,15 +233,18 @@ export default async function DevChecklistPage() {
         {/* 1 — L'onglet Checklist : le plan du bateau, système par système, et le stock. */}
         <section className="flex flex-col gap-6">
           <PageHeader title={t("title")} subtitle={t("subtitle")} />
-          <ChecklistBoard
-            boatId={DEV_BOAT_ID}
-            categories={PROGRESS}
-            rows={ROWS}
-            members={MEMBERS}
-            currentUserId="u-xav"
-            currentUserName="Xavier Marin"
-            canContribute
-          />
+          <Suspense>
+            <ChecklistBoard
+              boatId={DEV_BOAT_ID}
+              categories={PROGRESS}
+              rows={ROWS}
+              members={MEMBERS}
+              currentUserId="u-xav"
+              currentUserName="Xavier Marin"
+              canContribute
+              canWrite
+            />
+          </Suspense>
           <SectionCard
             title={tr("title")}
             action={<QuickRestockAdd boatId={DEV_BOAT_ID} />}

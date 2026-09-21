@@ -110,7 +110,11 @@ export function CompleteItemDialog({
   currentUserId: string;
   currentUserName: string;
   onOpenChange: (open: boolean) => void;
-  onCompleted?: (item: CompletableItem, completion: SavedCompletion) => void;
+  onCompleted?: (
+    item: CompletableItem,
+    completion: SavedCompletion,
+    undo?: () => Promise<boolean>,
+  ) => void;
   onUndone?: (item: CompletableItem, completionId: string) => void;
 }) {
   const t = useTranslations("checklist.complete");
@@ -171,7 +175,11 @@ function CompleteForm({
   currentUserId: string;
   currentUserName: string;
   onClose: () => void;
-  onCompleted?: (item: CompletableItem, completion: SavedCompletion) => void;
+  onCompleted?: (
+    item: CompletableItem,
+    completion: SavedCompletion,
+    undo?: () => Promise<boolean>,
+  ) => void;
   onUndone?: (item: CompletableItem, completionId: string) => void;
 }) {
   const t = useTranslations("checklist.complete");
@@ -313,48 +321,61 @@ function CompleteForm({
         },
       );
       const saved: SavedCompletion = {
-        id: completionId,
+        id: outcome.status === "sent" ? outcome.data.completionId : completionId,
         logId: outcome.status === "sent" ? outcome.data.logId : logId,
         completedAt: parsed.data.completedAt,
         completedByName: byName,
         engineHours: parsed.data.engineHours,
         nextDueAt: parsed.data.nextDueAt,
       };
-      onCompleted?.(item, saved);
+      let undoing = false;
+      let wasUndone = false;
+      const undo = async (): Promise<boolean> => {
+        if (undoing || wasUndone) return false;
+        undoing = true;
+        try {
+          if (outcome.status === "queued") outbox.discard(logId);
+          else {
+            const result = await trashLog({ boatId, logId: saved.logId });
+            if (!result.ok) {
+              toast.error(errorMessage(result.error));
+              return false;
+            }
+          }
+          wasUndone = true;
+          onUndone?.(item, completionId);
+          toast.success(
+            outcome.status === "queued"
+              ? t("undone")
+              : item.openLogId
+                ? t("undoneReopened")
+                : t("undoneTrashed"),
+          );
+          router.refresh();
+          return true;
+        } catch {
+          toast.error(errorMessage("errors.unknown"));
+          return false;
+        } finally {
+          undoing = false;
+        }
+      };
+      onCompleted?.(item, saved, undo);
       onClose();
-      if (outcome.status === "queued") {
-        undoToast({
-          message: to("savedOnDevice"),
-          description: nextDue ?? undefined,
-          undoLabel: t("undo"),
-          onUndo: () => {
-            outbox.discard(logId);
-            onUndone?.(item, completionId);
-            toast.success(t("undone"));
-          },
-        });
-        return;
-      }
       undoToast({
-        message: item.openLogId
-          ? t("finishedPlanned", { label: item.label })
-          : t("saved", { label: item.label }),
+        message:
+          outcome.status === "queued"
+            ? to("savedOnDevice")
+            : item.openLogId
+              ? t("finishedPlanned", { label: item.label })
+              : t("saved", { label: item.label }),
         description: nextDue ?? undefined,
         undoLabel: t("undo"),
         onUndo: () => {
-          // The tick is an intervention (D140): undoing it is putting that line in the trash,
-          // and the completion the database derived from it goes with it.
-          void trashLog({ boatId, logId: saved.logId }).then((undo) => {
-            if (!undo.ok) {
-              toast.error(errorMessage(undo.error));
-              return;
-            }
-            onUndone?.(item, completionId);
-            toast.success(item.openLogId ? t("undoneReopened") : t("undoneTrashed"));
-            router.refresh();
-          });
+          void undo();
         },
       });
+      if (outcome.status === "queued") return;
       router.refresh();
     });
   }
