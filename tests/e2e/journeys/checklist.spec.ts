@@ -62,5 +62,30 @@ test.describe("§6.3 spring check", () => {
 
     // §6.3 ends on the point being there for the next person to see.
     await expect(page.getByText(label).first()).toBeVisible({ timeout: 15_000 });
+
+    // E4-12: the newly added point is actionable from the landing page itself.
+    await page.goto(`/boats/${SEED.boat}/checklist`);
+    await page.getByRole("textbox", { name: fr.checklist.board.search }).fill(label);
+    const tickLabel = fr.checklist.tick.label.replace("{label}", label);
+    const checkbox = page.getByRole("checkbox", { name: tickLabel, exact: true });
+    await expect(checkbox).toHaveAttribute("aria-checked", "false");
+    await checkbox.tap();
+    const dialog = page.getByRole("dialog", { name: fr.checklist.complete.title });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: fr.common.save, exact: true }).tap();
+    await expect(dialog).toBeHidden();
+    const checkedLabel = fr.checklist.board.checkedLabel.replace("{label}", label);
+    await expect(page.getByRole("checkbox", { name: checkedLabel, exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+      { timeout: 15_000 },
+    );
+    // Verify persistence, not only the optimistic overlay.
+    await page.reload();
+    await expect(page.getByRole("checkbox", { name: checkedLabel, exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+      { timeout: 15_000 },
+    );
   });
 });
