@@ -54,5 +54,14 @@ Les parcours existants vérifient aussi l'ajout d'un point et son cochage depuis
 La suite unitaire couvre la distinction historique/échéances, la priorité des urgences,
 les relevés périmés, les échéances fixes et les retours serveur/annulations.
 
-Les résultats de validation sont attachés à la [PR #99](https://github.com/myfrank-io/xaman/pull/99).
+La [validation CI du code livré](https://github.com/myfrank-io/xaman/actions/runs/35630549231)
+réussit : **1 035 tests métier/RLS, 270 contrôles tactiles et 34 parcours avec Supabase**,
+ainsi que lint, format, TypeScript et build. Les parcours sont ignorés dans le job tactile
+sans Supabase, puis exécutés intégralement dans leur job avec la base.
+
+Des avertissements d'hydratation de la navigation partagée (Breadcrumbs/BottomTabs) restent
+visibles dans les logs CI, sans échec des parcours. La reprise des étapes de la checklist
+dispose de son propre contrôle d'absence d'erreur d'hydratation.
+
+Les résultats sont attachés à la [PR #99](https://github.com/myfrank-io/xaman/pull/99).
 La recette physique Safari/iPad et la validation d'usage par Xavier restent à faire.
