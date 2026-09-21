@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D148.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D149.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4075,3 +4075,17 @@ rien. `tests/unit/checklist-progress-plan.test.ts` lit donc le plan. Il ne mesur
 répondre sur un bateau, la vue ne doit pas lire les points des autres. Vérifié dans les deux
 sens — le cas échoue sur l'ancienne définition (4201 points lus pour en vouloir 200) et passe sur
 la nouvelle.
+
+## 2026-09-21 — D148 : une checklist montre ses cases dès son ouverture
+
+À la demande de Joseph, la racine Checklist remplace la grille de navigation par les points
+regroupés par système, directement cochables. Recherche et filtres Tous / À vérifier / À jour
+réduisent la liste sans quitter la page. Les catégories restent dans leur ordre habituel.
+Une case est cochée seulement si une réalisation existe, si son état est OK et si aucune
+intervention ouverte ne la concerne. Un ancrage estimé ne vaut pas réalisation ; un point
+Bientôt redevient à vérifier. Le compteur décrit ces cases, pas la progression SQL des échéances.
+Le dialogue existant confirme la date, l'auteur et les heures avant l'écriture historisée ;
+une case déjà cochée ne supprime jamais un historique. Les détails restent accessibles via le
+libellé et permettent une nouvelle réalisation. Le stock passe après les contrôles.
+Cela remplace le choix de E20-1 de limiter la page d'entrée à un répertoire de systèmes.
+Aucun changement du schéma ni du calcul des échéances.

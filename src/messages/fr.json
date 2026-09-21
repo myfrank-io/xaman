@@ -1130,7 +1130,7 @@
       "kept": "{kept} / {total} suivis",
       "readingsSaved": "{count, plural, one {# compteur enregistré} other {# compteurs enregistrés}}"
     },
-    "subtitle": "Ce que vous suivez sur ce bateau, système par système.",
+    "subtitle": "Contrôlez, cochez, gardez une trace de chaque entretien.",
     "plan": {
       "title": "Choisissez un plan d'entretien",
       "intro": "Les systèmes de votre bateau sont en place. Un modèle les remplit avec ce qu'il y a à suivre, les échéances et les gestes détaillés.",
@@ -1187,6 +1187,28 @@
       "noContacts": "Aucun intervenant dans l'annuaire. Ajoutez d'abord votre chantier : la demande partira à son adresse.",
       "addContact": "Ajouter un intervenant",
       "close": "Fermer"
+    },
+    "board": {
+      "progress": "{count} / {total} points à jour",
+      "remaining": "{count} à vérifier",
+      "progressLabel": "Contrôles réalisés et à jour",
+      "hint": "Une case cochée correspond à un contrôle réalisé et à jour. Elle se libère à la prochaine échéance. Touchez un libellé pour consulter les détails.",
+      "filterLabel": "Filtrer les points",
+      "filters": {
+        "all": "Tous",
+        "todo": "À vérifier",
+        "checked": "À jour"
+      },
+      "search": "Rechercher un point…",
+      "category": "Filtrer par système",
+      "allCategories": "Tous les systèmes",
+      "results": "{count, plural, =0 {Aucun point affiché} one {# point affiché} other {# points affichés}}",
+      "empty": "Aucun point ne correspond à ces filtres.",
+      "reset": "Afficher tous les points",
+      "manage": "Ouvrir le système {category}",
+      "checkedLabel": "À jour : {label}",
+      "due": "Échéance : {date}",
+      "dueHours": "Échéance moteur : {hours}"
     }
   },
   "validation": {
