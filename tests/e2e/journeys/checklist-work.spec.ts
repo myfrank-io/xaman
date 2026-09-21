@@ -90,6 +90,11 @@ test.describe("E4-13 working through the checklist", () => {
     const line = page.locator(`[data-item-id="${item.id}"]`);
     await line.getByRole("button", { name: new RegExp(item.label) }).tap();
     await line.getByRole("checkbox", { name: "1. Ouvrir le capot" }).check();
+    const browserErrors: string[] = [];
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+    await page.reload();
+    await expect(line.getByRole("checkbox", { name: "1. Ouvrir le capot" })).toBeChecked();
+    expect(browserErrors.filter((message) => /hydration/i.test(message))).toEqual([]);
     expect(await logs(request, item.id)).toHaveLength(0);
     await line.getByRole("button", { name: fr.checklist.work.otherDate, exact: true }).tap();
     const dialog = page.getByRole("dialog");
