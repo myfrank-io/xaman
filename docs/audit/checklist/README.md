@@ -1,30 +1,58 @@
-# Checklist — audit et refonte E4-12
+# Checklist — audit et reprise E4-13
 
-Audit du 21 septembre 2026 de la page Xaman en production, puis de son code.
+Audit du 21 septembre 2026, après la première refonte E4-12. La cible est Xavier sur
+son iPad à bord et Emmanuel sur téléphone : trouver le contrôle, lire sa méthode,
+le réaliser, puis garder une trace fiable dans le carnet.
 
-| Constat | Effet | Correction |
+## Problèmes corrigés
+
+| Constat | Conséquence | Comportement livré |
 |---|---|---|
-| La racine ne montre que des cartes de systèmes | Aucun contrôle directement visible ou cochable | Liste de contrôles groupée par système dès l'arrivée |
-| Le bloc de réapprovisionnement précède le suivi | L'action principale passe après le stock | Réapprovisionnement placé après les contrôles |
-| Les pourcentages d'échéances peuvent être pris pour des contrôles réalisés | Un ancrage ne prouve pourtant pas une réalisation | Compteur de cases réellement réalisées et OK, sans intervention ouverte |
-| Aucun filtre ou recherche sur l'ensemble des points | Il faut ouvrir chaque système pour retrouver un point | Recherche insensible aux accents, filtres d'état et de système combinables |
-| Les détails d'une réalisation demandent l'ouverture d'un système | Lecture lente des derniers contrôles | Date, auteur, intervalle, échéance et prestataire prévu sur les lignes |
+| La première refonte surchargeait chaque ligne et plaçait un pourcentage global en tête | Les contrôles passaient après les indicateurs | Lignes compactes, échéance lisible, consignes et historique dépliables |
+| « Jamais noté » était mélangé aux travaux à traiter | L'absence d'historique devenait une fausse urgence | Vues « À faire », « Tout le plan » et « Sans historique » distinctes |
+| Cocher ouvrait systématiquement un formulaire | Trop de manipulations pour une opération quotidienne | Un appui note aujourd'hui et la personne connectée ; date, auteur et note restent modifiables dans le détail |
+| Le contrôle pouvait quitter la liste après enregistrement | Perte du point de repère sous le doigt | La ligne garde sa place jusqu'au changement de filtre, avec confirmation et annulation |
+| Un ancien relevé moteur pouvait être réutilisé sans confirmation | Des heures anciennes pouvaient être présentées comme actuelles | Le cochage demande le compteur lorsque le dernier relevé n'est pas d'aujourd'hui |
+| Le rechargement d'un contrôle ouvert lisait ses étapes différemment sur serveur et navigateur | Erreur d'hydratation et interaction perdue | Restauration des étapes via un store local compatible SSR |
+| Une intervention confiée affichait « Moi » dans le dialogue | Intervenant affiché différent de celui réellement conservé | Prestataire de la fiche affiché ; modification et réalisation utilisent la même intervention |
+| Le retrait d'un travail confié annonçait sa réouverture, alors qu'il allait à la corbeille | Confirmation trompeuse | Action nommée « Mettre à la corbeille » pour cette fiche existante ; annulation simple pour un nouveau cochage |
 
-La case ouvre le dialogue existant. Enregistrer utilise la Server Action existante : date,
-auteur, heures exigées et historique restent appliqués. Une case déjà à jour n'efface pas
-l'historique. Le libellé mène au détail existant (étapes, historique, édition, nouvelle réalisation).
-Le compteur de la nouvelle liste est explicitement distinct de la progression SQL par échéances
-(qui conserve sa sémantique pour les autres écrans). Voir D148.
+Les statuts restent calculés par la vue SQL. Aucun schéma ni droit d'accès modifié.
+Une échéance fixe et une intervention ouverte demandent une confirmation détaillée.
+Une réalisation ancienne ne remplace pas artificiellement une réalisation plus récente.
+Le stock manquant reste après les contrôles ; son bloc vide disparaît.
 
-## Vérification
+## Recette dans le navigateur
 
-- Galerie des composants réels `/dev/ui/checklist` inspectée dans Chrome aux formats
-  1024 × 768, 768 × 1024 et 390 × 844. Pas de défilement horizontal constaté sur mobile.
-- Cases : zones mesurées à 44 × 44 px. Libellés longs lisibles sur plusieurs lignes.
-- Filtre « À jour », recherche `GENOIS` sans accent, catégorie sans résultat, réinitialisation,
-  repli/dépli d'un groupe et ouverture/annulation du dialogue vérifiés dans le navigateur.
-- Tests unitaires : ancrage sans réalisation, échéance proche/dépassée, intervention ouverte,
-  contrôle ponctuel, recherche combinée, retour immédiat et annulation avant/après réception serveur.
-- Lint, TypeScript et build Next.js vérifiés. Les suites nécessitant Postgres sont ignorées
-  sans `DATABASE_URL`. Aucune écriture effectuée dans le carnet de production.
-- Reste à la recette de déploiement : écriture de bout en bout avec Supabase et Safari iPad réel.
+Composants réels inspectés dans Chrome à 1024 × 768, 768 × 1024, 390 × 844 et
+320 × 740. Ce sont des formats iPad et téléphone, pas une certification Safari sur matériel.
+
+- Recherche et filtres combinés, changement de système, retour à la liste complète.
+- Consignes et étapes sur place ; fermeture, réouverture et rechargement avec étapes cochées.
+- Refus d'enregistrement : retour à l'état initial et conservation des étapes en cours.
+- Réalisation détaillée, annulation du formulaire et intervention confiée avec son prestataire.
+- Aucun débordement horizontal constaté ; cibles de cochage de 48 × 48 px.
+- Les actions de gestion de la galerie reproduisent celles de la page réelle.
+
+![Liste à faire, iPad paysage](./ipad-landscape-e4-13.png)
+
+![Intervention confiée, iPad portrait](./ipad-portrait-planned-e4-13.png)
+
+## Parcours automatisés
+
+`tests/e2e/journeys/checklist-work.spec.ts` utilise la vraie pile Auth/PostgREST/Postgres
+isolée de CI, avec utilisateurs et données de recette. Aucun test n'écrit dans le carnet de production.
+
+1. Double appui : une seule intervention, ligne stable, annulation, nouveau cochage puis persistance au rechargement.
+2. Étapes conservées au rechargement sans erreur d'hydratation ; réalisation à une date passée avec note puis annulation confirmée en base.
+3. Compteur moteur ancien : heures demandées, refus de saisie vide, enregistrement du relevé saisi.
+4. Point sans historique : absence dans les urgences, recherche et système conservés au rechargement.
+5. Lecteur : accès aux consignes, aucune action de réalisation.
+6. Intervention confiée : prestataire conservé, même identifiant d'intervention, aucun doublon ; retrait explicitement nommé.
+
+Les parcours existants vérifient aussi l'ajout d'un point et son cochage depuis la racine.
+La suite unitaire couvre la distinction historique/échéances, la priorité des urgences,
+les relevés périmés, les échéances fixes et les retours serveur/annulations.
+
+Les résultats de validation sont attachés à la [PR #99](https://github.com/myfrank-io/xaman/pull/99).
+La recette physique Safari/iPad et la validation d'usage par Xavier restent à faire.

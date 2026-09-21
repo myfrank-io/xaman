@@ -349,7 +349,7 @@ function CompleteForm({
             }
           }
           wasUndone = true;
-          onUndone?.(item, completionId);
+          onUndone?.(item, saved.id);
           toast.success(outcome.status === "queued" ? t("undone") : t("undoneTrashed"));
           router.refresh();
           return true;

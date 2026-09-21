@@ -9,6 +9,7 @@ import {
   Clock3Icon,
   HistoryIcon,
   PencilIcon,
+  Trash2Icon,
   Undo2Icon,
 } from "lucide-react";
 import { StepsChecklist } from "./StepsChecklist";
@@ -151,7 +152,11 @@ export function ChecklistWorkRow({
               disabled={undoing}
               className="mb-2 inline-flex min-h-11 items-center gap-2 text-label font-medium text-ink-2 underline underline-offset-4"
             >
-              <Undo2Icon className="size-4" aria-hidden />
+              {undoTrashesPlanned ? (
+                <Trash2Icon className="size-4" aria-hidden />
+              ) : (
+                <Undo2Icon className="size-4" aria-hidden />
+              )}
               {t(undoTrashesPlanned ? "complete.trashConfirm" : "work.undo")}
             </button>
           ) : null}
