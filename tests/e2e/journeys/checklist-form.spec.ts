@@ -24,7 +24,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist/new`);
     const docs = page.getByRole("region", { name: fr.attachments.title });
     await expect(docs).toBeVisible();
-    await page.getByLabel(fr.checklist.form.label, { exact: true }).fill(label);
+    await page.getByLabel(fr.checklist.form.label).fill(label);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     await page.getByRole("checkbox", { name: "Coque & Pont", exact: true }).check();
     await docs
@@ -65,7 +65,7 @@ test.describe("E4-14 shared categories and evidence", () => {
   }) => {
     await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist/new`);
     const label = `Photo en échec ${randomUUID().slice(0, 8)}`;
-    await page.getByLabel(fr.checklist.form.label, { exact: true }).fill(label);
+    await page.getByLabel(fr.checklist.form.label).fill(label);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     await page.route("**/storage/v1/object/boat-files/**", (route) => route.abort());
     const docs = page.getByRole("region", { name: fr.attachments.title });
@@ -74,7 +74,7 @@ test.describe("E4-14 shared categories and evidence", () => {
       .setInputFiles(evidence);
     await expect(docs.getByRole("alert")).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole("button", { name: fr.common.save, exact: true })).toBeDisabled();
-    await expect(page.getByLabel(fr.checklist.form.label, { exact: true })).toHaveValue(label);
+    await expect(page.getByLabel(fr.checklist.form.label)).toHaveValue(label);
     await page.unroute("**/storage/v1/object/boat-files/**");
     await docs.getByRole("button", { name: fr.common.retry, exact: true }).tap();
     await expect(docs.getByLabel(fr.attachments.caption)).toBeVisible({ timeout: 15000 });
@@ -89,7 +89,7 @@ test.describe("E4-14 shared categories and evidence", () => {
   }) => {
     const label = `Pièce jointe à reprendre ${randomUUID().slice(0, 8)}`;
     await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist/new`);
-    await page.getByLabel(fr.checklist.form.label, { exact: true }).fill(label);
+    await page.getByLabel(fr.checklist.form.label).fill(label);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     const docs = page.getByRole("region", { name: fr.attachments.title });
     await docs
@@ -108,7 +108,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     });
     await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
     await expect(page.getByText(fr.attachments.saveRetry)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByLabel(fr.checklist.form.label, { exact: true })).toHaveValue(label);
+    await expect(page.getByLabel(fr.checklist.form.label)).toHaveValue(label);
     await expect(docs.getByText(evidence.name)).toBeVisible();
     await page.unroute(`**/boats/${SEED.boat}/checklist/new`);
     await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
@@ -136,7 +136,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     );
     const boxes = await Promise.all(buttons.slice(0, 3).map((button) => button.boundingBox()));
     expect(new Set(boxes.map((box) => box?.height)).size).toBe(1);
-    await page.getByLabel(fr.logs.form.title, { exact: true }).fill(title);
+    await page.getByLabel(fr.logs.form.title).fill(title);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     await page.getByRole("checkbox", { name: "Coque & Pont", exact: true }).check();
     await docs
