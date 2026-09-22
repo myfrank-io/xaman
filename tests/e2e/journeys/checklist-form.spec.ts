@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import fr from "../../../src/messages/fr.json";
 import { signIn } from "../support/auth";
 import { hasStack, SEED, skipReason, SUPABASE_URL, SERVICE_ROLE_KEY } from "../support/stack";
@@ -12,6 +12,15 @@ const evidence = {
   mimeType: "application/pdf",
   buffer: Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF"),
 };
+
+async function addEvidence(page: Page) {
+  const chooser = page.waitForEvent("filechooser");
+  await page
+    .getByRole("region", { name: fr.attachments.title })
+    .getByRole("button", { name: fr.attachments.files, exact: true })
+    .tap();
+  await (await chooser).setFiles(evidence);
+}
 
 test.describe("E4-14 shared categories and evidence", () => {
   test.skip(!hasStack, skipReason);
@@ -27,9 +36,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     await page.getByLabel(fr.checklist.form.label).fill(label);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     await page.getByRole("checkbox", { name: "Coque & Pont", exact: true }).check();
-    await docs
-      .locator('input[type="file"][accept="image/*,application/pdf"]')
-      .setInputFiles(evidence);
+    await addEvidence(page);
     await expect(docs.getByLabel(fr.attachments.caption)).toBeVisible({ timeout: 15000 });
     await docs.getByLabel(fr.attachments.caption).fill("Devis avant remplacement");
     await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
@@ -69,9 +76,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     await page.route("**/storage/v1/object/boat-files/**", (route) => route.abort());
     const docs = page.getByRole("region", { name: fr.attachments.title });
-    await docs
-      .locator('input[type="file"][accept="image/*,application/pdf"]')
-      .setInputFiles(evidence);
+    await addEvidence(page);
     await expect(docs.getByRole("alert")).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole("button", { name: fr.common.save, exact: true })).toBeDisabled();
     await expect(page.getByLabel(fr.checklist.form.label)).toHaveValue(label);
@@ -92,9 +97,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     await page.getByLabel(fr.checklist.form.label).fill(label);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     const docs = page.getByRole("region", { name: fr.attachments.title });
-    await docs
-      .locator('input[type="file"][accept="image/*,application/pdf"]')
-      .setInputFiles(evidence);
+    await addEvidence(page);
     await expect(docs.getByLabel(fr.attachments.caption)).toBeVisible({ timeout: 15000 });
     let actions = 0;
     await page.route(`**/boats/${SEED.boat}/checklist/new`, async (route) => {
@@ -139,9 +142,7 @@ test.describe("E4-14 shared categories and evidence", () => {
     await page.getByLabel(fr.logs.form.title).fill(title);
     await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
     await page.getByRole("checkbox", { name: "Coque & Pont", exact: true }).check();
-    await docs
-      .locator('input[type="file"][accept="image/*,application/pdf"]')
-      .setInputFiles(evidence);
+    await addEvidence(page);
     await expect(docs.getByLabel(fr.attachments.caption)).toBeVisible({ timeout: 15000 });
     await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
     await expect(page).toHaveURL(new RegExp(`/boats/${SEED.boat}/logs$`), { timeout: 15000 });
