@@ -630,6 +630,73 @@ export type Database = {
           },
         ]
       }
+      checklist_item_categories: {
+        Row: {
+          boat_id: string
+          category_id: string
+          created_at: string
+          item_id: string
+          updated_at: string
+        }
+        Insert: {
+          boat_id: string
+          category_id: string
+          created_at?: string
+          item_id: string
+          updated_at?: string
+        }
+        Update: {
+          boat_id?: string
+          category_id?: string
+          created_at?: string
+          item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_item_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boat_dashboard_stats"
+            referencedColumns: ["boat_id"]
+          },
+          {
+            foreignKeyName: "checklist_item_categories_boat_id_fkey"
+            columns: ["boat_id"]
+            isOneToOne: false
+            referencedRelation: "boats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_item_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "boat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_item_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_category_progress"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "checklist_item_categories_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_item_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_item_categories_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           actions: NonNullable<Json>
@@ -2502,6 +2569,7 @@ export type Database = {
           anchor_hours: number | null
           boat_id: string | null
           category_id: string | null
+          category_ids: string[] | null
           counter_reset_at: string | null
           current_hours: number | null
           days_remaining: number | null
@@ -2856,6 +2924,10 @@ export type Database = {
         Args: { p_boat_id: string; p_equipment_id?: string }
         Returns: number
       }
+      apply_stock_movement: {
+        Args: { p_delta: number; p_part_id: string }
+        Returns: undefined
+      }
       apply_template_categories: {
         Args: { p_boat_id: string; p_template_id: string }
         Returns: number
@@ -2987,6 +3059,14 @@ export type Database = {
       }
       normalise_for_match: { Args: { p_value: string }; Returns: string }
       purge_trash: { Args: Record<PropertyKey, never>; Returns: number }
+      save_checklist_item: {
+        Args: {
+          p_category_ids: string[]
+          p_expected_updated_at?: string
+          p_item: Json
+        }
+        Returns: string
+      }
       search_boat: {
         Args: { p_boat_id: string; p_limit?: number; p_query: string }
         Returns: {
@@ -3060,6 +3140,7 @@ export type Database = {
         | "purchase"
         | "boat"
         | "checklist_completion"
+        | "checklist_item"
       boat_role: "owner" | "editor" | "pro" | "viewer" | "renter"
       boat_type:
         | "catamaran"
@@ -3229,6 +3310,7 @@ export const Constants = {
         "purchase",
         "boat",
         "checklist_completion",
+        "checklist_item",
       ],
       boat_role: ["owner", "editor", "pro", "viewer", "renter"],
       boat_type: [

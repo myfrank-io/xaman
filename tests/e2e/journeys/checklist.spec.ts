@@ -55,7 +55,7 @@ test.describe("§6.3 spring check", () => {
     await page.getByLabel(fr.checklist.form.label).fill(label);
     // A point belongs to a category, and the form opened from the checklist itself carries
     // none: the chips are how one is chosen (rule 13).
-    await page.getByRole("radio", { name: SEED.category }).first().tap();
+    await page.getByRole("checkbox", { name: SEED.category }).first().tap();
     await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
 
     // §6.3 ends on the point being there for the next person to see.

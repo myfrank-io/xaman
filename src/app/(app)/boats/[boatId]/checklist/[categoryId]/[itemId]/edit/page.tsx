@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { ChecklistItemForm } from "@/components/checklist/ChecklistItemForm";
+import { listAttachments } from "@/lib/queries/attachments";
 import { can, type BoatRole } from "@/lib/permissions";
 import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +20,8 @@ export default async function EditChecklistItemPage({
     { data: engines },
     { data: items },
     { count },
+    { data: links },
+    attachments,
   ] = await Promise.all([
     readBoatRole(boatId),
     supabase
@@ -48,7 +51,14 @@ export default async function EditChecklistItemPage({
     supabase
       .from("checklist_completions")
       .select("id", { count: "exact", head: true })
-      .eq("checklist_item_id", itemId),
+      .eq("checklist_item_id", itemId)
+      .eq("boat_id", boatId),
+    supabase
+      .from("checklist_item_categories")
+      .select("category_id")
+      .eq("item_id", itemId)
+      .eq("boat_id", boatId),
+    listAttachments(supabase, boatId, { type: "checklist_item", id: itemId }),
   ]);
   if (!role || !can(role as BoatRole, "write") || !item) notFound();
   return (
@@ -63,6 +73,10 @@ export default async function EditChecklistItemPage({
       item={{
         id: item.id,
         categoryId: item.category_id,
+        categoryIds: [
+          item.category_id,
+          ...(links ?? []).map((link) => link.category_id).filter((id) => id !== item.category_id),
+        ],
         label: item.label,
         description: item.description,
         intervalMonths: item.interval_months,
@@ -75,6 +89,7 @@ export default async function EditChecklistItemPage({
         updatedAt: item.updated_at,
       }}
       defaultCategoryId={item.category_id}
+      attachments={attachments}
       existingLabels={(items ?? []).map((row) => row.label)}
     />
   );

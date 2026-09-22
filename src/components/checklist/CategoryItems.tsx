@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { ChevronLeftIcon, SendIcon, Trash2Icon } from "lucide-react";
 
+import { AttachmentsSection } from "@/components/attachments/AttachmentsSection";
 import { HandOverDialog } from "@/components/checklist/HandOverDialog";
 import { TodoRow } from "@/components/checklist/TodoRow";
 import { useTick } from "@/components/checklist/use-tick";
@@ -391,6 +392,7 @@ export function CategoryItems({
             {row.description ? (
               <p className="text-body whitespace-pre-wrap text-foreground">{row.description}</p>
             ) : null}
+            <AttachmentsSection boatId={boatId} owner={{ type: "checklist_item", id: row.id }} />
             {row.actions.length > 0 ? (
               <StepsChecklist itemId={row.id} steps={row.actions} />
             ) : (

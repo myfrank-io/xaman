@@ -658,7 +658,7 @@ Durée = `ended_at - started_at` (calculée). Interventions liées : `maintenanc
 |---|---|---|---|
 | id | uuid | PK | tiré côté client avant l'envoi (règle 5) ; l'upsert le rejoue (règle 11) |
 | boat_id | uuid | FK boats on delete cascade | |
-| entity_type | attachment_entity | not null | V1 n'écrit que `maintenance_log` et `purchase` ; `equipment`, `haul_out`, `boat`, `checklist_completion` sont réservés à la V1.1 |
+| entity_type | attachment_entity | not null | V1 écrit `maintenance_log`, `purchase` et `checklist_item` (D150) ; `equipment`, `haul_out`, `boat`, `checklist_completion` sont réservés à la V1.1 |
 | entity_id | uuid | not null | pas de FK (polymorphe) ; intégrité assurée par `attachments_owner_guard()`, nettoyage par `cleanup_attachments()` |
 | storage_path | text | not null, unique, check `boat_id_from_storage_path(storage_path) is not distinct from boat_id` | `boats/{boat_id}/{entity_type}/{entity_id}/{attachment_id}.{ext}` dans le bucket `boat-files` ; le nom du fichier d'origine n'entre jamais dans la clé de l'objet |
 | file_name | text | not null | nom d'origine, affiché sous la vignette |
@@ -1112,3 +1112,14 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 - `adjust_part_quantity` (`0010`) est `security invoker` et n'apparaît donc pas : la politique `parts_update` décide.
 
 `auth_leaked_password_protection` est sans objet : l'authentification se fait par code OTP, l'app n'a pas de mot de passe.
+
+
+## D150 — Plusieurs catégories et documents du point (`20260922081718`)
+
+`checklist_item_categories` : `item_id` (FK checklist_items, cascade) + `category_id` (FK boat_categories, cascade) forment la clé primaire ; `boat_id` (FK boats, cascade), `created_at`, `updated_at`. Le trigger `checklist_item_categories_check_boat` impose le même bateau aux trois références. Index `(boat_id, category_id)`. Lecture pour les membres ; insertion/retrait pour owner/editor/admin ; pas de droit UPDATE, une liaison se remplace. La catégorie principale reste `checklist_items.category_id` pour les anciens lecteurs et les imports.
+
+`save_checklist_item(jsonb, uuid[], timestamptz)` est une fonction security invoker : point et liaisons sont écrits atomiquement sous RLS, 1–16 catégories distinctes du bateau, verrou sur une édition et refus `conflict` si la version attendue est dépassée. Elle renvoie `updated_at` pour permettre une reprise après échec du rattachement des fichiers. Les autres champs du JSON sont ignorés.
+
+`checklist_item_status` reste security_invoker et garde ses calculs ; `category_ids` contient le principal et les liaisons secondaires, une ligne par point. `checklist_category_progress` compte le point dans chacun de ses systèmes. `suggest_checklist_items` accepte aussi les systèmes secondaires. Un cochage ou une délégation transmet les catégories à l’intervention.
+
+L’enum `attachment_entity` accepte `checklist_item` ; le garde polymorphe et le nettoyage couvrent ce nouveau propriétaire. RLS et bucket privé existants inchangés. Aucune réalisation n’est requise pour joindre un document. Les fichiers se chargent avant l’enregistrement ; un transfert inachevé bloque le départ et un échec de rattachement conserve le formulaire pour réessayer.

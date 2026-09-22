@@ -66,3 +66,20 @@ dispose de son propre contrôle d'absence d'erreur d'hydratation.
 
 Les résultats sont attachés à la [PR #99](https://github.com/myfrank-io/xaman/pull/99).
 La recette physique Safari/iPad et la validation d'usage par Xavier restent à faire.
+
+## E4-14 — Catégories et documents, 22 septembre 2026
+
+Un point possède plusieurs catégories et un seul historique. Les catégories principales/secondaires suivent les filtres, la progression et les interventions issues du point. Une fonction Postgres enregistre point + catégories dans une transaction avec RLS et contrôle de version.
+
+Les deux formulaires présentent les photos/documents en tête, trois commandes de même largeur, une grille de catégories et des champs alignés en haut. Leur barre d’actions suit les bords des champs. Pas de clavier forcé à l’ouverture. Le transfert d’un fichier bloque l’enregistrement jusqu’à sa fin ; un échec de rattachement conserve les fichiers pour réessayer.
+
+Vérifications locales : migration complète + seed sur Postgres 17 isolé avec le shim Supabase du dépôt ; tests métier/RLS ; lint, types, build Next et service worker. Recette visuelle navigateur en 1024×768 et 768×1024, sans débordement horizontal ; actions de 44 px alignées. Ces captures ne valent pas une recette sur iPad physique.
+
+- `checklist-form-landscape-e4-14.png`
+- `checklist-form-portrait-e4-14.png`
+- `intervention-form-landscape-e4-14.png`
+- `intervention-form-portrait-e4-14.png`
+
+Parcours automatisés ajoutés : création avec deux catégories et PDF, visibilité sous les deux filtres, relecture et modification, conservation du fichier après rechargement ; upload refusé sans perte du formulaire ; intervention avec document dans le bloc commun. La CI les exécute sur sa propre stack Supabase, jamais sur Xaman en production.
+
+Déploiement : appliquer `20260922081718_checklist_categories_and_documents.sql` avant de déployer le code. Migration additive, compatible avec la version précédente. Ne pas servir le nouveau formulaire avec l’ancien schéma.

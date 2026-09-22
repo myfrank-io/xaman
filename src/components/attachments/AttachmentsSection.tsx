@@ -20,7 +20,7 @@ export function AttachmentsSection({
 }: {
   boatId: string;
   owner: AttachmentOwner;
-  initial: AttachmentItem[];
+  initial?: AttachmentItem[];
 }) {
   const t = useTranslations("attachments");
   const { items } = useAttachments({ boatId, owner, initial });

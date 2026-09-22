@@ -42,6 +42,14 @@ const row = (over: Partial<ChecklistRow> = {}): ChecklistRow => ({
 });
 
 describe("checklist landing page", () => {
+  it("finds one shared point in either category without duplicating it", () => {
+    const shared = row({ categoryIds: ["sails", "safety"], categoryNames: ["Voiles", "Sécurité"] });
+    for (const categoryId of ["", "sails", "safety"]) {
+      expect(filterChecklist([shared], { filter: "all", categoryId, search: "securite" })).toEqual([
+        shared,
+      ]);
+    }
+  });
   it("never treats an estimated date as a performed control", () => {
     expect(isChecklistChecked(row({ hasCompletion: false }))).toBe(false);
     expect(isChecklistChecked(row())).toBe(true);

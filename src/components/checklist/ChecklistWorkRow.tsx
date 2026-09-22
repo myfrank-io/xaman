@@ -1,5 +1,6 @@
 "use client";
 
+import { AttachmentsSection } from "@/components/attachments/AttachmentsSection";
 import Link from "next/link";
 import type { Route } from "next";
 import { useTranslations } from "next-intl";
@@ -167,7 +168,9 @@ export function ChecklistWorkRow({
           id={`details-${row.id}`}
           className="flex flex-col gap-5 border-t border-border px-4 py-5 sm:pl-[4.75rem]"
         >
-          <p className="text-caption font-medium text-ink-3">{row.categoryName}</p>
+          <p className="text-caption font-medium text-ink-3">
+            {(row.categoryNames ?? [row.categoryName]).join(" · ")}
+          </p>
           {row.description ? (
             <p className="max-w-prose text-body whitespace-pre-wrap text-ink-2">
               {row.description}
@@ -180,6 +183,7 @@ export function ChecklistWorkRow({
               steps={row.actions}
             />
           ) : null}
+          <AttachmentsSection boatId={boatId} owner={{ type: "checklist_item", id: row.id }} />
           <dl className="grid gap-4 text-caption sm:grid-cols-2">
             <div>
               <dt className="mb-1 text-ink-3">{t("work.lastDone")}</dt>

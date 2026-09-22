@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D150.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D151.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4118,3 +4118,10 @@ sans toucher à l’intervention prévue.
 À la demande de Joseph, la liste est continue : aucun bloc ni accordéon par catégorie.
 La vue « À faire » respecte l’urgence à l’échelle du bateau, tous systèmes confondus.
 Le système reste disponible en filtre et dans le détail d’un contrôle.
+
+
+## D150 — 2026-09-22 · Un point, plusieurs catégories et ses documents
+
+**Décision.** Un point peut concerner plusieurs catégories sans dupliquer son historique. Comme une intervention, il conserve une catégorie principale et une table de liaison pour les autres. Le point et ses catégories sont enregistrés dans une seule transaction. Photos, devis et PDF appartiennent au point lui-même, restent visibles dans son détail et sont proposés en haut du formulaire. Les deux formulaires partagent les commandes d’ajout et la barre d’actions. Un transfert inachevé ou refusé conserve le formulaire et ses fichiers pour réessayer.
+
+**Raison.** Demande de Joseph : documenter un défaut avant intervention, retrouver un contrôle sous chaque système concerné et rendre les créations cohérentes sur iPad.

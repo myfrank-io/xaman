@@ -41,7 +41,7 @@ export default async function CategoryPage({
       .from("checklist_item_status")
       .select("*")
       .eq("boat_id", boatId)
-      .eq("category_id", categoryId)
+      .contains("category_ids", [categoryId])
       .order("sort_order"),
     supabase
       .from("checklist_items")

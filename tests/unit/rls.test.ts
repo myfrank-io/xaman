@@ -96,6 +96,7 @@ const BUSINESS_TABLES = [
   "maintenance_logs",
   "maintenance_log_categories",
   "checklist_items",
+  "checklist_item_categories",
   "checklist_completions",
   "engine_hour_readings",
   "parts",
@@ -2959,5 +2960,134 @@ describeWithDb("search_boat", () => {
     expect(contact.byEmail).toBe(0);
     expect(contact.byAddress).toBe(0);
     expect(contact.byName).toBe(1);
+  });
+});
+
+describeWithDb("checklist categories and documents (D150)", () => {
+  const SECOND = "00000000-0000-4000-8000-00000000ca50";
+  const NEW_ITEM = "00000000-0000-4000-8000-000000003050";
+  const payload = {
+    id: NEW_ITEM,
+    boat_id: BOAT,
+    label: "Inspect shared fitting",
+    interval_months: 12,
+    actions: [],
+  };
+  const save = "select public.save_checklist_item($1::jsonb, $2::uuid[], $3::timestamptz) as stamp";
+
+  it.each(["owner", "editor", "admin"] as const)(
+    "%s saves the point and both categories once",
+    async (role) => {
+      await as(U[role], async (c) => {
+        await c.query(
+          "insert into public.boat_categories(id, boat_id, name, color) values ($1,$2,'Second','#123456')",
+          [SECOND, BOAT],
+        );
+        await c.query(save, [payload, [CATEGORY, SECOND], null]);
+        await c.query(save, [payload, [CATEGORY, SECOND], null]);
+        const result = await c.query(
+          "select category_ids from public.checklist_item_status where id = $1",
+          [NEW_ITEM],
+        );
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].category_ids).toEqual([CATEGORY, SECOND]);
+        const progress = await c.query(
+          "select total from public.checklist_category_progress where category_id = $1",
+          [SECOND],
+        );
+        expect(progress.rows[0].total).toBe(1);
+        await c.query(save, [payload, [SECOND], null]);
+        expect(
+          (
+            await c.query("select category_ids from public.checklist_item_status where id=$1", [
+              NEW_ITEM,
+            ])
+          ).rows[0].category_ids,
+        ).toEqual([SECOND]);
+      });
+    },
+  );
+  it.each(["pro", "viewer", "stranger"] as const)(
+    "%s cannot create or relabel a point",
+    async (role) => {
+      expect((await run(U[role], save, [payload, [CATEGORY], null])).ok).toBe(false);
+      expect(
+        (
+          await run(
+            U[role],
+            "insert into public.checklist_item_categories(item_id, category_id, boat_id) values ($1,$2,$3)",
+            [ITEM, CATEGORY, BOAT],
+          )
+        ).ok,
+      ).toBe(false);
+    },
+  );
+  it("rejects foreign categories without writing the point", async () => {
+    await as(U.admin, async (c) => {
+      await c.query(
+        "insert into public.boat_categories(id,boat_id,name,color) values ($1,$2,'Foreign','#123456')",
+        [SECOND, BOAT2],
+      );
+      await c.query("savepoint rejected");
+      await expect(c.query(save, [payload, [CATEGORY, SECOND], null])).rejects.toThrow();
+      await c.query("rollback to savepoint rejected");
+      expect(
+        (await c.query("select id from public.checklist_items where id=$1", [NEW_ITEM])).rows,
+      ).toHaveLength(0);
+    });
+  });
+  it("rejects stale edits and keeps the previous label", async () => {
+    await as(U.owner, async (c) => {
+      await c.query(save, [payload, [CATEGORY], null]);
+      await c.query("savepoint rejected");
+      await expect(
+        c.query(save, [{ ...payload, label: "Lost update" }, [CATEGORY], "2000-01-01"]),
+      ).rejects.toThrow("conflict");
+      await c.query("rollback to savepoint rejected");
+      expect(
+        (await c.query("select label from public.checklist_items where id=$1", [NEW_ITEM])).rows[0]
+          .label,
+      ).toBe(payload.label);
+    });
+  });
+  it("keeps linked systems and the view isolated to the boat", async () => {
+    await as(U.owner, async (c) => {
+      await c.query(
+        "insert into public.checklist_item_categories(item_id,category_id,boat_id) values ($1,$2,$3) on conflict do nothing",
+        [ITEM, CATEGORY, BOAT],
+      );
+      await c.query("select set_config('request.jwt.claims',$1,true)", [
+        JSON.stringify({ ...U.stranger, sub: U.stranger.id, role: "authenticated" }),
+      ]);
+      expect(
+        (await c.query("select * from public.checklist_item_categories where boat_id=$1", [BOAT]))
+          .rows,
+      ).toHaveLength(0);
+      expect(
+        (await c.query("select * from public.checklist_item_status where boat_id=$1", [BOAT])).rows,
+      ).toHaveLength(0);
+    });
+  });
+  const attachment = `insert into public.attachments(id,boat_id,entity_type,entity_id,storage_path,file_name,mime_type,size_bytes,created_by)
+    values (gen_random_uuid(),$1::uuid,'checklist_item',$2,'boats/'||$1::uuid::text||'/checklist_item/evidence.pdf','evidence.pdf','application/pdf',120,$3)`;
+  it("attaches a document to a point without a completion, with member-only visibility", async () => {
+    await as(U.owner, async (c) => {
+      await c.query(attachment, [BOAT, ITEM, U.owner.id]);
+      for (const user of [U.viewer, U.stranger]) {
+        await c.query("select set_config('request.jwt.claims',$1,true)", [
+          JSON.stringify({ sub: user.id, role: "authenticated" }),
+        ]);
+        const result = await c.query(
+          "select id from public.attachments where entity_type='checklist_item' and entity_id=$1",
+          [ITEM],
+        );
+        expect(result.rows.length).toBe(user === U.viewer ? 1 : 0);
+      }
+    });
+  });
+  it("rejects documents hung off another boat or an absent point", async () => {
+    expect((await run(U.admin, attachment, [BOAT2, ITEM, U.admin.id])).ok).toBe(false);
+    expect((await run(U.owner, attachment, [BOAT, NEW_ITEM, U.owner.id])).ok).toBe(false);
+    expect((await run(U.viewer, attachment, [BOAT, ITEM, U.viewer.id])).ok).toBe(false);
   });
 });

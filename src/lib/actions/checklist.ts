@@ -110,15 +110,25 @@ export async function completeChecklistItem(input: unknown): Promise<ActionResul
       { onConflict: "id", ignoreDuplicates: true },
     );
     if (error) return fail(dbErrorKey(error));
-    if (item.category_id) {
-      const { error: linkError } = await supabase
-        .from("maintenance_log_categories")
-        .upsert(
-          { log_id: logId, category_id: item.category_id, boat_id: boatId, created_by: userId },
-          { onConflict: "log_id,category_id", ignoreDuplicates: true },
-        );
-      if (linkError) return fail(dbErrorKey(linkError));
-    }
+    const { data: links, error: categoriesError } = await supabase
+      .from("checklist_item_categories")
+      .select("category_id")
+      .eq("boat_id", boatId)
+      .eq("item_id", itemId);
+    if (categoriesError) return fail(dbErrorKey(categoriesError));
+    const categoryIds = [
+      ...new Set([item.category_id, ...(links ?? []).map((link) => link.category_id)]),
+    ];
+    const { error: linkError } = await supabase.from("maintenance_log_categories").upsert(
+      categoryIds.map((categoryId) => ({
+        log_id: logId,
+        category_id: categoryId,
+        boat_id: boatId,
+        created_by: userId,
+      })),
+      { onConflict: "log_id,category_id", ignoreDuplicates: true },
+    );
+    if (linkError) return fail(dbErrorKey(linkError));
   }
 
   // ---- the counter read on the tick travels with the line (D5) ----------------------------
@@ -198,58 +208,29 @@ export async function deleteCompletion(input: unknown): Promise<ActionResult> {
 // completion date is given; an edited item keeps its anchor when none is given.
 export async function upsertChecklistItem(
   input: unknown,
-): Promise<ActionResult<{ itemId: string }>> {
+): Promise<ActionResult<{ itemId: string; updatedAt: string }>> {
   const parsed = parseInput(upsertChecklistItemSchema, input);
   if (!parsed.ok) return parsed.result;
   const { id, boatId, expectedUpdatedAt, anchorDate, ...values } = parsed.data;
-
   const supabase = await createClient();
-  const userId = await currentUserId(supabase);
-  if (!userId) return fail("errors.forbidden");
-
-  const { data: existing, error: readError } = await supabase
-    .from("checklist_items")
-    .select("id, updated_at")
-    .eq("id", id)
-    .maybeSingle();
-  if (readError) return fail(dbErrorKey(readError));
-  if (existing && expectedUpdatedAt && existing.updated_at !== expectedUpdatedAt) {
-    return fail("errors.conflict");
-  }
-
-  let sortOrder: number | undefined;
-  if (!existing) {
-    const { count } = await supabase
-      .from("checklist_items")
-      .select("id", { count: "exact", head: true })
-      .eq("boat_id", boatId)
-      .eq("category_id", values.categoryId);
-    sortOrder = count ?? 0;
-  }
-
-  const anchor = anchorDate ?? (existing ? undefined : toIsoDate());
-  const { error } = await supabase.from("checklist_items").upsert(
-    {
+  const { data, error } = await supabase.rpc("save_checklist_item", {
+    p_item: {
       id,
       boat_id: boatId,
-      category_id: values.categoryId,
       label: values.label,
       description: values.description,
       interval_months: values.intervalMonths,
       interval_hours: values.intervalHours,
       engine_id: values.engineId,
       actions: values.actions,
-      source: "custom",
-      updated_by: userId,
-      ...(anchor === undefined ? {} : { anchor_date: anchor }),
-      ...(sortOrder === undefined ? {} : { sort_order: sortOrder, created_by: userId }),
+      anchor_date: anchorDate,
     },
-    { onConflict: "id" },
-  );
-  if (error) return fail(dbErrorKey(error));
-
+    p_category_ids: values.categoryIds,
+    p_expected_updated_at: expectedUpdatedAt,
+  });
+  if (error) return fail(error.message === "conflict" ? "errors.conflict" : dbErrorKey(error));
   revalidateBoat(boatId);
-  return ok({ itemId: id });
+  return ok({ itemId: id, updatedAt: data });
 }
 
 // Items are never deleted (their history stays): deactivated and reactivated.
