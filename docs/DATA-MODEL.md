@@ -1116,7 +1116,7 @@ Palette harmonisée (deutéranopie, lisibilité en plein soleil) : `daggerboards
 
 ## D150 — Plusieurs catégories et documents du point (`20260922081718`)
 
-`checklist_item_categories` : `item_id` (FK checklist_items, cascade) + `category_id` (FK boat_categories, cascade) forment la clé primaire ; `boat_id` (FK boats, cascade), `created_at`, `updated_at`. Le trigger `checklist_item_categories_check_boat` impose le même bateau aux trois références. Index `(boat_id, category_id)`. Lecture pour les membres ; insertion/retrait pour owner/editor/admin ; pas de droit UPDATE, une liaison se remplace. La catégorie principale reste `checklist_items.category_id` pour les anciens lecteurs et les imports.
+`checklist_item_categories` : `item_id` (FK checklist_items, cascade) + `category_id` (FK boat_categories, cascade) forment la clé primaire ; `boat_id` (FK boats, cascade), `created_at`, `updated_at`. Le trigger `checklist_item_categories_check_boat` impose le même bateau aux trois références. Index `(boat_id, category_id)`. Lecture pour les membres ; insertion/retrait pour owner/editor/admin ; pas de droit UPDATE, une liaison se remplace. La catégorie principale reste `checklist_items.category_id` pour les anciens lecteurs et les imports ; `sync_checklist_primary_category` maintient sa liaison lors des créations et déplacements, sans effacer les systèmes secondaires.
 
 `save_checklist_item(jsonb, uuid[], timestamptz)` est une fonction security invoker : point et liaisons sont écrits atomiquement sous RLS, 1–16 catégories distinctes du bateau, verrou sur une édition et refus `conflict` si la version attendue est dépassée. Elle renvoie `updated_at` pour permettre une reprise après échec du rattachement des fichiers. Les autres champs du JSON sont ignorés.
 

@@ -83,6 +83,44 @@ test.describe("E4-14 shared categories and evidence", () => {
     await expect(page.getByRole("checkbox", { name: SEED.category, exact: true })).toBeChecked();
   });
 
+  test("retries a failed document commit without duplicating the point", async ({
+    page,
+    request,
+  }) => {
+    const label = `Pièce jointe à reprendre ${randomUUID().slice(0, 8)}`;
+    await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/checklist/new`);
+    await page.getByLabel(fr.checklist.form.label, { exact: true }).fill(label);
+    await page.getByRole("checkbox", { name: SEED.category, exact: true }).check();
+    const docs = page.getByRole("region", { name: fr.attachments.title });
+    await docs
+      .locator('input[type="file"][accept="image/*,application/pdf"]')
+      .setInputFiles(evidence);
+    await expect(docs.getByLabel(fr.attachments.caption)).toBeVisible({ timeout: 15000 });
+    let actions = 0;
+    await page.route(`**/boats/${SEED.boat}/checklist/new`, async (route) => {
+      if (
+        route.request().method() === "POST" &&
+        route.request().headers()["next-action"] &&
+        ++actions === 2
+      ) {
+        await route.abort();
+      } else await route.continue();
+    });
+    await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
+    await expect(page.getByText(fr.attachments.saveRetry)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByLabel(fr.checklist.form.label, { exact: true })).toHaveValue(label);
+    await expect(docs.getByText(evidence.name)).toBeVisible();
+    await page.unroute(`**/boats/${SEED.boat}/checklist/new`);
+    await page.getByRole("button", { name: fr.common.save, exact: true }).tap();
+    await expect(page).toHaveURL(/checklist\?view=all&open=/, { timeout: 15000 });
+    const response = await request.get(
+      `${SUPABASE_URL}/rest/v1/checklist_items?boat_id=eq.${SEED.boat}&label=eq.${encodeURIComponent(label)}&select=id`,
+      { headers },
+    );
+    expect(await response.json()).toHaveLength(1);
+    await expect(page.getByRole("link", { name: new RegExp(evidence.name) })).toBeVisible();
+  });
+
   test("intervention uses the same document controls and saves its evidence", async ({
     page,
     request,

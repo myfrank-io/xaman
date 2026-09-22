@@ -32,9 +32,8 @@ export default async function EditChecklistItemPage({
       .maybeSingle(),
     supabase
       .from("boat_categories")
-      .select("id, name, color, icon")
+      .select("id, name, color, icon, is_active")
       .eq("boat_id", boatId)
-      .eq("is_active", true)
       .order("sort_order"),
     supabase
       .from("engines")
@@ -61,10 +60,16 @@ export default async function EditChecklistItemPage({
     listAttachments(supabase, boatId, { type: "checklist_item", id: itemId }),
   ]);
   if (!role || !can(role as BoatRole, "write") || !item) notFound();
+  const categoryIds = [
+    item.category_id,
+    ...(links ?? []).map((link) => link.category_id).filter((id) => id !== item.category_id),
+  ];
   return (
     <ChecklistItemForm
       boatId={boatId}
-      categories={categories ?? []}
+      categories={(categories ?? [])
+        .filter((category) => category.is_active || categoryIds.includes(category.id))
+        .map((category) => ({ ...category, archived: !category.is_active }))}
       engines={(engines ?? []).map((engine) => ({
         id: engine.id,
         label: engine.label,
@@ -73,10 +78,7 @@ export default async function EditChecklistItemPage({
       item={{
         id: item.id,
         categoryId: item.category_id,
-        categoryIds: [
-          item.category_id,
-          ...(links ?? []).map((link) => link.category_id).filter((id) => id !== item.category_id),
-        ],
+        categoryIds,
         label: item.label,
         description: item.description,
         intervalMonths: item.interval_months,

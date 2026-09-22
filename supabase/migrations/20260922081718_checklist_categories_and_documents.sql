@@ -34,6 +34,27 @@ for each row execute function public.checklist_item_categories_check_boat();
 revoke all on function public.checklist_item_categories_check_boat() from public, anon, authenticated;
 grant execute on function public.checklist_item_categories_check_boat() to service_role;
 
+-- Legacy writers (templates, equipment rules, category moves) only know category_id.
+-- Keep their principal link in sync while preserving any independently selected systems.
+create function public.sync_checklist_primary_category()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'UPDATE' and old.category_id is distinct from new.category_id then
+    delete from public.checklist_item_categories
+    where item_id = new.id and boat_id = new.boat_id and category_id = old.category_id;
+  end if;
+  insert into public.checklist_item_categories(item_id, category_id, boat_id)
+  values (new.id, new.category_id, new.boat_id) on conflict do nothing;
+  return new;
+end;
+$$;
+create trigger sync_checklist_primary_category after insert or update of category_id on public.checklist_items
+for each row execute function public.sync_checklist_primary_category();
+revoke all on function public.sync_checklist_primary_category() from public, anon, authenticated;
+grant execute on function public.sync_checklist_primary_category() to service_role;
+insert into public.checklist_item_categories(item_id, category_id, boat_id)
+select id, category_id, boat_id from public.checklist_items;
+
 -- The primary system always remains readable, even for seed/import writers that know only it.
 -- Secondary systems are replaced together with the item; RLS applies throughout this RPC.
 create function public.save_checklist_item(p_item jsonb, p_category_ids uuid[], p_expected_updated_at timestamptz default null)
@@ -69,6 +90,7 @@ begin
     category_id = excluded.category_id, label = excluded.label, description = excluded.description,
     interval_months = excluded.interval_months, interval_hours = excluded.interval_hours,
     engine_id = excluded.engine_id, actions = excluded.actions, anchor_date = excluded.anchor_date,
+    source = excluded.source,
     updated_by = auth.uid()
   where checklist_items.boat_id = v.boat_id
   returning updated_at into stamp;

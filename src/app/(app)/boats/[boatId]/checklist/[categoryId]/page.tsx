@@ -45,9 +45,8 @@ export default async function CategoryPage({
       .order("sort_order"),
     supabase
       .from("checklist_items")
-      .select("id, label")
+      .select("id, label, category_id, checklist_item_categories(category_id)")
       .eq("boat_id", boatId)
-      .eq("category_id", categoryId)
       .eq("is_active", false)
       .order("sort_order"),
     supabase
@@ -118,7 +117,13 @@ export default async function CategoryPage({
       }}
       rows={rows}
       completions={completionRows}
-      disabledItems={(disabled ?? []).map((item) => ({ id: item.id, label: item.label }))}
+      disabledItems={(disabled ?? [])
+        .filter(
+          (item) =>
+            item.category_id === categoryId ||
+            item.checklist_item_categories.some((link) => link.category_id === categoryId),
+        )
+        .map((item) => ({ id: item.id, label: item.label }))}
       progress={progress?.progress ?? null}
       members={context.members}
       contacts={contacts}

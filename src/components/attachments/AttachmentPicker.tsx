@@ -16,6 +16,7 @@ import {
 import { AttachmentTile } from "@/components/attachments/AttachmentGallery";
 import {
   removeOrphanObject,
+  attachmentIsStored,
   signedUrlFor,
   uploadAttachmentFile,
   STAGE_PROGRESS,
@@ -263,8 +264,17 @@ export function AttachmentPicker({
   }
 
   async function remove(item: PickedAttachment) {
-    filesById.current.delete(item.id);
-    if (!item.persisted) {
+    let persisted = item.persisted;
+    if (!persisted && item.storagePath) {
+      try {
+        persisted = await attachmentIsStored(boatId, item.id);
+      } catch {
+        toast.error(t("saveRetry"));
+        return;
+      }
+    }
+    if (!persisted) {
+      filesById.current.delete(item.id);
       setItems((current) => current.filter((row) => row.id !== item.id));
       if (item.storagePath) await removeOrphanObject(item.storagePath);
       return;
@@ -274,6 +284,7 @@ export function AttachmentPicker({
       toast.error(errorMessage(result.error));
       return;
     }
+    filesById.current.delete(item.id);
     setItems((current) => current.filter((row) => row.id !== item.id));
     invalidateAttachments();
     undoToast({
@@ -282,7 +293,10 @@ export function AttachmentPicker({
       onUndo: () => {
         void restoreTrashedAttachment({ boatId, id: item.id }).then((restored) => {
           if (restored.ok) {
-            setItems((current) => [...current, item]);
+            setItems((current) => [
+              ...current,
+              { ...item, persisted: true, stage: "done", error: null },
+            ]);
             invalidateAttachments();
           } else toast.error(errorMessage(restored.error));
         });
@@ -313,6 +327,8 @@ export function AttachmentPicker({
       <input
         ref={cameraInput}
         type="file"
+        tabIndex={-1}
+        aria-hidden="true"
         accept="image/*"
         capture="environment"
         className="sr-only"
@@ -324,6 +340,8 @@ export function AttachmentPicker({
       <input
         ref={libraryInput}
         type="file"
+        tabIndex={-1}
+        aria-hidden="true"
         accept="image/*"
         multiple
         className="sr-only"
@@ -335,6 +353,8 @@ export function AttachmentPicker({
       <input
         ref={filesInput}
         type="file"
+        tabIndex={-1}
+        aria-hidden="true"
         accept={ATTACHMENT_ACCEPT}
         multiple
         className="sr-only"

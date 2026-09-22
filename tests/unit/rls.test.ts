@@ -3036,6 +3036,34 @@ describeWithDb("checklist categories and documents (D150)", () => {
       ).toHaveLength(0);
     });
   });
+  it("marks an edited template point as custom", async () => {
+    await as(U.owner, async (c) => {
+      await c.query(save, [{ ...payload, id: ITEM }, [CATEGORY], null]);
+      expect(
+        (await c.query("select source from public.checklist_items where id=$1", [ITEM])).rows[0]
+          .source,
+      ).toBe("custom");
+    });
+  });
+  it("keeps secondary systems when a legacy writer moves the principal", async () => {
+    await as(U.owner, async (c) => {
+      await c.query(
+        "insert into public.boat_categories(id,boat_id,name,color) values ($1,$2,'Second','#123456')",
+        [SECOND, BOAT],
+      );
+      await c.query(save, [payload, [CATEGORY, SECOND], null]);
+      const target = "00000000-0000-0000-0000-00000000ca02";
+      await c.query("update public.checklist_items set category_id=$1 where id=$2", [
+        target,
+        NEW_ITEM,
+      ]);
+      const result = await c.query(
+        "select category_ids from public.checklist_item_status where id=$1",
+        [NEW_ITEM],
+      );
+      expect(result.rows[0].category_ids).toEqual([target, SECOND]);
+    });
+  });
   it("rejects stale edits and keeps the previous label", async () => {
     await as(U.owner, async (c) => {
       await c.query(save, [payload, [CATEGORY], null]);
