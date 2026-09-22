@@ -131,3 +131,15 @@ export async function signedUrlFor(storagePath: string): Promise<string | null> 
     .createSignedUrl(storagePath, 3600);
   return data?.signedUrl ?? null;
 }
+
+/** A timed-out commit may have succeeded: never remove the bytes behind a stored row. */
+export async function attachmentIsStored(boatId: string, attachmentId: string): Promise<boolean> {
+  const { data, error } = await createClient()
+    .from("attachments")
+    .select("id")
+    .eq("boat_id", boatId)
+    .eq("id", attachmentId)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}

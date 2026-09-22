@@ -10,6 +10,8 @@ export type ChecklistRow = {
   description: string | null;
   actions: string[];
   categoryId: string;
+  categoryIds?: string[];
+  categoryNames?: string[];
   categoryName: string;
   categoryColor: string;
   engineId: string | null;
@@ -88,6 +90,7 @@ export function toChecklistRow(
     description: row.description,
     actions: Array.isArray(row.actions) ? row.actions.map(String) : [],
     categoryId: row.category_id ?? "",
+    categoryIds: row.category_ids ?? [row.category_id ?? ""],
     categoryName: category.name,
     categoryColor: category.color,
     engineId: row.engine_id,

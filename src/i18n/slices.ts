@@ -97,6 +97,7 @@ export const BOAT_SECTIONS = {
     "validation",
   ],
   checklist: [
+    "attachments",
     "checklist",
     "checklistState",
     "common",

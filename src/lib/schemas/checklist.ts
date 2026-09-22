@@ -12,6 +12,8 @@ import {
 } from "@/lib/schemas/common";
 import { ENGINE_HOURS_MAX } from "@/lib/schemas/engines";
 
+export const CHECKLIST_CATEGORIES_MAX = 16;
+
 export const INTERVAL_MONTH_PRESETS = [3, 6, 12, 24, 36] as const;
 
 const emptyToNull = (value: unknown) => (value === "" ? null : value);
@@ -60,7 +62,11 @@ export const upsertChecklistItemSchema = z
     id: uuid,
     boatId: uuid,
     expectedUpdatedAt,
-    categoryId: uuid,
+    categoryIds: z
+      .array(uuid)
+      .min(1, "required")
+      .max(CHECKLIST_CATEGORIES_MAX)
+      .transform((ids) => [...new Set(ids)]),
     label: requiredText(160),
     description: nullableText(4000),
     intervalMonths: nullableInteger(1, 240),

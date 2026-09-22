@@ -861,7 +861,7 @@
       "newTitle": "Noter une intervention",
       "editTitle": "Modifier l'intervention",
       "title": "Qu'avez-vous fait ?",
-      "category": "Catégorie",
+      "category": "Catégories",
       "status": "Statut",
       "date": "Date",
       "datePlanned": "Prévu le",
@@ -904,7 +904,8 @@
       "hoursKept": "{count, plural, one {# relevé saisi} other {# relevés saisis}}",
       "saveAndNew": "Enregistrer et en saisir une autre",
       "categoryMultiHelp": "Plusieurs systèmes possibles : une visite qui touche le moteur et le gréement en coche deux.",
-      "fromDocument": "D'après {name}"
+      "fromDocument": "D'après {name}",
+      "readDocument": "Préremplir les champs depuis un devis ou une facture"
     },
     "detail": {
       "fields": {
@@ -1080,7 +1081,7 @@
       "new": "Nouvelle ligne à suivre",
       "edit": "Modifier",
       "label": "Libellé",
-      "category": "Catégorie",
+      "category": "Catégories",
       "interval": "À refaire tous les…",
       "monthsSuffix": "mois",
       "other": "Autre",
@@ -1105,7 +1106,8 @@
       "disableTitle": "Désactiver {label} ?",
       "disableDescription": "La ligne sort de la checklist ; {count, plural, =0 {son historique est conservé} one {sa réalisation est conservée} other {ses # réalisations sont conservées}}. Rien n'est supprimé : vous pourrez le réactiver.",
       "disabled": "Retiré du suivi",
-      "enabled": "Remis au suivi"
+      "enabled": "Remis au suivi",
+      "categoryMultiHelp": "Choisissez un ou plusieurs systèmes concernés. Le point reste unique."
     },
     "wizard": {
       "title": "Mise en route",
@@ -2578,7 +2580,11 @@
       "unsupported": "Format non accepté : photos et PDF seulement.",
       "upload": "L'envoi a échoué. Réessayez quand le réseau revient.",
       "save": "Le document est envoyé mais n'a pas pu être rattaché."
-    }
+    },
+    "formHelp": "Photo d’un défaut, devis, facture ou document utile — ajoutez-les ici.",
+    "waitForFiles": "Attendez la fin des transferts. Réessayez ou retirez les fichiers en erreur avant d’enregistrer.",
+    "commitRetry": "Le formulaire est enregistré, mais certains documents restent à joindre. Réessayez l’enregistrement : vos fichiers sont conservés ici.",
+    "saveRetry": "Enregistrement interrompu. Votre saisie et vos fichiers sont conservés ici pour réessayer."
   },
   "inbox": {
     "title": "À valider",

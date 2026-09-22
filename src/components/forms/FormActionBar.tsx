@@ -57,7 +57,7 @@ export function FormActionBar({
         // flex-wrap, because « Enregistrer et en saisir une autre » is 33 characters: on a 320 px
         // phone the two submits take their own line under « Annuler » instead of running past
         // the right edge (the audit measures exactly that).
-        "sticky z-20 bleed-gutters mt-8 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border bg-surface py-2",
+        "sticky z-20 mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface py-3",
         className,
       )}
       style={{
@@ -65,12 +65,18 @@ export function FormActionBar({
         paddingBottom: keyboard > 0 ? undefined : "max(0.5rem, env(safe-area-inset-bottom))",
       }}
     >
-      <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
+      <Button
+        type="button"
+        variant="outline"
+        className="min-w-28"
+        onClick={onCancel}
+        disabled={pending}
+      >
         {cancelLabel ?? t("cancel")}
       </Button>
       <div
         className={cn(
-          "flex flex-wrap items-center justify-end gap-2",
+          "flex flex-wrap items-center justify-end gap-3",
           secondaryLabel && onSecondary ? "w-full sm:w-auto" : undefined,
         )}
       >
@@ -90,6 +96,7 @@ export function FormActionBar({
         <Button
           type={online || queueable ? "submit" : "button"}
           disabled={pending || disabled}
+          className="min-w-36"
           aria-busy={pending}
           aria-disabled={(!online && !queueable) || undefined}
           variant={online ? "default" : "outline"}

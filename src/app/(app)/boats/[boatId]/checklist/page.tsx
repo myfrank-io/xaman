@@ -81,11 +81,17 @@ export default async function ChecklistPage({
     const category = row.category_id ? byCategory.get(row.category_id) : undefined;
     return category
       ? [
-          toChecklistRow(
-            row,
-            category,
-            row.engine_id ? (engineLabels.get(row.engine_id) ?? null) : null,
-          ),
+          {
+            ...toChecklistRow(
+              row,
+              category,
+              row.engine_id ? (engineLabels.get(row.engine_id) ?? null) : null,
+            ),
+            categoryNames: (row.category_ids ?? [row.category_id]).flatMap((id) => {
+              const cat = id ? byCategory.get(id) : undefined;
+              return cat ? [cat.name] : [];
+            }),
+          },
         ]
       : [];
   });

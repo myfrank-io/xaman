@@ -134,3 +134,8 @@ on conflict do nothing;
 insert into public.maintenance_logs (id, boat_id, title, status, performed_at, external_ref, created_by)
 values ('00000000-0000-0000-0000-000000002101', '00000000-0000-0000-0000-00000000b002', 'Intervention autre bateau', 'done', '2026-05-01', 'other-log', '00000000-0000-0000-0000-000000000015')
 on conflict (id) do nothing;
+
+-- Shared-system link for the checklist RLS matrix (D150).
+insert into public.checklist_item_categories(item_id, category_id, boat_id)
+select id, category_id, boat_id from public.checklist_items where external_ref = 'eng-oil:test-engine'
+on conflict do nothing;

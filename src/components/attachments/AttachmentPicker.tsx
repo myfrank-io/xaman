@@ -16,6 +16,7 @@ import {
 import { AttachmentTile } from "@/components/attachments/AttachmentGallery";
 import {
   removeOrphanObject,
+  attachmentIsStored,
   signedUrlFor,
   uploadAttachmentFile,
   STAGE_PROGRESS,
@@ -141,6 +142,7 @@ export function AttachmentPicker({
   const libraryInput = useRef<HTMLInputElement>(null);
   const filesInput = useRef<HTMLInputElement>(null);
   const objectUrls = useRef<string[]>([]);
+  const filesById = useRef(new Map<string, File>());
 
   useEffect(() => {
     const urls = objectUrls.current;
@@ -161,6 +163,63 @@ export function AttachmentPicker({
   const patch = useCallback((id: string, changes: Partial<PickedAttachment>) => {
     setItems((current) => current.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   }, []);
+
+  const uploadItem = useCallback(
+    async (item: PickedAttachment, file: File) => {
+      patch(item.id, { stage: "queued", error: null });
+      try {
+        const result = await uploadAttachmentFile({
+          boatId,
+          owner,
+          attachmentId: item.id,
+          file,
+          onStage: (stage) => patch(item.id, { stage }),
+        });
+        if (!result.ok) {
+          patch(item.id, { stage: "error", error: result.error });
+          return;
+        }
+
+        const uploaded = result.file;
+        patch(item.id, {
+          fileName: uploaded.fileName,
+          mimeType: uploaded.mimeType,
+          sizeBytes: uploaded.sizeBytes,
+          storagePath: uploaded.storagePath,
+        });
+
+        if (deferred) {
+          patch(item.id, { stage: "done" });
+          return;
+        }
+
+        patch(item.id, { stage: "saving" });
+        const saved = await saveAttachment({
+          id: item.id,
+          boatId,
+          ownerType: owner.type,
+          ownerId: owner.id,
+          storagePath: uploaded.storagePath,
+          fileName: uploaded.fileName,
+          mimeType: uploaded.mimeType,
+          sizeBytes: uploaded.sizeBytes,
+          caption: null,
+        });
+        if (!saved.ok) {
+          patch(item.id, { stage: "error", error: "save" });
+          toast.error(errorMessage(saved.error));
+          return;
+        }
+        const url = await signedUrlFor(uploaded.storagePath);
+        patch(item.id, { stage: "done", persisted: true, previewUrl: url ?? item.previewUrl });
+        invalidateAttachments();
+        filesById.current.delete(item.id);
+      } catch {
+        patch(item.id, { stage: "error", error: "upload" });
+      }
+    },
+    [boatId, owner, deferred, patch, errorMessage, invalidateAttachments],
+  );
 
   const handleFiles = useCallback(
     async (files: FileList | File[] | null) => {
@@ -188,68 +247,34 @@ export function AttachmentPicker({
       });
       setItems((current) => [...current, ...queued]);
 
-      // One at a time: a hotspot at anchor does not share well, and a failure stays local.
       for (const [index, item] of queued.entries()) {
         const file = picked[index];
         if (!file) continue;
-        const result = await uploadAttachmentFile({
-          boatId,
-          owner,
-          attachmentId: item.id,
-          file,
-          onStage: (stage) => patch(item.id, { stage }),
-        });
-        if (!result.ok) {
-          patch(item.id, { stage: "error", error: result.error });
-          continue;
-        }
-
-        const uploaded = result.file;
-        patch(item.id, {
-          fileName: uploaded.fileName,
-          mimeType: uploaded.mimeType,
-          sizeBytes: uploaded.sizeBytes,
-          storagePath: uploaded.storagePath,
-        });
-
-        if (deferred) {
-          patch(item.id, { stage: "done" });
-          continue;
-        }
-
-        patch(item.id, { stage: "saving" });
-        const saved = await saveAttachment({
-          id: item.id,
-          boatId,
-          ownerType: owner.type,
-          ownerId: owner.id,
-          storagePath: uploaded.storagePath,
-          fileName: uploaded.fileName,
-          mimeType: uploaded.mimeType,
-          sizeBytes: uploaded.sizeBytes,
-          caption: null,
-        });
-        if (!saved.ok) {
-          patch(item.id, { stage: "error", error: "save" });
-          toast.error(errorMessage(saved.error));
-          continue;
-        }
-        const url = await signedUrlFor(uploaded.storagePath);
-        patch(item.id, { stage: "done", persisted: true, previewUrl: url ?? item.previewUrl });
-        invalidateAttachments();
+        filesById.current.set(item.id, file);
+        await uploadItem(item, file);
       }
     },
-    [boatId, owner, deferred, patch, errorMessage, invalidateAttachments],
+    [uploadItem],
   );
 
   function retry(item: PickedAttachment) {
-    // The File is gone once the input is cleared: ask for it again rather than pretend.
-    setItems((current) => current.filter((row) => row.id !== item.id));
-    filesInput.current?.click();
+    const file = filesById.current.get(item.id);
+    if (file) void uploadItem(item, file);
+    else filesInput.current?.click();
   }
 
   async function remove(item: PickedAttachment) {
-    if (!item.persisted) {
+    let persisted = item.persisted;
+    if (!persisted && item.storagePath) {
+      try {
+        persisted = await attachmentIsStored(boatId, item.id);
+      } catch {
+        toast.error(t("saveRetry"));
+        return;
+      }
+    }
+    if (!persisted) {
+      filesById.current.delete(item.id);
       setItems((current) => current.filter((row) => row.id !== item.id));
       if (item.storagePath) await removeOrphanObject(item.storagePath);
       return;
@@ -259,6 +284,7 @@ export function AttachmentPicker({
       toast.error(errorMessage(result.error));
       return;
     }
+    filesById.current.delete(item.id);
     setItems((current) => current.filter((row) => row.id !== item.id));
     invalidateAttachments();
     undoToast({
@@ -267,7 +293,10 @@ export function AttachmentPicker({
       onUndo: () => {
         void restoreTrashedAttachment({ boatId, id: item.id }).then((restored) => {
           if (restored.ok) {
-            setItems((current) => [...current, item]);
+            setItems((current) => [
+              ...current,
+              { ...item, persisted: true, stage: "done", error: null },
+            ]);
             invalidateAttachments();
           } else toast.error(errorMessage(restored.error));
         });
@@ -298,6 +327,8 @@ export function AttachmentPicker({
       <input
         ref={cameraInput}
         type="file"
+        tabIndex={-1}
+        aria-hidden="true"
         accept="image/*"
         capture="environment"
         className="sr-only"
@@ -309,6 +340,8 @@ export function AttachmentPicker({
       <input
         ref={libraryInput}
         type="file"
+        tabIndex={-1}
+        aria-hidden="true"
         accept="image/*"
         multiple
         className="sr-only"
@@ -320,6 +353,8 @@ export function AttachmentPicker({
       <input
         ref={filesInput}
         type="file"
+        tabIndex={-1}
+        aria-hidden="true"
         accept={ATTACHMENT_ACCEPT}
         multiple
         className="sr-only"
@@ -329,11 +364,11 @@ export function AttachmentPicker({
         }}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <Button
           type="button"
           variant="outline"
-          disabled={disabled}
+          disabled={disabled || busy}
           onClick={() => cameraInput.current?.click()}
         >
           <CameraIcon />
@@ -342,7 +377,7 @@ export function AttachmentPicker({
         <Button
           type="button"
           variant="outline"
-          disabled={disabled}
+          disabled={disabled || busy}
           onClick={() => libraryInput.current?.click()}
         >
           <ImageIcon />
@@ -351,7 +386,7 @@ export function AttachmentPicker({
         <Button
           type="button"
           variant="outline"
-          disabled={disabled}
+          disabled={disabled || busy}
           onClick={() => filesInput.current?.click()}
         >
           <FolderOpenIcon />
@@ -421,7 +456,13 @@ export function AttachmentPicker({
 
               <div className="flex flex-wrap gap-2">
                 {item.stage === "error" ? (
-                  <Button type="button" variant="outline" size="sm" onClick={() => retry(item)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={disabled || busy}
+                    onClick={() => retry(item)}
+                  >
                     <RotateCcwIcon />
                     {tc("retry")}
                   </Button>
@@ -430,7 +471,7 @@ export function AttachmentPicker({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  disabled={disabled}
+                  disabled={disabled || busy}
                   onClick={() => void remove(item)}
                 >
                   <TrashIcon />

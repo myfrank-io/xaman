@@ -8,11 +8,8 @@ import { toast } from "sonner";
 import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, GaugeIcon } from "lucide-react";
 import type { z } from "zod";
 
-import {
-  AttachmentPicker,
-  pendingRows,
-  type PickedAttachment,
-} from "@/components/attachments/AttachmentPicker";
+import { pendingRows, type PickedAttachment } from "@/components/attachments/AttachmentPicker";
+import { AttachmentFormSection } from "@/components/attachments/AttachmentFormSection";
 import { CategoryChipsMulti, type CategoryChoice } from "@/components/common/CategoryChips";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ContactPicker } from "@/components/contacts/ContactPicker";
@@ -182,7 +179,6 @@ export function LogForm({
     defaultValues,
   });
   const errors = form.formState.errors;
-  const guard = useUnsavedGuard(form.formState.isDirty && !form.formState.isSubmitSuccessful);
   const draft = useDraft<LogFormState>(log ? `edit-${log.id}` : `new-${boatId}`, !log);
 
   // useWatch, not form.watch(): the React compiler cannot memoize the function returned by
@@ -233,6 +229,7 @@ export function LogForm({
   // Documents (E10-1). On a creation their objects go up while the form is being typed — the id
   // of the intervention is drawn at open — and their rows are written once it exists.
   const [picked, setPicked] = useState<PickedAttachment[]>([]);
+  const guard = useUnsavedGuard(form.formState.isDirty || picked.some((file) => !file.persisted));
   // Same id the form will save under: the objects can go up before the row exists. After
   // « en saisir une autre » it is the new row's id, so the picker starts empty on the new line.
   const attachmentOwnerId = log?.id ?? newId;
@@ -428,93 +425,108 @@ export function LogForm({
     })(event);
   }
 
+  const attachmentBlocked = picked.some((file) => file.stage !== "done");
+
   function onSubmit(values: LogOutput) {
+    if (attachmentBlocked) {
+      toast.error(ta("waitForFiles"));
+      return;
+    }
     const again = another.current;
     another.current = false;
     setServerError(null);
     startTransition(async () => {
-      // A new intervention typed at sea is kept on the iPad rather than lost (E9-1b, D25);
-      // an edit is sent or it fails, because replaying it later could overwrite a colleague.
-      const outcome = await submitOrQueue({
-        kind: "log",
-        boatId,
-        id: values.id,
-        label: values.title,
-        values,
-        action: saveLog,
-        enqueue: outbox.enqueue,
-        online,
-        // Never queued when a document opened the form (D119): the reading came from the
-        // network anyway, and a line saved on the iPad would leave its document behind.
-        allowQueue: !log && !sourceDocument,
-      });
-      if (outcome.status === "full") {
-        setServerError(to("queueFull"));
-        return;
-      }
-      if (outcome.status === "queued") {
-        draft.clear();
-        // Written on the save and never on a keystroke: an abandoned form teaches nothing (D95).
-        remember(values);
-        toast.success(to("savedOnDevice"));
-        if (again) {
-          resetForAnother(values);
+      try {
+        // A new intervention typed at sea is kept on the iPad rather than lost (E9-1b, D25);
+        // an edit is sent or it fails, because replaying it later could overwrite a colleague.
+        const outcome = await submitOrQueue({
+          kind: "log",
+          boatId,
+          id: values.id,
+          label: values.title,
+          values,
+          action: saveLog,
+          enqueue: outbox.enqueue,
+          online,
+          // Never queued when a document opened the form (D119): the reading came from the
+          // network anyway, and a line saved on the iPad would leave its document behind.
+          allowQueue: !log && !sourceDocument && picked.length === 0,
+        });
+        if (outcome.status === "full") {
+          setServerError(to("queueFull"));
           return;
         }
-        router.push(logsPath(boatId) as Parameters<typeof router.push>[0]);
-        return;
-      }
-      if (outcome.status === "refused") {
-        setServerError(errorMessage(outcome.error));
-        return;
-      }
-      const result = { ok: true as const, data: outcome.data };
-      // The intervention now exists: the documents uploaded while it was typed get their rows.
-      const rows = log
-        ? []
-        : pendingRows(picked, { type: "maintenance_log", id: result.data.logId });
-      if (rows.length > 0) {
-        const committed = await saveAttachments({ boatId, items: rows });
-        if (!committed.ok) toast.error(ta("commitFailed"));
-      }
-      // The document the intervention started from joins it, by the very path « Valider » takes
-      // from « À valider » (D119). A refusal is said and nothing else: the intervention is
-      // written, and the document is still on its card, one tap from the same outcome.
-      if (sourceDocument) {
-        const joined = await attachInboxDocument({
-          boatId,
-          itemId: sourceDocument.itemId,
-          logId: result.data.logId,
-        });
-        if (!joined.ok) toast.error(ti("attachFailed"));
-      }
-      draft.clear();
-      remember(values);
-      const reading = result.data.readings[0];
-      const engine = reading ? engines.find((row) => row.id === reading.engineId) : undefined;
-      toast.success(
-        reading && engine
-          ? t("savedWithReading", { engine: engine.label, hours: formatHours(reading.hours) })
-          : t("saved"),
-        {
-          action: {
-            label: t("view"),
-            onClick: () =>
-              router.push(logPath(boatId, result.data.logId) as Parameters<typeof router.push>[0]),
+        if (outcome.status === "queued") {
+          draft.clear();
+          // Written on the save and never on a keystroke: an abandoned form teaches nothing (D95).
+          remember(values);
+          toast.success(to("savedOnDevice"));
+          if (again) {
+            resetForAnother(values);
+            return;
+          }
+          router.push(logsPath(boatId) as Parameters<typeof router.push>[0]);
+          return;
+        }
+        if (outcome.status === "refused") {
+          setServerError(errorMessage(outcome.error));
+          return;
+        }
+        const result = { ok: true as const, data: outcome.data };
+        // The intervention now exists: the documents uploaded while it was typed get their rows.
+        const rows = log
+          ? []
+          : pendingRows(picked, { type: "maintenance_log", id: result.data.logId });
+        if (rows.length > 0) {
+          const committed = await saveAttachments({ boatId, items: rows });
+          if (!committed.ok) {
+            setServerError(ta("commitRetry"));
+            return;
+          }
+        }
+        // The document the intervention started from joins it, by the very path « Valider » takes
+        // from « À valider » (D119). A refusal is said and nothing else: the intervention is
+        // written, and the document is still on its card, one tap from the same outcome.
+        if (sourceDocument) {
+          const joined = await attachInboxDocument({
+            boatId,
+            itemId: sourceDocument.itemId,
+            logId: result.data.logId,
+          });
+          if (!joined.ok) toast.error(ti("attachFailed"));
+        }
+        draft.clear();
+        remember(values);
+        const reading = result.data.readings[0];
+        const engine = reading ? engines.find((row) => row.id === reading.engineId) : undefined;
+        toast.success(
+          reading && engine
+            ? t("savedWithReading", { engine: engine.label, hours: formatHours(reading.hours) })
+            : t("saved"),
+          {
+            action: {
+              label: t("view"),
+              onClick: () =>
+                router.push(
+                  logPath(boatId, result.data.logId) as Parameters<typeof router.push>[0],
+                ),
+            },
           },
-        },
-      );
-      if (again) {
-        resetForAnother(values);
+        );
+        if (again) {
+          resetForAnother(values);
+          router.refresh();
+          return;
+        }
+        router.push(
+          (log ? logPath(boatId, result.data.logId) : logsPath(boatId)) as Parameters<
+            typeof router.push
+          >[0],
+        );
         router.refresh();
-        return;
+      } catch {
+        setServerError(ta("saveRetry"));
       }
-      router.push(
-        (log ? logPath(boatId, result.data.logId) : logsPath(boatId)) as Parameters<
-          typeof router.push
-        >[0],
-      );
-      router.refresh();
     });
   }
 
@@ -522,11 +534,25 @@ export function LogForm({
     <form onSubmit={submitForm} noValidate className="flex flex-col gap-6">
       <PageHeader title={log ? t("editTitle") : t("newTitle")} />
 
-      {/* En tête du formulaire, jamais devant lui (D119) : le document d'abord pour qui l'a en
-          main, et pas un tap de plus pour qui n'en a pas — les champs sont déjà là. */}
-      {askForDocument && !log ? (
-        <LogDocumentStart boatId={boatId} read={read} onRead={applyReading} />
-      ) : null}
+      <AttachmentFormSection
+        key={attachmentOwnerId}
+        boatId={boatId}
+        owner={{ type: "maintenance_log", id: attachmentOwnerId }}
+        initial={attachments}
+        deferred={!log}
+        disabled={pending}
+        onItemsChange={setPicked}
+      >
+        {askForDocument && !log ? (
+          <details className="border-t border-border pt-2">
+            <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-label font-medium text-ink-2">
+              <FileTextIcon className="size-4" aria-hidden />
+              {t("readDocument")}
+            </summary>
+            <LogDocumentStart boatId={boatId} read={read} onRead={applyReading} />
+          </details>
+        ) : null}
+      </AttachmentFormSection>
 
       {/* Ce que le document est devenu : il est déjà dans « À valider » et rejoint les pièces
           jointes de l'intervention à l'enregistrement. Le dire, et dire quand la lecture
@@ -596,7 +622,6 @@ export function LogForm({
             autoCapitalize="sentences"
             enterKeyHint="next"
             placeholder={t("titlePlaceholder")}
-            autoFocus={!log}
             aria-invalid={errors.title ? true : undefined}
             {...form.register("title")}
             onFocus={() => setTitleFocused(true)}
@@ -640,6 +665,7 @@ export function LogForm({
           name="categoryIds"
           render={({ field }) => (
             <CategoryChipsMulti
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
               categories={categories}
               values={field.value}
               onValuesChange={(ids) => {
@@ -661,7 +687,7 @@ export function LogForm({
         ) : null}
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid items-start gap-5 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label>{t("status")}</Label>
           <div className="flex flex-wrap items-center gap-3">
@@ -755,7 +781,7 @@ export function LogForm({
         </div>
       ) : null}
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid items-start gap-5 sm:grid-cols-2">
         <Field id="log-cost" label={t("cost")} error={fieldError(errors.cost)}>
           <NumericField
             id="log-cost"
@@ -817,7 +843,7 @@ export function LogForm({
             {t("more")}
           </Button>
           {detailsOpen ? (
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid items-start gap-5 sm:grid-cols-2">
               {equipment.length > 0 ? (
                 <Field id="log-equipment" label={t("equipment")}>
                   <Controller
@@ -867,18 +893,6 @@ export function LogForm({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3">
-        <Label>{t("attachments")}</Label>
-        <AttachmentPicker
-          key={attachmentOwnerId}
-          boatId={boatId}
-          owner={{ type: "maintenance_log", id: attachmentOwnerId }}
-          initial={attachments}
-          deferred={!log}
-          onItemsChange={setPicked}
-        />
-      </div>
-
       {status === "done" ? (
         <ChecklistMatches
           items={matches}
@@ -898,7 +912,8 @@ export function LogForm({
 
       <FormActionBar
         pending={pending}
-        queueable={!log && !sourceDocument}
+        disabled={attachmentBlocked}
+        queueable={!log && !sourceDocument && picked.length === 0}
         secondaryLabel={log ? undefined : t("saveAndNew")}
         onSecondary={
           log

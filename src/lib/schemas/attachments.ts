@@ -3,11 +3,10 @@ import { z } from "zod";
 import { nullableText, requiredText, uuid } from "@/lib/schemas/common";
 
 /**
- * Documents hung off an intervention or a purchase (E10-1). The table is polymorphic
- * (`entity_type` + `entity_id`, DATA-MODEL §3.19); V1 only writes the two owners below, the
- * other enum values are reserved for the equipment gallery and the boat photo (V1.1).
+ * Documents on interventions, purchases and checklist points (D150). The owner exists
+ * independently of any completion, so a defect can be documented before work starts.
  */
-export const ATTACHMENT_OWNERS = ["maintenance_log", "purchase"] as const;
+export const ATTACHMENT_OWNERS = ["maintenance_log", "purchase", "checklist_item"] as const;
 export const attachmentOwnerSchema = z.enum(ATTACHMENT_OWNERS);
 export type AttachmentOwnerType = (typeof ATTACHMENT_OWNERS)[number];
 

@@ -25,6 +25,8 @@ function revalidateOwner(boatId: string, ownerType: AttachmentOwnerType, ownerId
   if (ownerType === "maintenance_log") {
     revalidatePath(logPath(boatId, ownerId));
     revalidatePath(boatPath(boatId, "logs"));
+  } else if (ownerType === "checklist_item") {
+    revalidatePath(boatPath(boatId, "checklist"), "layout");
   } else {
     revalidatePath(boatPath(boatId, "supplies"));
   }

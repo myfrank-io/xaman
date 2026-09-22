@@ -53,7 +53,7 @@ export async function handOverItem(input: unknown): Promise<ActionResult<HandedO
       supabase
         .from("checklist_item_status")
         .select(
-          "id, label, category_id, engine_id, interval_months, interval_hours, status, due_at, days_remaining, hours_remaining, current_hours, has_completion, last_completed_at, last_engine_hours, last_completed_by_name, open_log_id",
+          "id, label, category_id, category_ids, engine_id, interval_months, interval_hours, status, due_at, days_remaining, hours_remaining, current_hours, has_completion, last_completed_at, last_engine_hours, last_completed_by_name, open_log_id",
         )
         .eq("id", itemId)
         .eq("boat_id", boatId)
@@ -107,12 +107,15 @@ export async function handOverItem(input: unknown): Promise<ActionResult<HandedO
   if (logError) return fail(dbErrorKey(logError));
 
   if (item.category_id) {
-    const { error: linkError } = await supabase
-      .from("maintenance_log_categories")
-      .upsert(
-        { log_id: logId, category_id: item.category_id, boat_id: boatId, created_by: userId },
-        { onConflict: "log_id,category_id", ignoreDuplicates: true },
-      );
+    const { error: linkError } = await supabase.from("maintenance_log_categories").upsert(
+      (item.category_ids ?? [item.category_id]).map((categoryId) => ({
+        log_id: logId,
+        category_id: categoryId,
+        boat_id: boatId,
+        created_by: userId,
+      })),
+      { onConflict: "log_id,category_id", ignoreDuplicates: true },
+    );
     if (linkError) return fail(dbErrorKey(linkError));
   }
 

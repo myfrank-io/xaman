@@ -21,10 +21,13 @@ export function filterChecklist(
   const filtered = rows
     .filter(
       (row) =>
-        (!options.categoryId || row.categoryId === options.categoryId) &&
+        (!options.categoryId ||
+          (row.categoryIds ?? [row.categoryId]).includes(options.categoryId)) &&
         matchesChecklistFilter(row, options.filter) &&
         (!query ||
-          normalize(`${row.label} ${row.categoryName} ${row.engineLabel ?? ""}`).includes(query)),
+          normalize(
+            `${row.label} ${(row.categoryNames ?? [row.categoryName]).join(" ")} ${row.engineLabel ?? ""}`,
+          ).includes(query)),
     )
     .sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label, "fr"));
   return options.filter === "todo" ? sortRows(filtered, true) : filtered;

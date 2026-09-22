@@ -18,7 +18,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E1 | E1-9 |
 | E2 | E2-11 |
 | E3 | E3-9 |
-| E4 | E4-14 |
+| E4 | E4-15 |
 | E5 | E5-6 |
 | E6 | E6-3 |
 | E7 | E7-3 |
@@ -760,3 +760,4 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
 - [x] **E4-12 (M, 3)** Refonte de la page Checklist en liste directement cochable (D148) : contrôles groupés par système, recherche, filtres, état et dernière réalisation visibles, validation datée, stock secondaire. Recette aux formats iPad paysage/portrait et mobile dans Chrome, lint/TypeScript/build et 733 tests verts ; 298 tests de base ignorés sans Postgres. Recette Safari réel et écriture Supabase à effectuer après déploiement. Audit : `docs/audit/checklist/README.md`.
 
 - [x] **E4-13 (M, 3)** Reprise de la checklist après usage (D149) : liste continue sans blocs par catégorie, urgences distinctes de l’historique absent, consignes en place, cochage rapide et annulation locale, compteurs anciens confirmés, contexte conservé. Prestataire et fiche prévue conservés. 34 parcours avec Supabase, 270 contrôles tactiles, 1 035 tests métier/RLS verts ; recette des formats iPad et téléphone documentée dans `docs/audit/checklist/README.md`.
+- [x] **E4-14 (M, 3)** Plusieurs catégories par point, photos et documents dès la création, formulaires checklist/intervention alignés (D150). DoD : classement unique dans tous les filtres, pièces jointes persistantes, reprise après échec, RLS et parcours testés, vérification iPad paysage/portrait. **Réalisé** : 1 052 tests métier/RLS locaux, lint/types/build, captures des deux formulaires aux deux dimensions. Parcours de création, édition et échec/reprise de document ajoutés à la CI.
