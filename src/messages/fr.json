@@ -454,7 +454,10 @@
     "joinedAt": "A rejoint le {date}",
     "notJoinedYet": "N'a pas encore ouvert le carnet",
     "list": {
-      "title": "{count, plural, one {# membre} other {# membres}}"
+      "title": "{count, plural, one {# membre} other {# membres}}",
+      "joined": "{count, plural, one {# membre connecté} other {# membres connectés}}",
+      "waiting": "{count, plural, one {# pas encore connecté} other {# pas encore connectés}}",
+      "waitingHint": "Ils ont reçu un e-mail avec leur identifiant et leur mot de passe, mais n'ont pas encore ouvert le carnet."
     },
     "roles": {
       "owner": "Propriétaire",
@@ -507,6 +510,19 @@
       "reissue": "Renvoyer les identifiants",
       "sent": "Nouveaux identifiants envoyés à {email}.",
       "emailFailedTitle": "E-mail non envoyé"
+    },
+    "sentOn": "Identifiants envoyés le {date}",
+    "sentAndReminded": "Identifiants envoyés · {count, plural, one {relancé une fois} other {relancé # fois}}, la dernière le {date}",
+    "notSent": "Identifiants pas encore envoyés",
+    "remind": "Relancer",
+    "details": {
+      "open": "Ouvrir la fiche de {name}",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "access": "Accès",
+      "until": "Jusqu'au…",
+      "save": "Enregistrer",
+      "saved": "Membre mis à jour."
     }
   },
   "profile": {

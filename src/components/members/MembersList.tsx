@@ -1,36 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
-import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { KeyRoundIcon, Trash2Icon } from "lucide-react";
+import { ChevronRightIcon, SendIcon } from "lucide-react";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { NativeSelect } from "@/components/ui/native-select";
-import {
-  changeMemberRole,
-  extendMemberAccess,
-  reissueCredentials,
-  removeMember,
-} from "@/lib/actions/members";
+import { MemberDetailsDialog } from "@/components/members/MemberDetailsDialog";
+import { reissueCredentials } from "@/lib/actions/members";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { formatDate, todayString } from "@/lib/format";
-import { ASSIGNABLE_ROLES, type BoatRole } from "@/lib/permissions";
-import { boatPath } from "@/lib/queries/boat-routes";
+import type { BoatRole } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 export type MemberRow = {
@@ -40,11 +22,15 @@ export type MemberRow = {
   fullName: string | null;
   email: string;
   lastSignInAt: string | null;
+  credentialsSentCount: number;
+  credentialsSentAt: string | null;
 };
 
-// The same four the invitation offers (D89). It used to be a second list written here, which is
-// how the dropdown came to hand out `owner` while the invitation refused to.
-
+/**
+ * Two lists, as before D151 (D154): those who have opened the carnet, and those still sitting on
+ * the credentials they were sent — with when, and how many relances. A row says who, what and
+ * until when; everything that changes it lives on the member's card, one tap away.
+ */
 export function MembersList({
   boatId,
   currentUserId,
@@ -57,233 +43,171 @@ export function MembersList({
   members: MemberRow[];
 }) {
   const t = useTranslations("members");
-  const te = useTranslations();
+  const [open, setOpen] = useState<MemberRow | null>(null);
+
+  const joined = members.filter((m) => m.userId === currentUserId || m.lastSignInAt);
+  const waiting = members.filter((m) => m.userId !== currentUserId && !m.lastSignInAt);
+
+  return (
+    <div className="flex flex-col gap-8">
+      <Section title={t("list.joined", { count: joined.length })}>
+        {joined.map((m) => (
+          <Row
+            key={m.userId}
+            boatId={boatId}
+            member={m}
+            self={m.userId === currentUserId}
+            canManage={canManage}
+            onOpen={() => setOpen(m)}
+          />
+        ))}
+      </Section>
+      {waiting.length > 0 ? (
+        <Section title={t("list.waiting", { count: waiting.length })} hint={t("list.waitingHint")}>
+          {waiting.map((m) => (
+            <Row
+              key={m.userId}
+              boatId={boatId}
+              member={m}
+              self={false}
+              canManage={canManage}
+              onOpen={() => setOpen(m)}
+            />
+          ))}
+        </Section>
+      ) : null}
+      <MemberDetailsDialog
+        boatId={boatId}
+        member={open}
+        onOpenChange={(next) => !next && setOpen(null)}
+      />
+    </div>
+  );
+}
+
+function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div>
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {hint ? <p className="text-sm text-muted-foreground">{hint}</p> : null}
+      </div>
+      <ul className="divide-y rounded-xl border bg-card shadow-sm">{children}</ul>
+    </section>
+  );
+}
+
+function Row({
+  boatId,
+  member: m,
+  self,
+  canManage,
+  onOpen,
+}: {
+  boatId: string;
+  member: MemberRow;
+  self: boolean;
+  canManage: boolean;
+  onOpen: () => void;
+}) {
+  const t = useTranslations("members");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [toRemove, setToRemove] = useState<MemberRow | null>(null);
-  const [lastOwnerBlocked, setLastOwnerBlocked] = useState(false);
-  const today = todayString();
+  const expired = m.validUntil !== null && m.validUntil < todayString();
+  const waiting = !self && !m.lastSignInAt;
+  const editable = canManage && !self;
 
-  function handleFailure(error: string) {
-    setLastOwnerBlocked(error === "errors.last_owner");
-    toast.error(errorMessage(error));
-  }
+  const access =
+    m.role === "owner"
+      ? null
+      : m.validUntil
+        ? expired
+          ? t("expired", { date: formatDate(m.validUntil) })
+          : t("validUntil", { date: formatDate(m.validUntil) })
+        : t("unlimited");
 
-  function onRoleChange(member: MemberRow, role: BoatRole) {
+  const status = self
+    ? null
+    : m.lastSignInAt
+      ? t("joinedAt", { date: formatDate(m.lastSignInAt) })
+      : m.credentialsSentAt
+        ? m.credentialsSentCount > 1
+          ? t("sentAndReminded", {
+              date: formatDate(m.credentialsSentAt),
+              count: m.credentialsSentCount - 1,
+            })
+          : t("sentOn", { date: formatDate(m.credentialsSentAt) })
+        : t("notSent");
+
+  function onRemind() {
     startTransition(async () => {
-      const result = await changeMemberRole({ boatId, userId: member.userId, role });
-      if (!result.ok) {
-        handleFailure(result.error);
-        return;
-      }
-      setLastOwnerBlocked(false);
-      toast.success(t("roleUpdated"));
-      router.refresh();
-    });
-  }
-
-  function onRemove(member: MemberRow) {
-    startTransition(async () => {
-      const result = await removeMember({ boatId, userId: member.userId });
-      setToRemove(null);
-      if (!result.ok) {
-        handleFailure(result.error);
-        return;
-      }
-      setLastOwnerBlocked(false);
-      toast.success(t("removed"));
-      router.refresh();
-    });
-  }
-
-  // D151: a fresh, simple password, sent by the same e-mail — the whole "relancer" of an owner.
-  function onReissue(member: MemberRow) {
-    startTransition(async () => {
-      const result = await reissueCredentials({ boatId, userId: member.userId });
+      const result = await reissueCredentials({ boatId, userId: m.userId });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
       if (result.data.emailFailed) toast.warning(t("credentials.emailFailedTitle"));
       else toast.success(t("credentials.sent", { email: result.data.email }));
-    });
-  }
-
-  // D29: an expired member is greyed with « Réactiver 90 j »
-  function onReactivate(member: MemberRow) {
-    startTransition(async () => {
-      const result = await extendMemberAccess({ boatId, userId: member.userId });
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
-        return;
-      }
-      toast.success(t("reactivated"));
       router.refresh();
     });
   }
 
-  return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">{t("list.title", { count: members.length })}</h2>
-      {lastOwnerBlocked ? (
-        <Alert variant="warning">
-          <AlertDescription className="flex flex-wrap items-center gap-3">
-            {t("lastOwnerHint")}
-            <Link
-              href={boatPath(boatId, "settings") as Route}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {t("transferLink")}
-            </Link>
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      <ul className="divide-y rounded-xl border bg-card shadow-sm">
-        {members.map((m) => {
-          const expired = m.validUntil !== null && m.validUntil < today;
-          return (
-            <li
-              key={m.userId}
-              className={cn("flex flex-wrap items-center gap-3 p-4", expired && "bg-surface-2")}
-            >
-              {/* Mobile-first: a name, an e-mail, a role menu and a bin do not fit one phone
-                  row. Measured at 390 px, the 160 px select and the bin left ~150 px for the
-                  identity, so every member read « Xavier Mari… / xavier.marin… » — a list of
-                  people where nobody can be told apart. The identity takes the whole row below
-                  `sm` and the controls drop under it; from `sm` the single line comes back. */}
-              <div className="min-w-0 flex-1 basis-full sm:basis-0">
-                <p className={cn("font-medium break-words sm:truncate", expired && "text-ink-3")}>
-                  {m.fullName ?? m.email}
-                  {m.userId === currentUserId ? (
-                    <span className="ml-2 text-sm text-muted-foreground">{t("you")}</span>
-                  ) : null}
-                </p>
-                {m.fullName ? (
-                  <p className="text-sm break-all text-muted-foreground sm:truncate">{m.email}</p>
-                ) : null}
-                {/* Shown here only when there is no action row to carry it (canManage false):
-                    otherwise it moves beside the role select, where the owner reads it. */}
-                {!canManage && m.validUntil ? (
-                  <p
-                    className={cn(
-                      "text-xs",
-                      expired ? "font-medium text-state-soon-fg" : "text-muted-foreground",
-                    )}
-                  >
-                    {expired
-                      ? t("expired", { date: formatDate(m.validUntil) })
-                      : t("validUntil", { date: formatDate(m.validUntil) })}
-                  </p>
-                ) : null}
-                {/* D152: has this invited member ever signed in with the credentials we sent? */}
-                {m.userId !== currentUserId ? (
-                  <p className="text-xs text-muted-foreground">
-                    {m.lastSignInAt
-                      ? t("joinedAt", { date: formatDate(m.lastSignInAt) })
-                      : t("notJoinedYet")}
-                  </p>
-                ) : null}
-              </div>
-              {canManage ? (
-                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
-                  {expired ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => onReactivate(m)}
-                    >
-                      {t("reactivate")}
-                    </Button>
-                  ) : null}
-                  {m.userId !== currentUserId ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => onReissue(m)}
-                    >
-                      <KeyRoundIcon />
-                      {t("credentials.reissue")}
-                    </Button>
-                  ) : null}
-                  {/* The select is sized by this box, not by a class on itself: NativeSelect
-                      draws its chevron against a `w-full` wrapper, so a width put on the
-                      control leaves the arrow floating at the far right of the row. */}
-                  <div className="min-w-36 flex-1 sm:w-40 sm:flex-none">
-                    <NativeSelect
-                      aria-label={t("roleLabel")}
-                      value={m.role}
-                      disabled={pending}
-                      onChange={(e) => onRoleChange(m, e.target.value as BoatRole)}
-                    >
-                      {ASSIGNABLE_ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {t(`roles.${r}`)}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                  {/* D89: an owner never expires — nothing to say there. Everyone else's access
-                      has a horizon, and it belongs beside the role that grants it, not buried
-                      under the identity where the owner managing the list has to hunt for it. */}
-                  {m.role !== "owner" ? (
-                    <span
-                      className={cn(
-                        "text-xs whitespace-nowrap",
-                        expired ? "font-medium text-state-soon-fg" : "text-muted-foreground",
-                      )}
-                    >
-                      {m.validUntil
-                        ? expired
-                          ? t("expired", { date: formatDate(m.validUntil) })
-                          : t("validUntil", { date: formatDate(m.validUntil) })
-                        : t("unlimited")}
-                    </span>
-                  ) : null}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t("remove")}
-                    disabled={pending}
-                    onClick={() => setToRemove(m)}
-                  >
-                    <Trash2Icon className="text-destructive" />
-                  </Button>
-                </div>
-              ) : (
-                <Badge variant="secondary">{t(`roles.${m.role}`)}</Badge>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+  const body = (
+    <>
+      <div className="min-w-0 flex-1">
+        <p className={cn("truncate font-medium", expired && "text-ink-3")}>
+          {m.fullName ?? m.email}
+          {self ? <span className="ml-2 text-sm text-muted-foreground">{t("you")}</span> : null}
+        </p>
+        {m.fullName ? <p className="truncate text-sm text-muted-foreground">{m.email}</p> : null}
+        {status ? <p className="text-xs text-muted-foreground">{status}</p> : null}
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <Badge variant="secondary">{t(`roles.${m.role}`)}</Badge>
+        {access ? (
+          <span
+            className={cn(
+              "text-xs whitespace-nowrap",
+              expired ? "font-medium text-state-soon-fg" : "text-muted-foreground",
+            )}
+          >
+            {access}
+          </span>
+        ) : null}
+      </div>
+      {editable ? <ChevronRightIcon className="size-5 shrink-0 text-n-400" aria-hidden /> : null}
+    </>
+  );
 
-      <Dialog open={toRemove !== null} onOpenChange={(open) => !open && setToRemove(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t("removeDialog.title", { name: toRemove?.fullName ?? toRemove?.email ?? "" })}
-            </DialogTitle>
-            <DialogDescription>{t("removeDialog.description")}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">{te("common.cancel")}</Button>
-            </DialogClose>
-            <Button
-              variant="destructive"
-              disabled={pending}
-              onClick={() => toRemove && onRemove(toRemove)}
-            >
-              {t("remove")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </section>
+  return (
+    <li className={cn("flex items-center gap-2 pr-2", expired && "bg-surface-2")}>
+      {editable ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={t("details.open", { name: m.fullName ?? m.email })}
+          className="flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-xl tap-feedback p-4 text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
+          {body}
+        </button>
+      ) : (
+        <div className="flex min-h-16 min-w-0 flex-1 items-center gap-3 p-4">{body}</div>
+      )}
+      {editable && waiting ? (
+        <Button type="button" variant="outline" size="sm" disabled={pending} onClick={onRemind}>
+          <SendIcon />
+          {t("remind")}
+        </Button>
+      ) : null}
+    </li>
   );
 }
