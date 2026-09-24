@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D154.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D155.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4147,3 +4147,9 @@ Le trigger ne rattrape que les connexions futures : `0048_last_sign_in.sql` incl
 **Décision.** Le menu compte gagne « Changer de bateau », vers le sélecteur `/boats` (`BOATS_PATH`) — visible uniquement si le compte a accès à plus d'un bateau, puisque `/boats` renvoie sinon directement vers l'unique carnet (D64) et l'entrée serait une impasse. Dans la liste des membres (`MembersList.tsx`), la date de fin d'accès (« Accès jusqu'au JJ/MM », « Accès expiré le JJ/MM » ou « Accès illimité ») se lit maintenant entre le sélecteur de rôle et la corbeille, à côté du geste qui la change, plutôt que sous l'identité où le propriétaire devait la chercher ; elle reste sous l'identité pour qui ne gère pas les membres (pas de ligne d'actions à côté de laquelle la mettre).
 
 **Raison.** Demande de Joseph, sur les deux écrans qu'il utilise au quotidien pour gérer plusieurs bateaux et plusieurs membres.
+
+## D154 — 2026-09-24 · Membres : deux listes, relances comptées, fiche éditable
+
+**Décision.** L'écran Membres se sépare de nouveau en deux listes, comme avant D151 : « connectés » (au moins une connexion, `profiles.last_sign_in_at`) et « pas encore connectés ». Pour ces derniers, la ligne dit quand les identifiants sont partis et combien de relances ont suivi : `boat_members.credentials_sent_count` et `credentials_sent_at` (`0050_credentials_sent.sql`), incrémentés par `issueCredentials` seulement quand le mailer a accepté le message. Chaque ligne n'affiche plus que qui, quel rôle et jusqu'à quand (« Accès illimité » ou la date) ; un tap ouvre la fiche du membre (`MemberDetailsDialog`) où le propriétaire corrige prénom et nom (`profiles.full_name`, écrit par la clé service après vérification du rôle `owner`, puisque la RLS ne laisse chacun écrire que son propre profil), change le rôle, choisit « Accès illimité » ou une date de fin, relance ou retire. « Relancer » reste aussi à portée directe sur les lignes en attente. Remplace le placement de D153 (date entre le rôle et la corbeille).
+
+**Raison.** Demande de Joseph : retrouver d'un coup d'œil qui a rejoint, qui non et combien de fois on l'a relancé, et pouvoir compléter la fiche des gens invités par leur seule adresse.

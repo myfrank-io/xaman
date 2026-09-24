@@ -24,7 +24,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
   const { data: members } = await supabase
     .from("boat_members")
     .select(
-      "user_id, role, valid_until, created_at, profiles!boat_members_user_id_fkey(full_name, email, last_sign_in_at)",
+      "user_id, role, valid_until, created_at, credentials_sent_count, credentials_sent_at, profiles!boat_members_user_id_fkey(full_name, email, last_sign_in_at)",
     )
     .eq("boat_id", boatId)
     .order("created_at");
@@ -51,6 +51,8 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
           fullName: m.profiles?.full_name ?? null,
           email: m.profiles?.email ?? "",
           lastSignInAt: m.profiles?.last_sign_in_at ?? null,
+          credentialsSentCount: m.credentials_sent_count,
+          credentialsSentAt: m.credentials_sent_at,
         }))}
       />
     </div>

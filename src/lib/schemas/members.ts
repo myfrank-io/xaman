@@ -47,3 +47,18 @@ export const reissueCredentialsSchema = z.object({
   boatId: z.string().uuid(),
   userId: z.string().uuid(),
 });
+
+// D154: the member's card, edited by an owner — who they are, what they may do, until when.
+// `validUntil` null = no end date (always the case for an owner, D89).
+export const updateMemberSchema = z.object({
+  boatId: z.string().uuid(),
+  userId: z.string().uuid(),
+  firstName: z.string().trim().max(80),
+  lastName: z.string().trim().max(80),
+  role: memberRoleSchema,
+  validUntil: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable(),
+});
+export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;

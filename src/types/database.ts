@@ -182,6 +182,8 @@ export type Database = {
         Row: {
           boat_id: string
           created_at: string
+          credentials_sent_at: string | null
+          credentials_sent_count: number
           invited_by: string | null
           role: Database["public"]["Enums"]["boat_role"]
           updated_at: string
@@ -192,6 +194,8 @@ export type Database = {
         Insert: {
           boat_id: string
           created_at?: string
+          credentials_sent_at?: string | null
+          credentials_sent_count?: number
           invited_by?: string | null
           role: Database["public"]["Enums"]["boat_role"]
           updated_at?: string
@@ -202,6 +206,8 @@ export type Database = {
         Update: {
           boat_id?: string
           created_at?: string
+          credentials_sent_at?: string | null
+          credentials_sent_count?: number
           invited_by?: string | null
           role?: Database["public"]["Enums"]["boat_role"]
           updated_at?: string

@@ -165,6 +165,8 @@ d'autre** : nom, type, constructeur et modèle restent ce que le formulaire affi
 | user_id | uuid | FK profiles on delete cascade | |
 | role | boat_role | not null | |
 | valid_from / valid_until | date | null | V2 (renter) ; null = illimité. Les fonctions RLS vérifient `valid_until is null or valid_until >= current_date` |
+| credentials_sent_count | integer | 0 | D154 : e-mails d'identifiants acceptés par le mailer (1 = premier envoi, chaque suivant = une relance) |
+| credentials_sent_at | timestamptz | null | D154 : dernier envoi accepté |
 | invited_by | uuid | FK profiles | |
 | created_at | timestamptz | | |
 | PK | (boat_id, user_id) | | |

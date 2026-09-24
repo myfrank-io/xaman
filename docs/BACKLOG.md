@@ -15,7 +15,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | Épique | Prochain |
 |---|---|
 | E0 | E0-10 |
-| E1 | E1-12 |
+| E1 | E1-13 |
 | E2 | E2-11 |
 | E3 | E3-9 |
 | E4 | E4-15 |
@@ -127,6 +127,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 - [x] **E1-9 (M, 2)** Adhésion instantanée (D151) : `inviteMember` / `inviteNewOwner` / `reissueCredentials` créent ou réinitialisent le compte `auth.users` et posent `boat_members` en un seul geste, sans ligne d'invitation ni jeton ; e-mail « identifiants » (adresse + mot de passe de 6 chiffres). Connexion par mot de passe uniquement (code à six-dix chiffres retiré de `LoginForm.tsx`) ; page `/invite/[token]` et `AcceptInvitation` supprimées. `0047_drop_invitations.sql` supprime `boat_invitations`, `accept_invitation`, `get_invitation_preview` et `boat_invitations_safe`. **DoD** : `pnpm lint && pnpm typecheck && pnpm test` verts, `docs/DATA-MODEL.md` et `tests/unit/rls.test.ts` à jour, `fr.json` sans texte en dur pour le nouvel écran.
 - [x] **E1-10 (S, 1)** Qui a rejoint (D152) : `profiles.last_sign_in_at` miroir de `auth.users.last_sign_in_at` via trigger `on_auth_user_sign_in` (`0048_last_sign_in.sql`) ; la liste des membres affiche « A rejoint le JJ/MM » ou « N'a pas encore ouvert le carnet » pour chaque membre autre que soi-même. **DoD** : `pnpm lint && pnpm typecheck && pnpm test` verts, `docs/DATA-MODEL.md` et `tests/unit/rls.test.ts` à jour, `fr.json` sans texte en dur.
 - [x] **E1-11 (S, 1)** Changer de bateau et accès jusqu'à quand (D153) : menu compte → « Changer de bateau » vers `/boats` (visible seulement si plus d'un bateau) ; dans `MembersList.tsx`, la date de fin d'accès se lit désormais entre le rôle et la corbeille pour qui gère les membres. Vieux liens `/invite/[token]` (envoyés avant D151) redirigés vers `/login` plutôt qu'un 404. **DoD** : `pnpm lint && pnpm typecheck && pnpm test` verts, `fr.json` sans texte en dur.
+- [x] **E1-12 (M, 2)** Membres en deux listes + fiche (D154) : « connectés » / « pas encore connectés », date d'envoi des identifiants et nombre de relances (`0050_credentials_sent.sql`), fiche éditable au tap (prénom, nom, rôle, accès illimité ou date, relancer, retirer). **DoD** : `pnpm lint && pnpm typecheck && pnpm test` verts, écran vérifié en viewport iPad, `fr.json` sans texte en dur.
 
 ## L8 — Confort
 

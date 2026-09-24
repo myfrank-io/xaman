@@ -20,6 +20,7 @@ import {
   leaveBoatSchema,
   removeMemberSchema,
   reissueCredentialsSchema,
+  updateMemberSchema,
 } from "@/lib/schemas/members";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -150,6 +151,25 @@ async function issueCredentials(
     console.error("issueCredentials: no mailer configured, credentials were not sent");
   }
 
+  // D154: only a message the mailer accepted counts as a send (or a relance).
+  if (!emailFailed) {
+    const { data: row } = await admin
+      .from("boat_members")
+      .select("credentials_sent_count")
+      .eq("boat_id", boatId)
+      .eq("user_id", authUserId)
+      .maybeSingle();
+    const { error: countError } = await admin
+      .from("boat_members")
+      .update({
+        credentials_sent_count: (row?.credentials_sent_count ?? 0) + 1,
+        credentials_sent_at: new Date().toISOString(),
+      })
+      .eq("boat_id", boatId)
+      .eq("user_id", authUserId);
+    if (countError) console.error(`issueCredentials: send not recorded — ${countError.message}`);
+  }
+
   revalidatePath(boatPath(boatId, "members"));
   return ok({ email, emailFailed });
 }
@@ -227,6 +247,48 @@ export async function reissueCredentials(input: unknown): Promise<ActionResult<I
     role,
     validUntil: member.valid_until,
   });
+}
+
+/**
+ * D154: the member's card. Role and end date go through the owner's own client (RLS decides);
+ * the name lives on the member's profile, which only its owner may write under RLS — so it goes
+ * through the service key, but only after the caller is checked as an owner of a boat that
+ * member actually belongs to.
+ */
+export async function updateMember(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(updateMemberSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, userId, firstName, lastName, role } = parsed.data;
+  // D89: an owner never expires.
+  const validUntil = role === "owner" ? null : parsed.data.validUntil;
+
+  const supabase = await createClient();
+  const { data: callerRole } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  if (callerRole !== "owner") return fail("errors.forbidden");
+
+  const { error, count } = await supabase
+    .from("boat_members")
+    .update({ role, valid_until: validUntil }, { count: "exact" })
+    .eq("boat_id", boatId)
+    .eq("user_id", userId);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || null;
+  try {
+    const admin = createAdminClient();
+    const { error: nameError } = await admin
+      .from("profiles")
+      .update({ full_name: fullName })
+      .eq("id", userId);
+    if (nameError) return fail(dbErrorKey(nameError));
+  } catch (adminError) {
+    console.error("updateMember: no admin client", adminError);
+    return fail("errors.unknown");
+  }
+
+  revalidatePath(boatPath(boatId, "members"));
+  return ok(undefined);
 }
 
 // E1-8 step 3: the former owner leaves; the last-owner guard refuses while nobody else owns it.

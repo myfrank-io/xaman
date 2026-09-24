@@ -19,6 +19,8 @@ const MEMBERS: MemberRow[] = [
     fullName: "Xavier Marin",
     email: "xavier.marin@exemple.fr",
     lastSignInAt: "2026-09-02",
+    credentialsSentCount: 1,
+    credentialsSentAt: "2026-09-02T10:00:00Z",
   },
   {
     userId: "00000000-0000-4000-8000-0000000000a2",
@@ -27,6 +29,8 @@ const MEMBERS: MemberRow[] = [
     fullName: "Emmanuel Lesaffre",
     email: "emmanuel.lesaffre@exemple.fr",
     lastSignInAt: null,
+    credentialsSentCount: 3,
+    credentialsSentAt: "2026-09-20T10:00:00Z",
   },
   {
     userId: "00000000-0000-4000-8000-0000000000a3",
@@ -35,6 +39,8 @@ const MEMBERS: MemberRow[] = [
     fullName: "Chantier Naval du Guip",
     email: "contact@chantier-naval-du-guip.example.fr",
     lastSignInAt: "2026-09-20",
+    credentialsSentCount: 1,
+    credentialsSentAt: "2026-09-05T10:00:00Z",
   },
   {
     userId: "00000000-0000-4000-8000-0000000000a4",
@@ -43,6 +49,8 @@ const MEMBERS: MemberRow[] = [
     fullName: null,
     email: "assurance.plaisance.grand-ouest@exemple.fr",
     lastSignInAt: null,
+    credentialsSentCount: 0,
+    credentialsSentAt: null,
   },
 ];
 
