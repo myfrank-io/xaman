@@ -9,6 +9,7 @@ import {
   DownloadIcon,
   LogOutIcon,
   PlusIcon,
+  SailboatIcon,
   SettingsIcon,
   UsersIcon,
   type LucideIcon,
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/actions/auth";
 import { can, type BoatRole } from "@/lib/permissions";
-import { NEW_BOAT_PATH, boatPath } from "@/lib/queries/boat-routes";
+import { BOATS_PATH, NEW_BOAT_PATH, boatPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 export type AccountUser = {
@@ -50,11 +51,14 @@ export function AccountMenu({
   boatId,
   role,
   user,
+  multipleBoats = false,
   className,
 }: {
   boatId: string;
   role: BoatRole;
   user: AccountUser;
+  /** Shows « Changer de bateau »: pointless while the picker would only bounce back here (D64). */
+  multipleBoats?: boolean;
   className?: string;
 }) {
   const t = useTranslations("nav");
@@ -73,6 +77,11 @@ export function AccountMenu({
     // The only door to a second carnet: /boats redirects straight to the dashboard as long as
     // there is exactly one boat, so the picker that carries the same entry is never seen (D64).
     { key: "newBoat", label: t("newBoat"), icon: PlusIcon, href: NEW_BOAT_PATH },
+    // Only once there is a second boat to switch to (D64): with a single boat, the picker itself
+    // redirects straight back here, so the entry would be a dead end.
+    ...(multipleBoats
+      ? [{ key: "switchBoat", label: t("switchBoat"), icon: SailboatIcon, href: BOATS_PATH }]
+      : []),
     ...(write
       ? [
           {

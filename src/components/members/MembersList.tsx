@@ -162,7 +162,9 @@ export function MembersList({
                 {m.fullName ? (
                   <p className="text-sm break-all text-muted-foreground sm:truncate">{m.email}</p>
                 ) : null}
-                {m.validUntil ? (
+                {/* Shown here only when there is no action row to carry it (canManage false):
+                    otherwise it moves beside the role select, where the owner reads it. */}
+                {!canManage && m.validUntil ? (
                   <p
                     className={cn(
                       "text-xs",
@@ -225,6 +227,23 @@ export function MembersList({
                       ))}
                     </NativeSelect>
                   </div>
+                  {/* D89: an owner never expires — nothing to say there. Everyone else's access
+                      has a horizon, and it belongs beside the role that grants it, not buried
+                      under the identity where the owner managing the list has to hunt for it. */}
+                  {m.role !== "owner" ? (
+                    <span
+                      className={cn(
+                        "text-xs whitespace-nowrap",
+                        expired ? "font-medium text-state-soon-fg" : "text-muted-foreground",
+                      )}
+                    >
+                      {m.validUntil
+                        ? expired
+                          ? t("expired", { date: formatDate(m.validUntil) })
+                          : t("validUntil", { date: formatDate(m.validUntil) })
+                        : t("unlimited")}
+                    </span>
+                  ) : null}
                   <Button
                     variant="ghost"
                     size="icon"

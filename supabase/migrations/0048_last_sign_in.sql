@@ -29,3 +29,12 @@ create trigger on_auth_user_sign_in
 
 -- Column privileges: readable like the rest of profiles (RLS already scopes rows to self and
 -- co-members), never writable by authenticated — the grant list in 0002_rls.sql already omits it.
+
+-- Backfill: the trigger only catches sign-ins from here on. Anyone who signed in before this
+-- migration ran would otherwise read as « jamais connecté » despite having used the carnet.
+update public.profiles p
+set last_sign_in_at = u.last_sign_in_at
+from auth.users u
+where u.id = p.id
+  and p.last_sign_in_at is null
+  and u.last_sign_in_at is not null;

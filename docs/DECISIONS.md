@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D153.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D154.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4139,3 +4139,11 @@ Cette décision remplace le mécanisme d'invitation par jeton/OTP de D75, D76 et
 **Décision.** Avec la création instantanée du compte (D151), un membre invité existe dans `boat_members` avant même d'avoir touché à ses identifiants ; la page Membres n'avait aucun moyen de distinguer un compte créé d'un compte réellement utilisé. `profiles` gagne une colonne `last_sign_in_at`, tenue à jour par un nouveau trigger `on_auth_user_sign_in` sur `auth.users` (même schéma que `on_auth_user_email_updated`, `0048_last_sign_in.sql`). La liste (`MembersList.tsx`) affiche pour chaque membre autre que soi-même « A rejoint le JJ/MM » ou « N'a pas encore ouvert le carnet », sous le même format que les lignes d'accès déjà présentes.
 
 **Raison.** Le signal le plus simple et le moins intrusif pour répondre au besoin de Joseph est un miroir en lecture seule de `auth.users.last_sign_in_at`, déjà le mécanisme retenu pour `email` ; il évite d'exposer `auth.users` lui-même (interdit par la RLS) et ne demande ni vue ni fonction supplémentaire.
+
+Le trigger ne rattrape que les connexions futures : `0048_last_sign_in.sql` inclut désormais un rattrapage ponctuel (`update … from auth.users where last_sign_in_at is null`) pour les comptes déjà connectés avant la migration, sans quoi ils lisaient à tort « jamais connecté ».
+
+## D153 — 2026-09-24 · Changer de bateau et accès jusqu'à quand, dans le menu compte et la liste des membres
+
+**Décision.** Le menu compte gagne « Changer de bateau », vers le sélecteur `/boats` (`BOATS_PATH`) — visible uniquement si le compte a accès à plus d'un bateau, puisque `/boats` renvoie sinon directement vers l'unique carnet (D64) et l'entrée serait une impasse. Dans la liste des membres (`MembersList.tsx`), la date de fin d'accès (« Accès jusqu'au JJ/MM », « Accès expiré le JJ/MM » ou « Accès illimité ») se lit maintenant entre le sélecteur de rôle et la corbeille, à côté du geste qui la change, plutôt que sous l'identité où le propriétaire devait la chercher ; elle reste sous l'identité pour qui ne gère pas les membres (pas de ligne d'actions à côté de laquelle la mettre).
+
+**Raison.** Demande de Joseph, sur les deux écrans qu'il utilise au quotidien pour gérer plusieurs bateaux et plusieurs membres.
