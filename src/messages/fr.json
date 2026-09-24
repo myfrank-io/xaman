@@ -199,38 +199,19 @@
   },
   "auth": {
     "title": "Connexion",
-    "subtitle": "Entrez votre mot de passe, ou recevez un code par e-mail.",
+    "subtitle": "Entrez votre adresse e-mail et votre mot de passe.",
     "email": {
       "label": "Adresse e-mail",
       "placeholder": "prenom@exemple.fr",
-      "submit": "Recevoir mon code",
-      "help": "Vous recevrez un code par e-mail, valable 10 minutes, ainsi qu'un lien de secours.",
       "invalid": "Saisissez une adresse e-mail valide."
     },
-    "code": {
-      "title": "Saisissez le code reçu",
-      "help": "Un code a été envoyé à {email}. Pensez à vérifier vos courriers indésirables.",
-      "label": "Code reçu par e-mail",
-      "submit": "Se connecter",
-      "back": "Changer d'adresse",
-      "resend": "Renvoyer le code",
-      "linkHint": "Demandez un seul code : en redemander un annule le précédent."
-    },
     "errors": {
-      "send": "Impossible d'envoyer le code. Réessayez dans une minute.",
-      "noAccount": "Aucun compte n'existe pour cette adresse. Demandez une invitation au propriétaire du bateau.",
-      "code": "Code incorrect ou expiré. Recopiez-le en entier, tel qu'il apparaît dans l'e-mail.",
-      "link": "Ce lien de connexion n'est plus valable. Demandez un nouveau code.",
-      "hint": "Vérifiez l'adresse saisie, ou demandez un nouveau code.",
+      "link": "Ce lien de connexion n'est plus valable.",
+      "hint": "Vérifiez l'adresse et le mot de passe saisis.",
       "credentials": "Adresse e-mail ou mot de passe incorrect.",
       "unconfirmed": "Ce compte n'est pas encore confirmé. Ouvrez l'e-mail que nous vous avons envoyé.",
       "rateLimited": "Trop de tentatives. Attendez une minute avant de réessayer.",
       "unexpected": "La connexion a échoué. Réessayez dans un instant."
-    },
-    "modes": {
-      "label": "Comment vous connecter",
-      "password": "Mot de passe",
-      "code": "Code par e-mail"
     },
     "password": {
       "label": "Mot de passe",
@@ -491,100 +472,37 @@
     "invite": {
       "button": "Inviter",
       "title": "Inviter une personne",
-      "description": "Elle recevra un e-mail avec un lien valable 14 jours, puis se connectera par code.",
+      "description": "Un compte est créé immédiatement : un e-mail lui envoie son adresse et un mot de passe.",
       "email": "Adresse e-mail",
-      "submit": "Envoyer l'invitation",
-      "sent": "Invitation envoyée à {email}.",
+      "submit": "Créer l’accès",
+      "sent": "Compte créé, e-mail envoyé à {email}.",
       "proTitle": "Ce que verra ce professionnel",
       "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions seront conservées.",
       "ownerTitle": "Ce que pourra ce propriétaire",
-      "ownerDescription": "Les mêmes droits que vous : gérer les membres, modifier les réglages, supprimer le carnet — et vous en retirer. Son accès n'a pas de date de fin. Pour lui transmettre le bateau et partir ensuite, passez plutôt par Réglages → Transférer le bateau.",
-      "duration": "Durée d'accès",
+      "ownerDescription": "Les mêmes droits que vous : gérer les membres, modifier les réglages, supprimer le carnet — et vous en retirer. Son accès n’a pas de date de fin. Pour lui transmettre le bateau et partir ensuite, passez plutôt par Réglages → Transférer le bateau.",
+      "duration": "Durée d’accès",
       "durations": {
         "7": "7 jours",
         "30": "30 jours",
         "90": "90 jours",
         "unlimited": "Sans limite"
       },
-      "durationHelp": "L'accès s'arrête seul à la date indiquée. Vous pourrez le prolonger ou le retirer avant.",
-      "durationHelpEditor": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour 90 jours au plus.",
-      "sentTitle": "Invitation envoyée",
-      "sentDescription": "{email} a reçu un e-mail. Vous pouvez aussi lui transmettre le lien directement.",
-      "validUntil": "Accès jusqu'au {date}",
-      "copyLink": "Copier le lien",
-      "linkCopied": "Lien copié.",
-      "share": "Partager",
-      "shareText": "Rejoignez le carnet d'entretien de {boat} sur Xaman",
+      "durationHelp": "L’accès s’arrête seul à la date indiquée. Vous pourrez le prolonger ou le retirer avant.",
+      "durationHelpEditor": "En tant qu’éditeur, vous invitez un professionnel ou un lecteur pour 90 jours au plus.",
+      "sentTitle": "Compte créé",
+      "sentDescription": "{email} a reçu un e-mail avec son adresse de connexion et un mot de passe.",
       "emailFailedTitle": "E-mail non envoyé",
-      "emailFailed": "Aucun e-mail n’est parti vers {email}. L’invitation est bien créée : copiez le lien ci-dessous et transmettez-le vous-même."
-    },
-    "invitations": {
-      "title": "Invitations en attente",
-      "expires": "expire le {date}",
-      "expired": "expirée",
-      "revoke": "Annuler",
-      "revoked": "Invitation annulée.",
-      "resend": "Relancer",
-      "resent": "Invitation renvoyée à {email}.",
-      "reminded": "{count, plural, one {relancée une fois le {date}} other {relancée # fois, la dernière le {date}}}",
-      "status": {
-        "pending": "En attente",
-        "expired": "Expirée",
-        "accepted": "Acceptée",
-        "revoked": "Annulée"
-      },
-      "delivery": {
-        "sent": "envoi en cours",
-        "delivered": "e-mail remis",
-        "delayed": "remise retardée",
-        "badge": {
-          "bounced": "Non délivré",
-          "complained": "Indésirable",
-          "failed": "Non envoyé"
-        },
-        "title": {
-          "bounced": "L'invitation n'est jamais arrivée",
-          "complained": "L'invitation a été signalée comme indésirable",
-          "failed": "L'e-mail n'a pas pu être envoyé"
-        },
-        "reasons": {
-          "no_email": "Cette adresse n'existe pas. Vérifiez l'orthographe, puis renvoyez l'invitation à la bonne adresse.",
-          "mailbox_full": "La boîte de réception du destinataire est pleine. Réessayez plus tard.",
-          "suppressed": "Cette adresse est bloquée après un échec précédent : plus rien ne lui sera envoyé. Utilisez une autre adresse.",
-          "blocked": "Le serveur du destinataire a refusé le message définitivement — le plus souvent, l'adresse n'existe pas. Vérifiez l'orthographe.",
-          "content": "Le serveur du destinataire a refusé le contenu du message.",
-          "spam": "Le destinataire ne recevra plus d'e-mail de notre part. Transmettez-lui le lien d'invitation autrement.",
-          "temporary": "La remise a échoué temporairement. Elle sera retentée automatiquement.",
-          "unknown": "L'e-mail n'a pas pu être remis."
-        },
-        "reinvite": "Réinviter",
-        "reinviteTitle": "Réinviter {email}",
-        "reinviteDescription": "Corrigez l'adresse si besoin : une nouvelle invitation part, l'ancienne reste en attente jusqu'à ce que vous l'annuliez."
-      }
+      "emailFailed": "Le compte de {email} est bien créé, mais l’e-mail n’est pas parti. Utilisez « Renvoyer les identifiants » pour réessayer."
     },
     "expired": "Accès expiré le {date}",
     "reactivate": "Réactiver 90 j",
     "reactivated": "Accès prolongé de 90 jours.",
     "lastOwnerHint": "Pour changer de propriétaire, transférez d'abord le bateau.",
-    "transferLink": "Transférer le bateau"
-  },
-  "invite": {
-    "title": "Invitation",
-    "summary": "{inviter} vous invite en tant que {role}.",
-    "signInHint": "Connectez-vous avec l'adresse invitée ({email}) pour rejoindre le bateau.",
-    "accept": "Rejoindre {boat}",
-    "invalid": {
-      "title": "Invitation introuvable",
-      "description": "Ce lien n'est pas valable. Demandez une nouvelle invitation au propriétaire du bateau."
-    },
-    "mismatch": {
-      "title": "Ce n'est pas la bonne adresse",
-      "description": "Vous êtes connecté avec {current} mais l'invitation a été envoyée à {invited}. Déconnectez-vous puis reconnectez-vous avec cette adresse."
-    },
-    "status": {
-      "accepted": "Cette invitation a déjà été acceptée.",
-      "revoked": "Cette invitation a été annulée.",
-      "expired": "Cette invitation a expiré. Demandez-en une nouvelle."
+    "transferLink": "Transférer le bateau",
+    "credentials": {
+      "reissue": "Renvoyer les identifiants",
+      "sent": "Nouveaux identifiants envoyés à {email}.",
+      "emailFailedTitle": "E-mail non envoyé"
     }
   },
   "profile": {

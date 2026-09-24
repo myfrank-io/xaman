@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { DeleteBoatCard } from "@/components/settings/DeleteBoatCard";
 import { ExportCard } from "@/components/settings/ExportCard";
 import { SettingsSection } from "@/components/settings/SettingsSection";
-import { TransferBoatCard, type OwnerInvitation } from "@/components/settings/TransferBoatCard";
+import { TransferBoatCard } from "@/components/settings/TransferBoatCard";
 import { Button } from "@/components/ui/button";
 import { can, type BoatRole } from "@/lib/permissions";
 import { checklistSetupPath, logsReviewPath, reportPath } from "@/lib/queries/boat-routes";
@@ -54,30 +54,17 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
     updatedAt: category.updated_at,
   }));
 
-  // Transfer (E1-8): other owners and pending owner invitations
+  // Transfer (E1-8, D151): the new owner's membership exists the moment they are invited, so
+  // this only needs the count of owners other than the one looking at this screen.
   let otherOwners = 0;
-  let ownerInvitations: OwnerInvitation[] = [];
   if (isOwner) {
-    const [{ count }, { data: invitations }] = await Promise.all([
-      supabase
-        .from("boat_members")
-        .select("user_id", { count: "exact", head: true })
-        .eq("boat_id", boatId)
-        .eq("role", "owner")
-        .neq("user_id", auth.user?.id ?? ""),
-      supabase
-        .from("boat_invitations_safe")
-        .select("id, email, expires_at, role, status")
-        .eq("boat_id", boatId)
-        .eq("role", "owner")
-        .eq("status", "pending"),
-    ]);
+    const { count } = await supabase
+      .from("boat_members")
+      .select("user_id", { count: "exact", head: true })
+      .eq("boat_id", boatId)
+      .eq("role", "owner")
+      .neq("user_id", auth.user?.id ?? "");
     otherOwners = count ?? 0;
-    ownerInvitations = (invitations ?? []).map((invitation) => ({
-      id: invitation.id ?? "",
-      email: invitation.email ?? "",
-      expiresAt: invitation.expires_at ?? "",
-    }));
   }
 
   const t = await getTranslations("settings");
@@ -116,12 +103,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
       {isOwner ? (
         <>
           <SettingsSection title={t("sections.transfer")} description={t("transfer.description")}>
-            <TransferBoatCard
-              boatId={boatId}
-              boatName={boat.name}
-              otherOwners={otherOwners}
-              pendingInvitations={ownerInvitations}
-            />
+            <TransferBoatCard boatId={boatId} boatName={boat.name} otherOwners={otherOwners} />
           </SettingsSection>
           <SettingsSection title={t("sections.danger")}>
             <DeleteBoatCard boatId={boatId} boatName={boat.name} />

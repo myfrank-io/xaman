@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D151.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D152.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4125,3 +4125,9 @@ Le système reste disponible en filtre et dans le détail d’un contrôle.
 **Décision.** Un point peut concerner plusieurs catégories sans dupliquer son historique. Comme une intervention, il conserve une catégorie principale et une table de liaison pour les autres. Le point et ses catégories sont enregistrés dans une seule transaction. Photos, devis et PDF appartiennent au point lui-même, restent visibles dans son détail et sont proposés en haut du formulaire. Les deux formulaires partagent les commandes d’ajout et la barre d’actions. Un transfert inachevé ou refusé conserve le formulaire et ses fichiers pour réessayer.
 
 **Raison.** Demande de Joseph : documenter un défaut avant intervention, retrouver un contrôle sous chaque système concerné et rendre les créations cohérentes sur iPad.
+
+## 2026-09-24 — D151 : l'accès se donne avec un mot de passe, jamais avec un code ou un jeton
+
+**Décision.** Le mot de passe devient le seul mode de connexion (`LoginForm.tsx`) : le code à six-dix chiffres envoyé par e-mail pour se connecter disparaît, et avec lui la page d'invitation qu'il servait à ouvrir. Ajouter un membre — `inviteMember`, `inviteNewOwner` — ou « relancer » quelqu'un — `reissueCredentials` — fait désormais la même chose en un seul geste (`src/lib/actions/members.ts`) : créer son compte `auth.users` s'il n'existe pas encore, ou réinitialiser son mot de passe s'il existe déjà, poser tout de suite sa ligne `boat_members`, et lui envoyer un e-mail « identifiants » avec son adresse et un mot de passe de 8 chiffres tirés au sort (`src/lib/email/credentials.ts`). Il n'y a plus d'état intermédiaire : pas de ligne d'invitation, pas de jeton, pas de statut à expirer ni à révoquer. `boat_invitations`, `accept_invitation`, `get_invitation_preview` et la vue `boat_invitations_safe` sont supprimés (`0047_drop_invitations.sql`), avec la page `/invite/[token]` et tout ce qui en dépendait.
+
+**Raison.** Le code par e-mail se heurtait aux scanners anti-hameçonnage des messageries professionnelles, qui ouvrent — et donc consomment — le lien avant que son destinataire ne l'ait lu (déjà le motif de D78 pour le mot de passe oublié) ; un mot de passe simple, tapé une fois, n'a pas ce problème. Et une invitation qui n'existe que comme promesse en attente d'acceptation est un état de plus à afficher, relancer et expirer, pour un geste — donner accès au bateau à quelqu'un — qui n'a besoin au fond que d'un compte et d'un mot de passe.

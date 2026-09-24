@@ -35,7 +35,6 @@ const ENGINE = "00000000-0000-0000-0000-00000000e001";
 const ITEM = "00000000-0000-0000-0000-000000003001";
 const LOG_OWNER = "00000000-0000-0000-0000-000000002001";
 const LOG_PRO = "00000000-0000-0000-0000-000000002002";
-const INVITATION_TOKEN = "test-token-secret-000000000000000000000000001";
 
 const pool = new Pool({ connectionString: DATABASE_URL, max: 4 });
 
@@ -165,40 +164,6 @@ describeWithDb("read access (select)", () => {
     expect(await count(U.stranger, "boat_members", "boat_id = $1", [BOAT])).toBe(0);
   });
 
-  it("boat_invitations: only owners (and admin) see them; the token column is unreadable for everyone", async () => {
-    expect(await count(U.owner, "boat_invitations", "boat_id = $1", [BOAT])).toBe(1);
-    expect(await count(U.admin, "boat_invitations", "boat_id = $1", [BOAT])).toBe(1);
-    for (const role of ["editor", "pro", "viewer", "stranger"] as Role[]) {
-      expect(await count(U[role], "boat_invitations", "boat_id = $1", [BOAT]), role).toBe(0);
-    }
-    const owner = await run(U.owner, "select token from public.boat_invitations");
-    expect(owner.ok).toBe(false);
-    if (!owner.ok) expect(owner.code).toBe("42501");
-    const star = await run(U.owner, "select * from public.boat_invitations");
-    expect(star.ok).toBe(false);
-
-    // D79 (0023): what became of the e-mail is readable, the mailer's own id and its English
-    // sentence are not — they are written by the service key and never leave the server.
-    const delivery = await run(
-      U.owner,
-      "select delivery_status, delivery_reason, delivery_updated_at from public.boat_invitations",
-    );
-    expect(delivery.ok).toBe(true);
-
-    // D112 (0031): the reminders are read on the Membres screen — « relancée 3 fois » is what
-    // ends the waiting — and written by the Server Action alone, with the service key.
-    const reminders = await run(
-      U.owner,
-      "select reminded_at, reminder_count from public.boat_invitations",
-    );
-    expect(reminders.ok).toBe(true);
-    for (const column of ["email_id", "delivery_detail"]) {
-      const hidden = await run(U.owner, `select ${column} from public.boat_invitations`);
-      expect(hidden.ok, column).toBe(false);
-      if (!hidden.ok) expect(hidden.code, column).toBe("42501");
-    }
-  });
-
   it("profiles: a user sees themself and the people sharing a boat; the admin sees everyone", async () => {
     expect(await count(U.owner, "profiles")).toBe(4);
     expect(await count(U.pro, "profiles")).toBe(4);
@@ -321,17 +286,12 @@ describeWithDb("insert", () => {
     expect((await run(U.viewer, sql, [U.viewer.id])).ok).toBe(false);
   });
 
-  it("boat_members and boat_invitations: owner only", async () => {
+  it("boat_members: owner only", async () => {
     const member =
       "insert into public.boat_members (boat_id, user_id, role) values ($1, $2, 'viewer')";
     expect((await run(U.owner, member, [BOAT, U.stranger.id])).ok).toBe(true);
     expect((await run(U.admin, member, [BOAT, U.stranger.id])).ok).toBe(true);
     expect((await run(U.editor, member, [BOAT, U.stranger.id])).ok).toBe(false);
-    const invite =
-      "insert into public.boat_invitations (boat_id, email, role, token, invited_by) values ($1, 'new@test.xaman', 'editor', $2, $3)";
-    expect((await run(U.owner, invite, [BOAT, "tok-1", U.owner.id])).ok).toBe(true);
-    expect((await run(U.owner, invite, [BOAT, "tok-2", U.editor.id])).ok).toBe(false);
-    expect((await run(U.editor, invite, [BOAT, "tok-3", U.editor.id])).ok).toBe(false);
   });
 
   it("checklist templates: platform admin only", async () => {
@@ -1171,44 +1131,6 @@ describeWithDb("update", () => {
     expect(twoOwners).toBe(1);
   });
 
-  it("boat_invitations: owner revokes; nothing else is updatable", async () => {
-    expect(
-      await run(
-        U.owner,
-        "update public.boat_invitations set revoked_at = now() where boat_id = $1",
-        [BOAT],
-      ),
-    ).toEqual({ ok: true, rowCount: 1 });
-    expect(
-      (
-        await run(
-          U.owner,
-          "update public.boat_invitations set email = 'x@test.xaman' where boat_id = $1",
-          [BOAT],
-        )
-      ).ok,
-    ).toBe(false);
-    expect(
-      await run(
-        U.editor,
-        "update public.boat_invitations set revoked_at = now() where boat_id = $1",
-        [BOAT],
-      ),
-    ).toEqual({ ok: true, rowCount: 0 });
-
-    // D112 (0031): a reminder is a Server Action, never a browser writing a date on a row.
-    // `revoked_at` stays the single column `authenticated` may update on this table.
-    for (const column of ["reminded_at = now()", "reminder_count = 5", "expires_at = now()"]) {
-      const written = await run(
-        U.owner,
-        `update public.boat_invitations set ${column} where boat_id = $1`,
-        [BOAT],
-      );
-      expect(written.ok, column).toBe(false);
-      if (!written.ok) expect(written.code, column).toBe("42501");
-    }
-  });
-
   it("profiles: a user edits their own display data only, never is_platform_admin", async () => {
     expect(
       await run(U.owner, "update public.profiles set full_name = 'O' where id = $1", [U.owner.id]),
@@ -1265,49 +1187,6 @@ describeWithDb("delete", () => {
         U.viewer.id,
       ]),
     ).toEqual({ ok: true, rowCount: 0 });
-  });
-});
-
-describeWithDb("invitation functions", () => {
-  it("get_invitation_preview works anonymously and exposes only the preview", async () => {
-    const preview = await as(null, async (c) => {
-      const res = await c.query("select * from public.get_invitation_preview($1)", [
-        INVITATION_TOKEN,
-      ]);
-      return res.rows[0] as Record<string, unknown> | undefined;
-    });
-    // 0007: the address is masked on the public page; only the domain and the initial show.
-    expect(preview).toMatchObject({
-      boat_name: "Bateau test",
-      email: "s•••@test.xaman",
-      role: "viewer",
-      status: "pending",
-    });
-    const unknown = await as(
-      null,
-      async (c) => (await c.query("select * from public.get_invitation_preview('nope')")).rowCount,
-    );
-    expect(unknown).toBe(0);
-  });
-
-  it("accept_invitation adds the member when the e-mail matches, and rejects everyone else", async () => {
-    const accepted = await as(U.stranger, async (c) => {
-      const res = await c.query("select public.accept_invitation($1) as boat_id", [
-        INVITATION_TOKEN,
-      ]);
-      const visible = await c.query("select count(*)::int as n from public.boats where id = $1", [
-        BOAT,
-      ]);
-      return { boatId: res.rows[0]?.boat_id as string, visible: Number(visible.rows[0]?.n) };
-    });
-    expect(accepted).toEqual({ boatId: BOAT, visible: 1 });
-
-    const mismatch = await run(U.viewer, "select public.accept_invitation($1)", [INVITATION_TOKEN]);
-    expect(mismatch.ok).toBe(false);
-    if (!mismatch.ok) expect(mismatch.message).toContain("invitation_email_mismatch");
-
-    const anon = await run(null, "select public.accept_invitation($1)", [INVITATION_TOKEN]);
-    expect(anon.ok).toBe(false);
   });
 });
 
@@ -1598,60 +1477,6 @@ describeWithDb("attachments (E10-1)", () => {
 // ---------------------------------------------------------------------------------------------
 const COMPLETION_OWNER = "00000000-0000-0000-0000-000000004001";
 const COMPLETION_PRO = "00000000-0000-0000-0000-000000004002";
-
-describeWithDb("invitations issued by an editor (D28)", () => {
-  const invite = (u: User, role: string, token: string, days: number | null) =>
-    run(
-      u,
-      `insert into public.boat_invitations (boat_id, email, role, token, invited_by, valid_until)
-       values ($1, 'meca@test.xaman', $2::public.boat_role, $3, $4, current_date + $5::int)`,
-      [BOAT, role, token, u.id, days],
-    );
-
-  it("an editor may invite a pro or a viewer for 90 days at most", async () => {
-    expect((await invite(U.editor, "pro", "ed-pro-30", 30)).ok, "pro 30 d").toBe(true);
-    expect((await invite(U.editor, "viewer", "ed-viewer-90", 90)).ok, "viewer 90 d").toBe(true);
-    expect((await invite(U.editor, "pro", "ed-pro-91", 91)).ok, "pro 91 d").toBe(false);
-    expect((await invite(U.editor, "pro", "ed-pro-none", null)).ok, "pro, no end date").toBe(false);
-    expect((await invite(U.editor, "editor", "ed-editor", 30)).ok, "editor role").toBe(false);
-    expect((await invite(U.editor, "owner", "ed-owner", 30)).ok, "owner role").toBe(false);
-  });
-
-  it("an owner keeps inviting any role, with or without an end date", async () => {
-    expect((await invite(U.owner, "editor", "ow-editor", null)).ok).toBe(true);
-    expect((await invite(U.owner, "pro", "ow-pro", 365)).ok).toBe(true);
-    // D89: the UI now offers `owner` at the invitation. The policy always allowed it — this is
-    // what says so, and what would fail if a later migration decided to close it.
-    expect((await invite(U.owner, "owner", "ow-owner", null)).ok, "owner role").toBe(true);
-    expect((await invite(U.pro, "viewer", "pro-viewer", 30)).ok, "a pro invites nobody").toBe(
-      false,
-    );
-    expect(
-      (await invite(U.viewer, "viewer", "viewer-viewer", 30)).ok,
-      "a viewer invites nobody",
-    ).toBe(false);
-  });
-
-  it("accept_invitation carries valid_until over to the membership", async () => {
-    const out = await as(U.stranger, async (c) => {
-      await c.query("set local role service_role");
-      await c.query(
-        "update public.boat_invitations set valid_until = current_date + 30 where token = $1",
-        [INVITATION_TOKEN],
-      );
-      await c.query("set local role authenticated");
-      await c.query("select public.accept_invitation($1)", [INVITATION_TOKEN]);
-      await c.query("set local role service_role");
-      const res = await c.query(
-        `select (valid_until = current_date + 30) as carried
-         from public.boat_members where boat_id = $1 and user_id = $2`,
-        [BOAT, U.stranger.id],
-      );
-      return res.rows[0] as { carried: boolean };
-    });
-    expect(out).toEqual({ carried: true });
-  });
-});
 
 describeWithDb("cancelling a completion (D15)", () => {
   const del = (u: User, id: string) =>
@@ -2084,38 +1909,6 @@ describeWithDb("secondary views", () => {
       expect(await count(null, v)).toBe(-1);
     },
   );
-
-  it("boat_invitations_safe: owners and the admin only, never the token", async () => {
-    expect(await count(U.owner, "boat_invitations_safe", "boat_id = $1", [BOAT])).toBeGreaterThan(
-      0,
-    );
-    expect(await count(U.admin, "boat_invitations_safe", "boat_id = $1", [BOAT])).toBeGreaterThan(
-      0,
-    );
-    for (const role of ["editor", "pro", "viewer", "stranger"] as Role[]) {
-      expect(await count(U[role], "boat_invitations_safe", "boat_id = $1", [BOAT]), role).toBe(0);
-    }
-    const columns = await as(U.owner, async (c) => {
-      const res = await c.query(
-        "select column_name from information_schema.columns where table_schema = 'public' and table_name = 'boat_invitations_safe'",
-      );
-      return res.rows.map((row) => row.column_name as string);
-    });
-    expect(columns).not.toContain("token");
-    expect(columns).toContain("valid_until");
-    // D79: the delivery is part of what an owner reads; the message id and the raw provider
-    // sentence stay out of the view, as the token does.
-    expect(columns).toEqual(
-      expect.arrayContaining(["delivery_status", "delivery_reason", "delivery_updated_at"]),
-    );
-    expect(columns).not.toContain("email_id");
-    expect(columns).not.toContain("delivery_detail");
-    // D112: the reminders are read from the same place as the rest of an invitation.
-    expect(columns).toEqual(expect.arrayContaining(["reminded_at", "reminder_count"]));
-    // A recreated view comes back granted to everyone by Supabase's default privileges; 0031
-    // restates what 0004 wanted, and this is what would have caught the drift 0023 left.
-    expect(await count(null, "boat_invitations_safe")).toBe(-1);
-  });
 
   it("maintenance_logs_trash_view: a trashed log shows for owner/editor, nothing for outsiders", async () => {
     const seen = async (u: User) =>

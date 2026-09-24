@@ -170,26 +170,15 @@ d'autre** : nom, type, constructeur et modèle restent ce que le formulaire affi
 
 Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la suppression / rétrogradation du dernier owner).
 
-### 3.6 `boat_invitations`
+### 3.6 Invitations (supprimé, D151)
 
-| Colonne | Type | Contraintes | Notes |
-|---|---|---|---|
-| id | uuid | PK | |
-| boat_id | uuid | FK boats on delete cascade | |
-| email | text | not null | normalisé en minuscules |
-| role | boat_role | not null | jamais 'owner' via l'UI V1 (un owner promeut ensuite) |
-| token | text | not null, unique | 32 octets aléatoires, base64url ; `revoke select (token) on boat_invitations from authenticated` — la colonne n'est lisible que par la clé service (Server Action d'envoi d'e-mail) ; l'acceptation passe par `accept_invitation(token)` et l'aperçu par `get_invitation_preview(token)` (security definer) |
-| invited_by | uuid | FK profiles | |
-| expires_at | timestamptz | not null default now() + interval '14 days' | |
-| accepted_at | timestamptz | null | |
-| accepted_by | uuid | FK profiles, null | |
-| revoked_at | timestamptz | null | |
-| created_at | timestamptz | | |
-| email_id | text | null | id du message chez l'expéditeur (Resend), écrit quand l'app envoie l'invitation elle-même (D75) ; index partiel `boat_invitations_email_id_idx`. Non lisible par `authenticated` (D79, `0023`) |
-| delivery_status | text | null, check | `sent` / `delivered` / `bounced` / `complained` / `delayed` / `failed`. Null = l'app n'a pas envoyé le message (pas d'expéditeur configuré) : inconnu, pas « remis » |
-| delivery_reason | text | null, check | cause de l'échec dans le vocabulaire de l'app : `no_email`, `mailbox_full`, `suppressed`, `blocked`, `content`, `spam`, `temporary`, `unknown` — traduit en français par `members.invitations.delivery.reasons.*` |
-| delivery_detail | text | null | la phrase du fournisseur, telle quelle, pour la table et les journaux. Non lisible par `authenticated` |
-| delivery_updated_at | timestamptz | null | horodatage de l'événement (pas de l'écriture) : une mise à jour plus ancienne que la valeur stockée est refusée, ce qui rend inoffensif un webhook arrivé dans le désordre |
+`boat_invitations`, `accept_invitation(token)`, `get_invitation_preview(token)` et la vue
+`boat_invitations_safe` ont existé jusqu'à `0047_drop_invitations.sql`. Le flux à token/OTP est
+remplacé par une adhésion instantanée : `inviteMember` / `inviteNewOwner` /
+`reissueCredentials` (`src/lib/actions/members.ts`) créent ou réinitialisent directement le compte
+`auth.users` (clé service) et font un `upsert` sur `boat_members`, puis envoient un e-mail
+« identifiants » (adresse + mot de passe, `src/lib/email/credentials.ts`). Il n'y a plus rien de
+« en attente » : pas de ligne, pas de token, pas de statut de remise à suivre.
 
 ### 3.7 `engines`
 
