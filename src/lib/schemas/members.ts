@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export const memberRoleSchema = z.enum(["owner", "editor", "pro", "viewer"]);
 // Since D89 an invitation may carry any of them, `owner` included; who is allowed to issue which
-// is decided by the insert policy on `boat_invitations`, and mirrored in `inviteMember`.
+// is decided in `inviteMember` itself (D28: an editor invites pro/viewer only).
 export const invitableRoleSchema = memberRoleSchema;
 
 // Access duration (D29): 7 / 30 / 90 days or unlimited; an editor may only issue dated
-// invitations (≤ 90 days, enforced by the insert policy too).
+// invitations (≤ 90 days, enforced in `inviteMember`).
 export const accessDurationSchema = z.enum(["7", "30", "90", "unlimited"]);
 export type AccessDuration = z.infer<typeof accessDurationSchema>;
 
@@ -42,15 +42,8 @@ export const removeMemberSchema = z.object({
   userId: z.string().uuid(),
 });
 
-export const revokeInvitationSchema = z.object({
+// D151: "relancer" a member — a fresh password, sent by the same e-mail. Owner only.
+export const reissueCredentialsSchema = z.object({
   boatId: z.string().uuid(),
-  invitationId: z.string().uuid(),
-});
-
-// D112: the same invitation, sent again to the same address. Nothing to choose — the row already
-// carries the role, the duration and the link — so the input is only which row.
-export const resendInvitationSchema = revokeInvitationSchema;
-
-export const acceptInvitationSchema = z.object({
-  token: z.string().min(16).max(128),
+  userId: z.string().uuid(),
 });

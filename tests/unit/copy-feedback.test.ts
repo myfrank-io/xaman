@@ -45,8 +45,9 @@ describe("retour visuel du copier", () => {
   });
 
   it("se sert bien du composant quelque part", () => {
+    // D151 a retiré le lien d'invitation à copier : une utilisation de moins qu'avant.
     const users = files.filter((file) => file.source.includes("<CopyButton"));
-    expect(users.length).toBeGreaterThanOrEqual(4);
+    expect(users.length).toBeGreaterThanOrEqual(3);
   });
 
   it("n'écrit jamais data-copied={false}, qui resterait sélectionné", () => {

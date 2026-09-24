@@ -14,29 +14,28 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { inviteNewOwner, leaveBoat, revokeInvitation } from "@/lib/actions/members";
-import { formatDate } from "@/lib/format";
+import { inviteNewOwner, leaveBoat } from "@/lib/actions/members";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { inviteNewOwnerSchema } from "@/lib/schemas/members";
-
-export type OwnerInvitation = { id: string; email: string; expiresAt: string };
 
 /**
  * Transfer (E1-8, D30) in three explicit steps: what leaves with the boat, export first,
  * invite the new owner as `owner`, then leave once they have accepted. Nothing is destroyed:
  * the logbook simply follows the boat.
+ *
+ * Step 2 is instant (D151): inviting the new owner creates their membership and sends their
+ * credentials right away, so `otherOwners` — read fresh after each invite — is what tells step 3
+ * it may open.
  */
 export function TransferBoatCard({
   boatId,
   boatName,
   otherOwners,
-  pendingInvitations,
 }: {
   boatId: string;
   boatName: string;
   otherOwners: number;
-  pendingInvitations: OwnerInvitation[];
 }) {
   const t = useTranslations("settings.transfer");
   const tc = useTranslations("common");
@@ -63,17 +62,6 @@ export function TransferBoatCard({
       }
       toast.success(t("invited", { email: parsed.data.email }));
       setEmail("");
-      router.refresh();
-    });
-  }
-
-  function revoke(id: string) {
-    startTransition(async () => {
-      const result = await revokeInvitation({ boatId, invitationId: id });
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
-        return;
-      }
       router.refresh();
     });
   }
@@ -119,27 +107,6 @@ export function TransferBoatCard({
               {t("invite")}
             </Button>
           </form>
-          {pendingInvitations.length > 0 ? (
-            <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
-              {pendingInvitations.map((invitation) => (
-                <li key={invitation.id} className="flex min-h-12 items-center gap-3 px-3">
-                  <span className="min-w-0 flex-1 truncate text-body">{invitation.email}</span>
-                  <span className="num text-caption text-ink-2">
-                    {t("expires", { date: formatDate(invitation.expiresAt) })}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => revoke(invitation.id)}
-                  >
-                    {t("revoke")}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </li>
         <li className="flex flex-col gap-2">
           <p className="text-body font-medium">{t("step3")}</p>

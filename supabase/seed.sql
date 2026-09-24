@@ -42,10 +42,6 @@ insert into public.boat_members (boat_id, user_id, role) values
   ('00000000-0000-0000-0000-00000000b001', '00000000-0000-0000-0000-000000000014', 'viewer')
 on conflict do nothing;
 
-insert into public.boat_invitations (id, boat_id, email, role, token, invited_by)
-values ('00000000-0000-0000-0000-00000000c001', '00000000-0000-0000-0000-00000000b001', 'stranger@test.xaman', 'viewer', 'test-token-secret-000000000000000000000000001', '00000000-0000-0000-0000-000000000011')
-on conflict (id) do nothing;
-
 insert into public.engines (id, boat_id, label, position, brand, external_ref, created_by)
 values ('00000000-0000-0000-0000-00000000e001', '00000000-0000-0000-0000-00000000b001', 'Moteur', 'center', 'Test', 'test-engine', '00000000-0000-0000-0000-000000000011')
 on conflict (id) do nothing;

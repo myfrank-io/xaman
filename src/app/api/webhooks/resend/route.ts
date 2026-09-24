@@ -1,7 +1,5 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 
-import { applyDelivery } from "@/lib/email/delivery";
-import { deliveryFromEvent } from "@/lib/email/delivery-status";
 import { verifyWebhookSignature } from "@/lib/email/webhook-signature";
 import { analyseInboxItem } from "@/lib/inbox/analyse";
 import { notifyInboxReceived } from "@/lib/inbox/notify";
@@ -9,18 +7,13 @@ import { receiveInboundEmail } from "@/lib/inbox/receive";
 import { inboundFromEvent } from "@/lib/inbox/resend-inbound";
 
 /**
- * Where the mailer says what became of a message it accepted (D79).
+ * Where Resend posts what happens to mail sent through it.
  *
- * Resend posts one signed event per state change — sent, delivered, bounced, complained,
- * delayed, failed — and `applyDelivery` writes it on the invitation carrying that message id.
- * That is what turns « En attente » into « Non délivré » on the Membres screen seconds after a
- * typo, instead of fourteen days later.
+ * D151 dropped the invitation-delivery tracking this endpoint used to feed (`boat_invitations`,
+ * bounces, complaints): there is no pending invitation to report on any more, since a member's
+ * account and membership are created up front. What is left, and what this endpoint is for now:
  *
- * The endpoint is public, so the signature is the whole door: no secret configured, no events
- * accepted. Nothing else in the app depends on it — without the webhook the screen still catches
- * up by asking (`refreshInvitationDeliveries`), only a minute later rather than at once.
- *
- * Since D91 the same endpoint receives `email.received`: a message sent to a boat's own address.
+ * Since D91 it receives `email.received`: a message sent to a boat's own address.
  * Its attachments become rows of the inbox before the mailer gets its answer — the bytes have to
  * be fetched while the event is fresh — and the reading of each document, which takes as long as
  * a Claude call, runs after the response (`after`), then one e-mail tells the crew.
@@ -77,18 +70,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // An event the app has nothing to store (opened, clicked, one added later) is not an error:
-  // answering anything but 200 would have the provider retry it for hours.
-  const delivery = deliveryFromEvent(payload);
-  if (!delivery) return NextResponse.json({ ignored: true });
-
-  try {
-    // False means no invitation carries that id — the weekly digest goes through this mailer too.
-    const matched = await applyDelivery(delivery.emailId, delivery);
-    return NextResponse.json({ matched });
-  } catch (error) {
-    // Retriable on our side: a 500 gets the event again rather than losing the bounce.
-    console.error("resend webhook: could not store the event", error);
-    return NextResponse.json({ error: "storage failed" }, { status: 500 });
-  }
+  // Everything else (sent, delivered, bounced, opened, …) has nothing left to be stored against
+  // since D151: answering 200 rather than an error keeps the provider from retrying it forever.
+  return NextResponse.json({ ignored: true });
 }

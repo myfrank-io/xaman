@@ -6,13 +6,11 @@ export const emailSchema = z.object({
 export type EmailInput = z.infer<typeof emailSchema>;
 
 /**
- * The code sent by e-mail. Six to ten digits, because that is the range Supabase's « Email OTP
- * Length » can hold — and the app does not own that setting.
+ * The code sent by e-mail for password recovery (D78). Six to ten digits, because that is the
+ * range Supabase's « Email OTP Length » can hold — and the app does not own that setting.
  *
- * It used to be exactly six, which is what the screen still promises everywhere else. A project
- * sending eight produced a code that could not even be typed: the field stopped at six
- * characters and the schema refused what got through. The length of a code is not ours to
- * decide, so nothing here decides it.
+ * Sign-in itself is password-only (D151): this schema now serves only the forgot-password code
+ * (`ForgotPasswordForm.tsx`), which is untouched by that change.
  */
 export const OTP_MIN = 6;
 export const OTP_MAX = 10;

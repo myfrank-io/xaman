@@ -17,8 +17,8 @@ import type { Namespace } from "@/i18n/namespaces";
 /** The root layout: the toaster and the install capture read nothing. */
 export const ROOT: readonly Namespace[] = [];
 
-/** Sign in, sign up, the password screens and the public invitation page. */
-export const AUTH: readonly Namespace[] = ["auth", "errors", "invite"];
+/** Sign in, sign up and the password screens. */
+export const AUTH: readonly Namespace[] = ["auth", "errors"];
 
 /** Opening a carnet, step 1 — the boat's identity, before any carnet exists. */
 export const NEW_BOAT: readonly Namespace[] = [
@@ -165,7 +165,8 @@ export const BOAT_SECTIONS = {
     "units",
     "validation",
   ],
-  members: ["auth", "common", "errors", "invite", "members"],
+  // "auth": InviteMemberDialog reuses `auth.email.invalid` for its own e-mail field.
+  members: ["auth", "common", "errors", "members"],
   report: ["report"],
   settings: ["categories", "common", "errors", "settings", "validation"],
   supplies: [

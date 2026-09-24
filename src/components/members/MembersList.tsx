@@ -6,7 +6,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Trash2Icon } from "lucide-react";
+import { KeyRoundIcon, Trash2Icon } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { NativeSelect } from "@/components/ui/native-select";
-import { changeMemberRole, extendMemberAccess, removeMember } from "@/lib/actions/members";
+import {
+  changeMemberRole,
+  extendMemberAccess,
+  reissueCredentials,
+  removeMember,
+} from "@/lib/actions/members";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { formatDate, todayString } from "@/lib/format";
 import { ASSIGNABLE_ROLES, type BoatRole } from "@/lib/permissions";
@@ -88,6 +93,19 @@ export function MembersList({
       setLastOwnerBlocked(false);
       toast.success(t("removed"));
       router.refresh();
+    });
+  }
+
+  // D151: a fresh, simple password, sent by the same e-mail — the whole "relancer" of an owner.
+  function onReissue(member: MemberRow) {
+    startTransition(async () => {
+      const result = await reissueCredentials({ boatId, userId: member.userId });
+      if (!result.ok) {
+        toast.error(errorMessage(result.error));
+        return;
+      }
+      if (result.data.emailFailed) toast.warning(t("credentials.emailFailedTitle"));
+      else toast.success(t("credentials.sent", { email: result.data.email }));
     });
   }
 
@@ -167,6 +185,18 @@ export function MembersList({
                       onClick={() => onReactivate(m)}
                     >
                       {t("reactivate")}
+                    </Button>
+                  ) : null}
+                  {m.userId !== currentUserId ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() => onReissue(m)}
+                    >
+                      <KeyRoundIcon />
+                      {t("credentials.reissue")}
                     </Button>
                   ) : null}
                   {/* The select is sized by this box, not by a class on itself: NativeSelect
