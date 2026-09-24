@@ -34,7 +34,7 @@ export type IssuedCredentials = {
 };
 
 /**
- * A password a person can actually type on an iPad, out loud if need be: 8 random digits, no
+ * A password a person can actually type on an iPad, out loud if need be: 6 random digits, no
  * letters, no symbols, nothing that reads ambiguously (0/O, 1/l never come up because there are
  * no letters at all).
  *
@@ -44,7 +44,7 @@ export type IssuedCredentials = {
  */
 function generateSimplePassword(): string {
   let digits = "";
-  for (let i = 0; i < 8; i += 1) digits += randomInt(0, 10).toString();
+  for (let i = 0; i < 6; i += 1) digits += randomInt(0, 10).toString();
   return digits;
 }
 
