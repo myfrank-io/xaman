@@ -15,7 +15,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | Épique | Prochain |
 |---|---|
 | E0 | E0-10 |
-| E1 | E1-9 |
+| E1 | E1-10 |
 | E2 | E2-11 |
 | E3 | E3-9 |
 | E4 | E4-15 |
@@ -124,6 +124,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 - [ ] **E9-4 (M, 2)** QA iPad Safari réelle : zoom, clavier, safe areas, scroll des dialogues, cibles, mode standalone, plein soleil réel, gants / doigts mouillés, reconnexion Realtime après veille.
 - [x] **E9-5 (M, 1)** `/health` (fait), capture d'erreurs front (optionnel), README (installation, seed, déploiement, requête d'activation). README réécrit (installation, base locale, tests, déploiement, demande d'accès).
 - [x] **E1-6b (M, 1)** Tests RLS des vues et fonctions secondaires (rapport, export, `boat_todo_queue`) — partie livrée par `0004`. Tests ajoutés pour `expenses_by_category`, `engine_current_hours`, `boat_invitations_safe` (sans token), `maintenance_logs_trash_view`.
+- [x] **E1-9 (M, 2)** Adhésion instantanée (D151) : `inviteMember` / `inviteNewOwner` / `reissueCredentials` créent ou réinitialisent le compte `auth.users` et posent `boat_members` en un seul geste, sans ligne d'invitation ni jeton ; e-mail « identifiants » (adresse + mot de passe de 8 chiffres). Connexion par mot de passe uniquement (code à six-dix chiffres retiré de `LoginForm.tsx`) ; page `/invite/[token]` et `AcceptInvitation` supprimées. `0047_drop_invitations.sql` supprime `boat_invitations`, `accept_invitation`, `get_invitation_preview` et `boat_invitations_safe`. **DoD** : `pnpm lint && pnpm typecheck && pnpm test` verts, `docs/DATA-MODEL.md` et `tests/unit/rls.test.ts` à jour, `fr.json` sans texte en dur pour le nouvel écran.
 
 ## L8 — Confort
 
