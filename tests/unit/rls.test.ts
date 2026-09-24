@@ -1151,6 +1151,18 @@ describeWithDb("update", () => {
     );
     expect(email.ok).toBe(false);
   });
+
+  // D152: last_sign_in_at is selectable (co-members see who has joined) but never writable by
+  // authenticated — only the on_auth_user_sign_in trigger (security definer) sets it.
+  it("profiles: last_sign_in_at is readable by co-members, never writable by authenticated", async () => {
+    expect(await count(U.owner, "profiles", "last_sign_in_at is null")).toBeGreaterThanOrEqual(0);
+    const write = await run(
+      U.owner,
+      "update public.profiles set last_sign_in_at = now() where id = $1",
+      [U.owner.id],
+    );
+    expect(write.ok).toBe(false);
+  });
 });
 
 describeWithDb("delete", () => {

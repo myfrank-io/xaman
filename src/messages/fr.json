@@ -449,6 +449,8 @@
     "removed": "Membre retiré. Ses interventions sont conservées.",
     "remove": "Retirer",
     "validUntil": "Accès jusqu'au {date}",
+    "joinedAt": "A rejoint le {date}",
+    "notJoinedYet": "N'a pas encore ouvert le carnet",
     "list": {
       "title": "{count, plural, one {# membre} other {# membres}}"
     },

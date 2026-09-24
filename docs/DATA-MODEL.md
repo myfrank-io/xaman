@@ -85,6 +85,7 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | avatar_url | text | | |
 | locale | text | not null default 'fr' | |
 | is_platform_admin | boolean | not null default false | Joseph = true. `revoke update (is_platform_admin) on profiles from authenticated` : modifiable uniquement en SQL / clé service |
+| last_sign_in_at | timestamptz | nullable | D152 : miroir de `auth.users.last_sign_in_at` via trigger `on_auth_user_sign_in` ; `null` = compte créé (identifiants envoyés) mais jamais utilisé pour se connecter |
 | created_at | timestamptz | not null default now() | |
 | updated_at | timestamptz | not null default now() | |
 
@@ -994,6 +995,7 @@ Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `ch
 - Contraintes de forme : `color ~ '^#[0-9A-Fa-f]{6}$'` (catégories et modèles), `jsonb_typeof(actions) = 'array'`, `jsonb_typeof(specs) = 'object'`, `pending_engine_hours` objet ou null, `boat_invitations.email = lower(email)`, `maintenance_logs.title` entre 1 et 160 caractères, `attachments.size_bytes` entre 1 et 10 Mio, `checklist_template_items.source in ('briefing','proposal','builder')`, `organization_members.role in ('admin','member')`, `boat_members.valid_until >= valid_from`.
 - Index supplémentaires sur `boat_id` (+ FK fréquentes) de toutes les tables métier, pour les politiques RLS et les listes ; index partiels sur `maintenance_logs.haul_out_id`, `checklist_items.engine_id`, `checklist_completions.maintenance_log_id`, `purchases.maintenance_log_id`.
 - Trigger `on_auth_user_email_updated` : synchronise `profiles.email` quand l'e-mail change dans `auth.users` ; `handle_new_user` lit `full_name` / `avatar_url` dans `raw_user_meta_data` (renseignés par le seed via `inviteUserByEmail`).
+- Trigger `on_auth_user_sign_in` (D152, `0048_last_sign_in.sql`) : synchronise `profiles.last_sign_in_at` quand `auth.users.last_sign_in_at` change, pour distinguer côté écran Membres un compte créé (identifiants envoyés) d'un compte réellement utilisé.
 - Supabase fournit Postgres 17 ; la validation locale sans Docker se fait sur Postgres 16 avec `tests/support/supabase-shim.sql` (aucune fonctionnalité spécifique à la 17 n'est utilisée).
 
 ## 11. Notes d'implémentation (migration `0003_logic.sql`)
