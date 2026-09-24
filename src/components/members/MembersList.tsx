@@ -161,52 +161,73 @@ function Row({
     });
   }
 
+  const meta = (
+    <>
+      <Badge variant="secondary">{t(`roles.${m.role}`)}</Badge>
+      {access ? (
+        <span
+          className={cn(
+            "text-xs whitespace-nowrap",
+            expired ? "font-medium text-state-soon-fg" : "text-muted-foreground",
+          )}
+        >
+          {access}
+        </span>
+      ) : null}
+    </>
+  );
+
+  // Phone first: the identity takes the whole width (an address is never cut to « cosa… »),
+  // role and access drop under it; from `sm` they move back to a right-hand column.
   const body = (
     <>
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate font-medium", expired && "text-ink-3")}>
+        <p className={cn("font-medium break-words sm:truncate", expired && "text-ink-3")}>
           {m.fullName ?? m.email}
           {self ? <span className="ml-2 text-sm text-muted-foreground">{t("you")}</span> : null}
         </p>
-        {m.fullName ? <p className="truncate text-sm text-muted-foreground">{m.email}</p> : null}
-        {status ? <p className="text-xs text-muted-foreground">{status}</p> : null}
-      </div>
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        <Badge variant="secondary">{t(`roles.${m.role}`)}</Badge>
-        {access ? (
-          <span
-            className={cn(
-              "text-xs whitespace-nowrap",
-              expired ? "font-medium text-state-soon-fg" : "text-muted-foreground",
-            )}
-          >
-            {access}
-          </span>
+        {m.fullName ? (
+          <p className="text-sm break-all text-muted-foreground sm:truncate">{m.email}</p>
         ) : null}
+        {status ? <p className="mt-0.5 text-xs text-muted-foreground">{status}</p> : null}
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 sm:hidden">{meta}</div>
       </div>
-      {editable ? <ChevronRightIcon className="size-5 shrink-0 text-n-400" aria-hidden /> : null}
+      <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">{meta}</div>
+      {editable ? (
+        <ChevronRightIcon className="size-5 shrink-0 self-center text-n-400" aria-hidden />
+      ) : null}
     </>
   );
 
   return (
-    <li className={cn("flex items-center gap-2 pr-2", expired && "bg-surface-2")}>
+    <li className={cn("flex flex-col sm:flex-row sm:items-center", expired && "bg-surface-2")}>
       {editable ? (
         <button
           type="button"
           onClick={onOpen}
           aria-label={t("details.open", { name: m.fullName ?? m.email })}
-          className="flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-xl tap-feedback p-4 text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="flex min-h-16 min-w-0 flex-1 items-start gap-3 rounded-xl tap-feedback p-4 text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:items-center"
         >
           {body}
         </button>
       ) : (
-        <div className="flex min-h-16 min-w-0 flex-1 items-center gap-3 p-4">{body}</div>
+        <div className="flex min-h-16 min-w-0 flex-1 items-start gap-3 p-4 sm:items-center">
+          {body}
+        </div>
       )}
       {editable && waiting ? (
-        <Button type="button" variant="outline" size="sm" disabled={pending} onClick={onRemind}>
-          <SendIcon />
-          {t("remind")}
-        </Button>
+        <div className="px-4 pb-4 sm:py-0 sm:pr-2 sm:pl-0">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending}
+            onClick={onRemind}
+            className="w-full sm:w-auto"
+          >
+            <SendIcon />
+            {t("remind")}
+          </Button>
+        </div>
       ) : null}
     </li>
   );
