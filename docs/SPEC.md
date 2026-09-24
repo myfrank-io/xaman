@@ -161,9 +161,9 @@ Priorisation MoSCoW. **Must** = livré dans le MVP, **Should** = dans le MVP si 
 ### 5.1 Must — cœur du MVP
 
 #### M1. Authentification et accès
-- Connexion **sans mot de passe** (Supabase Auth, e-mail OTP) : l'utilisateur saisit son e-mail et reçoit un e-mail contenant un **code à 6 chiffres** à taper dans l'app (et, en secours, un lien magique). Le code est le mode principal : sur iPad, un lien cliqué depuis Mail s'ouvre dans Safari et non dans la PWA installée, alors que le code se saisit dans l'app où l'on est. Session persistante sur l'appareil (PWA installée comprise).
+- **Connexion par mot de passe uniquement (D151)** : e-mail + mot de passe (`signInWithPassword`), plus le mot de passe oublié par code (D78, inchangé). Le code à 6 chiffres pour se connecter a existé jusqu'à D151 ; il est retiré, avec la page d'invitation qu'il servait à ouvrir. Session persistante sur l'appareil (PWA installée comprise).
 - Profil minimal : nom affiché, e-mail, langue (fr par défaut).
-- **Invitation à un bateau** par e-mail avec un rôle. La page d'invitation affiche le nom du bateau, l'inviteur et le rôle (fonction serveur dédiée, sans exposer la table), le destinataire se connecte avec son e-mail et devient membre. Lien valable 14 jours, révocable.
+- **Invitation à un bateau (D151)** : ajouter quelqu'un crée (ou réinitialise) son compte et sa ligne `boat_members` immédiatement, sans état intermédiaire, et lui envoie un e-mail avec son adresse et un mot de passe simple à taper. Pas de lien, pas de délai de validité, pas de révocation à faire : « relancer » quelqu'un renvoie de nouveaux identifiants.
 - Gestion des membres (owner) : liste, changement de rôle, retrait.
 - Première mise en route : Joseph (admin plateforme) exécute le seed, qui **crée les comptes** de Xavier (`owner`), Emmanuel (`editor`) et Joseph (`editor` + admin plateforme) via l'API admin Supabase (chacun reçoit un e-mail d'invitation Supabase) et les inscrit directement comme membres du bateau. **Depuis D64, un compte sans bateau ajoute le sien** ; **depuis D65, l'inscription ne parle que du bateau** : `/boats/new` demande un nom, un type de coque, un constructeur et un modèle (texte libre) et le nombre de moteurs. `create_boat` crée le bateau, inscrit la personne comme `owner`, crée les moteurs et copie les systèmes de la coque. **Le plan d'entretien est une question distincte** (`checklist_template_id` reste null jusque-là) : **depuis D67 elle est posée à l'étape 3 de la mise en route**, pré-sélectionnée sur le modèle générique de la coque, et le bloc de la Checklist reste la porte de secours pour les bateaux qui ont sauté l'étape. La mise en route est un flux de trois écrans — `/boats/new` (le bateau), `/boats/new/[boatId]?step=2` (reprise du carnet existant), `?step=3` (prise en main) — avec l'étape en cours écrite en haut de chacun. La table `boats` reste fermée en insertion — la fonction est la seule porte. Un compte sans bateau n'est donc plus une page d'attente. **Depuis D69**, les suggestions constructeur/modèle viennent du catalogue `boat_models` : toucher « Lagoon 42 » écrit le chantier, règle le type de coque et fait arriver les dimensions du modèle (indicatives, et seulement là où le catalogue les connaît).
 
@@ -265,8 +265,8 @@ Modèle de checklist :
 ## 6. Parcours utilisateur clés
 
 ### 6.1 Première connexion d'Emmanuel (invité)
-1. Reçoit un e-mail « Xavier vous invite sur Xaman (ORC 50) en tant qu'éditeur ».
-2. Clique → page d'invitation (nom du bateau, inviteur, rôle) → e-mail pré-rempli → reçoit un code à 6 chiffres → le saisit → connecté et membre.
+1. Reçoit un e-mail « Votre accès Xaman » avec son adresse de connexion et un mot de passe (D151) : son compte et sa place sur le bateau existent déjà.
+2. Ouvre `/login`, saisit l'adresse et le mot de passe reçus → connecté et membre.
 3. Atterrit sur le dashboard de Xaman. Bannière « Ajouter Xaman à l'écran d'accueil » (instructions Safari : Partager → Sur l'écran d'accueil).
 
 ### 6.2 Vidange à quai (moins d'une minute)
