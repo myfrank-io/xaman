@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D152.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D153.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4133,3 +4133,9 @@ Le système reste disponible en filtre et dans le détail d’un contrôle.
 **Raison.** Le code par e-mail se heurtait aux scanners anti-hameçonnage des messageries professionnelles, qui ouvrent — et donc consomment — le lien avant que son destinataire ne l'ait lu (déjà le motif de D78 pour le mot de passe oublié) ; un mot de passe simple, tapé une fois, n'a pas ce problème. Et une invitation qui n'existe que comme promesse en attente d'acceptation est un état de plus à afficher, relancer et expirer, pour un geste — donner accès au bateau à quelqu'un — qui n'a besoin au fond que d'un compte et d'un mot de passe.
 
 Cette décision remplace le mécanisme d'invitation par jeton/OTP de D75, D76 et D79 (courriel d'invitation, code de connexion, suivi de remise) et le rappel manuel de D112 (il n'y a plus rien en attente à relancer autrement qu'en réémettant des identifiants). Elle ne touche ni au mot de passe oublié par code (D78), ni au principe de D89 : un `owner` reste sans date de fin — seul le canal qui le met sur le bateau change.
+
+## D152 — 2026-09-24 · La liste des membres affiche qui a déjà ouvert le carnet
+
+**Décision.** Avec la création instantanée du compte (D151), un membre invité existe dans `boat_members` avant même d'avoir touché à ses identifiants ; la page Membres n'avait aucun moyen de distinguer un compte créé d'un compte réellement utilisé. `profiles` gagne une colonne `last_sign_in_at`, tenue à jour par un nouveau trigger `on_auth_user_sign_in` sur `auth.users` (même schéma que `on_auth_user_email_updated`, `0048_last_sign_in.sql`). La liste (`MembersList.tsx`) affiche pour chaque membre autre que soi-même « A rejoint le JJ/MM » ou « N'a pas encore ouvert le carnet », sous le même format que les lignes d'accès déjà présentes.
+
+**Raison.** Le signal le plus simple et le moins intrusif pour répondre au besoin de Joseph est un miroir en lecture seule de `auth.users.last_sign_in_at`, déjà le mécanisme retenu pour `email` ; il évite d'exposer `auth.users` lui-même (interdit par la RLS) et ne demande ni vue ni fonction supplémentaire.

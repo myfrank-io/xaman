@@ -2252,6 +2252,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_platform_admin: boolean
+          last_sign_in_at: string | null
           locale: string
           updated_at: string
         }
@@ -2262,6 +2263,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_platform_admin?: boolean
+          last_sign_in_at?: string | null
           locale?: string
           updated_at?: string
         }
@@ -2272,6 +2274,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_platform_admin?: boolean
+          last_sign_in_at?: string | null
           locale?: string
           updated_at?: string
         }

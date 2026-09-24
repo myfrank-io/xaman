@@ -39,6 +39,7 @@ export type MemberRow = {
   validUntil: string | null;
   fullName: string | null;
   email: string;
+  lastSignInAt: string | null;
 };
 
 // The same four the invitation offers (D89). It used to be a second list written here, which is
@@ -171,6 +172,14 @@ export function MembersList({
                     {expired
                       ? t("expired", { date: formatDate(m.validUntil) })
                       : t("validUntil", { date: formatDate(m.validUntil) })}
+                  </p>
+                ) : null}
+                {/* D152: has this invited member ever signed in with the credentials we sent? */}
+                {m.userId !== currentUserId ? (
+                  <p className="text-xs text-muted-foreground">
+                    {m.lastSignInAt
+                      ? t("joinedAt", { date: formatDate(m.lastSignInAt) })
+                      : t("notJoinedYet")}
                   </p>
                 ) : null}
               </div>
