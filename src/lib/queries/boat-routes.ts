@@ -28,6 +28,13 @@ export const PROFILE_PATH = "/settings/profile";
 export const NEW_BOAT_PATH = "/boats/new";
 
 /**
+ * The picker (D64): only ever a destination someone chooses — /boats redirects straight past it
+ * to the dashboard as long as the account has exactly one boat. The account menu's « Changer de
+ * bateau » is the one link to it, shown only once there is a second boat to switch to.
+ */
+export const BOATS_PATH = "/boats";
+
+/**
  * Steps 2 and 3 of opening a carnet (D67). Under `/boats/new` rather than in the boat's own tree,
  * because the boat's tree is `AppShell`: landing there would put the four tabs on screen and
  * invite someone to wander off mid-flow. The id is in the address so the step is resumable — a
