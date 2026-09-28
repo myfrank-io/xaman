@@ -49,8 +49,13 @@ const COMPOSED = [
     `three.${side}Label`,
     ...MOMENTS.map((moment) => `three.${side}${moment}`),
   ]),
-  ...["owner", "yard", "market"].flatMap((point) => [`four.${point}Title`, `four.${point}Body`]),
-  ...["One", "Two", "Three"].map((n) => `five.ask${n}`),
+  ...["One", "Two", "Three"].flatMap((n) => [`four.journal${n}`, `four.journal${n}Meta`]),
+  ...["Boat", "Item", "State", "Last"].flatMap((row) => [
+    `five.handoff${row}Label`,
+    `five.handoff${row}Value`,
+  ]),
+  ...["Cover", "Claim"].flatMap((row) => [`five.warranty${row}Label`, `five.warranty${row}Value`]),
+  ...["One", "Two", "Three"].map((n) => `six.ask${n}`),
 ];
 
 /**
@@ -73,14 +78,32 @@ const LITERAL = SCOPES.flatMap(([source, prefix]) =>
 const READ = new Set([...LITERAL, ...COMPOSED]);
 
 describe("la brochure et ses mots", () => {
-  it("lit cinq pages, et pas une de plus", () => {
-    for (const page of ["one", "two", "three", "four", "five"]) {
+  it("lit six pages, et pas une de plus", () => {
+    for (const page of ["one", "two", "three", "four", "five", "six"]) {
       expect(brochure, page).toHaveProperty(page);
     }
-    for (const gone of ["six", "seven"]) {
-      expect(brochure, gone).not.toHaveProperty(gone);
-    }
-    expect(PAGE).toContain("const TOTAL = 5");
+    expect(brochure).not.toHaveProperty("seven");
+    expect(PAGE).toContain("const TOTAL = 6");
+  });
+
+  it("présente l'outil par ses quatre éléments, et marque celui que le pilote construit", () => {
+    const { four, five } = fr.marketing.brochure;
+    expect([
+      four.preventiveTitle,
+      four.historyTitle,
+      five.supportTitle,
+      five.warrantyTitle,
+    ]).toEqual([
+      "Maintenance préventive",
+      "Historique des interventions",
+      "Accompagnement",
+      "Logique de garantie constructeur",
+    ]);
+    // La garantie n'existe pas encore dans l'app (E19-2, E19-3) : la page le dit, et sa carte
+    // est un exemple, pas la lecture d'un bateau.
+    expect(five.warrantyTag).toMatch(/pilote/);
+    expect(five.warrantyLabel).toMatch(/^Exemple/);
+    expect(PAGE).toContain('tag={t("five.warrantyTag")}');
   });
 
   it("met l'automobile et le nautisme face à face, aux trois mêmes moments", () => {
@@ -116,9 +139,9 @@ describe("ce que la version publique ne dit pas", () => {
   });
 
   it("finit sur deux personnes à qui écrire, et sur rien d'autre", () => {
-    const five = fr.marketing.brochure.five;
-    expect(five.title).toMatch(/30 minutes/);
-    for (const email of [five.contactOne, five.contactTwo]) {
+    const six = fr.marketing.brochure.six;
+    expect(six.title).toMatch(/30 minutes/);
+    for (const email of [six.contactOne, six.contactTwo]) {
       expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[a-z]+$/);
     }
     expect(PAGE).toContain("href={`mailto:${email}?subject=${subject}`}");

@@ -25,17 +25,25 @@
       "h": 1080
     },
     {
-      "file": "Produit.dc.html",
-      "title": "4 · Votre SAV devient un argument de vente",
+      "file": "Proprietaire.dc.html",
+      "title": "4 · L'outil, côté propriétaire",
       "x": 0,
       "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Echange.dc.html",
-      "title": "5 · Prochaine étape",
+      "file": "Chantier.dc.html",
+      "title": "5 · L'outil, côté chantier",
       "x": 2040,
+      "y": 1280,
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "Echange.dc.html",
+      "title": "6 · Prochaine étape",
+      "x": 4080,
       "y": 1280,
       "w": 1920,
       "h": 1080
@@ -44,10 +52,10 @@
   "annotations": [
     {
       "id": "notes-deck",
-      "x": 4080,
-      "y": 1280,
+      "x": 6120,
+      "y": 0,
       "w": 620,
-      "text": "Cinq slides, un seul but : décrocher un appel de 30 minutes.\n\nSLIDE 2 — 300+ entreprises et 4,9/5 viennent de myfrank.io ; les 400 points de vente sont notre compte. Les remettre à jour avant chaque envoi.\n\nSLIDE 4 — le carnet montré est celui de Xaman (ORC 50, coque n° 25). Vérifier qu'il est chargé dans la démo.\n\nSLIDE 5 — deux contacts, joseph@myfrank.io et xchauvin@xl4.fr, les mêmes que sur le site.\n\nAucun prix nulle part."
+      "text": "Six slides, un seul but : décrocher un appel de 30 minutes.\n\nSLIDE 2 — 300+ entreprises et 4,9/5 viennent de myfrank.io ; les 400 points de vente sont notre compte. Les remettre à jour avant chaque envoi.\n\nSLIDE 4 — échéances et journal sont ceux de Xaman (ORC 50, coque n° 25). Vérifier qu'ils sont chargés dans la démo.\n\nSLIDE 5 — « Confier au chantier » existe (E19-11) ; la garantie constructeur NON (E19-2, E19-3) : elle est marquée « Avec le programme pilote » et sa carte est un exemple. Ne pas la promettre en démo.\n\nSLIDE 6 — deux contacts, joseph@myfrank.io et xchauvin@xl4.fr, les mêmes que sur le site.\n\nAucun prix nulle part."
     }
   ],
   "launch": {

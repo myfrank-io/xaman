@@ -17,7 +17,7 @@ import { ChevronLeftIcon, ChevronRightIcon, PrinterIcon } from "lucide-react";
  *
  * The numbers are laid out for a 320 px screen: a round target of 44 px per page plus two arrows
  * runs past it as soon as there are more than a handful, and the audit forbids a page that
- * scrolls sideways (rule 1). Below `sm` the rail says « 3 / 5 » between the two arrows and the
+ * scrolls sideways (rule 1). Below `sm` the rail says « 3 / 6 » between the two arrows and the
  * numbers step aside.
  */
 export function BrochureRail({

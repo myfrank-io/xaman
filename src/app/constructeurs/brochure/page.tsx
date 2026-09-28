@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CarIcon, CompassIcon, HouseIcon, SailboatIcon, UsersIcon } from "lucide-react";
+import {
+  CalendarClockIcon,
+  CarIcon,
+  HandshakeIcon,
+  HistoryIcon,
+  SailboatIcon,
+  ShieldCheckIcon,
+  type LucideIcon,
+} from "lucide-react";
+import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 
 import { XamanLogotype } from "@/components/brand/XamanLogotype";
@@ -8,7 +17,7 @@ import { BrochureRail } from "@/components/marketing/brochure/BrochureRail";
 import { BrochureSlide } from "@/components/marketing/brochure/BrochureSlide";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
-const TOTAL = 5;
+const TOTAL = 6;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("marketing.brochure.meta");
@@ -18,11 +27,15 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The builders' presentation, read on the site rather than sent as a PDF (E19-10, E19-12, D155).
  *
- * Five pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, the car
- * trade beside the marine one, what the logbook changes for a yard's after-sales service, and a
- * thirty-minute call with a pilot at the end of it. The seven pages it replaced argued the yard's business back to it and read as
- * machine-written; these say what we have and what we want, and nothing about the reader they
- * have not been told.
+ * Six pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, the car
+ * trade beside the marine one, the tool itself in two pages (the owner's side, then the yard's),
+ * and a thirty-minute call with a pilot at the end of it. The seven pages it replaced argued the
+ * yard's business back to it and read as machine-written; these say what we have and what we
+ * want, and nothing about the reader they have not been told.
+ *
+ * The tool pages show what runs today — due dates, the journal, « Confier au chantier » — and
+ * say so when they do not: the builder's warranty is carried by the pilot (E19-2, E19-3), and
+ * its card is drawn as an example rather than read from a boat.
  *
  * MyFrank's figures (300+ companies, 4,9/5) are the ones myfrank.io publishes; the 400 points of
  * sale are the team's own count. Keep the three in step with the site before each send.
@@ -45,8 +58,8 @@ export default async function BrochurePage() {
 
   // Two people to write to, by name, rather than the builders' letterbox (E19-9): that one does
   // not exist yet, and a brochure sent to a yard cannot end on an address that bounces.
-  const subject = encodeURIComponent(t("five.mailSubject"));
-  const contacts = [t("five.contactOne"), t("five.contactTwo")];
+  const subject = encodeURIComponent(t("six.mailSubject"));
+  const contacts = [t("six.contactOne"), t("six.contactTwo")];
 
   return (
     <main className="flex min-h-dvh flex-col bg-background">
@@ -177,41 +190,85 @@ export default async function BrochurePage() {
         title={t("four.title")}
         source={source}
       >
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-10">
-          <ul className="flex flex-col gap-5">
-            {[
-              { key: "owner", Icon: UsersIcon },
-              { key: "yard", Icon: HouseIcon },
-              { key: "market", Icon: CompassIcon },
-            ].map(({ key, Icon }) => (
-              <li key={key} className="flex items-start gap-3">
-                <Icon className="mt-1 size-5 shrink-0 text-ink-2" aria-hidden />
-                <div className="min-w-0">
-                  <h3 className="text-h2">{t(`four.${key}Title` as "four.ownerTitle")}</h3>
-                  <p className="mt-1 text-body text-ink-2">
-                    {t(`four.${key}Body` as "four.ownerBody")}
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+          <Feature
+            Icon={CalendarClockIcon}
+            title={t("four.preventiveTitle")}
+            body={t("four.preventiveBody")}
+          >
+            <CarnetCard />
+          </Feature>
+          <Feature Icon={HistoryIcon} title={t("four.historyTitle")} body={t("four.historyBody")}>
+            <Panel label={t("four.journalLabel")}>
+              {(["One", "Two", "Three"] as const).map((n) => (
+                <li key={n} className="px-4 py-3">
+                  <p className="text-label text-foreground">
+                    {t(`four.journal${n}` as "four.journalOne")}
                   </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <CarnetCard />
+                  <p className="mt-0.5 text-caption text-ink-2">
+                    {t(`four.journal${n}Meta` as "four.journalOneMeta")}
+                  </p>
+                </li>
+              ))}
+            </Panel>
+          </Feature>
         </div>
+        <p className="text-caption text-ink-3">{t("four.caption")}</p>
       </BrochureSlide>
 
       {/* ------------------------------------------------------------- 5 */}
       <BrochureSlide
         index={5}
         total={TOTAL}
-        tone="navy"
+        tone="paper"
         eyebrow={t("five.eyebrow")}
         title={t("five.title")}
         source={source}
       >
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+          <Feature Icon={HandshakeIcon} title={t("five.supportTitle")} body={t("five.supportBody")}>
+            <Panel label={t("five.handoffLabel")}>
+              {(["Boat", "Item", "State", "Last"] as const).map((row) => (
+                <Fact
+                  key={row}
+                  label={t(`five.handoff${row}Label` as "five.handoffBoatLabel")}
+                  value={t(`five.handoff${row}Value` as "five.handoffBoatValue")}
+                />
+              ))}
+            </Panel>
+          </Feature>
+          <Feature
+            Icon={ShieldCheckIcon}
+            title={t("five.warrantyTitle")}
+            body={t("five.warrantyBody")}
+            tag={t("five.warrantyTag")}
+          >
+            <Panel label={t("five.warrantyLabel")} badge={t("five.warrantyBadge")}>
+              {(["Cover", "Claim"] as const).map((row) => (
+                <Fact
+                  key={row}
+                  label={t(`five.warranty${row}Label` as "five.warrantyCoverLabel")}
+                  value={t(`five.warranty${row}Value` as "five.warrantyCoverValue")}
+                />
+              ))}
+            </Panel>
+          </Feature>
+        </div>
+      </BrochureSlide>
+
+      {/* ------------------------------------------------------------- 6 */}
+      <BrochureSlide
+        index={6}
+        total={TOTAL}
+        tone="navy"
+        eyebrow={t("six.eyebrow")}
+        title={t("six.title")}
+        source={source}
+      >
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <p className="text-body-lg text-on-navy-2">{t("five.lead")}</p>
+          <p className="text-body-lg text-on-navy-2">{t("six.lead")}</p>
           <div className="flex flex-col gap-3">
-            <p className="text-overline text-brass-light uppercase">{t("five.askLabel")}</p>
+            <p className="text-overline text-brass-light uppercase">{t("six.askLabel")}</p>
             <ol className="flex flex-col divide-y divide-on-navy-border border-y border-on-navy-border">
               {(["One", "Two", "Three"] as const).map((n, i) => (
                 <li key={n} className="flex items-baseline gap-4 py-3">
@@ -219,7 +276,7 @@ export default async function BrochurePage() {
                     {i + 1}
                   </span>
                   <span className="min-w-0 text-body text-on-navy">
-                    {t(`five.ask${n}` as "five.askOne")}
+                    {t(`six.ask${n}` as "six.askOne")}
                   </span>
                 </li>
               ))}
@@ -229,7 +286,7 @@ export default async function BrochurePage() {
 
         <div className="flex flex-col gap-4 border-t border-on-navy-border pt-6">
           <div className="flex flex-col gap-1">
-            <p className="text-overline text-brass-light uppercase">{t("five.contactLabel")}</p>
+            <p className="text-overline text-brass-light uppercase">{t("six.contactLabel")}</p>
             <ul className="flex flex-wrap items-center gap-x-6">
               {contacts.map((email) => (
                 <li key={email}>
@@ -241,7 +298,7 @@ export default async function BrochurePage() {
                   </a>
                 </li>
               ))}
-              <li className="text-label text-brass-light">{t("five.site")}</li>
+              <li className="text-label text-brass-light">{t("six.site")}</li>
             </ul>
           </div>
           <p className="text-caption text-on-navy-3">{t("pilot")}</p>
@@ -264,7 +321,69 @@ export default async function BrochurePage() {
   );
 }
 
-/** Page 4's carnet: the same three lines as the home page's preview, drawn on paper. */
+/**
+ * One element of the tool, on pages 4 and 5: what it does in two lines, then what it looks like.
+ * `tag` marks the elements the pilot builds rather than the app already runs.
+ */
+function Feature({
+  Icon,
+  title,
+  body,
+  tag,
+  children,
+}: {
+  Icon: LucideIcon;
+  title: string;
+  body: string;
+  tag?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <div>
+        <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-h2">
+          <Icon className="size-5 shrink-0 text-ink-2" aria-hidden />
+          {title}
+          {tag ? (
+            <span className="rounded-full border border-border-strong bg-surface px-2.5 py-0.5 text-caption font-medium text-ink-2">
+              {tag}
+            </span>
+          ) : null}
+        </h3>
+        <p className="mt-1 text-body text-ink-2">{body}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** A card drawn the way the app draws its lists: a grey header, then one row per line. */
+function Panel({ label, badge, children }: { label: string; badge?: string; children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-2 px-4 py-3">
+        <p className="text-label text-foreground">{label}</p>
+        {badge ? (
+          <span className="shrink-0 rounded-full border border-state-ok-border bg-state-ok-tint px-2.5 py-1 text-caption font-medium text-state-ok-fg">
+            {badge}
+          </span>
+        ) : null}
+      </div>
+      <ul className="divide-y divide-border">{children}</ul>
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <li className="flex items-baseline justify-between gap-4 px-4 py-2.5">
+      <span className="shrink-0 text-caption text-ink-3">{label}</span>
+      <span className="min-w-0 text-right text-label text-foreground">{value}</span>
+    </li>
+  );
+}
+
+/** Page 4's due dates: the same three lines as the home page's preview, drawn on paper. */
 async function CarnetCard() {
   const t = await getTranslations("marketing");
 
@@ -290,28 +409,20 @@ async function CarnetCard() {
   ];
 
   return (
-    <figure className="m-0 flex min-w-0 flex-col gap-3">
-      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
-        <div className="border-b border-border bg-surface-2 px-4 py-3">
-          <p className="text-label text-foreground">{t("brochure.four.boat")}</p>
-        </div>
-        <ul className="divide-y divide-border">
-          {lines.map((line) => (
-            <li key={line.title} className="flex items-start justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-label text-foreground">{line.title}</p>
-                <p className="mt-0.5 text-caption text-ink-2">{line.meta}</p>
-              </div>
-              <span
-                className={`shrink-0 rounded-full border px-2.5 py-1 text-caption font-medium ${line.tone}`}
-              >
-                {line.badge}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <figcaption className="text-caption text-ink-3">{t("brochure.four.caption")}</figcaption>
-    </figure>
+    <Panel label={t("brochure.four.boat")}>
+      {lines.map((line) => (
+        <li key={line.title} className="flex items-start justify-between gap-3 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-label text-foreground">{line.title}</p>
+            <p className="mt-0.5 text-caption text-ink-2">{line.meta}</p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full border px-2.5 py-1 text-caption font-medium ${line.tone}`}
+          >
+            {line.badge}
+          </span>
+        </li>
+      ))}
+    </Panel>
   );
 }
