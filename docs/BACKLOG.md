@@ -32,7 +32,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E16 | E16-10 |
 | E17 | E17-13 |
 | E18 | E18-17 |
-| E19 | E19-12 |
+| E19 | E19-13 |
 | E20 | E20-7 |
 
 ---
@@ -582,9 +582,25 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   **DoD** : textes dans `fr.json` (règle 7), `tests/unit/brochure.test.ts` (parité clés lues ↔
   clés écrites, dans les deux sens, et le nom du prospect nulle part ailleurs que dans la
   citation), route publique couverte par `tests/unit/proxy-public.test.ts`, page ajoutée à l'audit
-  tactile, vérifiée en 1024 × 768 et 768 × 1024. **Reste, et ce n'est pas du code** : la citation de
-  la page 4 (*Figaro Nautisme*, octobre 2025) est reprise du deck **sans avoir été vérifiée à la
-  source** ; et `constructeurs@xaman.boats`, que la page 7 appelle, n'existe pas encore (E19-9).
+  tactile, vérifiée en 1024 × 768 et 768 × 1024. **Réécrite en quatre pages par E19-12** : la
+  citation de la page 4 (*Figaro Nautisme*, octobre 2025), reprise du deck sans avoir pu être
+  vérifiée à la source, est partie avec l'argumentaire. Reste `constructeurs@xaman.boats`, que la
+  dernière page appelle et qui n'existe pas encore (E19-9).
+
+- [x] **E19-12 (S, 2)** **La présentation tombe à quatre pages, et demande un échange** (D155). Un
+  prospect a lu les sept pages comme « un copier-coller de Claude Code » : elles concluaient à la
+  place du chantier — ce que sa livraison lui coûte, l'analogie automobile, ses deux acheteurs — sur
+  un métier que personne ne nous avait raconté. `/constructeurs/brochure` et les sources du deck
+  (`.design/deck-constructeurs/`) disent désormais la même chose en quatre pages : ce qu'est Xaman
+  et qui le fait (l'équipe de myFrank, plus de 400 points de vente accompagnés sur la collecte
+  d'avis et le suivi de la satisfaction) ; ce que nous savons faire — le service après-vente — et
+  que nous ne connaissons pas encore le leur ; ce que nous cherchons à faire dans le nautisme, avec
+  le carnet de Xaman comme preuve qu'il tourne ; puis la demande, trente minutes où le chantier
+  parle, autour de trois questions. Partent aussi la citation jamais vérifiée et la couverture qui
+  se disait « le premier carnet d'entretien nautique numérique ». **DoD** : textes dans `fr.json`
+  (règle 7), `tests/unit/brochure.test.ts` mis à parité (quatre pages, plus aucun prospect nommé,
+  la page 4 demande bien un échange), deck et site aux mêmes mots, vérifié en 1024 × 768 et
+  768 × 1024. **Reste** : `constructeurs@xaman.boats` n'existe toujours pas (E19-9).
 
 ### Lot 1 bis — Le SAV se commande depuis le carnet *(MVP demandé le 2026-09-17, livré)*
 

@@ -1,17 +1,15 @@
 import type { ReactNode } from "react";
 
 /**
- * One page of the builders' brochure (E19-10, D136).
+ * One page of the builders' brochure (E19-10, E19-12).
  *
- * The deck handed over as a PDF is seven 16:9 pages, and its grammar never changes: a brass
- * eyebrow, a title set in the display face, a body, and — on the pages that argue rather than
- * open or close — a navy band that says the one sentence to remember. This component is that
- * grammar, so the seven pages of `/constructeurs/brochure` differ only by their body.
+ * The grammar of a page never changes: a brass eyebrow, a title set in the display face, a body,
+ * and — on the middle pages — a navy band that says the one sentence to remember. This component
+ * is that grammar, so the pages of `/constructeurs/brochure` differ only by their body.
  *
- * Two tones, exactly as in the deck: `navy` opens and closes (pages 1, 4 and 7), `paper` carries
- * the argument. A page is at least a screen tall so it reads as a page rather than a section,
- * never *exactly* a screen: a body that outgrows the viewport — which is what happens at
- * 768 × 1024 on page 3 — scrolls on rather than being cut off.
+ * Two tones: `navy` opens and closes, `paper` carries the middle. A page is at least a screen
+ * tall so it reads as a page rather than a section, never *exactly* a screen: a body that
+ * outgrows the viewport scrolls on rather than being cut off.
  */
 export type BrochureTone = "navy" | "paper";
 

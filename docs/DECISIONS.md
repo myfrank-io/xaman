@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D155.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D156.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4153,3 +4153,9 @@ Le trigger ne rattrape que les connexions futures : `0048_last_sign_in.sql` incl
 **Décision.** L'écran Membres se sépare de nouveau en deux listes, comme avant D151 : « connectés » (au moins une connexion, `profiles.last_sign_in_at`) et « pas encore connectés ». Pour ces derniers, la ligne dit quand les identifiants sont partis et combien de relances ont suivi : `boat_members.credentials_sent_count` et `credentials_sent_at` (`0050_credentials_sent.sql`), incrémentés par `issueCredentials` seulement quand le mailer a accepté le message. Chaque ligne n'affiche plus que qui, quel rôle et jusqu'à quand (« Accès illimité » ou la date) ; un tap ouvre la fiche du membre (`MemberDetailsDialog`) où le propriétaire corrige prénom et nom (`profiles.full_name`, écrit par la clé service après vérification du rôle `owner`, puisque la RLS ne laisse chacun écrire que son propre profil), change le rôle, choisit « Accès illimité » ou une date de fin, relance ou retire. « Relancer » reste aussi à portée directe sur les lignes en attente. Remplace le placement de D153 (date entre le rôle et la corbeille).
 
 **Raison.** Demande de Joseph : retrouver d'un coup d'œil qui a rejoint, qui non et combien de fois on l'a relancé, et pouvoir compléter la fiche des gens invités par leur seule adresse.
+
+## D155 — 2026-09-28 · La présentation constructeur passe de sept pages à quatre, et demande un échange
+
+**Décision.** `/constructeurs/brochure` et les sources du deck (`.design/deck-constructeurs/`) tombent de sept pages à quatre, aux mêmes mots des deux côtés : (1) ce qu'est Xaman, et qui le fait — l'équipe de myFrank, plus de 400 points de vente accompagnés sur la collecte d'avis et le suivi de la satisfaction ; (2) ce que nous savons faire, le service après-vente, et le fait que nous ne connaissons pas encore le leur ; (3) ce que nous cherchons à faire dans le nautisme — un suivi qui devienne un avantage plutôt qu'une charge — avec le carnet de Xaman comme preuve qu'il tourne ; (4) la demande, trente minutes où le chantier parle, autour de trois questions : comment il suit ses bateaux après la livraison, ce que la garantie et le SAV lui coûtent, et ce que ses propriétaires demandent sans l'obtenir. Partent avec les trois pages supprimées le coût de la poignée de main, l'analogie automobile, les deux acheteurs, la citation de *Figaro Nautisme* jamais vérifiée à la source, et la couverture qui se disait « le premier carnet d'entretien nautique numérique ».
+
+**Raison.** Un prospect a lu la version à sept pages comme « un copier-coller de Claude Code ». Le reproche porte : ces pages concluaient à la place du chantier — ce que sa livraison lui coûte, ce que ses acheteurs deviennent, ce qu'il devrait vendre — sur un métier que personne ne nous avait raconté. Tant qu'on ne leur a pas parlé, aucun modèle économique ne tient (D125 et D126 restent l'hypothèse, pas la conclusion). Le document sert donc désormais à obtenir la conversation, et ce qu'il affirmait est devenu ce qu'il demande.
