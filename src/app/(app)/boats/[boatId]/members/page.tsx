@@ -36,9 +36,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
-        actions={
-          <InviteMemberDialog boatId={boatId} inviterRole={isOwner ? "owner" : "editor"} />
-        }
+        actions={<InviteMemberDialog boatId={boatId} inviterRole={isOwner ? "owner" : "editor"} />}
       />
       <MembersList
         boatId={boatId}

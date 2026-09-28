@@ -2,15 +2,15 @@
   "artboards": [
     {
       "file": "Main.dc.html",
-      "title": "1 · Le constat",
+      "title": "1 · Couverture",
       "x": 0,
       "y": 0,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Cout.dc.html",
-      "title": "2 · Ce que ça coûte",
+      "file": "Equipe.dc.html",
+      "title": "2 · MyFrank",
       "x": 2040,
       "y": 0,
       "w": 1920,
@@ -18,39 +18,39 @@
     },
     {
       "file": "Automobile.dc.html",
-      "title": "3 · L'analogie automobile",
+      "title": "3 · Automobile et nautisme",
       "x": 4080,
       "y": 0,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Citation.dc.html",
-      "title": "4 · Ce que dit leur pôle occasion",
+      "file": "Idee.dc.html",
+      "title": "4 · L'idée",
       "x": 6120,
       "y": 0,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Produit.dc.html",
-      "title": "5 · Ce qu'est Xaman",
+      "file": "Proprietaire.dc.html",
+      "title": "5 · L'outil, côté propriétaire",
       "x": 0,
       "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "DeuxChemins.dc.html",
-      "title": "6 · Les deux acheteurs",
+      "file": "Chantier.dc.html",
+      "title": "6 · L'outil, côté chantier",
       "x": 2040,
       "y": 1280,
       "w": 1920,
       "h": 1080
     },
     {
-      "file": "Pilote.dc.html",
-      "title": "7 · Ce que nous leur proposons",
+      "file": "Echange.dc.html",
+      "title": "7 · Prochaine étape",
       "x": 4080,
       "y": 1280,
       "w": 1920,
@@ -63,7 +63,7 @@
       "x": 6120,
       "y": 1280,
       "w": 620,
-      "text": "Sept slides, dédiées à Grand Large Yachting.\n\nSLIDE 5 — « une de vos coques » est vérifié : Grand Large Yachting a repris Marsaudon Composites et la marque ORC (annoncé au Yachting Festival de Cannes, 18 septembre 2023), et Xaman est un ORC 50 coque n° 25 (seed/xaman-boat.json). Nuance à assumer si on la soulève : la coque est sortie avant la reprise — c'est justement la flotte que leur pôle occasion revend. Vérifier aussi que le carnet de Xaman est bien chargé dans la démo avant de présenter.\n\nSLIDE 4 — la citation de Pierre Delhomeau n'a PAS pu être vérifiée à la source (Figaro Nautisme inaccessible d'ici). Seul « un bon carnet d'entretien » est entre guillemets, le reste est en discours rapporté. À confirmer mot à mot avant de présenter, ainsi que le chiffre de 35 à 40 bateaux par an.\n\nLes anomalies du carnet papier citées en slide 5 sont réelles : relevées dans seed/xaman-history.json (20/13/25, 31/11/25, moteur SB 708 h → 347 h).\n\nAucun prix nulle part : ni l'option, ni ce que paie le chantier."
+      "text": "Sept slides, un seul but : décrocher un appel de 30 minutes.\n\nSLIDE 2 — 300+ entreprises et 4,9/5 viennent de myfrank.io ; les 400 points de vente sont notre compte. Les remettre à jour avant chaque envoi.\n\nSLIDE 5 — échéances et journal sont ceux de Xaman (ORC 50, coque n° 25). Vérifier qu'ils sont chargés dans la démo.\n\nSLIDE 6 — « Confier au chantier » existe (E19-11) ; la garantie constructeur NON (E19-2, E19-3) : elle est marquée « Avec le programme pilote » et sa carte est un exemple. Ne pas la promettre en démo.\n\nSLIDE 7 — deux contacts, joseph@myfrank.io et xchauvin@xl4.fr, les mêmes que sur le site.\n\nAucun prix nulle part."
     }
   ],
   "launch": {

@@ -4,20 +4,21 @@ import { useCallback, useEffect, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, PrinterIcon } from "lucide-react";
 
 /**
- * The way through the seven pages (E19-10, D136).
+ * The way through the pages (E19-10, E19-12).
  *
- * Without scripting the rail is still seven anchors to seven `id`s, which is the whole of what
- * it has to do — a brochure read by scrolling needs no JavaScript. What the script adds is the
- * three things a reader expects of a deck and a document cannot give: the current page is
- * marked, the arrow keys turn it, and the whole thing prints as seven landscape pages.
+ * Without scripting the rail is still one anchor per `id`, which is the whole of what it has to
+ * do — a brochure read by scrolling needs no JavaScript. What the script adds is the three
+ * things a reader expects of a deck and a document cannot give: the current page is marked, the
+ * arrow keys turn it, and the whole thing prints as landscape pages.
  *
  * Its words arrive as props rather than through `useTranslations`: this is the only client
  * component of the public site, and passing five strings costs less than a message slice around
  * two marketing pages (D110).
  *
- * The seven numbers do not fit a 320 px screen — nine round targets of 44 px are 396 px before
- * any padding, and the audit forbids a page that scrolls sideways (rule 1). Below `sm` the rail
- * says « 3 / 7 » between the two arrows and the numbers step aside.
+ * The numbers are laid out for a 320 px screen: a round target of 44 px per page plus two arrows
+ * runs past it as soon as there are more than a handful, and the audit forbids a page that
+ * scrolls sideways (rule 1). Below `sm` the rail says « 3 / 7 » between the two arrows and the
+ * numbers step aside.
  */
 export function BrochureRail({
   total,
