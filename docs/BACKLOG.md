@@ -582,23 +582,23 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   **DoD** : textes dans `fr.json` (règle 7), `tests/unit/brochure.test.ts` (parité clés lues ↔
   clés écrites, dans les deux sens, et le nom du prospect nulle part ailleurs que dans la
   citation), route publique couverte par `tests/unit/proxy-public.test.ts`, page ajoutée à l'audit
-  tactile, vérifiée en 1024 × 768 et 768 × 1024. **Réécrite en quatre pages par E19-12** : la
+  tactile, vérifiée en 1024 × 768 et 768 × 1024. **Réécrite en cinq pages par E19-12** : la
   citation de la page 4 (*Figaro Nautisme*, octobre 2025), reprise du deck sans avoir pu être
   vérifiée à la source, est partie avec l'argumentaire, et la dernière page n'appelle plus
   `constructeurs@xaman.boats` (E19-9) mais deux contacts nommés.
 
-- [x] **E19-12 (S, 2)** **La présentation tombe à quatre pages, et vend un appel** (D155). Un
+- [x] **E19-12 (S, 2)** **La présentation tombe à cinq pages, et vend un appel** (D155). Un
   prospect a lu les sept pages comme « un copier-coller de Claude Code » : elles concluaient à la
   place du chantier — ce que sa livraison lui coûte, l'analogie automobile, ses deux acheteurs — sur
   un métier que personne ne nous avait raconté. `/constructeurs/brochure` et les sources du deck
-  (`.design/deck-constructeurs/`) disent désormais la même chose en quatre pages : ce qu'est Xaman et
+  (`.design/deck-constructeurs/`) disent désormais la même chose en cinq pages : ce qu'est Xaman et
   qui le fait (MyFrank) ; MyFrank en trois chiffres (400+ points de vente, 300+ entreprises, 4,9/5) ;
-  ce que Xaman change pour le SAV d'un chantier, carnet de Xaman à l'appui ; un appel de 30 minutes
+  l'automobile et le nautisme face à face, à la vente, à l'entretien, à la revente ; ce que Xaman change pour le SAV d'un chantier, carnet de Xaman à l'appui ; un appel de 30 minutes
   qui finit sur un pilote, et deux contacts nommés (joseph@myfrank.io, xchauvin@xl4.fr) à la place
   du bouton vers `constructeurs@xaman.boats`. Plus de lien vers `/constructeurs`, plus de bandeau navy
   (`BrochureNote` supprimé). Partent aussi la citation jamais vérifiée et la couverture qui se
   disait « le premier carnet d'entretien nautique numérique ». **DoD** : textes dans `fr.json`
-  (règle 7), `tests/unit/brochure.test.ts` mis à parité (quatre pages, aucun prospect nommé, deux
+  (règle 7), `tests/unit/brochure.test.ts` mis à parité (cinq pages, aucun prospect nommé, deux
   contacts et ni retour à l'offre ni boîte `constructeurs@`, « MyFrank » écrit comme MyFrank
   l'écrit), deck et site aux mêmes mots, vérifié en 1024 × 768 et 768 × 1024.
 

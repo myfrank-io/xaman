@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CompassIcon, HouseIcon, UsersIcon } from "lucide-react";
+import { CarIcon, CompassIcon, HouseIcon, SailboatIcon, UsersIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { XamanLogotype } from "@/components/brand/XamanLogotype";
@@ -8,7 +8,7 @@ import { BrochureRail } from "@/components/marketing/brochure/BrochureRail";
 import { BrochureSlide } from "@/components/marketing/brochure/BrochureSlide";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
-const TOTAL = 4;
+const TOTAL = 5;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("marketing.brochure.meta");
@@ -18,9 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The builders' presentation, read on the site rather than sent as a PDF (E19-10, E19-12, D155).
  *
- * Four pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, what the
- * logbook changes for a yard's after-sales service, and a thirty-minute call with a pilot at the
- * end of it. The seven pages it replaced argued the yard's business back to it and read as
+ * Five pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, the car
+ * trade beside the marine one, what the logbook changes for a yard's after-sales service, and a
+ * thirty-minute call with a pilot at the end of it. The seven pages it replaced argued the yard's business back to it and read as
  * machine-written; these say what we have and what we want, and nothing about the reader they
  * have not been told.
  *
@@ -45,8 +45,8 @@ export default async function BrochurePage() {
 
   // Two people to write to, by name, rather than the builders' letterbox (E19-9): that one does
   // not exist yet, and a brochure sent to a yard cannot end on an address that bounces.
-  const subject = encodeURIComponent(t("four.mailSubject"));
-  const contacts = [t("four.contactOne"), t("four.contactTwo")];
+  const subject = encodeURIComponent(t("five.mailSubject"));
+  const contacts = [t("five.contactOne"), t("five.contactTwo")];
 
   return (
     <main className="flex min-h-dvh flex-col bg-background">
@@ -137,6 +137,46 @@ export default async function BrochurePage() {
         title={t("three.title")}
         source={source}
       >
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            {
+              side: "car",
+              Icon: CarIcon,
+              box: "border border-border bg-surface shadow-sm",
+            },
+            { side: "boat", Icon: SailboatIcon, box: "bg-surface-2" },
+          ].map(({ side, Icon, box }) => (
+            <article key={side} className={`flex flex-col gap-4 rounded-xl p-5 lg:p-6 ${box}`}>
+              <h3 className="flex items-center gap-2 text-h2">
+                <Icon className="size-5 shrink-0 text-ink-2" aria-hidden />
+                {t(`three.${side}Label` as "three.carLabel")}
+              </h3>
+              <dl className="flex flex-col divide-y divide-border">
+                {(["Sale", "Care", "Resale"] as const).map((moment) => (
+                  <div key={moment} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
+                    <dt className="text-overline text-ink-3 uppercase">
+                      {t(`three.moment${moment}` as "three.momentSale")}
+                    </dt>
+                    <dd className="m-0 text-body text-foreground">
+                      {t(`three.${side}${moment}` as "three.carSale")}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </article>
+          ))}
+        </div>
+      </BrochureSlide>
+
+      {/* ------------------------------------------------------------- 4 */}
+      <BrochureSlide
+        index={4}
+        total={TOTAL}
+        tone="paper"
+        eyebrow={t("four.eyebrow")}
+        title={t("four.title")}
+        source={source}
+      >
         <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-10">
           <ul className="flex flex-col gap-5">
             {[
@@ -147,9 +187,9 @@ export default async function BrochurePage() {
               <li key={key} className="flex items-start gap-3">
                 <Icon className="mt-1 size-5 shrink-0 text-ink-2" aria-hidden />
                 <div className="min-w-0">
-                  <h3 className="text-h2">{t(`three.${key}Title` as "three.ownerTitle")}</h3>
+                  <h3 className="text-h2">{t(`four.${key}Title` as "four.ownerTitle")}</h3>
                   <p className="mt-1 text-body text-ink-2">
-                    {t(`three.${key}Body` as "three.ownerBody")}
+                    {t(`four.${key}Body` as "four.ownerBody")}
                   </p>
                 </div>
               </li>
@@ -159,19 +199,19 @@ export default async function BrochurePage() {
         </div>
       </BrochureSlide>
 
-      {/* ------------------------------------------------------------- 4 */}
+      {/* ------------------------------------------------------------- 5 */}
       <BrochureSlide
-        index={4}
+        index={5}
         total={TOTAL}
         tone="navy"
-        eyebrow={t("four.eyebrow")}
-        title={t("four.title")}
+        eyebrow={t("five.eyebrow")}
+        title={t("five.title")}
         source={source}
       >
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <p className="text-body-lg text-on-navy-2">{t("four.lead")}</p>
+          <p className="text-body-lg text-on-navy-2">{t("five.lead")}</p>
           <div className="flex flex-col gap-3">
-            <p className="text-overline text-brass-light uppercase">{t("four.askLabel")}</p>
+            <p className="text-overline text-brass-light uppercase">{t("five.askLabel")}</p>
             <ol className="flex flex-col divide-y divide-on-navy-border border-y border-on-navy-border">
               {(["One", "Two", "Three"] as const).map((n, i) => (
                 <li key={n} className="flex items-baseline gap-4 py-3">
@@ -179,7 +219,7 @@ export default async function BrochurePage() {
                     {i + 1}
                   </span>
                   <span className="min-w-0 text-body text-on-navy">
-                    {t(`four.ask${n}` as "four.askOne")}
+                    {t(`five.ask${n}` as "five.askOne")}
                   </span>
                 </li>
               ))}
@@ -189,7 +229,7 @@ export default async function BrochurePage() {
 
         <div className="flex flex-col gap-4 border-t border-on-navy-border pt-6">
           <div className="flex flex-col gap-1">
-            <p className="text-overline text-brass-light uppercase">{t("four.contactLabel")}</p>
+            <p className="text-overline text-brass-light uppercase">{t("five.contactLabel")}</p>
             <ul className="flex flex-wrap items-center gap-x-6">
               {contacts.map((email) => (
                 <li key={email}>
@@ -201,7 +241,7 @@ export default async function BrochurePage() {
                   </a>
                 </li>
               ))}
-              <li className="text-label text-brass-light">{t("four.site")}</li>
+              <li className="text-label text-brass-light">{t("five.site")}</li>
             </ul>
           </div>
           <p className="text-caption text-on-navy-3">{t("pilot")}</p>
@@ -224,7 +264,7 @@ export default async function BrochurePage() {
   );
 }
 
-/** Page 3's carnet: the same three lines as the home page's preview, drawn on paper. */
+/** Page 4's carnet: the same three lines as the home page's preview, drawn on paper. */
 async function CarnetCard() {
   const t = await getTranslations("marketing");
 
@@ -253,7 +293,7 @@ async function CarnetCard() {
     <figure className="m-0 flex min-w-0 flex-col gap-3">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
         <div className="border-b border-border bg-surface-2 px-4 py-3">
-          <p className="text-label text-foreground">{t("brochure.three.boat")}</p>
+          <p className="text-label text-foreground">{t("brochure.four.boat")}</p>
         </div>
         <ul className="divide-y divide-border">
           {lines.map((line) => (
@@ -271,7 +311,7 @@ async function CarnetCard() {
           ))}
         </ul>
       </div>
-      <figcaption className="text-caption text-ink-3">{t("brochure.three.caption")}</figcaption>
+      <figcaption className="text-caption text-ink-3">{t("brochure.four.caption")}</figcaption>
     </figure>
   );
 }

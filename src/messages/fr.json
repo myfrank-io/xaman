@@ -2403,6 +2403,21 @@
         "site": "myfrank.io"
       },
       "three": {
+        "eyebrow": "Automobile et nautisme",
+        "title": "L'automobile a son carnet d'entretien. Le bateau, pas encore.",
+        "carLabel": "Automobile",
+        "boatLabel": "Nautisme aujourd'hui",
+        "momentSale": "À la vente",
+        "momentCare": "Entretien",
+        "momentResale": "À la revente",
+        "carSale": "Le contrat d'entretien est proposé avec la voiture.",
+        "carCare": "Chaque révision est inscrite au carnet.",
+        "carResale": "L'historique complet rassure l'acheteur et soutient le prix.",
+        "boatSale": "Le lien avec le chantier s'arrête souvent à la remise des clés.",
+        "boatCare": "L'entretien se note à la main, dans un classeur à bord.",
+        "boatResale": "L'historique se reconstitue avec des factures éparpillées."
+      },
+      "four": {
         "eyebrow": "Xaman",
         "title": "Votre SAV devient un argument de vente.",
         "ownerTitle": "Des clients mieux accompagnés",
@@ -2414,7 +2429,7 @@
         "boat": "Xaman · ORC 50, coque n° 25",
         "caption": "Un vrai bateau, suivi dans l'application."
       },
-      "four": {
+      "five": {
         "eyebrow": "Prochaine étape",
         "title": "Échangeons 30 minutes sur votre SAV.",
         "lead": "Nous voulons comprendre comment vous suivez vos bateaux aujourd'hui, et voir avec vous ce que Xaman peut apporter à vos clients.",

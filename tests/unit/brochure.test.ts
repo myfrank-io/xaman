@@ -33,7 +33,7 @@ function flatten(value: unknown, prefix = ""): string[] {
 }
 
 const DEFINED = new Set(flatten(brochure));
-/** La page 3 emprunte les trois lignes de l'accueil (`marketing.preview.*`) plutôt que de les réécrire. */
+/** La page 4 emprunte les trois lignes de l'accueil (`marketing.preview.*`) plutôt que de les réécrire. */
 const DEFINED_AROUND = new Set(flatten(fr.marketing));
 
 /**
@@ -41,15 +41,21 @@ const DEFINED_AROUND = new Set(flatten(fr.marketing));
  * composées sont listées ici parce qu'une expression ne se relit pas : c'est la liste, et non le
  * gabarit, qui dit ce que la page demandera vraiment à l'exécution.
  */
+const MOMENTS = ["Sale", "Care", "Resale"];
 const COMPOSED = [
   ...["One", "Two", "Three"].flatMap((n) => [`two.stat${n}Value`, `two.stat${n}Label`]),
-  ...["owner", "yard", "market"].flatMap((point) => [`three.${point}Title`, `three.${point}Body`]),
-  ...["One", "Two", "Three"].map((n) => `four.ask${n}`),
+  ...MOMENTS.map((moment) => `three.moment${moment}`),
+  ...["car", "boat"].flatMap((side) => [
+    `three.${side}Label`,
+    ...MOMENTS.map((moment) => `three.${side}${moment}`),
+  ]),
+  ...["owner", "yard", "market"].flatMap((point) => [`four.${point}Title`, `four.${point}Body`]),
+  ...["One", "Two", "Three"].map((n) => `five.ask${n}`),
 ];
 
 /**
  * Deux lectures ne passent pas par `marketing.brochure` : `generateMetadata`, qui ouvre la
- * tranche `…brochure.meta` et lit donc « title » tout court, et la carte de la page 3, qui
+ * tranche `…brochure.meta` et lit donc « title » tout court, et la carte de la page 4, qui
  * emprunte `marketing` pour réutiliser les trois lignes de l'accueil. On ramène les deux au même
  * repère avant de comparer — d'où la coupure au `export default`, qui sépare les deux portées.
  */
@@ -67,14 +73,22 @@ const LITERAL = SCOPES.flatMap(([source, prefix]) =>
 const READ = new Set([...LITERAL, ...COMPOSED]);
 
 describe("la brochure et ses mots", () => {
-  it("lit quatre pages, et pas une de plus", () => {
-    for (const page of ["one", "two", "three", "four"]) {
+  it("lit cinq pages, et pas une de plus", () => {
+    for (const page of ["one", "two", "three", "four", "five"]) {
       expect(brochure, page).toHaveProperty(page);
     }
-    for (const gone of ["five", "six", "seven"]) {
+    for (const gone of ["six", "seven"]) {
       expect(brochure, gone).not.toHaveProperty(gone);
     }
-    expect(PAGE).toContain("const TOTAL = 4");
+    expect(PAGE).toContain("const TOTAL = 5");
+  });
+
+  it("met l'automobile et le nautisme face à face, aux trois mêmes moments", () => {
+    const three = fr.marketing.brochure.three as Record<string, string>;
+    for (const side of ["car", "boat"]) {
+      for (const moment of MOMENTS)
+        expect(three[`${side}${moment}`], `${side}${moment}`).toBeTruthy();
+    }
   });
 
   it("ne lit aucune clé qui n'existe pas", () => {
@@ -102,9 +116,9 @@ describe("ce que la version publique ne dit pas", () => {
   });
 
   it("finit sur deux personnes à qui écrire, et sur rien d'autre", () => {
-    const four = fr.marketing.brochure.four;
-    expect(four.title).toMatch(/30 minutes/);
-    for (const email of [four.contactOne, four.contactTwo]) {
+    const five = fr.marketing.brochure.five;
+    expect(five.title).toMatch(/30 minutes/);
+    for (const email of [five.contactOne, five.contactTwo]) {
       expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[a-z]+$/);
     }
     expect(PAGE).toContain("href={`mailto:${email}?subject=${subject}`}");
