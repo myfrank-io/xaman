@@ -33,7 +33,7 @@ function flatten(value: unknown, prefix = ""): string[] {
 }
 
 const DEFINED = new Set(flatten(brochure));
-/** La page 4 emprunte les trois lignes de l'accueil (`marketing.preview.*`) plutôt que de les réécrire. */
+/** La page 5 emprunte les trois lignes de l'accueil (`marketing.preview.*`) plutôt que de les réécrire. */
 const DEFINED_AROUND = new Set(flatten(fr.marketing));
 
 /**
@@ -49,18 +49,19 @@ const COMPOSED = [
     `three.${side}Label`,
     ...MOMENTS.map((moment) => `three.${side}${moment}`),
   ]),
-  ...["One", "Two", "Three"].flatMap((n) => [`four.journal${n}`, `four.journal${n}Meta`]),
+  ...["One", "Two", "Three", "Four"].flatMap((n) => [`four.goal${n}Title`, `four.goal${n}Body`]),
+  ...["One", "Two", "Three"].flatMap((n) => [`five.journal${n}`, `five.journal${n}Meta`]),
   ...["Boat", "Item", "State", "Last"].flatMap((row) => [
-    `five.handoff${row}Label`,
-    `five.handoff${row}Value`,
+    `six.handoff${row}Label`,
+    `six.handoff${row}Value`,
   ]),
-  ...["Cover", "Claim"].flatMap((row) => [`five.warranty${row}Label`, `five.warranty${row}Value`]),
-  ...["One", "Two", "Three"].map((n) => `six.ask${n}`),
+  ...["Cover", "Claim"].flatMap((row) => [`six.warranty${row}Label`, `six.warranty${row}Value`]),
+  ...["One", "Two", "Three"].map((n) => `seven.ask${n}`),
 ];
 
 /**
  * Deux lectures ne passent pas par `marketing.brochure` : `generateMetadata`, qui ouvre la
- * tranche `…brochure.meta` et lit donc « title » tout court, et la carte de la page 4, qui
+ * tranche `…brochure.meta` et lit donc « title » tout court, et la carte de la page 5, qui
  * emprunte `marketing` pour réutiliser les trois lignes de l'accueil. On ramène les deux au même
  * repère avant de comparer — d'où la coupure au `export default`, qui sépare les deux portées.
  */
@@ -78,22 +79,29 @@ const LITERAL = SCOPES.flatMap(([source, prefix]) =>
 const READ = new Set([...LITERAL, ...COMPOSED]);
 
 describe("la brochure et ses mots", () => {
-  it("lit six pages, et pas une de plus", () => {
-    for (const page of ["one", "two", "three", "four", "five", "six"]) {
+  it("lit sept pages, et pas une de plus", () => {
+    for (const page of ["one", "two", "three", "four", "five", "six", "seven"]) {
       expect(brochure, page).toHaveProperty(page);
     }
-    expect(brochure).not.toHaveProperty("seven");
-    expect(PAGE).toContain("const TOTAL = 6");
+    expect(brochure).not.toHaveProperty("eight");
+    expect(PAGE).toContain("const TOTAL = 7");
+  });
+
+  it("dit ce que le suivi rapporte au chantier, en quatre points", () => {
+    const four = fr.marketing.brochure.four;
+    expect([four.goalOneTitle, four.goalTwoTitle, four.goalThreeTitle, four.goalFourTitle]).toEqual(
+      [
+        "Faire monter la valeur perçue",
+        "Attirer les acheteurs qui hésitent",
+        "Mieux suivre votre flotte",
+        "Ouvrir une nouvelle source de revenus",
+      ],
+    );
   });
 
   it("présente l'outil par ses quatre éléments, et marque celui que le pilote construit", () => {
-    const { four, five } = fr.marketing.brochure;
-    expect([
-      four.preventiveTitle,
-      four.historyTitle,
-      five.supportTitle,
-      five.warrantyTitle,
-    ]).toEqual([
+    const { five, six } = fr.marketing.brochure;
+    expect([five.preventiveTitle, five.historyTitle, six.supportTitle, six.warrantyTitle]).toEqual([
       "Maintenance préventive",
       "Historique des interventions",
       "Accompagnement",
@@ -101,9 +109,9 @@ describe("la brochure et ses mots", () => {
     ]);
     // La garantie n'existe pas encore dans l'app (E19-2, E19-3) : la page le dit, et sa carte
     // est un exemple, pas la lecture d'un bateau.
-    expect(five.warrantyTag).toMatch(/pilote/);
-    expect(five.warrantyLabel).toMatch(/^Exemple/);
-    expect(PAGE).toContain('tag={t("five.warrantyTag")}');
+    expect(six.warrantyTag).toMatch(/pilote/);
+    expect(six.warrantyLabel).toMatch(/^Exemple/);
+    expect(PAGE).toContain('tag={t("six.warrantyTag")}');
   });
 
   it("met l'automobile et le nautisme face à face, aux trois mêmes moments", () => {
@@ -139,9 +147,9 @@ describe("ce que la version publique ne dit pas", () => {
   });
 
   it("finit sur deux personnes à qui écrire, et sur rien d'autre", () => {
-    const six = fr.marketing.brochure.six;
-    expect(six.title).toMatch(/30 minutes/);
-    for (const email of [six.contactOne, six.contactTwo]) {
+    const seven = fr.marketing.brochure.seven;
+    expect(seven.title).toMatch(/30 minutes/);
+    for (const email of [seven.contactOne, seven.contactTwo]) {
       expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[a-z]+$/);
     }
     expect(PAGE).toContain("href={`mailto:${email}?subject=${subject}`}");

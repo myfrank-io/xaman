@@ -3,10 +3,14 @@ import Link from "next/link";
 import {
   CalendarClockIcon,
   CarIcon,
+  CoinsIcon,
   HandshakeIcon,
   HistoryIcon,
+  ListChecksIcon,
   SailboatIcon,
   ShieldCheckIcon,
+  TrendingUpIcon,
+  UserCheckIcon,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -17,7 +21,7 @@ import { BrochureRail } from "@/components/marketing/brochure/BrochureRail";
 import { BrochureSlide } from "@/components/marketing/brochure/BrochureSlide";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
-const TOTAL = 6;
+const TOTAL = 7;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("marketing.brochure.meta");
@@ -27,9 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The builders' presentation, read on the site rather than sent as a PDF (E19-10, E19-12, D155).
  *
- * Six pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, the car
- * trade beside the marine one, the tool itself in two pages (the owner's side, then the yard's),
- * and a thirty-minute call with a pilot at the end of it. The seven pages it replaced argued the
+ * Seven pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, the car
+ * trade beside the marine one, what following its boats earns a yard, the tool itself in two
+ * pages (the owner's side, then the yard's), and a thirty-minute call with a pilot at the end. The seven pages it replaced argued the
  * yard's business back to it and read as machine-written; these say what we have and what we
  * want, and nothing about the reader they have not been told.
  *
@@ -58,8 +62,8 @@ export default async function BrochurePage() {
 
   // Two people to write to, by name, rather than the builders' letterbox (E19-9): that one does
   // not exist yet, and a brochure sent to a yard cannot end on an address that bounces.
-  const subject = encodeURIComponent(t("six.mailSubject"));
-  const contacts = [t("six.contactOne"), t("six.contactTwo")];
+  const subject = encodeURIComponent(t("seven.mailSubject"));
+  const contacts = [t("seven.contactOne"), t("seven.contactTwo")];
 
   return (
     <main className="flex min-h-dvh flex-col bg-background">
@@ -185,35 +189,34 @@ export default async function BrochurePage() {
       <BrochureSlide
         index={4}
         total={TOTAL}
-        tone="paper"
+        tone="navy"
         eyebrow={t("four.eyebrow")}
         title={t("four.title")}
         source={source}
       >
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
-          <Feature
-            Icon={CalendarClockIcon}
-            title={t("four.preventiveTitle")}
-            body={t("four.preventiveBody")}
-          >
-            <CarnetCard />
-          </Feature>
-          <Feature Icon={HistoryIcon} title={t("four.historyTitle")} body={t("four.historyBody")}>
-            <Panel label={t("four.journalLabel")}>
-              {(["One", "Two", "Three"] as const).map((n) => (
-                <li key={n} className="px-4 py-3">
-                  <p className="text-label text-foreground">
-                    {t(`four.journal${n}` as "four.journalOne")}
-                  </p>
-                  <p className="mt-0.5 text-caption text-ink-2">
-                    {t(`four.journal${n}Meta` as "four.journalOneMeta")}
-                  </p>
-                </li>
-              ))}
-            </Panel>
-          </Feature>
-        </div>
-        <p className="text-caption text-ink-3">{t("four.caption")}</p>
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {[
+            { n: "One", Icon: TrendingUpIcon },
+            { n: "Two", Icon: UserCheckIcon },
+            { n: "Three", Icon: ListChecksIcon },
+            { n: "Four", Icon: CoinsIcon },
+          ].map(({ n, Icon }) => (
+            <li
+              key={n}
+              className="flex items-start gap-4 rounded-xl border border-on-navy-border bg-on-navy-surface/70 px-5 py-5"
+            >
+              <Icon className="mt-0.5 size-6 shrink-0 text-brass-light" aria-hidden />
+              <div className="min-w-0">
+                <h3 className="text-h2 text-on-navy">
+                  {t(`four.goal${n}Title` as "four.goalOneTitle")}
+                </h3>
+                <p className="mt-1 text-body text-on-navy-2">
+                  {t(`four.goal${n}Body` as "four.goalOneBody")}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </BrochureSlide>
 
       {/* ------------------------------------------------------------- 5 */}
@@ -226,29 +229,64 @@ export default async function BrochurePage() {
         source={source}
       >
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
-          <Feature Icon={HandshakeIcon} title={t("five.supportTitle")} body={t("five.supportBody")}>
-            <Panel label={t("five.handoffLabel")}>
+          <Feature
+            Icon={CalendarClockIcon}
+            title={t("five.preventiveTitle")}
+            body={t("five.preventiveBody")}
+          >
+            <CarnetCard />
+          </Feature>
+          <Feature Icon={HistoryIcon} title={t("five.historyTitle")} body={t("five.historyBody")}>
+            <Panel label={t("five.journalLabel")}>
+              {(["One", "Two", "Three"] as const).map((n) => (
+                <li key={n} className="px-4 py-3">
+                  <p className="text-label text-foreground">
+                    {t(`five.journal${n}` as "five.journalOne")}
+                  </p>
+                  <p className="mt-0.5 text-caption text-ink-2">
+                    {t(`five.journal${n}Meta` as "five.journalOneMeta")}
+                  </p>
+                </li>
+              ))}
+            </Panel>
+          </Feature>
+        </div>
+        <p className="text-caption text-ink-3">{t("five.caption")}</p>
+      </BrochureSlide>
+
+      {/* ------------------------------------------------------------- 6 */}
+      <BrochureSlide
+        index={6}
+        total={TOTAL}
+        tone="paper"
+        eyebrow={t("six.eyebrow")}
+        title={t("six.title")}
+        source={source}
+      >
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+          <Feature Icon={HandshakeIcon} title={t("six.supportTitle")} body={t("six.supportBody")}>
+            <Panel label={t("six.handoffLabel")}>
               {(["Boat", "Item", "State", "Last"] as const).map((row) => (
                 <Fact
                   key={row}
-                  label={t(`five.handoff${row}Label` as "five.handoffBoatLabel")}
-                  value={t(`five.handoff${row}Value` as "five.handoffBoatValue")}
+                  label={t(`six.handoff${row}Label` as "six.handoffBoatLabel")}
+                  value={t(`six.handoff${row}Value` as "six.handoffBoatValue")}
                 />
               ))}
             </Panel>
           </Feature>
           <Feature
             Icon={ShieldCheckIcon}
-            title={t("five.warrantyTitle")}
-            body={t("five.warrantyBody")}
-            tag={t("five.warrantyTag")}
+            title={t("six.warrantyTitle")}
+            body={t("six.warrantyBody")}
+            tag={t("six.warrantyTag")}
           >
-            <Panel label={t("five.warrantyLabel")} badge={t("five.warrantyBadge")}>
+            <Panel label={t("six.warrantyLabel")} badge={t("six.warrantyBadge")}>
               {(["Cover", "Claim"] as const).map((row) => (
                 <Fact
                   key={row}
-                  label={t(`five.warranty${row}Label` as "five.warrantyCoverLabel")}
-                  value={t(`five.warranty${row}Value` as "five.warrantyCoverValue")}
+                  label={t(`six.warranty${row}Label` as "six.warrantyCoverLabel")}
+                  value={t(`six.warranty${row}Value` as "six.warrantyCoverValue")}
                 />
               ))}
             </Panel>
@@ -256,19 +294,19 @@ export default async function BrochurePage() {
         </div>
       </BrochureSlide>
 
-      {/* ------------------------------------------------------------- 6 */}
+      {/* ------------------------------------------------------------- 7 */}
       <BrochureSlide
-        index={6}
+        index={7}
         total={TOTAL}
         tone="navy"
-        eyebrow={t("six.eyebrow")}
-        title={t("six.title")}
+        eyebrow={t("seven.eyebrow")}
+        title={t("seven.title")}
         source={source}
       >
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <p className="text-body-lg text-on-navy-2">{t("six.lead")}</p>
+          <p className="text-body-lg text-on-navy-2">{t("seven.lead")}</p>
           <div className="flex flex-col gap-3">
-            <p className="text-overline text-brass-light uppercase">{t("six.askLabel")}</p>
+            <p className="text-overline text-brass-light uppercase">{t("seven.askLabel")}</p>
             <ol className="flex flex-col divide-y divide-on-navy-border border-y border-on-navy-border">
               {(["One", "Two", "Three"] as const).map((n, i) => (
                 <li key={n} className="flex items-baseline gap-4 py-3">
@@ -276,7 +314,7 @@ export default async function BrochurePage() {
                     {i + 1}
                   </span>
                   <span className="min-w-0 text-body text-on-navy">
-                    {t(`six.ask${n}` as "six.askOne")}
+                    {t(`seven.ask${n}` as "seven.askOne")}
                   </span>
                 </li>
               ))}
@@ -286,7 +324,7 @@ export default async function BrochurePage() {
 
         <div className="flex flex-col gap-4 border-t border-on-navy-border pt-6">
           <div className="flex flex-col gap-1">
-            <p className="text-overline text-brass-light uppercase">{t("six.contactLabel")}</p>
+            <p className="text-overline text-brass-light uppercase">{t("seven.contactLabel")}</p>
             <ul className="flex flex-wrap items-center gap-x-6">
               {contacts.map((email) => (
                 <li key={email}>
@@ -298,7 +336,7 @@ export default async function BrochurePage() {
                   </a>
                 </li>
               ))}
-              <li className="text-label text-brass-light">{t("six.site")}</li>
+              <li className="text-label text-brass-light">{t("seven.site")}</li>
             </ul>
           </div>
           <p className="text-caption text-on-navy-3">{t("pilot")}</p>
@@ -322,7 +360,7 @@ export default async function BrochurePage() {
 }
 
 /**
- * One element of the tool, on pages 4 and 5: what it does in two lines, then what it looks like.
+ * One element of the tool, on pages 5 and 6: what it does in two lines, then what it looks like.
  * `tag` marks the elements the pilot builds rather than the app already runs.
  */
 function Feature({
@@ -383,7 +421,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Page 4's due dates: the same three lines as the home page's preview, drawn on paper. */
+/** Page 5's due dates: the same three lines as the home page's preview, drawn on paper. */
 async function CarnetCard() {
   const t = await getTranslations("marketing");
 
@@ -409,7 +447,7 @@ async function CarnetCard() {
   ];
 
   return (
-    <Panel label={t("brochure.four.boat")}>
+    <Panel label={t("brochure.five.boat")}>
       {lines.map((line) => (
         <li key={line.title} className="flex items-start justify-between gap-3 px-4 py-3">
           <div className="min-w-0">

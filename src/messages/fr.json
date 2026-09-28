@@ -2418,6 +2418,18 @@
         "boatResale": "L'historique se reconstitue avec des factures éparpillées."
       },
       "four": {
+        "eyebrow": "L'idée",
+        "title": "Ce que le suivi rapporte au chantier.",
+        "goalOneTitle": "Faire monter la valeur perçue",
+        "goalOneBody": "Un bateau livré avec son carnet et suivi par son chantier inspire confiance, à l'achat comme à la revente.",
+        "goalTwoTitle": "Attirer les acheteurs qui hésitent",
+        "goalTwoBody": "Beaucoup renoncent à un grand bateau de peur de se retrouver seuls pour l'entretenir. Un suivi assuré par le chantier lève ce frein.",
+        "goalThreeTitle": "Mieux suivre votre flotte",
+        "goalThreeBody": "Vous savez où en sont vos bateaux après la livraison : ce qui est fait, ce qui est en retard, ce qui revient souvent.",
+        "goalFourTitle": "Ouvrir une nouvelle source de revenus",
+        "goalFourBody": "Une offre de suivi vendue avec le bateau, et un entretien qui revient chez vous saison après saison."
+      },
+      "five": {
         "eyebrow": "L'outil · côté propriétaire",
         "title": "Un carnet qui prévient avant la panne.",
         "preventiveTitle": "Maintenance préventive",
@@ -2434,7 +2446,7 @@
         "journalThreeMeta": "30 décembre 2025 · Moteurs",
         "caption": "Un vrai bateau, suivi dans l'application."
       },
-      "five": {
+      "six": {
         "eyebrow": "L'outil · côté chantier",
         "title": "Votre SAV devient un argument de vente.",
         "supportTitle": "Accompagnement",
@@ -2458,7 +2470,7 @@
         "warrantyClaimLabel": "Réclamation",
         "warrantyClaimValue": "Date, heures, photos et facture jointes"
       },
-      "six": {
+      "seven": {
         "eyebrow": "Prochaine étape",
         "title": "Échangeons 30 minutes sur votre SAV.",
         "lead": "Nous voulons comprendre comment vous suivez vos bateaux aujourd'hui, et voir avec vous ce que Xaman peut apporter à vos clients.",
