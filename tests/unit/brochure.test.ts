@@ -37,12 +37,12 @@ const DEFINED = new Set(flatten(brochure));
 const DEFINED_AROUND = new Set(flatten(fr.marketing));
 
 /**
- * Les clés que la page lit en dur, plus celles qu'elle compose (`two.${key}Label`). Les familles
+ * Les clés que la page lit en dur, plus celles qu'elle compose (`two.stat${n}Value`). Les familles
  * composées sont listées ici parce qu'une expression ne se relit pas : c'est la liste, et non le
  * gabarit, qui dit ce que la page demandera vraiment à l'exécution.
  */
 const COMPOSED = [
-  ...["reviews", "service", "xaman"].flatMap((card) => [`two.${card}Label`, `two.${card}Body`]),
+  ...["One", "Two", "Three"].flatMap((n) => [`two.stat${n}Value`, `two.stat${n}Label`]),
   ...["owner", "yard", "market"].flatMap((point) => [`three.${point}Title`, `three.${point}Body`]),
   ...["One", "Two", "Three"].map((n) => `four.ask${n}`),
 ];
@@ -101,9 +101,25 @@ describe("ce que la version publique ne dit pas", () => {
     expect(named).toEqual([]);
   });
 
-  it("demande un échange plutôt que de conclure à la place du chantier", () => {
-    expect(fr.marketing.brochure.four.title).toMatch(/trente minutes/i);
-    expect(PAGE).toContain('t("four.askLabel")');
+  it("finit sur une demande d'appel, et sur rien d'autre", () => {
+    expect(fr.marketing.brochure.four.title).toMatch(/30 minutes/);
+    expect(PAGE).toContain('t("four.ctaButton")');
+    // Envoyée seule, en lien, à quelqu'un qui n'a pas vu la page de l'offre : un second bouton
+    // à côté de « Réserver un appel » ne lui donne qu'un autre endroit où aller.
+    expect(PAGE).not.toContain('href="/constructeurs"');
+    expect(brochure.nav).not.toHaveProperty("back");
+  });
+
+  it("écrit MyFrank comme MyFrank l'écrit", () => {
+    const all = flatten(brochure).map((key) =>
+      key
+        .split(".")
+        .reduce<unknown>((node, step) => (node as Record<string, unknown>)?.[step], brochure),
+    );
+    expect(all.some((value) => typeof value === "string" && value.includes("MyFrank"))).toBe(true);
+    expect(all.filter((value) => typeof value === "string" && /\bmyFrank\b/.test(value))).toEqual(
+      [],
+    );
   });
 
   it("annonce le programme pilote, comme la page qui la porte", () => {

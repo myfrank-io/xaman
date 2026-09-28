@@ -1,18 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowLeftIcon,
-  CompassIcon,
-  HouseIcon,
-  NotebookTextIcon,
-  StarIcon,
-  UsersIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { CompassIcon, HouseIcon, UsersIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { XamanLogotype } from "@/components/brand/XamanLogotype";
-import { BrochureNote } from "@/components/marketing/brochure/BrochureNote";
 import { BrochureRail } from "@/components/marketing/brochure/BrochureRail";
 import { BrochureSlide } from "@/components/marketing/brochure/BrochureSlide";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
@@ -28,18 +19,18 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * The builders' presentation, read on the site rather than sent as a PDF (E19-10, E19-12, D155).
  *
- * Four pages, where there were seven. The seven argued — the cost of the handshake, the car
- * analogy, a quote, two buyers, a pilot — and a prospect read them as something a machine had
- * written: seven pages of conclusions about a business we have never been told about. Which they
- * were. So the deck no longer argues: it says who we are, what we have already built elsewhere,
- * what we would like to try in the marine trade, and asks for thirty minutes in which the yard
- * does the talking. Everything a call is supposed to establish — their process, what warranty
- * costs them, what their owners ask for — is now a question on page 4 instead of an answer on
- * pages 2, 3 and 6.
+ * Four pages that sell a call: what Xaman is and who builds it, MyFrank's own numbers, what the
+ * logbook changes for a yard's after-sales service, and a thirty-minute call with a pilot at the
+ * end of it. The seven pages it replaced argued the yard's business back to it and read as
+ * machine-written; these say what we have and what we want, and nothing about the reader they
+ * have not been told.
  *
- * Two liabilities left with those pages, and both were flagged before they did: the *Figaro
- * Nautisme* quote nobody could verify at the source, and a cover that called Xaman the first
- * digital logbook in yachting with nothing to back it.
+ * MyFrank's figures (300+ companies, 4,9/5) are the ones myfrank.io publishes; the 400 points of
+ * sale are the team's own count. Keep the three in step with the site before each send.
+ *
+ * There is no way back to `/constructeurs` from here: the brochure is sent on its own, as a
+ * link, to someone who has not seen the offer page, and a second button beside « Réserver un
+ * appel » only gives them somewhere else to go.
  *
  * Re-drawn with the tokens of `globals.css` rather than embedded as a PDF: a flattened raster has
  * no selectable text, nothing a screen reader can read, and is a second copy of a design that
@@ -74,24 +65,13 @@ export default async function BrochurePage() {
       <style>{"@media print{@page{size:A4 landscape;margin:10mm}.brochure-page{zoom:0.78}}"}</style>
 
       <div className="sticky top-0 z-30 border-b border-on-navy-border bg-navy/95 text-on-navy backdrop-blur print:hidden">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 safe-pt-2 pb-2 lg:px-8">
+        <div className="mx-auto flex w-full max-w-6xl items-center px-4 safe-pt-2 pb-2 lg:px-8">
           <Link
             href="/"
             aria-label={tNav("home")}
             className="inline-flex min-h-11 items-center rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-brass-light/60"
           >
             <XamanLogotype className="h-7" />
-          </Link>
-          {/* « Revenir à l'offre constructeur » is 221 px of label: beside the logotype it runs
-              off a 320 px screen, so below `sm` it is the arrow alone and the words move to the
-              accessible name. 44 x 44 either way. */}
-          <Link
-            href="/constructeurs"
-            aria-label={t("nav.back")}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-3 text-label text-on-navy outline-none hover:bg-on-navy-surface focus-visible:ring-[3px] focus-visible:ring-brass-light/60"
-          >
-            <ArrowLeftIcon className="size-4 shrink-0" aria-hidden />
-            <span className="hidden sm:inline">{t("nav.back")}</span>
           </Link>
         </div>
       </div>
@@ -123,30 +103,33 @@ export default async function BrochurePage() {
         eyebrow={t("two.eyebrow")}
         title={t("two.title")}
         source={source}
-        note={
-          <BrochureNote icon={<UsersIcon className="size-5" />} title={t("two.noteTitle")}>
-            <p className="text-body text-on-navy-2">{t("two.noteBody")}</p>
-          </BrochureNote>
-        }
       >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { key: "reviews", Icon: StarIcon },
-            { key: "service", Icon: WrenchIcon },
-            { key: "xaman", Icon: NotebookTextIcon },
-          ].map(({ key, Icon }) => (
-            <li
-              key={key}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm"
+        <dl className="grid gap-4 sm:grid-cols-3">
+          {(["One", "Two", "Three"] as const).map((n) => (
+            <div
+              key={n}
+              className="flex flex-col gap-1 rounded-xl border border-border bg-surface p-5 shadow-sm lg:p-6"
             >
-              <p className="flex items-center gap-2 text-overline text-brass uppercase">
-                <Icon className="size-4 text-ink-2" aria-hidden />
-                {t(`two.${key}Label` as "two.reviewsLabel")}
-              </p>
-              <p className="text-body text-ink-2">{t(`two.${key}Body` as "two.reviewsBody")}</p>
-            </li>
+              <dt className="order-2 text-body text-ink-2">
+                {t(`two.stat${n}Label` as "two.statOneLabel")}
+              </dt>
+              <dd className="order-1 m-0 font-display num text-[2.5rem] leading-none font-semibold tracking-tight text-foreground lg:text-[3.25rem]">
+                {t(`two.stat${n}Value` as "two.statOneValue")}
+              </dd>
+            </div>
           ))}
-        </ul>
+        </dl>
+        <div className="flex max-w-3xl flex-col gap-3">
+          <p className="text-body-lg text-ink-2">{t("two.body")}</p>
+          <a
+            href="https://myfrank.io"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex min-h-11 w-fit items-center text-label font-medium text-foreground underline underline-offset-4 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            {t("two.site")}
+          </a>
+        </div>
       </BrochureSlide>
 
       {/* ------------------------------------------------------------- 3 */}
@@ -157,9 +140,6 @@ export default async function BrochurePage() {
         eyebrow={t("three.eyebrow")}
         title={t("three.title")}
         source={source}
-        note={
-          <BrochureNote icon={<CompassIcon className="size-5" />} title={t("three.noteTitle")} />
-        }
       >
         <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-10">
           <ul className="flex flex-col gap-5">
@@ -192,47 +172,33 @@ export default async function BrochurePage() {
         title={t("four.title")}
         source={source}
       >
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12">
-          <div className="flex flex-col gap-4">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+          <p className="text-body-lg text-on-navy-2">{t("four.lead")}</p>
+          <div className="flex flex-col gap-3">
             <p className="text-overline text-brass-light uppercase">{t("four.askLabel")}</p>
-            <ol className="flex flex-col gap-3">
+            <ol className="flex flex-col divide-y divide-on-navy-border border-y border-on-navy-border">
               {(["One", "Two", "Three"] as const).map((n, i) => (
-                <li
-                  key={n}
-                  className="flex items-start gap-4 rounded-xl border border-on-navy-border bg-on-navy-surface/70 px-4 py-4"
-                >
-                  <span
-                    aria-hidden
-                    className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-brass-light num text-caption font-medium text-brass-light"
-                  >
+                <li key={n} className="flex items-baseline gap-4 py-3">
+                  <span aria-hidden className="w-5 shrink-0 num text-label text-brass-light">
                     {i + 1}
                   </span>
-                  <p className="min-w-0 text-body text-on-navy">
+                  <span className="min-w-0 text-body text-on-navy">
                     {t(`four.ask${n}` as "four.askOne")}
-                  </p>
+                  </span>
                 </li>
               ))}
             </ol>
           </div>
-          <p className="text-body-lg text-on-navy-2 lg:self-center">{t("four.closing")}</p>
         </div>
 
         <div className="flex flex-col gap-4 border-t border-on-navy-border pt-6">
-          <p className="text-caption text-on-navy-3">{t("pilot")}</p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <Button asChild size="xl" variant="secondary">
               <a href={mailto}>{t("four.ctaButton")}</a>
             </Button>
-            <Button
-              asChild
-              size="xl"
-              variant="outline"
-              className="border-on-navy-border bg-transparent text-on-navy hover:bg-on-navy-surface hover:text-on-navy"
-            >
-              <Link href="/constructeurs">{t("nav.back")}</Link>
-            </Button>
             <span className="text-label text-brass-light">{t("four.site")}</span>
           </div>
+          <p className="text-caption text-on-navy-3">{t("pilot")}</p>
         </div>
       </BrochureSlide>
 

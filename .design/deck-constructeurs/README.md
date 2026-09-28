@@ -16,21 +16,18 @@ Charte : reprise à l'identique des tokens de `src/app/globals.css` (Fraunces et
 
 ## Ce que ce deck cherche à obtenir
 
-**Un échange de trente minutes, pas une signature.** La version précédente en faisait sept et
-concluait à la place du chantier — le coût de la poignée de main, l'analogie automobile, les deux
-acheteurs — sur un métier que personne ne nous avait encore raconté. Un prospect l'a lue comme « un
-copier-coller de Claude Code », et il avait raison. Ce que ces pages affirmaient est devenu les
-trois questions de la slide 4.
+**Un appel de 30 minutes.** La version précédente en faisait sept et concluait à la place du
+chantier sur un métier que personne ne nous avait encore raconté ; un prospect l'a lue comme « un
+copier-coller de Claude Code ». Celle-ci dit ce que nous avons et ce que nous proposons, et laisse
+à l'appel ce que le chantier vit.
 
-## À vérifier avant de présenter
+## À vérifier avant chaque envoi
 
-- **Aucun prix nulle part** — ni l'option de service, ni ce que paie le chantier (E19-9 ne les a pas
-  tranchés ; une grille inventée disqualifierait le deck entier).
-- **Le chiffre de la slide 2** — « plus de 400 points de vente » est notre propre chiffre myFrank,
-  à confirmer avant chaque envoi.
+- **Les trois chiffres de la slide 2.** 300+ entreprises et 4,9/5 sont ceux que publie
+  [myfrank.io](https://myfrank.io) ; les 400 points de vente sont notre propre compte. Les tenir au
+  même niveau que le site.
 - **Le carnet de la slide 3** est celui de Xaman (ORC 50, coque n° 25, `seed/xaman-boat.json`).
   Vérifier qu'il est chargé dans la démo avant de présenter.
-
-Deux risques sont partis avec les trois slides supprimées : la citation de Pierre Delhomeau, qui
-n'avait jamais pu être vérifiée à la source, et une couverture qui se disait « le premier carnet
-d'entretien nautique numérique » sans rien pour l'étayer.
+- **Aucun prix nulle part** — ni l'option de service, ni ce que paie le chantier (E19-9 ne les a pas
+  tranchés).
+- **« Réserver un appel »** pointe vers `constructeurs@xaman.boats`, qui n'existe pas encore (E19-9).

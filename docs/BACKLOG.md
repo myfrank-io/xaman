@@ -587,20 +587,20 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   vérifiée à la source, est partie avec l'argumentaire. Reste `constructeurs@xaman.boats`, que la
   dernière page appelle et qui n'existe pas encore (E19-9).
 
-- [x] **E19-12 (S, 2)** **La présentation tombe à quatre pages, et demande un échange** (D155). Un
+- [x] **E19-12 (S, 2)** **La présentation tombe à quatre pages, et vend un appel** (D155). Un
   prospect a lu les sept pages comme « un copier-coller de Claude Code » : elles concluaient à la
   place du chantier — ce que sa livraison lui coûte, l'analogie automobile, ses deux acheteurs — sur
   un métier que personne ne nous avait raconté. `/constructeurs/brochure` et les sources du deck
-  (`.design/deck-constructeurs/`) disent désormais la même chose en quatre pages : ce qu'est Xaman
-  et qui le fait (l'équipe de myFrank, plus de 400 points de vente accompagnés sur la collecte
-  d'avis et le suivi de la satisfaction) ; ce que nous savons faire — le service après-vente — et
-  que nous ne connaissons pas encore le leur ; ce que nous cherchons à faire dans le nautisme, avec
-  le carnet de Xaman comme preuve qu'il tourne ; puis la demande, trente minutes où le chantier
-  parle, autour de trois questions. Partent aussi la citation jamais vérifiée et la couverture qui
-  se disait « le premier carnet d'entretien nautique numérique ». **DoD** : textes dans `fr.json`
-  (règle 7), `tests/unit/brochure.test.ts` mis à parité (quatre pages, plus aucun prospect nommé,
-  la page 4 demande bien un échange), deck et site aux mêmes mots, vérifié en 1024 × 768 et
-  768 × 1024. **Reste** : `constructeurs@xaman.boats` n'existe toujours pas (E19-9).
+  (`.design/deck-constructeurs/`) disent désormais la même chose en quatre pages : ce qu'est Xaman et
+  qui le fait (MyFrank) ; MyFrank en trois chiffres (400+ points de vente, 300+ entreprises, 4,9/5) ;
+  ce que Xaman change pour le SAV d'un chantier, carnet de Xaman à l'appui ; un appel de 30 minutes
+  qui finit sur un pilote. Plus de lien vers `/constructeurs`, plus de bandeau navy
+  (`BrochureNote` supprimé). Partent aussi la citation jamais vérifiée et la couverture qui se
+  disait « le premier carnet d'entretien nautique numérique ». **DoD** : textes dans `fr.json`
+  (règle 7), `tests/unit/brochure.test.ts` mis à parité (quatre pages, aucun prospect nommé, un seul
+  bouton et pas de retour à l'offre, « MyFrank » écrit comme MyFrank l'écrit), deck et site aux mêmes
+  mots, vérifié en 1024 × 768 et 768 × 1024. **Reste** : `constructeurs@xaman.boats`, que le bouton
+  appelle, n'existe toujours pas (E19-9).
 
 ### Lot 1 bis — Le SAV se commande depuis le carnet *(MVP demandé le 2026-09-17, livré)*
 

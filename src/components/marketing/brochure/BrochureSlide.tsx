@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 /**
  * One page of the builders' brochure (E19-10, E19-12).
  *
- * The grammar of a page never changes: a brass eyebrow, a title set in the display face, a body,
- * and — on the middle pages — a navy band that says the one sentence to remember. This component
- * is that grammar, so the pages of `/constructeurs/brochure` differ only by their body.
+ * The grammar of a page never changes: a brass eyebrow, a title set in the display face, and a
+ * body. This component is that grammar, so the pages of `/constructeurs/brochure` differ only by
+ * their body.
  *
  * Two tones: `navy` opens and closes, `paper` carries the middle. A page is at least a screen
  * tall so it reads as a page rather than a section, never *exactly* a screen: a body that
@@ -21,7 +21,6 @@ export function BrochureSlide({
   title,
   level = 2,
   source,
-  note,
   children,
 }: {
   index: number;
@@ -32,8 +31,6 @@ export function BrochureSlide({
   title: ReactNode;
   level?: 1 | 2;
   source: string;
-  /** The navy band at the foot of an argument page. */
-  note?: ReactNode;
   children: ReactNode;
 }) {
   const navy = tone === "navy";
@@ -52,7 +49,7 @@ export function BrochureSlide({
       }`}
     >
       {/* `pb-24` is the rail's clearance: it floats at the bottom of the viewport, so without it
-          the last line of a page — the navy band of page 3 — reads through a row of buttons. */}
+          the last line of a page reads through a row of buttons. */}
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 pt-10 pb-24 lg:px-10 lg:pt-12 print:pb-10">
         <header className="flex flex-col gap-3">
           <p className={`text-overline uppercase ${navy ? "text-brass-light" : "text-brass"}`}>
@@ -70,8 +67,6 @@ export function BrochureSlide({
         </header>
 
         <div className="flex flex-1 flex-col justify-center gap-6">{children}</div>
-
-        {note}
 
         <footer
           className={`flex items-center justify-between gap-4 border-t pt-4 text-caption ${

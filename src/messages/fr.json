@@ -2373,59 +2373,57 @@
     "brochure": {
       "meta": {
         "title": "Xaman pour les constructeurs — la présentation",
-        "description": "Qui nous sommes, ce que nous avons construit pour le nautisme, et la conversation que nous aimerions avoir avec vous."
+        "description": "Xaman, le carnet d'entretien numérique des bateaux, par MyFrank : ce qu'il apporte à vos clients et à votre SAV."
       },
       "nav": {
         "label": "Pages de la présentation",
         "goTo": "Page {number}",
         "position": "Page {number} sur {total}",
-        "back": "Revenir à l'offre constructeur",
         "print": "Imprimer la présentation"
       },
       "footer": "Xaman pour les constructeurs",
-      "pilot": "Programme pilote : le carnet du propriétaire est en service, l'étage constructeur s'écrit avec nos premiers chantiers partenaires.",
+      "pilot": "Programme pilote : nous cherchons deux ou trois chantiers partenaires pour construire l'offre constructeur avec eux.",
       "one": {
-        "eyebrow": "Xaman · le carnet d'entretien des bateaux",
-        "title": "Le carnet d'entretien du bateau, en numérique.",
-        "lead": "Les échéances, les interventions, les factures et les garanties d'un bateau, au même endroit — de la livraison à la revente.",
-        "byLabel": "Par l'équipe de",
-        "byBody": "myFrank, qui accompagne plus de 400 points de vente dans la collecte d'avis et le suivi de leur satisfaction."
+        "eyebrow": "Xaman · par MyFrank",
+        "title": "Le carnet d'entretien numérique de vos bateaux.",
+        "lead": "Vos clients suivent l'entretien de leur bateau depuis leur téléphone ou leur tablette. Vous gardez le lien avec eux après la livraison.",
+        "byLabel": "Conçu par MyFrank",
+        "byBody": "La plateforme de satisfaction client utilisée par plus de 400 points de vente."
       },
       "two": {
-        "eyebrow": "Qui vous parle",
+        "eyebrow": "MyFrank",
         "title": "La satisfaction client, c'est notre métier.",
-        "reviewsLabel": "myFrank",
-        "reviewsBody": "Plus de 400 points de vente accompagnés dans la collecte d'avis et le suivi de leur satisfaction.",
-        "serviceLabel": "Le service après-vente",
-        "serviceBody": "Le terrain que nous connaissons : faire remonter ce qui se passe après la vente, et le rendre exploitable.",
-        "xamanLabel": "Xaman",
-        "xamanBody": "Ce que nous avons construit pour le nautisme. Le carnet tourne déjà sur un bateau.",
-        "noteTitle": "Nous savons faire parler l'après-vente. Le vôtre, nous ne le connaissons pas.",
-        "noteBody": "C'est tout l'objet de cette présentation : vous demander trente minutes, pas vous vendre quelque chose."
+        "statOneValue": "400+",
+        "statOneLabel": "points de vente équipés",
+        "statTwoValue": "300+",
+        "statTwoLabel": "entreprises clientes",
+        "statThreeValue": "4,9/5",
+        "statThreeLabel": "note donnée par nos clients",
+        "body": "Collecte d'avis, mesure de la satisfaction, suivi après-vente : nous aidons les entreprises à garder le contact avec leurs clients. Xaman applique ce savoir-faire au nautisme.",
+        "site": "myfrank.io"
       },
       "three": {
-        "eyebrow": "Ce que nous cherchons à faire",
-        "title": "Faire du suivi après-vente un avantage, pas une charge.",
-        "ownerTitle": "Pour le propriétaire",
-        "ownerBody": "Un bateau dont l'entretien est tracé tombe moins en panne, et se revend mieux.",
-        "yardTitle": "Pour le chantier",
-        "yardBody": "Le lien avec l'acheteur ne s'arrête plus à la remise des clés.",
-        "marketTitle": "Sur le marché",
-        "marketBody": "Dans le nautisme, l'entretien se note encore à la main. Il y a une place à prendre.",
+        "eyebrow": "Xaman",
+        "title": "Votre SAV devient un argument de vente.",
+        "ownerTitle": "Des clients mieux accompagnés",
+        "ownerBody": "Échéances, rappels et historique dans leur poche. Le bateau est mieux entretenu et garde sa valeur à la revente.",
+        "yardTitle": "Un lien qui continue après la livraison",
+        "yardBody": "Les interventions remontent au chantier. Votre équipe SAV voit ce qui se passe sur vos bateaux.",
+        "marketTitle": "Une différence visible dès la remise des clés",
+        "marketBody": "L'acheteur repart avec son carnet déjà rempli : modèle, moteurs, garanties, plan d'entretien.",
         "boat": "Xaman · ORC 50, coque n° 25",
-        "caption": "Le carnet d'un bateau réel, aujourd'hui.",
-        "noteTitle": "Ce n'est pas une maquette."
+        "caption": "Un vrai bateau, suivi dans l'application."
       },
       "four": {
-        "eyebrow": "La suite",
-        "title": "Trente minutes, et c'est vous qui parlez.",
-        "askLabel": "Ce que nous aimerions comprendre",
-        "askOne": "Comment vous suivez vos bateaux une fois qu'ils sont livrés.",
-        "askTwo": "Ce que la garantie et le service après-vente vous coûtent, en temps et en arbitrage.",
-        "askThree": "Ce que vos propriétaires vous demandent et que vous n'arrivez pas à leur donner.",
-        "closing": "Nous n'arrivons pas avec une solution toute faite. Nous arrivons avec ce que nous savons faire ailleurs, et l'envie de comprendre votre réalité avant de proposer quoi que ce soit.",
-        "ctaButton": "Fixer un échange",
-        "ctaSubject": "Échange — carnet d'entretien numérique",
+        "eyebrow": "Prochaine étape",
+        "title": "Échangeons 30 minutes sur votre SAV.",
+        "lead": "Nous voulons comprendre comment vous suivez vos bateaux aujourd'hui, et voir avec vous ce que Xaman peut apporter à vos clients.",
+        "askLabel": "Au programme",
+        "askOne": "Votre organisation SAV et garantie aujourd'hui",
+        "askTwo": "Ce que vos propriétaires vous demandent après la livraison",
+        "askThree": "Un pilote sur quelques bateaux de votre gamme",
+        "ctaButton": "Réserver un appel",
+        "ctaSubject": "Xaman : réserver un appel",
         "site": "xaman.boats"
       }
     }
