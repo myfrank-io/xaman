@@ -584,8 +584,8 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   citation), route publique couverte par `tests/unit/proxy-public.test.ts`, page ajoutée à l'audit
   tactile, vérifiée en 1024 × 768 et 768 × 1024. **Réécrite en quatre pages par E19-12** : la
   citation de la page 4 (*Figaro Nautisme*, octobre 2025), reprise du deck sans avoir pu être
-  vérifiée à la source, est partie avec l'argumentaire. Reste `constructeurs@xaman.boats`, que la
-  dernière page appelle et qui n'existe pas encore (E19-9).
+  vérifiée à la source, est partie avec l'argumentaire, et la dernière page n'appelle plus
+  `constructeurs@xaman.boats` (E19-9) mais deux contacts nommés.
 
 - [x] **E19-12 (S, 2)** **La présentation tombe à quatre pages, et vend un appel** (D155). Un
   prospect a lu les sept pages comme « un copier-coller de Claude Code » : elles concluaient à la
@@ -594,13 +594,13 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
   (`.design/deck-constructeurs/`) disent désormais la même chose en quatre pages : ce qu'est Xaman et
   qui le fait (MyFrank) ; MyFrank en trois chiffres (400+ points de vente, 300+ entreprises, 4,9/5) ;
   ce que Xaman change pour le SAV d'un chantier, carnet de Xaman à l'appui ; un appel de 30 minutes
-  qui finit sur un pilote. Plus de lien vers `/constructeurs`, plus de bandeau navy
+  qui finit sur un pilote, et deux contacts nommés (joseph@myfrank.io, xchauvin@xl4.fr) à la place
+  du bouton vers `constructeurs@xaman.boats`. Plus de lien vers `/constructeurs`, plus de bandeau navy
   (`BrochureNote` supprimé). Partent aussi la citation jamais vérifiée et la couverture qui se
   disait « le premier carnet d'entretien nautique numérique ». **DoD** : textes dans `fr.json`
-  (règle 7), `tests/unit/brochure.test.ts` mis à parité (quatre pages, aucun prospect nommé, un seul
-  bouton et pas de retour à l'offre, « MyFrank » écrit comme MyFrank l'écrit), deck et site aux mêmes
-  mots, vérifié en 1024 × 768 et 768 × 1024. **Reste** : `constructeurs@xaman.boats`, que le bouton
-  appelle, n'existe toujours pas (E19-9).
+  (règle 7), `tests/unit/brochure.test.ts` mis à parité (quatre pages, aucun prospect nommé, deux
+  contacts et ni retour à l'offre ni boîte `constructeurs@`, « MyFrank » écrit comme MyFrank
+  l'écrit), deck et site aux mêmes mots, vérifié en 1024 × 768 et 768 × 1024.
 
 ### Lot 1 bis — Le SAV se commande depuis le carnet *(MVP demandé le 2026-09-17, livré)*
 

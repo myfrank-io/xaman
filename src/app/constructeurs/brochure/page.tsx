@@ -7,7 +7,6 @@ import { XamanLogotype } from "@/components/brand/XamanLogotype";
 import { BrochureRail } from "@/components/marketing/brochure/BrochureRail";
 import { BrochureSlide } from "@/components/marketing/brochure/BrochureSlide";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
-import { Button } from "@/components/ui/button";
 
 const TOTAL = 4;
 
@@ -29,8 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * sale are the team's own count. Keep the three in step with the site before each send.
  *
  * There is no way back to `/constructeurs` from here: the brochure is sent on its own, as a
- * link, to someone who has not seen the offer page, and a second button beside « Réserver un
- * appel » only gives them somewhere else to go.
+ * link or a PDF, to someone who has not seen the offer page. It ends on two people to write to.
  *
  * Re-drawn with the tokens of `globals.css` rather than embedded as a PDF: a flattened raster has
  * no selectable text, nothing a screen reader can read, and is a second copy of a design that
@@ -39,18 +37,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BrochurePage() {
   const t = await getTranslations("marketing.brochure");
   const tNav = await getTranslations("marketing.nav");
-  const tBuilders = await getTranslations("marketing.builders");
   const source = t("footer");
 
   const pages = Array.from({ length: TOTAL }, (_, i) => i + 1);
   const goTo = pages.map((number) => t("nav.goTo", { number }));
   const position = pages.map((number) => t("nav.position", { number, total: TOTAL }));
 
-  // The same letterbox the builders' page cites (E19-9), read from the same key rather than
-  // written twice: it does not exist yet, and the day it is created it is created once.
-  const mailto = `mailto:${tBuilders("cta.email")}?subject=${encodeURIComponent(
-    t("four.ctaSubject"),
-  )}`;
+  // Two people to write to, by name, rather than the builders' letterbox (E19-9): that one does
+  // not exist yet, and a brochure sent to a yard cannot end on an address that bounces.
+  const subject = encodeURIComponent(t("four.mailSubject"));
+  const contacts = [t("four.contactOne"), t("four.contactTwo")];
 
   return (
     <main className="flex min-h-dvh flex-col bg-background">
@@ -192,11 +188,21 @@ export default async function BrochurePage() {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-on-navy-border pt-6">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Button asChild size="xl" variant="secondary">
-              <a href={mailto}>{t("four.ctaButton")}</a>
-            </Button>
-            <span className="text-label text-brass-light">{t("four.site")}</span>
+          <div className="flex flex-col gap-1">
+            <p className="text-overline text-brass-light uppercase">{t("four.contactLabel")}</p>
+            <ul className="flex flex-wrap items-center gap-x-6">
+              {contacts.map((email) => (
+                <li key={email}>
+                  <a
+                    href={`mailto:${email}?subject=${subject}`}
+                    className="inline-flex min-h-11 items-center text-body-lg font-medium text-on-navy underline decoration-on-navy-border underline-offset-4 outline-none hover:decoration-on-navy focus-visible:ring-[3px] focus-visible:ring-brass-light/60"
+                  >
+                    {email}
+                  </a>
+                </li>
+              ))}
+              <li className="text-label text-brass-light">{t("four.site")}</li>
+            </ul>
           </div>
           <p className="text-caption text-on-navy-3">{t("pilot")}</p>
         </div>

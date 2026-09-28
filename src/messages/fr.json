@@ -2422,8 +2422,10 @@
         "askOne": "Votre organisation SAV et garantie aujourd'hui",
         "askTwo": "Ce que vos propriétaires vous demandent après la livraison",
         "askThree": "Un pilote sur quelques bateaux de votre gamme",
-        "ctaButton": "Réserver un appel",
-        "ctaSubject": "Xaman : réserver un appel",
+        "contactLabel": "Contact",
+        "contactOne": "joseph@myfrank.io",
+        "contactTwo": "xchauvin@xl4.fr",
+        "mailSubject": "Xaman : échange de 30 minutes",
         "site": "xaman.boats"
       }
     }

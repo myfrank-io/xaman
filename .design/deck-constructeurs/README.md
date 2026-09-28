@@ -30,4 +30,4 @@ copier-coller de Claude Code ». Celle-ci dit ce que nous avons et ce que nous p
   Vérifier qu'il est chargé dans la démo avant de présenter.
 - **Aucun prix nulle part** — ni l'option de service, ni ce que paie le chantier (E19-9 ne les a pas
   tranchés).
-- **« Réserver un appel »** pointe vers `constructeurs@xaman.boats`, qui n'existe pas encore (E19-9).
+- **Les deux contacts de la slide 4** (joseph@myfrank.io, xchauvin@xl4.fr) sont les mêmes que sur le site.

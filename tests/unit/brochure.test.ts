@@ -101,12 +101,17 @@ describe("ce que la version publique ne dit pas", () => {
     expect(named).toEqual([]);
   });
 
-  it("finit sur une demande d'appel, et sur rien d'autre", () => {
-    expect(fr.marketing.brochure.four.title).toMatch(/30 minutes/);
-    expect(PAGE).toContain('t("four.ctaButton")');
-    // Envoyée seule, en lien, à quelqu'un qui n'a pas vu la page de l'offre : un second bouton
-    // à côté de « Réserver un appel » ne lui donne qu'un autre endroit où aller.
+  it("finit sur deux personnes à qui écrire, et sur rien d'autre", () => {
+    const four = fr.marketing.brochure.four;
+    expect(four.title).toMatch(/30 minutes/);
+    for (const email of [four.contactOne, four.contactTwo]) {
+      expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[a-z]+$/);
+    }
+    expect(PAGE).toContain("href={`mailto:${email}?subject=${subject}`}");
+    // Envoyée seule, en lien ou en PDF, à quelqu'un qui n'a pas vu la page de l'offre : ni
+    // retour vers elle, ni la boîte `constructeurs@` de l'offre, qui n'existe pas encore (E19-9).
     expect(PAGE).not.toContain('href="/constructeurs"');
+    expect(PAGE).not.toContain("cta.email");
     expect(brochure.nav).not.toHaveProperty("back");
   });
 
