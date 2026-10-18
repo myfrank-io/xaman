@@ -9,9 +9,11 @@ import {
   parseHoursParam,
   type LogFormPrefill,
 } from "@/components/logs/log-form-values";
+import { inboundDomain } from "@/lib/inbox/receive";
 import { can, type BoatRole } from "@/lib/permissions";
 import { logFormData } from "@/lib/queries/log-form-data";
 import { readBoatRole } from "@/lib/queries/boat-context";
+import { inboxAddress } from "@/lib/schemas/inbox";
 import { createClient } from "@/lib/supabase/server";
 
 type Search = Record<string, string | string[] | undefined>;
@@ -43,40 +45,48 @@ export default async function NewLogPage({
   const engineId = firstParam(search.engine);
   const equipmentId = firstParam(search.equipment);
   const itemId = firstParam(search.item);
-  const [{ data: role }, data, { data: engine }, { data: equipmentItem }, { data: item }] =
-    await Promise.all([
-      readBoatRole(boatId),
-      logFormData(supabase, boatId, t("equipmentRemoved")),
-      engineId
-        ? supabase
-            .from("engines")
-            .select("id")
-            .eq("id", engineId)
-            .eq("boat_id", boatId)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      // Comme avant : un `?category=` explicite gagne, donc la question ne se pose plus.
-      equipmentId && !firstParam(search.category)
-        ? supabase
-            .from("equipment")
-            .select("category_id")
-            .eq("id", equipmentId)
-            .eq("boat_id", boatId)
-            .is("deleted_at", null)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      itemId
-        ? supabase
-            .from("checklist_items")
-            .select("id, label, category_id, engine_id, interval_hours")
-            .eq("id", itemId)
-            .eq("boat_id", boatId)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+  const [
+    { data: role },
+    data,
+    { data: boat },
+    { data: engine },
+    { data: equipmentItem },
+    { data: item },
+  ] = await Promise.all([
+    readBoatRole(boatId),
+    logFormData(supabase, boatId, t("equipmentRemoved")),
+    supabase.from("boats").select("name, inbox_token").eq("id", boatId).maybeSingle(),
+    engineId
+      ? supabase.from("engines").select("id").eq("id", engineId).eq("boat_id", boatId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Comme avant : un `?category=` explicite gagne, donc la question ne se pose plus.
+    equipmentId && !firstParam(search.category)
+      ? supabase
+          .from("equipment")
+          .select("category_id")
+          .eq("id", equipmentId)
+          .eq("boat_id", boatId)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    itemId
+      ? supabase
+          .from("checklist_items")
+          .select("id, label, category_id, engine_id, interval_hours")
+          .eq("id", itemId)
+          .eq("boat_id", boatId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
   if (!role) notFound();
   const boatRole = role as BoatRole;
   if (!can(boatRole, "contribute")) notFound();
+
+  // L'autre porte du document (D145) : transférer la facture à l'adresse du carnet plutôt que de
+  // la téléverser. Seulement si un domaine d'arrivée est configuré.
+  const mailDomain = inboundDomain();
+  const boatInboxAddress =
+    mailDomain && boat ? inboxAddress(boat.name, boat.inbox_token, mailDomain) : null;
 
   const categories = parseCategoriesParam(search.category);
   const prefill: LogFormPrefill = {
@@ -124,6 +134,7 @@ export default async function NewLogPage({
       log={null}
       prefill={prefill}
       askForDocument={!hasPrefillParams(search)}
+      inboxAddress={boatInboxAddress}
       categories={data.categories}
       engines={data.engines}
       engineCategoryIds={data.engineCategoryIds}
