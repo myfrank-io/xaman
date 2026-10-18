@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -10,6 +10,8 @@ import { InviteMemberDialog } from "@/components/members/InviteMemberDialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
+import { Input } from "@/components/ui/input";
 import { resendInvitation, revokeInvitation } from "@/lib/actions/members";
 import {
   deliveryFailed,
@@ -47,33 +49,41 @@ const NOTE: Partial<Record<DeliveryStatus, "sent" | "delivered" | "delayed">> = 
 
 export function InvitationsList({
   boatId,
-  boatName,
   invitations,
 }: {
   boatId: string;
-  boatName: string;
   invitations: InvitationRow[];
 }) {
   const t = useTranslations("members");
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // The one moment the owner has to hand a generated password over themselves (D151): only set
+  // when « Relancer » granted the access but the e-mail carrying it failed to leave.
+  const [revealed, setRevealed] = useState<{ id: string; password: string } | null>(null);
   const visible = invitations.filter((i) => i.status === "pending" || i.status === "expired");
   if (visible.length === 0) return null;
 
   /**
-   * D112: the same invitation, sent again to the same address. The server owns the rules — an
-   * hour between two reminders, nothing to an address that bounced — and answers with the
-   * sentence to show; here there is only the message that it left.
+   * « Relancer » on a row left over from before D151 (docs/DATA-MODEL.md §3.6): converts it into
+   * a granted account instead of resending the old token link. The server owns the rules — an
+   * hour between two tries, nothing to an address that bounced — and answers with the sentence to
+   * show.
    */
   function resend(id: string, email: string) {
+    setRevealed(null);
     startTransition(async () => {
       const result = await resendInvitation({ boatId, invitationId: id });
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
-      toast.success(t("invitations.resent", { email }));
+      if (result.data.emailFailed) {
+        toast.warning(t("invite.emailFailedTitle"));
+        if (result.data.password) setRevealed({ id, password: result.data.password });
+      } else {
+        toast.success(t("invitations.resent", { email }));
+      }
       router.refresh();
     });
   }
@@ -150,6 +160,26 @@ export function InvitationsList({
                   {t("invitations.revoke")}
                 </Button>
               </div>
+              {/* D151: the access is granted, but the e-mail carrying the password did not
+                  leave — the one moment the owner has to hand it over themselves. */}
+              {revealed?.id === i.id ? (
+                <Alert variant="warning" className="basis-full">
+                  <AlertTitle>{t("invite.emailFailedPassword", { email: i.email })}</AlertTitle>
+                  <AlertDescription className="flex flex-wrap items-center gap-2">
+                    <Input
+                      readOnly
+                      value={revealed.password}
+                      onFocus={(event) => event.target.select()}
+                      className="max-w-48 num"
+                    />
+                    <CopyButton
+                      value={revealed.password}
+                      label={t("invite.copyPassword")}
+                      onCopied={() => toast.success(t("invite.passwordCopied"))}
+                    />
+                  </AlertDescription>
+                </Alert>
+              ) : null}
               {/* The whole point of D79: what the mailer knew three seconds after the send, said
                   where the invitation is read — with the way out under it, address in hand. */}
               {failure ? (
@@ -160,7 +190,6 @@ export function InvitationsList({
                     <p>{t(`invitations.delivery.reasons.${i.delivery?.reason ?? "unknown"}`)}</p>
                     <InviteMemberDialog
                       boatId={boatId}
-                      boatName={boatName}
                       inviterRole="owner"
                       defaultEmail={i.email}
                       defaultRole={i.role === "renter" ? undefined : i.role}

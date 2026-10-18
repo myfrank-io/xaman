@@ -113,7 +113,7 @@ export default async function DevMembersPage() {
         <PageHeader
           title={t("title")}
           subtitle={t("subtitle")}
-          actions={<InviteMemberDialog boatId={DEV_BOAT_ID} boatName="Xaman" inviterRole="owner" />}
+          actions={<InviteMemberDialog boatId={DEV_BOAT_ID} inviterRole="owner" />}
         />
         <MembersList
           boatId={DEV_BOAT_ID}
@@ -121,7 +121,7 @@ export default async function DevMembersPage() {
           canManage
           members={MEMBERS}
         />
-        <InvitationsList boatId={DEV_BOAT_ID} boatName="Xaman" invitations={INVITATIONS} />
+        <InvitationsList boatId={DEV_BOAT_ID} invitations={INVITATIONS} />
       </div>
     </DevShell>
   );

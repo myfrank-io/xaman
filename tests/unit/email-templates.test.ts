@@ -13,16 +13,11 @@ import {
 import { payload, subjectsFromConfig } from "../../scripts/push-email-templates.mjs";
 
 import { SAMPLE_VALUES, renderEmailPreview, unresolvedPlaceholders } from "@/lib/email-preview";
+import { credentialsEmail } from "@/lib/email/credentials";
 import { handOverEmail } from "@/lib/email/handoff";
-import { invitationEmail } from "@/lib/email/invitation";
 import { recoveryEmail } from "@/lib/email/recovery";
 import { unresolvedPlaceholders as unresolvedIn } from "@/lib/email/render";
-import {
-  INVITATION_HTML,
-  INVITATION_SUBJECT,
-  RECOVERY_HTML,
-  RECOVERY_SUBJECT,
-} from "@/lib/email/templates.generated";
+import { RECOVERY_HTML, RECOVERY_SUBJECT } from "@/lib/email/templates.generated";
 
 type Template = {
   key: string;
@@ -51,15 +46,13 @@ describe("auth e-mail templates", () => {
   });
 
   /**
-   * The app sends its own invitation (D75) and its own recovery code (D78) when a mailer is
-   * configured. Both must be the very e-mail Supabase would have sent, which is why the module
-   * is generated rather than written.
+   * The app sends its own recovery code (D78) when a mailer is configured — the very e-mail
+   * Supabase would have sent, which is why the module is generated rather than written. The
+   * credentials e-mail (D151) is app-only (no `supabase/templates/` counterpart, like the inbox
+   * and hand-over e-mails): `renderAppTemplate()` is still the one source for it.
    */
   it("hand the app the very e-mails Supabase would have sent", () => {
     expect(readFileSync(APP_TEMPLATE as string, "utf8")).toBe(renderAppTemplate());
-    const invite = templates.find((t) => t.key === "invite")!;
-    expect(INVITATION_HTML).toBe(html(invite.file));
-    expect(INVITATION_SUBJECT).toBe(invite.subject);
     const recovery = templates.find((t) => t.key === "recovery")!;
     expect(RECOVERY_HTML).toBe(html(recovery.file));
     expect(RECOVERY_SUBJECT).toBe(recovery.subject);
@@ -81,22 +74,45 @@ describe("auth e-mail templates", () => {
     expect(unresolvedIn(body, {})).toEqual([]);
   });
 
-  it("fill the invitation the app sends with the boat, the inviter and the role", () => {
-    const { subject, html: body } = invitationEmail({
+  /**
+   * D151. The access is already granted by the time this is sent — nothing left to click — so
+   * the e-mail only has to carry what opens the door: the boat, the role, the identifier and,
+   * for a fresh account, the password.
+   */
+  it("fill the credentials e-mail with the boat, the role, the identifier and the password", () => {
+    const {
+      subject,
+      html: body,
+      text,
+    } = credentialsEmail({
       email: "emmanuel@exemple.fr",
-      inviteUrl: "https://xaman.boats/invite/tok",
+      password: "a1b2c3d4e5f6",
       boatName: "Xaman",
       inviterName: "Xavier",
       roleLabel: "Éditeur",
       appUrl: "https://xaman.boats",
     });
-    expect(subject).toBe(INVITATION_SUBJECT);
-    for (const value of ["Xaman", "Xavier", "Éditeur", "emmanuel@exemple.fr"]) {
+    expect(subject).toBe("Vos accès Xaman — Xaman");
+    for (const value of ["Xaman", "Xavier", "Éditeur", "emmanuel@exemple.fr", "a1b2c3d4e5f6"]) {
       expect(body).toContain(value);
+      expect(text).toContain(value);
     }
-    // The link is the invitation's own address, not an auth verification URL: opening it
-    // creates nobody's account, /invite/[token] asks for the sign-in.
-    expect(body).toContain("https://xaman.boats/invite/tok");
+    expect(body).toContain("https://xaman.boats/login");
+    expect(unresolvedIn(body, {})).toEqual([]);
+  });
+
+  // Someone who already has a Xaman account elsewhere: no password is ever generated or shown.
+  it("say nothing about a password for someone who already has an account", () => {
+    const { html: body, text } = credentialsEmail({
+      email: "emmanuel@exemple.fr",
+      password: null,
+      boatName: "Xaman",
+      inviterName: "Xavier",
+      roleLabel: "Éditeur",
+      appUrl: "https://xaman.boats",
+    });
+    expect(body).not.toContain("Mot de passe");
+    expect(text).not.toContain("Mot de passe :");
     expect(unresolvedIn(body, {})).toEqual([]);
   });
 
@@ -158,18 +174,19 @@ describe("auth e-mail templates", () => {
     expect(unresolvedIn(body, {})).toEqual([]);
   });
 
-  // A boat with no name, or an invitation whose inviter has neither name nor e-mail on file.
-  it("still read as an invitation when the metadata is empty", () => {
-    const { html: body } = invitationEmail({
+  // A member granted access whose inviter has neither name nor e-mail on file (profiles.full_name
+  // and profiles.email both null — the row was mirrored from an auth.users row created before
+  // either was set).
+  it("still read right when the inviter's name is empty", () => {
+    const { html: body } = credentialsEmail({
       email: "e@exemple.fr",
-      inviteUrl: "https://xaman.boats/invite/tok",
-      boatName: "",
+      password: null,
+      boatName: "Xaman",
       inviterName: "",
-      roleLabel: "",
+      roleLabel: "Lecteur",
       appUrl: "https://xaman.boats",
     });
-    expect(body).toContain("Le carnet du bord");
-    expect(body).toContain("Vous êtes invité à rejoindre");
+    expect(body).toContain("Vous avez accès");
     expect(unresolvedIn(body, {})).toEqual([]);
   });
 

@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D151.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D152.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4125,3 +4125,24 @@ Le système reste disponible en filtre et dans le détail d’un contrôle.
 **Décision.** Un point peut concerner plusieurs catégories sans dupliquer son historique. Comme une intervention, il conserve une catégorie principale et une table de liaison pour les autres. Le point et ses catégories sont enregistrés dans une seule transaction. Photos, devis et PDF appartiennent au point lui-même, restent visibles dans son détail et sont proposés en haut du formulaire. Les deux formulaires partagent les commandes d’ajout et la barre d’actions. Un transfert inachevé ou refusé conserve le formulaire et ses fichiers pour réessayer.
 
 **Raison.** Demande de Joseph : documenter un défaut avant intervention, retrouver un contrôle sous chaque système concerné et rendre les créations cohérentes sur iPad.
+
+## D151 — 2026-09-24 · L'accès se donne, il ne se demande plus
+
+**Décision.** Inviter quelqu'un crée son compte Supabase Auth et sa ligne `boat_members` dans le
+même appel (`grant_boat_access`, security definer, appelé par l'inviteur) : plus de ligne
+`boat_invitations` en attente, plus de token, plus de page `/invite/[token]`, plus de code OTP à
+6 chiffres — ni pour rejoindre, ni pour se connecter ensuite (mot de passe seul). L'e-mail envoyé
+porte l'identifiant (l'adresse) et, pour un compte neuf, un mot de passe généré ; quelqu'un qui a
+déjà un compte Xaman (un autre bateau) reçoit un e-mail sans mot de passe, le sien ouvre déjà
+celui-ci. Un envoi qui échoue n'est jamais un accès perdu : le mot de passe reste affiché une
+fois, à l'écran, pour que le propriétaire le transmette lui-même — le même principe que D75 pour
+le lien, appliqué au mot de passe. Les lignes `boat_invitations` déjà envoyées sous l'ancien
+modèle restent lisibles (table conservée) ; « Relancer » les convertit une par une au lieu de
+renvoyer l'ancien lien, et la ligne disparaît une fois le nouvel e-mail parti.
+
+**Raison.** Signalé par Joseph : l'envoi du code ne fonctionnait pas de façon fiable pour
+rejoindre un bateau, et rien ne distinguait un invité d'un autre avant qu'il ait lui-même cliqué
+le lien puis saisi un code — deux envois, donc deux occasions d'échouer en transit, pour la même
+classe de bug que D76/D78 avaient déjà corrigée côté connexion et récupération de mot de passe,
+jamais corrigée ici. Demande explicite de simplification maximale : supprimer entièrement le
+parcours à token et le mode de connexion par code, ne garder que mot de passe + e-mail.

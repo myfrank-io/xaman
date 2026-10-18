@@ -192,7 +192,6 @@ export type Database = {
           reminder_count: number
           revoked_at: string | null
           role: Database["public"]["Enums"]["boat_role"]
-          token: string
           updated_at: string
           valid_until: string | null
         }
@@ -214,7 +213,6 @@ export type Database = {
           reminder_count?: number
           revoked_at?: string | null
           role: Database["public"]["Enums"]["boat_role"]
-          token: string
           updated_at?: string
           valid_until?: string | null
         }
@@ -236,7 +234,6 @@ export type Database = {
           reminder_count?: number
           revoked_at?: string | null
           role?: Database["public"]["Enums"]["boat_role"]
-          token?: string
           updated_at?: string
           valid_until?: string | null
         }
@@ -2911,7 +2908,6 @@ export type Database = {
       }
     }
     Functions: {
-      accept_invitation: { Args: { p_token: string }; Returns: string }
       adjust_part_quantity: {
         Args: { p_delta: number; p_part_id: string }
         Returns: number
@@ -3026,15 +3022,14 @@ export type Database = {
         Args: { p_type: Database["public"]["Enums"]["boat_type"] }
         Returns: string
       }
-      get_invitation_preview: {
-        Args: { p_token: string }
-        Returns: {
-          boat_name: string
-          email: string
-          inviter_name: string
-          role: Database["public"]["Enums"]["boat_role"]
-          status: string
-        }[]
+      grant_boat_access: {
+        Args: {
+          p_boat_id: string
+          p_role: Database["public"]["Enums"]["boat_role"]
+          p_user_id: string
+          p_valid_until: string | null
+        }
+        Returns: undefined
       }
       is_boat_member: { Args: { p_boat_id: string }; Returns: boolean }
       is_boat_owner: { Args: { p_boat_id: string }; Returns: boolean }

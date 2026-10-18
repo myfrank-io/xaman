@@ -12,31 +12,27 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Field } from "@/components/forms/Field";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { inviteNewOwner, leaveBoat, revokeInvitation } from "@/lib/actions/members";
-import { formatDate } from "@/lib/format";
+import { inviteNewOwner, leaveBoat } from "@/lib/actions/members";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { inviteNewOwnerSchema } from "@/lib/schemas/members";
 
-export type OwnerInvitation = { id: string; email: string; expiresAt: string };
-
 /**
- * Transfer (E1-8, D30) in three explicit steps: what leaves with the boat, export first,
- * invite the new owner as `owner`, then leave once they have accepted. Nothing is destroyed:
- * the logbook simply follows the boat.
+ * Transfer (E1-8, D30, D151) in three explicit steps: what leaves with the boat, export first,
+ * grant the new owner access right away, then leave once there is another owner in place.
+ * Nothing is destroyed: the logbook simply follows the boat.
  */
 export function TransferBoatCard({
   boatId,
   boatName,
   otherOwners,
-  pendingInvitations,
 }: {
   boatId: string;
   boatName: string;
   otherOwners: number;
-  pendingInvitations: OwnerInvitation[];
 }) {
   const t = useTranslations("settings.transfer");
   const tc = useTranslations("common");
@@ -44,6 +40,9 @@ export function TransferBoatCard({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
+  // The one moment there is a generated password to hand over by hand (D151): only set when the
+  // access was granted but the e-mail carrying it failed to leave.
+  const [password, setPassword] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -55,25 +54,20 @@ export function TransferBoatCard({
       return;
     }
     setError(undefined);
+    setPassword(null);
     startTransition(async () => {
       const result = await inviteNewOwner(parsed.data);
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
-      toast.success(t("invited", { email: parsed.data.email }));
-      setEmail("");
-      router.refresh();
-    });
-  }
-
-  function revoke(id: string) {
-    startTransition(async () => {
-      const result = await revokeInvitation({ boatId, invitationId: id });
-      if (!result.ok) {
-        toast.error(errorMessage(result.error));
-        return;
+      if (result.data.emailFailed) {
+        toast.warning(t("emailFailedTitle"));
+        if (result.data.password) setPassword(result.data.password);
+      } else {
+        toast.success(t("invited", { email: parsed.data.email }));
       }
+      setEmail("");
       router.refresh();
     });
   }
@@ -119,26 +113,23 @@ export function TransferBoatCard({
               {t("invite")}
             </Button>
           </form>
-          {pendingInvitations.length > 0 ? (
-            <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
-              {pendingInvitations.map((invitation) => (
-                <li key={invitation.id} className="flex min-h-12 items-center gap-3 px-3">
-                  <span className="min-w-0 flex-1 truncate text-body">{invitation.email}</span>
-                  <span className="num text-caption text-ink-2">
-                    {t("expires", { date: formatDate(invitation.expiresAt) })}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => revoke(invitation.id)}
-                  >
-                    {t("revoke")}
-                  </Button>
-                </li>
-              ))}
-            </ul>
+          {password ? (
+            <Alert variant="warning">
+              <AlertTitle>{t("emailFailedPassword")}</AlertTitle>
+              <AlertDescription className="flex flex-wrap items-center gap-2">
+                <Input
+                  readOnly
+                  value={password}
+                  onFocus={(event) => event.target.select()}
+                  className="max-w-48 num"
+                />
+                <CopyButton
+                  value={password}
+                  label={t("copyPassword")}
+                  onCopied={() => toast.success(t("passwordCopied"))}
+                />
+              </AlertDescription>
+            </Alert>
           ) : null}
         </li>
         <li className="flex flex-col gap-2">

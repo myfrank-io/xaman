@@ -2,46 +2,47 @@ import { expect, test } from "@playwright/test";
 
 import fr from "../../../src/messages/fr.json";
 import { signIn } from "../support/auth";
-import { freshInvitation } from "../support/invitation";
+import { clearStrangerAccess } from "../support/invitation";
 import { SEED, hasStack, skipReason } from "../support/stack";
 
 /**
- * SPEC.md §6.1 — "Première connexion d'Emmanuel (invité)". The invitation page has to say what
- * is being joined before asking anyone to sign in — the boat, who invited, which role — because
- * it is the first screen a new member ever sees.
- *
- * The seed carries one pending invitation (`supabase/seed.sql`): `stranger@test.xaman`, as
- * viewer, on the test boat.
+ * SPEC.md §6.1 — a new member's first sign-in. D151 replaced the invitation link and the 6-digit
+ * code with an immediate grant: the owner invites from the Membres screen, the account and the
+ * access exist right away, and the invitee's only step is to sign in. Without a mailer configured
+ * (this stack has none), the dialog shows the generated password itself — the owner's fallback
+ * for a message that did not leave (`src/components/members/InviteMemberDialog.tsx`) — which is
+ * also what lets this journey read the password back without an inbox to check.
  */
 const INVITEE = SEED.users.stranger;
 
-test.describe("§6.1 an invitee's first sign-in", () => {
+test.describe("§6.1 a new member's first sign-in", () => {
   test.skip(!hasStack, skipReason);
 
-  test("the invitation names the boat, the inviter and the role before sign-in", async ({
+  test("inviting grants access right away and hands back a password to relay", async ({
     page,
     request,
   }) => {
-    await page.goto(`/invite/${await freshInvitation(request)}`);
+    await clearStrangerAccess(request);
+    await signIn(page, request, SEED.users.owner, `/boats/${SEED.boat}/members`);
 
-    await expect(page.getByRole("heading", { name: fr.invite.title })).toBeVisible();
-    await expect(page.getByText(SEED.boatName).first()).toBeVisible();
-    // The address is deliberately masked in the preview — the invitee types their own — so what
-    // is asserted is the sentence that asks for it, not the address itself.
-    await expect(page.getByText(/adresse invitée/).first()).toBeVisible();
-  });
+    await page.getByRole("button", { name: fr.members.invite.button }).click();
+    await page.getByLabel(fr.members.invite.email).fill(INVITEE);
+    await page.getByRole("button", { name: fr.members.invite.submit }).click();
 
-  test("an unknown token explains itself instead of failing", async ({ page }) => {
-    await page.goto("/invite/not-a-real-token");
-    await expect(page.getByText(fr.invite.invalid.title)).toBeVisible();
-  });
+    // No mailer in this stack: the dialog falls back to the password, exactly as it does for an
+    // owner whose mailer is having a bad day.
+    await expect(page.getByText(fr.members.invite.emailFailedTitle)).toBeVisible();
+    const password = await page.locator("input[readonly]").inputValue();
+    expect(password.length).toBeGreaterThanOrEqual(8);
 
-  test("signing in as the invitee joins the boat", async ({ page, request }) => {
-    await signIn(page, request, INVITEE, `/invite/${await freshInvitation(request)}`);
+    await page.getByRole("button", { name: fr.common.close }).click();
+    await page.getByRole("button", { name: fr.nav.signOut }).click();
 
-    await page.getByRole("button", { name: /Rejoindre/ }).tap();
+    await page.goto("/login");
+    await page.getByLabel(fr.auth.email.label).fill(INVITEE);
+    await page.getByLabel(fr.auth.password.label).fill(password);
+    await page.getByRole("button", { name: fr.auth.password.submit }).click();
 
-    // Lands on the boat: the invitation is spent and the membership exists.
     await page.waitForURL(/\/boats\/[0-9a-f-]+/, { timeout: 15_000 });
     await expect(
       page.getByRole("heading", { name: SEED.boatName, level: 1 }).first(),

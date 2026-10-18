@@ -35,7 +35,6 @@ const ENGINE = "00000000-0000-0000-0000-00000000e001";
 const ITEM = "00000000-0000-0000-0000-000000003001";
 const LOG_OWNER = "00000000-0000-0000-0000-000000002001";
 const LOG_PRO = "00000000-0000-0000-0000-000000002002";
-const INVITATION_TOKEN = "test-token-secret-000000000000000000000000001";
 
 const pool = new Pool({ connectionString: DATABASE_URL, max: 4 });
 
@@ -165,15 +164,12 @@ describeWithDb("read access (select)", () => {
     expect(await count(U.stranger, "boat_members", "boat_id = $1", [BOAT])).toBe(0);
   });
 
-  it("boat_invitations: only owners (and admin) see them; the token column is unreadable for everyone", async () => {
+  it("boat_invitations: only owners (and admin) see them; the hidden columns stay hidden (D151 — legacy rows only, nothing inserts here any more)", async () => {
     expect(await count(U.owner, "boat_invitations", "boat_id = $1", [BOAT])).toBe(1);
     expect(await count(U.admin, "boat_invitations", "boat_id = $1", [BOAT])).toBe(1);
     for (const role of ["editor", "pro", "viewer", "stranger"] as Role[]) {
       expect(await count(U[role], "boat_invitations", "boat_id = $1", [BOAT]), role).toBe(0);
     }
-    const owner = await run(U.owner, "select token from public.boat_invitations");
-    expect(owner.ok).toBe(false);
-    if (!owner.ok) expect(owner.code).toBe("42501");
     const star = await run(U.owner, "select * from public.boat_invitations");
     expect(star.ok).toBe(false);
 
@@ -327,11 +323,14 @@ describeWithDb("insert", () => {
     expect((await run(U.owner, member, [BOAT, U.stranger.id])).ok).toBe(true);
     expect((await run(U.admin, member, [BOAT, U.stranger.id])).ok).toBe(true);
     expect((await run(U.editor, member, [BOAT, U.stranger.id])).ok).toBe(false);
+    // D151: nothing in the app writes this row any more (a grant goes straight to boat_members,
+    // `grant_boat_access`). The insert policy itself is untouched, so a direct insert — the only
+    // way anyone still reaches this table — still obeys it.
     const invite =
-      "insert into public.boat_invitations (boat_id, email, role, token, invited_by) values ($1, 'new@test.xaman', 'editor', $2, $3)";
-    expect((await run(U.owner, invite, [BOAT, "tok-1", U.owner.id])).ok).toBe(true);
-    expect((await run(U.owner, invite, [BOAT, "tok-2", U.editor.id])).ok).toBe(false);
-    expect((await run(U.editor, invite, [BOAT, "tok-3", U.editor.id])).ok).toBe(false);
+      "insert into public.boat_invitations (boat_id, email, role, invited_by) values ($1, 'new@test.xaman', 'editor', $2)";
+    expect((await run(U.owner, invite, [BOAT, U.owner.id])).ok).toBe(true);
+    expect((await run(U.owner, invite, [BOAT, U.editor.id])).ok).toBe(false);
+    expect((await run(U.editor, invite, [BOAT, U.editor.id])).ok).toBe(false);
   });
 
   it("checklist templates: platform admin only", async () => {
@@ -1268,48 +1267,9 @@ describeWithDb("delete", () => {
   });
 });
 
-describeWithDb("invitation functions", () => {
-  it("get_invitation_preview works anonymously and exposes only the preview", async () => {
-    const preview = await as(null, async (c) => {
-      const res = await c.query("select * from public.get_invitation_preview($1)", [
-        INVITATION_TOKEN,
-      ]);
-      return res.rows[0] as Record<string, unknown> | undefined;
-    });
-    // 0007: the address is masked on the public page; only the domain and the initial show.
-    expect(preview).toMatchObject({
-      boat_name: "Bateau test",
-      email: "s•••@test.xaman",
-      role: "viewer",
-      status: "pending",
-    });
-    const unknown = await as(
-      null,
-      async (c) => (await c.query("select * from public.get_invitation_preview('nope')")).rowCount,
-    );
-    expect(unknown).toBe(0);
-  });
-
-  it("accept_invitation adds the member when the e-mail matches, and rejects everyone else", async () => {
-    const accepted = await as(U.stranger, async (c) => {
-      const res = await c.query("select public.accept_invitation($1) as boat_id", [
-        INVITATION_TOKEN,
-      ]);
-      const visible = await c.query("select count(*)::int as n from public.boats where id = $1", [
-        BOAT,
-      ]);
-      return { boatId: res.rows[0]?.boat_id as string, visible: Number(visible.rows[0]?.n) };
-    });
-    expect(accepted).toEqual({ boatId: BOAT, visible: 1 });
-
-    const mismatch = await run(U.viewer, "select public.accept_invitation($1)", [INVITATION_TOKEN]);
-    expect(mismatch.ok).toBe(false);
-    if (!mismatch.ok) expect(mismatch.message).toContain("invitation_email_mismatch");
-
-    const anon = await run(null, "select public.accept_invitation($1)", [INVITATION_TOKEN]);
-    expect(anon.ok).toBe(false);
-  });
-});
+// `get_invitation_preview` and `accept_invitation` are gone with D151 (no more /invite/[token]):
+// `grant_boat_access` is their replacement, tested above alongside the insert policy it stands in
+// place of at acceptance time.
 
 describeWithDb("storage bucket boat-files", () => {
   const OBJECT = `boats/${BOAT}/maintenance_log/${LOG_OWNER}/photo.jpg`;
@@ -1599,57 +1559,89 @@ describeWithDb("attachments (E10-1)", () => {
 const COMPLETION_OWNER = "00000000-0000-0000-0000-000000004001";
 const COMPLETION_PRO = "00000000-0000-0000-0000-000000004002";
 
+// D151: `boat_invitations_insert` is untouched (nothing drops the policy — only its caller, the
+// pre-D151 code path, is gone), so a direct insert still proves the same rule. The one case that
+// moved — `accept_invitation` carrying `valid_until` to the membership — is proven on its
+// replacement, `grant_boat_access`, below.
 describeWithDb("invitations issued by an editor (D28)", () => {
-  const invite = (u: User, role: string, token: string, days: number | null) =>
+  const invite = (u: User, role: string, days: number | null) =>
     run(
       u,
-      `insert into public.boat_invitations (boat_id, email, role, token, invited_by, valid_until)
-       values ($1, 'meca@test.xaman', $2::public.boat_role, $3, $4, current_date + $5::int)`,
-      [BOAT, role, token, u.id, days],
+      `insert into public.boat_invitations (boat_id, email, role, invited_by, valid_until)
+       values ($1, 'meca@test.xaman', $2::public.boat_role, $3, current_date + $4::int)`,
+      [BOAT, role, u.id, days],
     );
 
   it("an editor may invite a pro or a viewer for 90 days at most", async () => {
-    expect((await invite(U.editor, "pro", "ed-pro-30", 30)).ok, "pro 30 d").toBe(true);
-    expect((await invite(U.editor, "viewer", "ed-viewer-90", 90)).ok, "viewer 90 d").toBe(true);
-    expect((await invite(U.editor, "pro", "ed-pro-91", 91)).ok, "pro 91 d").toBe(false);
-    expect((await invite(U.editor, "pro", "ed-pro-none", null)).ok, "pro, no end date").toBe(false);
-    expect((await invite(U.editor, "editor", "ed-editor", 30)).ok, "editor role").toBe(false);
-    expect((await invite(U.editor, "owner", "ed-owner", 30)).ok, "owner role").toBe(false);
+    expect((await invite(U.editor, "pro", 30)).ok, "pro 30 d").toBe(true);
+    expect((await invite(U.editor, "viewer", 90)).ok, "viewer 90 d").toBe(true);
+    expect((await invite(U.editor, "pro", 91)).ok, "pro 91 d").toBe(false);
+    expect((await invite(U.editor, "pro", null)).ok, "pro, no end date").toBe(false);
+    expect((await invite(U.editor, "editor", 30)).ok, "editor role").toBe(false);
+    expect((await invite(U.editor, "owner", 30)).ok, "owner role").toBe(false);
   });
 
   it("an owner keeps inviting any role, with or without an end date", async () => {
-    expect((await invite(U.owner, "editor", "ow-editor", null)).ok).toBe(true);
-    expect((await invite(U.owner, "pro", "ow-pro", 365)).ok).toBe(true);
+    expect((await invite(U.owner, "editor", null)).ok).toBe(true);
+    expect((await invite(U.owner, "pro", 365)).ok).toBe(true);
     // D89: the UI now offers `owner` at the invitation. The policy always allowed it — this is
     // what says so, and what would fail if a later migration decided to close it.
-    expect((await invite(U.owner, "owner", "ow-owner", null)).ok, "owner role").toBe(true);
-    expect((await invite(U.pro, "viewer", "pro-viewer", 30)).ok, "a pro invites nobody").toBe(
-      false,
-    );
-    expect(
-      (await invite(U.viewer, "viewer", "viewer-viewer", 30)).ok,
-      "a viewer invites nobody",
-    ).toBe(false);
+    expect((await invite(U.owner, "owner", null)).ok, "owner role").toBe(true);
+    expect((await invite(U.pro, "viewer", 30)).ok, "a pro invites nobody").toBe(false);
+    expect((await invite(U.viewer, "viewer", 30)).ok, "a viewer invites nobody").toBe(false);
   });
+});
 
-  it("accept_invitation carries valid_until over to the membership", async () => {
-    const out = await as(U.stranger, async (c) => {
-      await c.query("set local role service_role");
-      await c.query(
-        "update public.boat_invitations set valid_until = current_date + 30 where token = $1",
-        [INVITATION_TOKEN],
-      );
-      await c.query("set local role authenticated");
-      await c.query("select public.accept_invitation($1)", [INVITATION_TOKEN]);
-      await c.query("set local role service_role");
+describeWithDb("grant_boat_access (D151)", () => {
+  const grant = (u: User, target: User, role: string, validUntil: string | null) =>
+    run(u, "select public.grant_boat_access($1, $2, $3::public.boat_role, $4::date)", [
+      BOAT,
+      target.id,
+      role,
+      validUntil,
+    ]);
+
+  it("an owner grants any role, and an owner grant never expires regardless of what is passed", async () => {
+    expect((await grant(U.owner, U.stranger, "viewer", "2026-10-01")).ok).toBe(true);
+    const row = await as(U.admin, async (c) => {
       const res = await c.query(
-        `select (valid_until = current_date + 30) as carried
-         from public.boat_members where boat_id = $1 and user_id = $2`,
+        "select role, valid_until from public.boat_members where boat_id = $1 and user_id = $2",
         [BOAT, U.stranger.id],
       );
-      return res.rows[0] as { carried: boolean };
+      return res.rows[0] as { role: string; valid_until: string | null };
     });
-    expect(out).toEqual({ carried: true });
+    expect(row).toEqual({ role: "viewer", valid_until: expect.any(Date) });
+
+    expect((await grant(U.owner, U.stranger, "owner", "2026-10-01")).ok).toBe(true);
+    const owner = await as(U.admin, async (c) => {
+      const res = await c.query(
+        "select role, valid_until from public.boat_members where boat_id = $1 and user_id = $2",
+        [BOAT, U.stranger.id],
+      );
+      return res.rows[0] as { role: string; valid_until: Date | null };
+    });
+    expect(owner.role).toBe("owner");
+    expect(owner.valid_until).toBeNull();
+  });
+
+  it("an editor grants a fresh pro/viewer only, dated, never a peer, never someone already aboard", async () => {
+    expect(
+      (await grant(U.editor, U.stranger, "viewer", "2026-10-01")).ok,
+      "pro/viewer, dated",
+    ).toBe(true);
+    expect((await grant(U.editor, U.stranger, "viewer", null)).ok, "no end date").toBe(false);
+    expect((await grant(U.editor, U.stranger, "editor", "2026-10-01")).ok, "a peer role").toBe(
+      false,
+    );
+    // The stranger is already aboard from the call just above: an editor may not touch them again.
+    expect((await grant(U.editor, U.stranger, "viewer", "2026-10-01")).ok, "already a member").toBe(
+      false,
+    );
+  });
+
+  it("a pro or a viewer grants nobody anything", async () => {
+    expect((await grant(U.pro, U.stranger, "viewer", "2026-10-01")).ok).toBe(false);
+    expect((await grant(U.viewer, U.stranger, "viewer", "2026-10-01")).ok).toBe(false);
   });
 });
 

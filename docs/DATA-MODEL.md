@@ -170,7 +170,17 @@ d'autre** : nom, type, constructeur et modèle restent ce que le formulaire affi
 
 Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la suppression / rétrogradation du dernier owner).
 
-### 3.6 `boat_invitations`
+### 3.6 `boat_invitations` (legacy — D151)
+
+Depuis `20260924120000` (D151) l'app n'insère plus dans cette table : inviter quelqu'un crée son
+compte et sa ligne `boat_members` dans le même appel (`grant_boat_access`, security definer,
+appelé par l'inviteur — pas par l'invité), et envoie un e-mail avec l'identifiant et le mot de
+passe plutôt qu'un lien à token. La table est conservée pour les lignes déjà envoyées sous
+l'ancien modèle : le bouton « Relancer » de l'écran Membres les convertit une par une (crée le
+compte, accorde l'accès, envoie le nouvel e-mail, supprime la ligne) au lieu de renvoyer le lien.
+Une fois ce solde à zéro, une migration ultérieure pourra supprimer la table. La colonne `token`
+est supprimée (plus rien ne la lit) ; `accept_invitation` et `get_invitation_preview` aussi
+(`/invite/[token]` n'existe plus).
 
 | Colonne | Type | Contraintes | Notes |
 |---|---|---|---|
@@ -178,7 +188,6 @@ Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la 
 | boat_id | uuid | FK boats on delete cascade | |
 | email | text | not null | normalisé en minuscules |
 | role | boat_role | not null | jamais 'owner' via l'UI V1 (un owner promeut ensuite) |
-| token | text | not null, unique | 32 octets aléatoires, base64url ; `revoke select (token) on boat_invitations from authenticated` — la colonne n'est lisible que par la clé service (Server Action d'envoi d'e-mail) ; l'acceptation passe par `accept_invitation(token)` et l'aperçu par `get_invitation_preview(token)` (security definer) |
 | invited_by | uuid | FK profiles | |
 | expires_at | timestamptz | not null default now() + interval '14 days' | |
 | accepted_at | timestamptz | null | |
@@ -725,13 +734,13 @@ create function is_boat_owner(p_boat_id uuid) returns boolean      -- boat_role 
 create function can_write_boat(p_boat_id uuid) returns boolean     -- owner | editor
 create function can_contribute_boat(p_boat_id uuid) returns boolean -- owner | editor | pro
 
--- Aperçu d'une invitation pour la page /invite/[token], appelable par un utilisateur anonyme
--- (security definer) : renvoie boat_name, inviter_name, email, role, status ('pending'|'expired'|'accepted'|'revoked').
-create function get_invitation_preview(p_token text) returns table (...) ...;
-
--- Acceptation d'invitation (security definer) : vérifie token, non expiré, non révoqué, non accepté,
--- email = auth.email() (insensible à la casse), upsert boat_members, marque accepted_at / accepted_by. Retourne boat_id.
-create function accept_invitation(p_token text) returns uuid ...;
+-- D151 (20260924120000) : accorder l'accès, tout de suite, appelé par l'inviteur (pas par l'invité).
+-- security definer ; mêmes règles que l'ancienne politique d'insertion sur boat_invitations (0004,
+-- D28) : owner → n'importe quel rôle (valid_until forcé à null si role = 'owner', D89) ; editor →
+-- pro/viewer uniquement, sur quelqu'un qui n'est pas déjà membre, toujours daté (<= 90 jours).
+-- Upsert dans boat_members ; retourne void, l'appelant a déjà le user_id (compte créé juste avant
+-- avec la clé service — src/lib/actions/members.ts).
+create function grant_boat_access(p_boat_id uuid, p_user_id uuid, p_role boat_role, p_valid_until date) returns void ...;
 
 -- Instanciation d'un modèle de checklist (security definer, réservé owner/editor/admin). Idempotente :
 --  * upsert des catégories dans boat_categories (clé (boat_id, external_ref) = external_ref de la catégorie du modèle) ;
@@ -954,8 +963,8 @@ La même logique est implémentée en TypeScript dans `src/lib/checklist-status.
 ### 6.3 `maintenance_logs_view`
 `maintenance_logs` non supprimés, joints à `boat_categories` (nom, couleur), `contacts` (nom), `profiles` (nom du créateur), avec `engine_hours` agrégé en JSON `[{engine_id, label, hours}]` depuis `engine_hour_readings`, `completions_count`, `attachments_count`, et depuis `0042` `checklist_item_id` et `checklist_item_label` (le point dont la ligne est le faire, D140). Utilisée par la liste, le détail et l'export. Une variante `maintenance_logs_trash_view` expose les lignes supprimées (< 30 jours).
 
-### 6.4 `boat_invitations_safe`
-`boat_invitations` sans la colonne `token`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur. Depuis `0023` (D79) elle expose aussi `delivery_status`, `delivery_reason` et `delivery_updated_at` — jamais `email_id` ni `delivery_detail`.
+### 6.4 `boat_invitations_safe` (legacy — D151, lit les lignes qui restent de l'ancien modèle)
+`boat_invitations`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur. Depuis `0023` (D79) elle expose aussi `delivery_status`, `delivery_reason` et `delivery_updated_at` — jamais `email_id` ni `delivery_detail`.
 
 ### 6.5 `expenses_by_category`
 Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `purchase_kind = null`), `purchases` (`amount`, `date = purchased_at`, `source = 'purchase'`, `purchase_kind = kind`), `haul_outs` (`cost`, `date = started_at`, `source = 'haul_out'`, `purchase_kind = null`), non supprimés, montant non null. Colonnes : `boat_id`, `category_id` (null → « Non catégorisé »), `category_name`, `source`, `purchase_kind`, `date`, `amount`, `currency`, `entity_id`. Agrégation par période côté requête ; le tableau E5-5 croise `category_name` × (`source`, `purchase_kind`).

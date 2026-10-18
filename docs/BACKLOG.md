@@ -26,7 +26,7 @@ gênent pas. `tests/unit/numbering.test.ts` refuse un numéro déjà pris et une
 | E9 | E9-7 |
 | E10 | E10-5 |
 | E12 | E12-9 |
-| E13 | E13-20 |
+| E13 | E13-21 |
 | E14 | E14-8 |
 | E15 | E15-14 |
 | E16 | E16-10 |
@@ -761,3 +761,23 @@ et il le referme d'un geste (D121) ; et le carnet reste au propriétaire quand l
 
 - [x] **E4-13 (M, 3)** Reprise de la checklist après usage (D149) : liste continue sans blocs par catégorie, urgences distinctes de l’historique absent, consignes en place, cochage rapide et annulation locale, compteurs anciens confirmés, contexte conservé. Prestataire et fiche prévue conservés. 34 parcours avec Supabase, 270 contrôles tactiles, 1 035 tests métier/RLS verts ; recette des formats iPad et téléphone documentée dans `docs/audit/checklist/README.md`.
 - [x] **E4-14 (M, 3)** Plusieurs catégories par point, photos et documents dès la création, formulaires checklist/intervention alignés (D150). DoD : classement unique dans tous les filtres, pièces jointes persistantes, reprise après échec, RLS et parcours testés, vérification iPad paysage/portrait. **Réalisé** : 1 052 tests métier/RLS locaux, lint/types/build, captures des deux formulaires aux deux dimensions. Parcours de création, édition et échec/reprise de document ajoutés à la CI.
+- [x] **E13-20 (M, 2)** **L'accès se donne, il ne se demande plus** (D151). Signalé à l'usage :
+  « l'envoi de code ne fonctionne pas dans l'app pour rejoindre et la différenciation entre les
+  users non plus ; simplifie le truc à mort » puis « quand je relance tout ces mecs là je veux que
+  ça fasse juste user name + mot de passe sur un nouvel objet ». Inviter crée le compte et accorde
+  l'accès dans le même appel (`grant_boat_access`, security definer, appelé par l'inviteur) :
+  plus de ligne `boat_invitations` en attente pour un nouvel envoi, plus de token, plus de
+  `/invite/[token]`, plus de code OTP à 6 chiffres — ni pour rejoindre, ni pour se connecter
+  (mot de passe seul désormais, `LoginForm` perd son sélecteur mot de passe / code). L'e-mail
+  (nouveau gabarit `credentials`, sujet distinct de l'ancienne invitation) porte l'identifiant et,
+  pour un compte neuf, un mot de passe généré ; quelqu'un qui a déjà un compte Xaman ailleurs
+  reçoit un e-mail sans mot de passe — le sien ouvre déjà celui-ci, jamais touché. Un envoi qui
+  échoue n'est jamais un accès perdu : le mot de passe reste affiché une fois pour que le
+  propriétaire le transmette lui-même (`InviteMemberDialog`, `InvitationsList`, `TransferBoatCard`).
+  Les lignes `boat_invitations` déjà envoyées sous l'ancien modèle restent lisibles (table et
+  colonnes de suivi de remise conservées, `token` seule colonne supprimée) ; « Relancer » les
+  convertit une par une au lieu de renvoyer l'ancien lien, et la ligne disparaît une fois le
+  nouvel e-mail parti. **DoD** : migration `20260924120000`, `grant_boat_access` testé en RLS à la
+  place de `accept_invitation`/`get_invitation_preview` (supprimées), `tests/unit/email-templates.test.ts`
+  et `tests/unit/rls.test.ts` à jour, lint/types/741 tests verts. **Reste hors dépôt** : appliquer
+  la migration au projet hébergé, `pnpm gen:emails` déjà exécuté localement.

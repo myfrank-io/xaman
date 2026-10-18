@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 export const memberRoleSchema = z.enum(["owner", "editor", "pro", "viewer"]);
-// Since D89 an invitation may carry any of them, `owner` included; who is allowed to issue which
-// is decided by the insert policy on `boat_invitations`, and mirrored in `inviteMember`.
+// Since D89 a grant may carry any of them, `owner` included; who is allowed to issue which is
+// decided by `grant_boat_access` (D151), and mirrored in `inviteMember`.
 export const invitableRoleSchema = memberRoleSchema;
 
-// Access duration (D29): 7 / 30 / 90 days or unlimited; an editor may only issue dated
-// invitations (≤ 90 days, enforced by the insert policy too).
+// Access duration (D29): 7 / 30 / 90 days or unlimited; an editor may only grant dated access
+// (≤ 90 days, enforced by `grant_boat_access` too).
 export const accessDurationSchema = z.enum(["7", "30", "90", "unlimited"]);
 export type AccessDuration = z.infer<typeof accessDurationSchema>;
 
@@ -47,10 +47,7 @@ export const revokeInvitationSchema = z.object({
   invitationId: z.string().uuid(),
 });
 
-// D112: the same invitation, sent again to the same address. Nothing to choose — the row already
-// carries the role, the duration and the link — so the input is only which row.
+// D151: converts a legacy pending row (docs/DATA-MODEL.md §3.6) into a granted account, instead
+// of resending its old token link. The row already carries the role and the duration, so the
+// input is only which one.
 export const resendInvitationSchema = revokeInvitationSchema;
-
-export const acceptInvitationSchema = z.object({
-  token: z.string().min(16).max(128),
-});

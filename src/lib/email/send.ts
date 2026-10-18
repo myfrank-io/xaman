@@ -23,6 +23,8 @@ export type Mail = {
   to: string;
   subject: string;
   html: string;
+  /** A plain-text alternative, when the caller has one (D151) — better received than HTML-only. */
+  text?: string;
   /**
    * Where a reply goes when the message is written on someone's behalf (D141): the yard answers
    * the owner, not `noreply@`. Absent on every e-mail the app sends for itself.
@@ -38,7 +40,7 @@ export type Mail = {
  */
 export type SendResult = { sent: true; id: string | null } | { sent: false };
 
-export async function sendMail({ to, subject, html, replyTo }: Mail): Promise<SendResult> {
+export async function sendMail({ to, subject, html, text, replyTo }: Mail): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY ?? "";
   if (!key) return { sent: false };
   try {
@@ -50,6 +52,7 @@ export async function sendMail({ to, subject, html, replyTo }: Mail): Promise<Se
         to: [to],
         subject,
         html,
+        ...(text ? { text } : {}),
         ...(replyTo ? { reply_to: replyTo } : {}),
       }),
     });

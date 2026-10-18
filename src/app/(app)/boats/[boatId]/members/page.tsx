@@ -9,7 +9,7 @@ import { refreshInvitationDeliveries } from "@/lib/email/delivery";
 import { toDeliveryReason, toDeliveryStatus } from "@/lib/email/delivery-status";
 import type { InvitationStatus } from "@/lib/invitations";
 import { can, type BoatRole } from "@/lib/permissions";
-import { readBoatRole, readBoatRow } from "@/lib/queries/boat-context";
+import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
 
 const INVITATION_COLUMNS =
@@ -83,7 +83,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
   if (!boatRole || !can(boatRole, "write")) notFound();
   const isOwner = can(boatRole, "manageMembers");
 
-  const [{ data: members }, invitations, { data: boat }] = await Promise.all([
+  const [{ data: members }, invitations] = await Promise.all([
     supabase
       .from("boat_members")
       .select(
@@ -92,7 +92,6 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       .eq("boat_id", boatId)
       .order("created_at"),
     isOwner ? loadInvitations(supabase, boatId) : Promise.resolve([] as InvitationSource[]),
-    readBoatRow(boatId),
   ]);
 
   // D79: the invitations still waiting are the ones worth asking the mailer about. Costs nothing
@@ -109,13 +108,7 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
-        actions={
-          <InviteMemberDialog
-            boatId={boatId}
-            boatName={boat?.name ?? ""}
-            inviterRole={isOwner ? "owner" : "editor"}
-          />
-        }
+        actions={<InviteMemberDialog boatId={boatId} inviterRole={isOwner ? "owner" : "editor"} />}
       />
       <MembersList
         boatId={boatId}
@@ -132,7 +125,6 @@ export default async function MembersPage({ params }: { params: Promise<{ boatId
       {isOwner ? (
         <InvitationsList
           boatId={boatId}
-          boatName={boat?.name ?? ""}
           invitations={invitations.map((i) => {
             const polled = fresh.get(i.id ?? "");
             const status = polled?.status ?? toDeliveryStatus(i.delivery_status);
