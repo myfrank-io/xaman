@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 
 import type { EngineReadDates } from "@/components/checklist/completable";
 import { toChecklistRow, type StatusViewRow } from "@/components/checklist/rows";
-import { BoatModel3D } from "@/components/boat-3d/BoatModel3D";
+import { BoatModel3DLazy } from "@/components/boat-3d/BoatModel3DLazy";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SectionCard } from "@/components/common/SectionCard";
 import { inboundDomain } from "@/lib/inbox/receive";
@@ -471,7 +471,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ boat
 
       {/* 6 — consulter mon bateau : la maquette d'E2-8, qui est déjà cet objet (D133). Elle
           deviendra « mes bateaux » à l'altitude flotte (E18-6, D121). */}
-      <BoatModel3D boatId={boatId} boatName={boat.name} data={boatModel} />
+      <BoatModel3DLazy boatId={boatId} boatName={boat.name} data={boatModel} />
 
       {/* 7 — découvrir ses dépenses : un montant qu'on regarde, pas un lien qu'on lit (D133). */}
       <ExpensesTeaser boatId={boatId} total={expensesTotal} categories={expenseCategories} />

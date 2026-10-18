@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/actions/auth";
 import { can, type BoatRole } from "@/lib/permissions";
-import { BOATS_PATH, NEW_BOAT_PATH, boatPath } from "@/lib/queries/boat-routes";
+import { NEW_BOAT_PATH, SWITCH_BOATS_PATH, boatPath } from "@/lib/queries/boat-routes";
 import { cn } from "@/lib/utils";
 
 export type AccountUser = {
@@ -78,9 +78,11 @@ export function AccountMenu({
     // there is exactly one boat, so the picker that carries the same entry is never seen (D64).
     { key: "newBoat", label: t("newBoat"), icon: PlusIcon, href: NEW_BOAT_PATH },
     // Only once there is a second boat to switch to (D64): with a single boat, the picker itself
-    // redirects straight back here, so the entry would be a dead end.
+    // redirects straight back here, so the entry would be a dead end. `?switch=1` is what forces
+    // the picker to show (D155): plain /boats now lands straight on a boat, so this is the one way
+    // back to the list.
     ...(multipleBoats
-      ? [{ key: "switchBoat", label: t("switchBoat"), icon: SailboatIcon, href: BOATS_PATH }]
+      ? [{ key: "switchBoat", label: t("switchBoat"), icon: SailboatIcon, href: SWITCH_BOATS_PATH }]
       : []),
     ...(write
       ? [

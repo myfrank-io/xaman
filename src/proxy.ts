@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { LAST_BOAT_COOKIE } from "@/lib/boats/landing";
 import { hasSupabaseEnv } from "@/lib/env";
 import { updateSession } from "@/lib/supabase/middleware";
+
+// A boat id in the first segment after /boats/ — never the onboarding tree (/boats/new, which is
+// three letters, not a uuid). Same shape the boat layout accepts.
+const BOAT_VIEW = /^\/boats\/([0-9a-f-]{36})(?:\/|$)/i;
 
 // Paths reachable without a session. Everything else (the (app) group) requires one.
 const PUBLIC_PREFIXES = [
@@ -54,6 +59,22 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/boats";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  // Remember the boat being viewed (D155): the next time this person lands on /boats it goes
+  // straight back here instead of the picker. Only ever a real boat id, written on the response
+  // that already carries the request — the page validates it against the RLS list before trusting
+  // it, so a stale id (access removed) simply falls back to the first boat.
+  if (claims) {
+    const boatId = BOAT_VIEW.exec(pathname)?.[1];
+    if (boatId) {
+      supabaseResponse.cookies.set(LAST_BOAT_COOKIE, boatId, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365,
+        httpOnly: true,
+        sameSite: "lax",
+      });
+    }
   }
 
   return supabaseResponse;

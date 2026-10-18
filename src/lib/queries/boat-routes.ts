@@ -28,11 +28,13 @@ export const PROFILE_PATH = "/settings/profile";
 export const NEW_BOAT_PATH = "/boats/new";
 
 /**
- * The picker (D64): only ever a destination someone chooses — /boats redirects straight past it
- * to the dashboard as long as the account has exactly one boat. The account menu's « Changer de
- * bateau » is the one link to it, shown only once there is a second boat to switch to.
+ * The picker (D64, D155): only ever a destination someone chooses. `/boats` redirects straight
+ * past it — to the single boat, or (with several) to the last one opened — so it is never the
+ * landing. `/boats?switch=1` forces it to show: that is the account menu's « Changer de bateau »,
+ * the one explicit door to the list, offered once there is a second boat to switch to.
  */
 export const BOATS_PATH = "/boats";
+export const SWITCH_BOATS_PATH = "/boats?switch=1";
 
 /**
  * Steps 2 and 3 of opening a carnet (D67). Under `/boats/new` rather than in the boat's own tree,
