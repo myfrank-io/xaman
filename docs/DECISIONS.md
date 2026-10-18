@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D155.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D156.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4153,3 +4153,9 @@ Le trigger ne rattrape que les connexions futures : `0048_last_sign_in.sql` incl
 **Décision.** L'écran Membres se sépare de nouveau en deux listes, comme avant D151 : « connectés » (au moins une connexion, `profiles.last_sign_in_at`) et « pas encore connectés ». Pour ces derniers, la ligne dit quand les identifiants sont partis et combien de relances ont suivi : `boat_members.credentials_sent_count` et `credentials_sent_at` (`0050_credentials_sent.sql`), incrémentés par `issueCredentials` seulement quand le mailer a accepté le message. Chaque ligne n'affiche plus que qui, quel rôle et jusqu'à quand (« Accès illimité » ou la date) ; un tap ouvre la fiche du membre (`MemberDetailsDialog`) où le propriétaire corrige prénom et nom (`profiles.full_name`, écrit par la clé service après vérification du rôle `owner`, puisque la RLS ne laisse chacun écrire que son propre profil), change le rôle, choisit « Accès illimité » ou une date de fin, relance ou retire. « Relancer » reste aussi à portée directe sur les lignes en attente. Remplace le placement de D153 (date entre le rôle et la corbeille).
 
 **Raison.** Demande de Joseph : retrouver d'un coup d'œil qui a rejoint, qui non et combien de fois on l'a relancé, et pouvoir compléter la fiche des gens invités par leur seule adresse.
+
+## D155 — 2026-10-18 · Atterrissage : droit sur un bateau, jamais le sélecteur
+
+**Décision.** `/boats` n'est plus l'écran d'atterrissage de qui a plusieurs bateaux. Zéro bateau → « Ajouter mon bateau » ; un bateau → son tableau de bord (inchangé, D64) ; plusieurs → **le dernier bateau ouvert**, à défaut le premier de la liste. Le dernier ouvert est gardé dans un cookie `xaman.boat` (httpOnly, un an) posé par `src/proxy.ts` à chaque visite d'un `/boats/{id}/…` ; la page le valide contre la liste RLS avant de s'y fier, donc un accès retiré retombe sur le premier bateau. Le sélecteur (`BoatPicker`) ne s'affiche plus que sur demande explicite : `/boats?switch=1`, où mène le « Changer de bateau » du menu compte. La décision pure vit dans `src/lib/boats/landing.ts` (`boatLandingTarget`, testée).
+
+**Raison.** Demande de Joseph : l'admin plateforme (et demain un propriétaire de flotte) retombait sur le sélecteur à chaque connexion, obligé de choisir un bateau avant de rien voir — « une grosse erreur ». Les invités n'ont qu'un bateau et allaient déjà droit au but ; seuls les comptes multi-bateaux subissaient le passage obligé. On garde l'écran, on lui retire son statut de péage.
