@@ -175,6 +175,8 @@ export const BOAT_SECTIONS = {
     "contacts",
     "errors",
     "haulOuts",
+    // L'adresse du carnet (D145) se pose aussi sur les Dépenses, là où vivent les factures.
+    "inbox",
     "logStatus",
     "logs",
     "offline",

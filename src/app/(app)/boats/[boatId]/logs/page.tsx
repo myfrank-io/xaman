@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
+import { InboxAddressCard } from "@/components/inbox/InboxAddressCard";
 import { LogsList } from "@/components/logs/LogsList";
 import { LogsTabs } from "@/components/logs/LogsTabs";
 import { LogsToolbar, type LogsFilters } from "@/components/logs/LogsToolbar";
@@ -14,9 +15,11 @@ import { toLogRow } from "@/components/logs/rows";
 import { Button } from "@/components/ui/button";
 import { todayString } from "@/lib/format";
 import { NO_MATCH_ID, STOCK_FILTER } from "@/lib/logs-filters";
+import { inboundDomain } from "@/lib/inbox/receive";
 import { can, type BoatRole } from "@/lib/permissions";
 import { loadLogAttention } from "@/lib/queries/attention";
 import { importPath, logsPath, logsReviewPath, newLogPath } from "@/lib/queries/boat-routes";
+import { inboxAddress } from "@/lib/schemas/inbox";
 import { LOG_STATUSES, type LogStatusValue } from "@/lib/schemas/logs";
 import { readBoatRole } from "@/lib/queries/boat-context";
 import { createClient } from "@/lib/supabase/server";
@@ -109,6 +112,7 @@ export default async function LogsPage({
   // barre du haut propose. Il ouvrait une vague à lui tout seul, devant les cinq autres.
   const [
     { data: role },
+    { data: boat },
     { data: rows, count },
     { count: reviewCount },
     { data: categories },
@@ -116,6 +120,7 @@ export default async function LogsPage({
     attentionCount,
   ] = await Promise.all([
     readBoatRole(boatId),
+    supabase.from("boats").select("name, inbox_token").eq("id", boatId).maybeSingle(),
     tab === "history"
       ? rowsQuery
           .order("performed_at", { ascending: false })
@@ -167,6 +172,13 @@ export default async function LogsPage({
   const canContribute = can(boatRole, "contribute");
   // Importing writes whole rows: owner and editor only, like any other bulk write.
   const canWrite = can(boatRole, "write");
+  // L'adresse du carnet (D145) sur l'historique : une facture de l'intervention passée s'y envoie.
+  // Pas sur « Prévu », où rien n'est encore à facturer. Gated on a configured domain + contributor.
+  const mailDomain = inboundDomain();
+  const inboxMailAddress =
+    tab === "history" && canContribute && mailDomain && boat
+      ? inboxAddress(boat.name, boat.inbox_token, mailDomain)
+      : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -213,6 +225,8 @@ export default async function LogsPage({
         contactName={contact?.name ?? null}
         canContribute={canContribute}
       />
+
+      {inboxMailAddress ? <InboxAddressCard boatId={boatId} address={inboxMailAddress} /> : null}
 
       {list.length === 0 ? (
         filtered ? (

@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import { InboxAddressCard } from "@/components/inbox/InboxAddressCard";
 import { ExpensesTab, type ExpensesData } from "@/components/supplies/ExpensesTab";
 import type { ExpenseLine } from "@/components/supplies/ExpenseLines";
 import { GasBottleEntry } from "@/components/supplies/GasBottleEntry";
@@ -27,6 +28,8 @@ import {
 import { gasFacts } from "@/lib/gas";
 import { can, type BoatRole } from "@/lib/permissions";
 import { isPurchaseKind, parsePurchaseLimit, PURCHASE_PAGE_SIZE } from "@/lib/purchases";
+import { inboundDomain } from "@/lib/inbox/receive";
+import { inboxAddress } from "@/lib/schemas/inbox";
 import { importPath, stockPath, suppliesPath } from "@/lib/queries/boat-routes";
 import { purchaseKindLabelKey, type PurchaseKind } from "@/lib/schemas/purchases";
 import { readBoatRole } from "@/lib/queries/boat-context";
@@ -124,6 +127,7 @@ export default async function SuppliesPage({
   // Le rôle et les systèmes formaient une première vague à eux seuls, devant tout le reste.
   const [
     { data: role },
+    { data: boat },
     { data: categories },
     { data: rows },
     { data: totals },
@@ -131,6 +135,7 @@ export default async function SuppliesPage({
     { data: gasRows },
   ] = await Promise.all([
     readBoatRole(boatId),
+    supabase.from("boats").select("name, inbox_token").eq("id", boatId).maybeSingle(),
     supabase
       .from("boat_categories")
       .select("id, name, color, icon, external_ref")
@@ -173,6 +178,14 @@ export default async function SuppliesPage({
   ]);
   if (!role) notFound();
   const canWrite = can(role as BoatRole, "write");
+  // Envoyer une facture au carnet est l'entrée la moins coûteuse (D145) : on la pose ici aussi,
+  // là où vivent les factures. Seulement si un domaine d'arrivée est configuré et pour qui peut
+  // contribuer.
+  const mailDomain = inboundDomain();
+  const inboxMailAddress =
+    can(role as BoatRole, "contribute") && mailDomain && boat
+      ? inboxAddress(boat.name, boat.inbox_token, mailDomain)
+      : null;
   const categoryList = (categories ?? []).map((category) => ({
     id: category.id,
     name: category.name,
@@ -352,6 +365,9 @@ export default async function SuppliesPage({
           ) : undefined
         }
       />
+      {inboxMailAddress && kind !== "gas" ? (
+        <InboxAddressCard boatId={boatId} address={inboxMailAddress} />
+      ) : null}
       {kind === "gas" ? (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           <div className="min-w-0 flex-1">
