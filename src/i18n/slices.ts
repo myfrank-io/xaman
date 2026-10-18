@@ -165,6 +165,7 @@ export const BOAT_SECTIONS = {
     "units",
     "validation",
   ],
+  // "auth": InviteMemberDialog reuses `auth.email.invalid` for its own e-mail field.
   members: ["auth", "common", "errors", "members"],
   report: ["report"],
   settings: ["categories", "common", "errors", "settings", "validation"],

@@ -12,7 +12,6 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Field } from "@/components/forms/Field";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { inviteNewOwner, leaveBoat } from "@/lib/actions/members";
@@ -21,9 +20,13 @@ import { boatPath } from "@/lib/queries/boat-routes";
 import { inviteNewOwnerSchema } from "@/lib/schemas/members";
 
 /**
- * Transfer (E1-8, D30, D151) in three explicit steps: what leaves with the boat, export first,
- * grant the new owner access right away, then leave once there is another owner in place.
- * Nothing is destroyed: the logbook simply follows the boat.
+ * Transfer (E1-8, D30) in three explicit steps: what leaves with the boat, export first,
+ * invite the new owner as `owner`, then leave once they have accepted. Nothing is destroyed:
+ * the logbook simply follows the boat.
+ *
+ * Step 2 is instant (D151): inviting the new owner creates their membership and sends their
+ * credentials right away, so `otherOwners` — read fresh after each invite — is what tells step 3
+ * it may open.
  */
 export function TransferBoatCard({
   boatId,
@@ -40,9 +43,6 @@ export function TransferBoatCard({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
-  // The one moment there is a generated password to hand over by hand (D151): only set when the
-  // access was granted but the e-mail carrying it failed to leave.
-  const [password, setPassword] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -54,19 +54,13 @@ export function TransferBoatCard({
       return;
     }
     setError(undefined);
-    setPassword(null);
     startTransition(async () => {
       const result = await inviteNewOwner(parsed.data);
       if (!result.ok) {
         toast.error(errorMessage(result.error));
         return;
       }
-      if (result.data.emailFailed) {
-        toast.warning(t("emailFailedTitle"));
-        if (result.data.password) setPassword(result.data.password);
-      } else {
-        toast.success(t("invited", { email: parsed.data.email }));
-      }
+      toast.success(t("invited", { email: parsed.data.email }));
       setEmail("");
       router.refresh();
     });
@@ -113,24 +107,6 @@ export function TransferBoatCard({
               {t("invite")}
             </Button>
           </form>
-          {password ? (
-            <Alert variant="warning">
-              <AlertTitle>{t("emailFailedPassword")}</AlertTitle>
-              <AlertDescription className="flex flex-wrap items-center gap-2">
-                <Input
-                  readOnly
-                  value={password}
-                  onFocus={(event) => event.target.select()}
-                  className="max-w-48 num"
-                />
-                <CopyButton
-                  value={password}
-                  label={t("copyPassword")}
-                  onCopied={() => toast.success(t("passwordCopied"))}
-                />
-              </AlertDescription>
-            </Alert>
-          ) : null}
         </li>
         <li className="flex flex-col gap-2">
           <p className="text-body font-medium">{t("step3")}</p>

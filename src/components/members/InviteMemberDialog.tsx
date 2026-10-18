@@ -11,7 +11,6 @@ import { UserPlusIcon } from "lucide-react";
 import { Field } from "@/components/forms/Field";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CopyButton } from "@/components/ui/copy-button";
 import {
   Dialog,
   DialogClose,
@@ -26,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { inviteMember, type GrantedAccess } from "@/lib/actions/members";
+import { inviteMember } from "@/lib/actions/members";
 import { useErrorMessage } from "@/lib/i18n/use-error-message";
 import { ASSIGNABLE_ROLES, EDITOR_ASSIGNABLE_ROLES } from "@/lib/permissions";
 import {
@@ -35,13 +34,16 @@ import {
   type InviteMemberInput,
 } from "@/lib/schemas/members";
 
+type Sent = { email: string; emailFailed: boolean };
+
 const DURATIONS: AccessDuration[] = ["7", "30", "90", "unlimited"];
 
 /**
- * Invite (E1-5, D28, D29, D89, D151): role, access duration, the sentence that says what the role
- * really allows. The account and the access are granted the moment the form is submitted — there
- * is no link to copy any more, only an e-mail already on its way with the identifier and (for a
- * fresh account) a password. An editor invites pro/viewer only, always dated (≤ 90 days).
+ * Invitation (E1-5, D28, D29, D89, D151): role, access duration, the sentence that says what the
+ * role really allows. Since D151 there is no link to copy or share any more — submitting creates
+ * the account (or resets its password) and a boat membership on the spot, and sends one e-mail
+ * carrying the login e-mail and a fresh password. The dialog only reports whether that e-mail
+ * left.
  *
  * Since D89 the list carries `owner` too. It brings its own rule: the duration question
  * disappears, because an owner has no end date (`inviteMember` writes null whatever the form
@@ -70,7 +72,7 @@ export function InviteMemberDialog({
   const errorMessage = useErrorMessage();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [sent, setSent] = useState<GrantedAccess | null>(null);
+  const [sent, setSent] = useState<Sent | null>(null);
   const [pending, startTransition] = useTransition();
   const editor = inviterRole === "editor";
   const roles = editor ? EDITOR_ASSIGNABLE_ROLES : ASSIGNABLE_ROLES;
@@ -94,10 +96,11 @@ export function InviteMemberDialog({
         toast.error(errorMessage(result.error));
         return;
       }
-      // The access is granted either way (D151); only the message may have stayed behind.
+      // The account and the membership exist either way; only the message may have stayed
+      // behind (D151).
       if (result.data.emailFailed) toast.warning(t("invite.emailFailedTitle"));
       else toast.success(t("invite.sent", { email: values.email }));
-      setSent(result.data);
+      setSent({ email: values.email, emailFailed: result.data.emailFailed });
       form.reset(defaults);
       router.refresh();
     });
@@ -122,39 +125,20 @@ export function InviteMemberDialog({
       <DialogContent>
         {sent ? (
           <div className="flex flex-col gap-5">
-            {/* The access is granted either way (D151); only the sentence changes. « Invitation
-                envoyée » over a message that never left is the one thing this screen must not
-                say. A password only ever appears here once, and only when the e-mail carrying it
-                did not leave — the one moment the owner has to hand it over themselves. */}
+            {/* The account and the membership exist in both cases; only the sentence about the
+                e-mail changes (D151). Nothing here to copy or share any more: there is no link,
+                the credentials went out (or didn't) by e-mail alone. */}
             <DialogHeader>
               <DialogTitle>
                 {sent.emailFailed ? t("invite.emailFailedTitle") : t("invite.sentTitle")}
               </DialogTitle>
               <DialogDescription>
                 {sent.emailFailed
-                  ? t(sent.password ? "invite.emailFailedPassword" : "invite.emailFailed", {
-                      email: sent.email,
-                    })
+                  ? t("invite.emailFailed", { email: sent.email })
                   : t("invite.sentDescription", { email: sent.email })}
               </DialogDescription>
             </DialogHeader>
-            {sent.password ? (
-              <Input
-                readOnly
-                value={sent.password}
-                onFocus={(event) => event.target.select()}
-                className="num"
-              />
-            ) : null}
             <DialogFooter>
-              {sent.password ? (
-                <CopyButton
-                  value={sent.password}
-                  label={t("invite.copyPassword")}
-                  onCopied={() => toast.success(t("invite.passwordCopied"))}
-                  onCopyFailed={() => toast.error(te("errors.unknown"))}
-                />
-              ) : null}
               <DialogClose asChild>
                 <Button type="button">{te("common.close")}</Button>
               </DialogClose>

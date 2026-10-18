@@ -2,7 +2,7 @@
 
 Format : date · question · décision · raison. Claude Code ajoute une ligne à chaque choix produit non couvert par `SPEC.md`.
 
-**Prochain numéro : D152.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
+**Prochain numéro : D155.** Le prendre, puis incrémenter cette ligne **dans le même commit**. C'est
 la seule ligne du dépôt qui porte le compteur : deux branches qui prennent le même numéro écrivent
 toutes les deux ici, donc la seconde fusion s'arrête sur un conflit git — pendant qu'un numéro se
 change encore d'un `sed`, et non trois jours plus tard, quand il est déjà cité dans une migration.
@@ -4126,23 +4126,30 @@ Le système reste disponible en filtre et dans le détail d’un contrôle.
 
 **Raison.** Demande de Joseph : documenter un défaut avant intervention, retrouver un contrôle sous chaque système concerné et rendre les créations cohérentes sur iPad.
 
-## D151 — 2026-09-24 · L'accès se donne, il ne se demande plus
+## D151 — 2026-09-24 · L'accès se donne avec un mot de passe, jamais avec un code ou un jeton
 
-**Décision.** Inviter quelqu'un crée son compte Supabase Auth et sa ligne `boat_members` dans le
-même appel (`grant_boat_access`, security definer, appelé par l'inviteur) : plus de ligne
-`boat_invitations` en attente, plus de token, plus de page `/invite/[token]`, plus de code OTP à
-6 chiffres — ni pour rejoindre, ni pour se connecter ensuite (mot de passe seul). L'e-mail envoyé
-porte l'identifiant (l'adresse) et, pour un compte neuf, un mot de passe généré ; quelqu'un qui a
-déjà un compte Xaman (un autre bateau) reçoit un e-mail sans mot de passe, le sien ouvre déjà
-celui-ci. Un envoi qui échoue n'est jamais un accès perdu : le mot de passe reste affiché une
-fois, à l'écran, pour que le propriétaire le transmette lui-même — le même principe que D75 pour
-le lien, appliqué au mot de passe. Les lignes `boat_invitations` déjà envoyées sous l'ancien
-modèle restent lisibles (table conservée) ; « Relancer » les convertit une par une au lieu de
-renvoyer l'ancien lien, et la ligne disparaît une fois le nouvel e-mail parti.
+**Décision.** Le mot de passe devient le seul mode de connexion (`LoginForm.tsx`) : le code à six-dix chiffres envoyé par e-mail pour se connecter disparaît, et avec lui la page d'invitation qu'il servait à ouvrir. Ajouter un membre — `inviteMember`, `inviteNewOwner` — ou « relancer » quelqu'un — `reissueCredentials` — fait désormais la même chose en un seul geste (`src/lib/actions/members.ts`) : créer son compte `auth.users` s'il n'existe pas encore, ou réinitialiser son mot de passe s'il existe déjà, poser tout de suite sa ligne `boat_members`, et lui envoyer un e-mail « identifiants » avec son adresse et un mot de passe de 6 chiffres tirés au sort (`src/lib/email/credentials.ts`). Il n'y a plus d'état intermédiaire : pas de ligne d'invitation, pas de jeton, pas de statut à expirer ni à révoquer. `boat_invitations`, `accept_invitation`, `get_invitation_preview` et la vue `boat_invitations_safe` sont supprimés (`0047_drop_invitations.sql`), avec la page `/invite/[token]` et tout ce qui en dépendait.
 
-**Raison.** Signalé par Joseph : l'envoi du code ne fonctionnait pas de façon fiable pour
-rejoindre un bateau, et rien ne distinguait un invité d'un autre avant qu'il ait lui-même cliqué
-le lien puis saisi un code — deux envois, donc deux occasions d'échouer en transit, pour la même
-classe de bug que D76/D78 avaient déjà corrigée côté connexion et récupération de mot de passe,
-jamais corrigée ici. Demande explicite de simplification maximale : supprimer entièrement le
-parcours à token et le mode de connexion par code, ne garder que mot de passe + e-mail.
+**Raison.** Le code par e-mail se heurtait aux scanners anti-hameçonnage des messageries professionnelles, qui ouvrent — et donc consomment — le lien avant que son destinataire ne l'ait lu (déjà le motif de D78 pour le mot de passe oublié) ; un mot de passe simple, tapé une fois, n'a pas ce problème. Et une invitation qui n'existe que comme promesse en attente d'acceptation est un état de plus à afficher, relancer et expirer, pour un geste — donner accès au bateau à quelqu'un — qui n'a besoin au fond que d'un compte et d'un mot de passe.
+
+Cette décision remplace le mécanisme d'invitation par jeton/OTP de D75, D76 et D79 (courriel d'invitation, code de connexion, suivi de remise) et le rappel manuel de D112 (il n'y a plus rien en attente à relancer autrement qu'en réémettant des identifiants). Elle ne touche ni au mot de passe oublié par code (D78), ni au principe de D89 : un `owner` reste sans date de fin — seul le canal qui le met sur le bateau change.
+
+## D152 — 2026-09-24 · La liste des membres affiche qui a déjà ouvert le carnet
+
+**Décision.** Avec la création instantanée du compte (D151), un membre invité existe dans `boat_members` avant même d'avoir touché à ses identifiants ; la page Membres n'avait aucun moyen de distinguer un compte créé d'un compte réellement utilisé. `profiles` gagne une colonne `last_sign_in_at`, tenue à jour par un nouveau trigger `on_auth_user_sign_in` sur `auth.users` (même schéma que `on_auth_user_email_updated`, `0048_last_sign_in.sql`). La liste (`MembersList.tsx`) affiche pour chaque membre autre que soi-même « A rejoint le JJ/MM » ou « N'a pas encore ouvert le carnet », sous le même format que les lignes d'accès déjà présentes.
+
+**Raison.** Le signal le plus simple et le moins intrusif pour répondre au besoin de Joseph est un miroir en lecture seule de `auth.users.last_sign_in_at`, déjà le mécanisme retenu pour `email` ; il évite d'exposer `auth.users` lui-même (interdit par la RLS) et ne demande ni vue ni fonction supplémentaire.
+
+Le trigger ne rattrape que les connexions futures : `0048_last_sign_in.sql` inclut désormais un rattrapage ponctuel (`update … from auth.users where last_sign_in_at is null`) pour les comptes déjà connectés avant la migration, sans quoi ils lisaient à tort « jamais connecté ».
+
+## D153 — 2026-09-24 · Changer de bateau et accès jusqu'à quand, dans le menu compte et la liste des membres
+
+**Décision.** Le menu compte gagne « Changer de bateau », vers le sélecteur `/boats` (`BOATS_PATH`) — visible uniquement si le compte a accès à plus d'un bateau, puisque `/boats` renvoie sinon directement vers l'unique carnet (D64) et l'entrée serait une impasse. Dans la liste des membres (`MembersList.tsx`), la date de fin d'accès (« Accès jusqu'au JJ/MM », « Accès expiré le JJ/MM » ou « Accès illimité ») se lit maintenant entre le sélecteur de rôle et la corbeille, à côté du geste qui la change, plutôt que sous l'identité où le propriétaire devait la chercher ; elle reste sous l'identité pour qui ne gère pas les membres (pas de ligne d'actions à côté de laquelle la mettre).
+
+**Raison.** Demande de Joseph, sur les deux écrans qu'il utilise au quotidien pour gérer plusieurs bateaux et plusieurs membres.
+
+## D154 — 2026-09-24 · Membres : deux listes, relances comptées, fiche éditable
+
+**Décision.** L'écran Membres se sépare de nouveau en deux listes, comme avant D151 : « connectés » (au moins une connexion, `profiles.last_sign_in_at`) et « pas encore connectés ». Pour ces derniers, la ligne dit quand les identifiants sont partis et combien de relances ont suivi : `boat_members.credentials_sent_count` et `credentials_sent_at` (`0050_credentials_sent.sql`), incrémentés par `issueCredentials` seulement quand le mailer a accepté le message. Chaque ligne n'affiche plus que qui, quel rôle et jusqu'à quand (« Accès illimité » ou la date) ; un tap ouvre la fiche du membre (`MemberDetailsDialog`) où le propriétaire corrige prénom et nom (`profiles.full_name`, écrit par la clé service après vérification du rôle `owner`, puisque la RLS ne laisse chacun écrire que son propre profil), change le rôle, choisit « Accès illimité » ou une date de fin, relance ou retire. « Relancer » reste aussi à portée directe sur les lignes en attente. Remplace le placement de D153 (date entre le rôle et la corbeille).
+
+**Raison.** Demande de Joseph : retrouver d'un coup d'œil qui a rejoint, qui non et combien de fois on l'a relancé, et pouvoir compléter la fiche des gens invités par leur seule adresse.

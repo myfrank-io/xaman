@@ -1,6 +1,6 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { randomInt } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -8,10 +8,8 @@ import { getTranslations } from "next-intl/server";
 
 import { dbErrorKey, fail, ok, parseInput, type ActionResult } from "@/lib/actions/result";
 import { credentialsEmail } from "@/lib/email/credentials";
-import { toDeliveryStatus } from "@/lib/email/delivery-status";
-import { sendMail } from "@/lib/email/send";
+import { mailerConfigured, sendMail } from "@/lib/email/send";
 import { publicEnv } from "@/lib/env";
-import { canRemind, remindedTooRecently, type InvitationStatus } from "@/lib/invitations";
 import { addDays, toIsoDate } from "@/lib/numbers";
 import { EDITOR_ASSIGNABLE_ROLES } from "@/lib/permissions";
 import {
@@ -21,8 +19,8 @@ import {
   inviteNewOwnerSchema,
   leaveBoatSchema,
   removeMemberSchema,
-  resendInvitationSchema,
-  revokeInvitationSchema,
+  reissueCredentialsSchema,
+  updateMemberSchema,
 } from "@/lib/schemas/members";
 import { boatPath } from "@/lib/queries/boat-routes";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -30,139 +28,153 @@ import { createClient } from "@/lib/supabase/server";
 
 type InvitationRole = "owner" | "editor" | "pro" | "viewer";
 
-export type GrantedAccess = {
+export type IssuedCredentials = {
   email: string;
-  /** A fresh Xaman account, as opposed to someone who already had one on another boat. */
-  created: boolean;
-  /** The row exists either way (D151 — the grant already happened); only the message stayed
-   *  behind. */
+  /** The row exists either way; only the message may have stayed behind. */
   emailFailed: boolean;
-  /**
-   * Only present when a password was generated *and* the e-mail carrying it failed to leave:
-   * the one moment the owner has to hand it over themselves. Never shown after a successful
-   * send, and never present at all for someone who already had an account.
-   */
-  password: string | null;
 };
 
-/** Twelve base64url characters: within `passwordField`'s 8–72 bounds, ours to hand over once. */
-function generatedPassword(): string {
-  return randomBytes(9).toString("base64url");
+/**
+ * A password a person can actually type on an iPad, out loud if need be: 6 random digits, no
+ * letters, no symbols, nothing that reads ambiguously (0/O, 1/l never come up because there are
+ * no letters at all).
+ *
+ * There is no other requirement on it. It is not meant to be kept — the owner reissues one
+ * whenever they need to (a fresh reissue is exactly a "relance"), and the member can set their
+ * own from their profile once signed in.
+ */
+function generateSimplePassword(): string {
+  let digits = "";
+  for (let i = 0; i < 6; i += 1) digits += randomInt(0, 10).toString();
+  return digits;
 }
 
 /**
- * Grants a boat, right away — no token, no code, no second visit (D151).
+ * Instant membership (D151): no invitation row, no token, no sign-in code. The account exists
+ * (freshly created, or already there — someone re-invited, or a member whose credentials are
+ * being reissued) the moment this returns, with a membership on this boat, and one e-mail on its
+ * way carrying the address and a fresh password.
  *
- * The bug this replaces: an invitee received a link, then had to receive a 6-digit code a second
- * time to open it — two sends that could each fail in transit, the same class of failure D76/D78
- * already fixed for sign-in and recovery, but never fixed here. And nothing distinguished one
- * invitee from another until they had clicked through, which is what made "on ne voit pas qui est
- * qui" true. Now the inviter grants the access and the account is created in the same call: there
- * is nothing left for the invitee to do but read their e-mail and sign in.
- *
- * **Who gets a password, and who doesn't.** A profile is looked up by e-mail first. None found:
- * a fresh account, with a generated password. One found *with no boat_members row anywhere*: an
- * account this function itself created on an earlier attempt whose e-mail never left (D151's own
- * retry path — `resendInvitation` below) — nobody could be relying on that password since it was
- * never delivered, so a new one is generated and written over it. One found *with* a boat_members
- * row somewhere: a real Xaman member already, on another boat — their password is never touched,
- * and the e-mail only tells them they now have this one too.
- *
- * **Who may grant what** is re-checked in the database (`grant_boat_access`, security definer):
- * an owner grants any role, an editor only a fresh pro/viewer, dated. Defence in depth (rule 2) —
- * the caller here has already applied the same rule in `inviteMember`, for the sentence that says
- * which half was wrong, but the database is what actually refuses it.
+ * "Relancer" is deliberately the same code path as a first invite: calling this again for an
+ * address that already has an account never creates a duplicate, it resets the password and
+ * sends it again. That is the whole answer to "quand je relance ces mecs, ça envoie un nouveau
+ * mail avec le nouveau mot de passe".
  */
-async function provisionAndGrant(
+async function issueCredentials(
   supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
   values: { boatId: string; email: string; role: InvitationRole; validUntil: string | null },
-): Promise<ActionResult<GrantedAccess>> {
+): Promise<ActionResult<IssuedCredentials>> {
   const { boatId, email, role, validUntil } = values;
+
   let admin: ReturnType<typeof createAdminClient>;
   try {
     admin = createAdminClient();
   } catch (error) {
-    console.error("provisionAndGrant: no admin client", error);
+    console.error("issueCredentials: no admin client", error);
     return fail("errors.unknown");
   }
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id, full_name")
-    .eq("email", email)
-    .maybeSingle();
+  const password = generateSimplePassword();
 
-  let userId: string;
-  let created = false;
-  let password: string | null = null;
-
-  if (!profile) {
-    password = generatedPassword();
-    const { data, error } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-    if (error || !data.user) {
-      console.error(`provisionAndGrant: account creation failed — ${error?.message}`);
-      return fail("errors.unknown");
-    }
-    userId = data.user.id;
-    created = true;
-  } else {
-    userId = profile.id;
-    const { data: existingAccess } = await admin
-      .from("boat_members")
-      .select("boat_id")
-      .eq("user_id", userId)
-      .limit(1);
-    // No boat anywhere: this profile has no working password anyone could be relying on — either
-    // it is fresh, or an earlier attempt here created it and its e-mail never arrived.
-    if (!existingAccess || existingAccess.length === 0) {
-      password = generatedPassword();
-      const { error } = await admin.auth.admin.updateUserById(userId, { password });
-      if (error) {
-        console.error(`provisionAndGrant: password reissue failed — ${error.message}`);
-        return fail("errors.unknown");
+  let authUserId: string | null = null;
+  {
+    // @supabase/supabase-js exposes a dedicated lookup on newer versions; fall back to scanning
+    // pages of listUsers on older ones so this keeps working either way.
+    const adminApi = admin.auth.admin as unknown as {
+      getUserByEmail?: (email: string) => Promise<{ data: { user: { id: string } | null } }>;
+    };
+    if (typeof adminApi.getUserByEmail === "function") {
+      const { data } = await adminApi.getUserByEmail(email);
+      authUserId = data.user?.id ?? null;
+    } else {
+      for (let page = 1; authUserId === null; page += 1) {
+        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+        if (error || !data || data.users.length === 0) break;
+        const match = data.users.find((u) => u.email?.toLowerCase() === email);
+        if (match) authUserId = match.id;
+        if (data.users.length < 200) break;
       }
     }
   }
 
-  const { error: grantError } = await supabase.rpc("grant_boat_access", {
-    p_boat_id: boatId,
-    p_user_id: userId,
-    p_role: role,
-    p_valid_until: validUntil,
-  });
-  if (grantError) return fail(dbErrorKey(grantError));
+  if (authUserId) {
+    const { error: updateError } = await admin.auth.admin.updateUserById(authUserId, { password });
+    if (updateError) {
+      console.error(`issueCredentials: password reset refused — ${updateError.message}`);
+      return fail("errors.unknown");
+    }
+  } else {
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (createError || !created.user) {
+      console.error(`issueCredentials: account creation refused — ${createError?.message}`);
+      return fail("errors.unknown");
+    }
+    authUserId = created.user.id;
+  }
+
+  const { error: memberError } = await supabase.from("boat_members").upsert(
+    {
+      boat_id: boatId,
+      user_id: authUserId,
+      role,
+      valid_until: validUntil,
+      invited_by: userId,
+    },
+    { onConflict: "boat_id,user_id" },
+  );
+  if (memberError) return fail(dbErrorKey(memberError));
 
   const [{ data: boat }, { data: inviter }] = await Promise.all([
     supabase.from("boats").select("name").eq("id", boatId).maybeSingle(),
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return { data: null };
-      return supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("id", data.user.id)
-        .maybeSingle();
-    }),
+    supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
   ]);
   const t = await getTranslations("members.roles");
-  const { subject, html, text } = credentialsEmail({
-    email,
-    password,
-    boatName: boat?.name ?? "",
-    inviterName: inviter?.full_name ?? inviter?.email ?? "",
-    roleLabel: t(role),
-    appUrl: publicEnv.appUrl,
-  });
-  const { sent } = await sendMail({ to: email, subject, html, text });
+
+  let emailFailed = true;
+  if (mailerConfigured()) {
+    const { subject, html } = credentialsEmail({
+      email,
+      password,
+      appUrl: publicEnv.appUrl,
+      boatName: boat?.name ?? "",
+      inviterName: inviter?.full_name ?? inviter?.email ?? "",
+      roleLabel: t(role),
+    });
+    const result = await sendMail({ to: email, subject, html });
+    emailFailed = !result.sent;
+  } else {
+    console.error("issueCredentials: no mailer configured, credentials were not sent");
+  }
+
+  // D154: only a message the mailer accepted counts as a send (or a relance).
+  if (!emailFailed) {
+    const { data: row } = await admin
+      .from("boat_members")
+      .select("credentials_sent_count")
+      .eq("boat_id", boatId)
+      .eq("user_id", authUserId)
+      .maybeSingle();
+    const { error: countError } = await admin
+      .from("boat_members")
+      .update({
+        credentials_sent_count: (row?.credentials_sent_count ?? 0) + 1,
+        credentials_sent_at: new Date().toISOString(),
+      })
+      .eq("boat_id", boatId)
+      .eq("user_id", authUserId);
+    if (countError) console.error(`issueCredentials: send not recorded — ${countError.message}`);
+  }
 
   revalidatePath(boatPath(boatId, "members"));
-  return ok({ email, created, emailFailed: !sent, password: !sent ? password : null });
+  return ok({ email, emailFailed });
 }
 
-export async function inviteMember(input: unknown): Promise<ActionResult<GrantedAccess>> {
+export async function inviteMember(input: unknown): Promise<ActionResult<IssuedCredentials>> {
   const parsed = parseInput(inviteMemberSchema, input);
   if (!parsed.ok) return parsed.result;
   const { boatId, email, role, duration } = parsed.data;
@@ -173,8 +185,8 @@ export async function inviteMember(input: unknown): Promise<ActionResult<Granted
   } = await supabase.auth.getUser();
   if (!user) return fail("errors.forbidden");
 
-  // D28: an editor grants a pro or a viewer, never a peer and never an owner, and always with an
-  // end date (≤ 90 days). `grant_boat_access` refuses the same thing; this only turns a bare
+  // D28: an editor invites a pro or a viewer, never a peer and never an owner, and always with
+  // an end date (≤ 90 days). The insert policy refuses the same thing; this only turns a bare
   // « forbidden » into the sentence that says which half was wrong.
   const { data: inviterRole } = await supabase.rpc("boat_role", { p_boat_id: boatId });
   if (inviterRole === "editor") {
@@ -185,11 +197,11 @@ export async function inviteMember(input: unknown): Promise<ActionResult<Granted
   // and the form hides the question rather than asking it — this is what makes that true.
   const validUntil =
     role === "owner" || duration === "unlimited" ? null : addDays(toIsoDate(), Number(duration));
-  return provisionAndGrant(supabase, { boatId, email, role, validUntil });
+  return issueCredentials(supabase, user.id, { boatId, email, role, validUntil });
 }
 
-// E1-8 / D30, step 2: the new owner is granted `owner` right away; step 3 (leaveBoat) once done.
-export async function inviteNewOwner(input: unknown): Promise<ActionResult<GrantedAccess>> {
+// E1-8 / D30, step 2: the new owner is invited as `owner`; step 3 (leaveBoat) once accepted.
+export async function inviteNewOwner(input: unknown): Promise<ActionResult<IssuedCredentials>> {
   const parsed = parseInput(inviteNewOwnerSchema, input);
   if (!parsed.ok) return parsed.result;
   const supabase = await createClient();
@@ -197,7 +209,86 @@ export async function inviteNewOwner(input: unknown): Promise<ActionResult<Grant
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return fail("errors.forbidden");
-  return provisionAndGrant(supabase, { ...parsed.data, role: "owner", validUntil: null });
+  return issueCredentials(supabase, user.id, { ...parsed.data, role: "owner", validUntil: null });
+}
+
+/**
+ * "Relancer" a member (D151): a fresh password, sent by the same e-mail. Owner only — the same
+ * right that manages members in every other way.
+ */
+export async function reissueCredentials(input: unknown): Promise<ActionResult<IssuedCredentials>> {
+  const parsed = parseInput(reissueCredentialsSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, userId } = parsed.data;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return fail("errors.forbidden");
+  const { data: callerRole } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  if (callerRole !== "owner") return fail("errors.forbidden");
+
+  const { data: member, error } = await supabase
+    .from("boat_members")
+    .select("role, valid_until, profiles!boat_members_user_id_fkey(email)")
+    .eq("boat_id", boatId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) return fail(dbErrorKey(error));
+  const email = member?.profiles?.email;
+  const role = member?.role;
+  // `renter` is a V2 role, never actually assigned in V1 (D89) — this only satisfies the type.
+  if (!member || !email || !role || role === "renter") return fail("errors.forbidden");
+
+  return issueCredentials(supabase, user.id, {
+    boatId,
+    email,
+    role,
+    validUntil: member.valid_until,
+  });
+}
+
+/**
+ * D154: the member's card. Role and end date go through the owner's own client (RLS decides);
+ * the name lives on the member's profile, which only its owner may write under RLS — so it goes
+ * through the service key, but only after the caller is checked as an owner of a boat that
+ * member actually belongs to.
+ */
+export async function updateMember(input: unknown): Promise<ActionResult> {
+  const parsed = parseInput(updateMemberSchema, input);
+  if (!parsed.ok) return parsed.result;
+  const { boatId, userId, firstName, lastName, role } = parsed.data;
+  // D89: an owner never expires.
+  const validUntil = role === "owner" ? null : parsed.data.validUntil;
+
+  const supabase = await createClient();
+  const { data: callerRole } = await supabase.rpc("boat_role", { p_boat_id: boatId });
+  if (callerRole !== "owner") return fail("errors.forbidden");
+
+  const { error, count } = await supabase
+    .from("boat_members")
+    .update({ role, valid_until: validUntil }, { count: "exact" })
+    .eq("boat_id", boatId)
+    .eq("user_id", userId);
+  if (error) return fail(dbErrorKey(error));
+  if (!count) return fail("errors.forbidden");
+
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || null;
+  try {
+    const admin = createAdminClient();
+    const { error: nameError } = await admin
+      .from("profiles")
+      .update({ full_name: fullName })
+      .eq("id", userId);
+    if (nameError) return fail(dbErrorKey(nameError));
+  } catch (adminError) {
+    console.error("updateMember: no admin client", adminError);
+    return fail("errors.unknown");
+  }
+
+  revalidatePath(boatPath(boatId, "members"));
+  return ok(undefined);
 }
 
 // E1-8 step 3: the former owner leaves; the last-owner guard refuses while nobody else owns it.
@@ -233,121 +324,6 @@ export async function extendMemberAccess(input: unknown): Promise<ActionResult> 
   if (!count) return fail("errors.forbidden");
   revalidatePath(boatPath(parsed.data.boatId, "members"));
   return ok(undefined);
-}
-
-// Cancels a still-pending row from before D151 (never any account, never any access to undo).
-export async function revokeInvitation(input: unknown): Promise<ActionResult> {
-  const parsed = parseInput(revokeInvitationSchema, input);
-  if (!parsed.ok) return parsed.result;
-  const supabase = await createClient();
-  const { error, count } = await supabase
-    .from("boat_invitations")
-    .update({ revoked_at: new Date().toISOString() }, { count: "exact" })
-    .eq("id", parsed.data.invitationId)
-    .eq("boat_id", parsed.data.boatId);
-  if (error) return fail(dbErrorKey(error));
-  if (!count) return fail("errors.forbidden");
-  revalidatePath(boatPath(parsed.data.boatId, "members"));
-  return ok(undefined);
-}
-
-/**
- * The four states of a legacy row, computed exactly as `boat_invitations_safe` computes them
- * (0023, 0031). The view is what the Membres screen reads; this is for the one caller that needs
- * the table itself, with the service key.
- */
-function invitationStatus(row: {
-  accepted_at: string | null;
-  revoked_at: string | null;
-  expires_at: string;
-}): InvitationStatus {
-  if (row.accepted_at) return "accepted";
-  if (row.revoked_at) return "revoked";
-  return Date.parse(row.expires_at) < Date.now() ? "expired" : "pending";
-}
-
-/**
- * « Relancer », on a row left over from before D151 (docs/DATA-MODEL.md §3.6): converts it into
- * the account-and-access grant a fresh invite now creates directly, instead of resending the old
- * token link. The row is deleted once the message actually leaves — a live account with nobody
- * told the password is worse than a row that stays in « En attente » one more try, so a failed
- * send keeps the row (and the `emailFailed` password fallback offers it once, the same way
- * `inviteMember` does for a brand new one).
- */
-export async function resendInvitation(input: unknown): Promise<ActionResult<GrantedAccess>> {
-  const parsed = parseInput(resendInvitationSchema, input);
-  if (!parsed.ok) return parsed.result;
-  const { boatId, invitationId } = parsed.data;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return fail("errors.forbidden");
-  // Owner only — the same right that puts the list on the screen (`boat_invitations_select`).
-  const { data: role } = await supabase.rpc("boat_role", { p_boat_id: boatId });
-  if (role !== "owner") return fail("errors.forbidden");
-
-  let admin: ReturnType<typeof createAdminClient>;
-  try {
-    admin = createAdminClient();
-  } catch (error) {
-    console.error("resendInvitation: no admin client", error);
-    return fail("errors.unknown");
-  }
-
-  const { data: invitation, error } = await admin
-    .from("boat_invitations")
-    .select(
-      "email, role, valid_until, accepted_at, revoked_at, expires_at, delivery_status, reminded_at",
-    )
-    .eq("id", invitationId)
-    .eq("boat_id", boatId)
-    .maybeSingle();
-  if (error) {
-    console.error(`resendInvitation: invitation unreadable — ${error.message}`);
-    return fail("errors.unknown");
-  }
-  if (!invitation) return fail("errors.invitation_not_found");
-
-  const status = invitationStatus(invitation);
-  if (!canRemind({ status, delivery: toDeliveryStatus(invitation.delivery_status) })) {
-    if (status === "accepted") return fail("errors.invitation_accepted");
-    if (status === "revoked") return fail("errors.invitation_revoked");
-    return fail("errors.invitation_address_refused");
-  }
-  if (remindedTooRecently(invitation.reminded_at)) {
-    return fail("errors.invitation_reminded_recently");
-  }
-
-  const result = await provisionAndGrant(supabase, {
-    boatId,
-    email: invitation.email,
-    role: invitation.role as InvitationRole,
-    validUntil: invitation.valid_until,
-  });
-  if (!result.ok) return result;
-
-  if (result.data.emailFailed) {
-    // The account and the access both exist; only the message stayed behind. The row stays too,
-    // marked as just tried, so « Relancer » can be pressed again without generating a second
-    // password nobody needs.
-    const { error: markError } = await admin
-      .from("boat_invitations")
-      .update({ reminded_at: new Date().toISOString() })
-      .eq("id", invitationId)
-      .eq("boat_id", boatId);
-    if (markError) console.error(`resendInvitation: reminder not recorded — ${markError.message}`);
-  } else {
-    const { error: deleteError } = await admin
-      .from("boat_invitations")
-      .delete()
-      .eq("id", invitationId)
-      .eq("boat_id", boatId);
-    if (deleteError) console.error(`resendInvitation: row not cleared — ${deleteError.message}`);
-  }
-
-  return result;
 }
 
 export async function changeMemberRole(input: unknown): Promise<ActionResult> {

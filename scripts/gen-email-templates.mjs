@@ -13,20 +13,13 @@
  * custom properties, and the display face falls back to the same serif stack as `--font-display`
  * — Fraunces is not installable in an inbox.
  *
- * Go template variables (https://supabase.com/docs/guides/auth/auth-email-templates), for the six
- * GoTrue still sends (`invite` among them is no longer triggered by the app — D151 — but is kept
- * rather than torn out, since nothing forbids it and a future use of `inviteUserByEmail` would
- * find it ready):
+ * Go template variables (https://supabase.com/docs/guides/auth/auth-email-templates):
  *   {{ .Token }}           6-digit code — its presence is what makes Supabase send a CODE
  *                          rather than a magic link (fixes « on reçoit un lien, pas un code »)
  *   {{ .ConfirmationURL }} verification link, honouring the redirectTo of the call
- *   {{ .Data.x }}          auth.users.user_metadata
+ *   {{ .Data.x }}          auth.users.user_metadata — the invitation passes boat_name,
+ *                          inviter_name and role_label (src/lib/actions/members.ts)
  *   {{ .Email }}, {{ .NewEmail }}, {{ .SiteURL }}
- *
- * The app-only templates below resolve the same `{{ .Data.x }}` placeholders themselves
- * (`src/lib/email/render.ts`), with values the Server Action passes in — the credentials e-mail
- * (D151) gets `boat_name`, `role_label`, `email`, `password` (absent for an existing account) and
- * `inviter_name` from `src/lib/actions/members.ts`.
  *
  * Usage: node scripts/gen-email-templates.mjs [--check]
  */
@@ -46,7 +39,14 @@ export const TEMPLATE_DIR = path.join(root, "supabase", "templates");
 export const APP_TEMPLATE = path.join(root, "src", "lib", "email", "templates.generated.ts");
 
 /** The templates the app sends itself, in the order they appear in the generated module. */
-const APP_TEMPLATE_KEYS = ["recovery", "credentials", "inbox_ready", "inbox_validated", "handoff"];
+const APP_TEMPLATE_KEYS = [
+  "invite",
+  "recovery",
+  "credentials",
+  "inbox_ready",
+  "inbox_validated",
+  "handoff",
+];
 
 /**
  * globals.css, verbatim — with one deliberate exception. The app draws its gilt rule as
@@ -124,6 +124,20 @@ const code =
   <tr>
     <td class="x-panel" align="center" bgcolor="${C.muted}" style="background-color:${C.muted};border:1px solid ${C.border};border-radius:12px;padding:20px 16px">
       <div class="x-ink" style="font-family:${MONO};font-size:34px;line-height:1.2;font-weight:700;letter-spacing:0.24em;text-indent:0.24em;color:${C.ink}">{{ .Token }}</div>
+    </td>
+  </tr>
+</table>`;
+
+/**
+ * The password panel: the same visual pattern as `code()` (monospace, boxed, nothing competing
+ * with it), for `{{ .Data.password }}` rather than `{{ .Token }}` — 8 digits, so the letter
+ * spacing is tuned a little tighter to stay comfortably inside the panel on a narrow phone.
+ */
+const passwordPanel =
+  () => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0 0">
+  <tr>
+    <td class="x-panel" align="center" bgcolor="${C.muted}" style="background-color:${C.muted};border:1px solid ${C.border};border-radius:12px;padding:20px 16px">
+      <div class="x-ink" style="font-family:${MONO};font-size:28px;line-height:1.2;font-weight:700;letter-spacing:0.18em;text-indent:0.18em;color:${C.ink}">{{ .Data.password }}</div>
     </td>
   </tr>
 </table>`;
@@ -369,38 +383,33 @@ export const TEMPLATES = [
  */
 export const APP_ONLY_TEMPLATES = [
   /**
-   * D151: what an invitation used to be — a link, then a 6-digit code the invitee had to receive
-   * a second time. Both steps could fail in transit (the same class of bug D76/D78 fixed for
-   * sign-in and recovery), and the app has no way to tell two invitees apart until one of them
-   * has clicked through. The account and the boat access are granted by the inviter in the same
-   * call that sends this — nothing left to click to become a member — so the mail only has to
-   * carry what opens the door: the identifier, and a password when one was generated. A person
-   * added who already has a Xaman account (another boat) gets the same mail without a password:
-   * their own still opens it, and generating a new one would only lock them out of it.
+   * D151: the whole invitation flow, in one e-mail. No token, no link, no code — the account and
+   * the membership already exist by the time this is sent; signing in with this address and this
+   * password is all that is left to do. Sent again, unchanged in shape, whenever the owner
+   * "relance" someone: a fresh password each time, same message.
    */
   {
     key: "credentials",
-    // A new subject on purpose, distinct from the old "Vous êtes invité à bord" — a fresh e-mail
-    // for a fresh mechanism, not a resend of one that used to fail.
-    subject: "Vos accès Xaman — {{ .Data.boat_name }}",
-    title: "Vos accès",
-    preheader: "Votre identifiant et votre mot de passe pour ouvrir le carnet.",
+    subject: "Votre accès Xaman{{ if .Data.boat_name }} — {{ .Data.boat_name }}{{ end }}",
+    title: "Votre accès Xaman",
+    preheader: "Votre adresse et votre mot de passe pour vous connecter.",
     body: [
-      h1("Vos accès au carnet"),
+      h1("Votre accès Xaman"),
       p(
-        `{{ if .Data.inviter_name }}${strong("{{ .Data.inviter_name }}")} vous a donné accès{{ else }}Vous avez accès{{ end }} au carnet d'entretien de ${strong("{{ .Data.boat_name }}")} sur Xaman, en tant que {{ .Data.role_label }}.`,
+        `{{ if .Data.inviter_name }}${strong("{{ .Data.inviter_name }}")} vous donne accès{{ else }}Vous avez accès{{ end }} au carnet d'entretien{{ if .Data.boat_name }} de ${strong("{{ .Data.boat_name }}")}{{ end }}. Voici de quoi vous connecter dès maintenant.`,
       ),
       facts([
-        ["Bateau", "{{ .Data.boat_name }}"],
-        ["Votre rôle", "{{ .Data.role_label }}"],
         ["Identifiant", "{{ .Data.email }}"],
+        ["Votre rôle", "{{ if .Data.role_label }}{{ .Data.role_label }}{{ else }}Membre{{ end }}"],
       ]),
-      `{{ if .Data.password }}\n${facts([["Mot de passe", "{{ .Data.password }}"]])}\n{{ end }}`,
-      button("Se connecter", "{{ .SiteURL }}/login"),
+      p("Mot de passe", { color: C.ink3, size: 13, top: 24 }),
+      passwordPanel(),
       p(
-        "{{ if .Data.password }}Ce mot de passe est à vous : vous pourrez le changer depuis Mon profil, une fois connecté.{{ else }}Connectez-vous avec le mot de passe que vous utilisez déjà sur Xaman.{{ end }}",
+        "Vous pouvez vous connecter dès maintenant avec cette adresse et ce mot de passe. Vous pourrez en choisir un autre depuis votre profil, une fois connecté.",
         { color: C.ink3, size: 13, top: 20 },
       ),
+      button("Se connecter à Xaman", "{{ .Data.login_url }}"),
+      fallbackLink("{{ .Data.login_url }}"),
     ],
   },
   {
@@ -512,6 +521,7 @@ export function render(template) {
 /** The generated module: the e-mails the app sends, and nothing to keep in step by hand. */
 export function renderAppTemplate() {
   const names = {
+    invite: "INVITATION",
     recovery: "RECOVERY",
     credentials: "CREDENTIALS",
     inbox_ready: "INBOX_READY",
@@ -527,9 +537,10 @@ export const ${name}_HTML = ${JSON.stringify(render(template))};
 `;
   });
   return `// Generated by scripts/gen-email-templates.mjs — do not edit.
-// The e-mails the app sends itself: the password-recovery code (D78) and the member's access
-// (D151), identical to the recovery e-mail's supabase/templates/*.html counterpart, the two
-// e-mails of the inbox (D91) and the hand-over to the yard (D141) — all app-only.
+// The e-mails the app sends itself: the invitation (D75) and the password-recovery code (D78),
+// identical to their supabase/templates/*.html counterparts, the credentials e-mail (D151), the
+// two e-mails of the inbox (D91) and the hand-over to the yard (D141) — these three only the app
+// sends.
 // Regenerate with: pnpm gen:emails
 
 ${blocks.join("\n")}`;

@@ -98,7 +98,8 @@
       "activity": "Ce qui a bougé",
       "profile": "Profil"
     },
-    "newBoat": "Ajouter un bateau"
+    "newBoat": "Ajouter un bateau",
+    "switchBoat": "Changer de bateau"
   },
   "logStatus": {
     "planned": "Planifié",
@@ -199,14 +200,15 @@
   },
   "auth": {
     "title": "Connexion",
-    "subtitle": "Entrez votre mot de passe pour ouvrir le carnet.",
+    "subtitle": "Entrez votre adresse e-mail et votre mot de passe.",
     "email": {
       "label": "Adresse e-mail",
       "placeholder": "prenom@exemple.fr",
       "invalid": "Saisissez une adresse e-mail valide."
     },
     "errors": {
-      "link": "Ce lien de connexion n'est plus valable. Demandez un nouveau code.",
+      "link": "Ce lien de connexion n'est plus valable.",
+      "hint": "Vérifiez l'adresse et le mot de passe saisis.",
       "credentials": "Adresse e-mail ou mot de passe incorrect.",
       "unconfirmed": "Ce compte n'est pas encore confirmé. Ouvrez l'e-mail que nous vous avons envoyé.",
       "rateLimited": "Trop de tentatives. Attendez une minute avant de réessayer.",
@@ -448,8 +450,14 @@
     "removed": "Membre retiré. Ses interventions sont conservées.",
     "remove": "Retirer",
     "validUntil": "Accès jusqu'au {date}",
+    "unlimited": "Accès illimité",
+    "joinedAt": "A rejoint le {date}",
+    "notJoinedYet": "N'a pas encore ouvert le carnet",
     "list": {
-      "title": "{count, plural, one {# membre} other {# membres}}"
+      "title": "{count, plural, one {# membre} other {# membres}}",
+      "joined": "{count, plural, one {# membre connecté} other {# membres connectés}}",
+      "waiting": "{count, plural, one {# pas encore connecté} other {# pas encore connectés}}",
+      "waitingHint": "Ils ont reçu un e-mail avec leur identifiant et leur mot de passe, mais n'ont pas encore ouvert le carnet."
     },
     "roles": {
       "owner": "Propriétaire",
@@ -471,81 +479,51 @@
     "invite": {
       "button": "Inviter",
       "title": "Inviter une personne",
-      "description": "Son compte est créé tout de suite : elle reçoit son identifiant et son mot de passe par e-mail.",
+      "description": "Un compte est créé immédiatement : un e-mail lui envoie son adresse et un mot de passe.",
       "email": "Adresse e-mail",
-      "submit": "Envoyer l'invitation",
-      "sent": "Invitation envoyée à {email}.",
+      "submit": "Créer l’accès",
+      "sent": "Compte créé, e-mail envoyé à {email}.",
       "proTitle": "Ce que verra ce professionnel",
       "proDescription": "Il verra tout le dossier du bateau. Il pourra ajouter et modifier ses propres interventions. Il ne pourra rien supprimer, ni voir la liste des membres. Vous pourrez retirer son accès à tout moment : ses interventions seront conservées.",
       "ownerTitle": "Ce que pourra ce propriétaire",
-      "ownerDescription": "Les mêmes droits que vous : gérer les membres, modifier les réglages, supprimer le carnet — et vous en retirer. Son accès n'a pas de date de fin. Pour lui transmettre le bateau et partir ensuite, passez plutôt par Réglages → Transférer le bateau.",
-      "duration": "Durée d'accès",
+      "ownerDescription": "Les mêmes droits que vous : gérer les membres, modifier les réglages, supprimer le carnet — et vous en retirer. Son accès n’a pas de date de fin. Pour lui transmettre le bateau et partir ensuite, passez plutôt par Réglages → Transférer le bateau.",
+      "duration": "Durée d’accès",
       "durations": {
         "7": "7 jours",
         "30": "30 jours",
         "90": "90 jours",
         "unlimited": "Sans limite"
       },
-      "durationHelp": "L'accès s'arrête seul à la date indiquée. Vous pourrez le prolonger ou le retirer avant.",
-      "durationHelpEditor": "En tant qu'éditeur, vous invitez un professionnel ou un lecteur pour 90 jours au plus.",
-      "sentTitle": "Invitation envoyée",
-      "sentDescription": "{email} a reçu un e-mail avec son identifiant et son mot de passe.",
-      "validUntil": "Accès jusqu'au {date}",
+      "durationHelp": "L’accès s’arrête seul à la date indiquée. Vous pourrez le prolonger ou le retirer avant.",
+      "durationHelpEditor": "En tant qu’éditeur, vous invitez un professionnel ou un lecteur pour 90 jours au plus.",
+      "sentTitle": "Compte créé",
+      "sentDescription": "{email} a reçu un e-mail avec son adresse de connexion et un mot de passe.",
       "emailFailedTitle": "E-mail non envoyé",
-      "emailFailed": "Aucun e-mail n’est parti vers {email}. La personne a bien accès au carnet : prévenez-la autrement.",
-      "emailFailedPassword": "Aucun e-mail n’est parti vers {email}. Son compte est créé : copiez ce mot de passe et transmettez-le vous-même.",
-      "copyPassword": "Copier le mot de passe",
-      "passwordCopied": "Mot de passe copié."
-    },
-    "invitations": {
-      "title": "Invitations en attente",
-      "expires": "expire le {date}",
-      "expired": "expirée",
-      "revoke": "Annuler",
-      "revoked": "Invitation annulée.",
-      "resend": "Relancer",
-      "resent": "Accès accordé à {email}.",
-      "reminded": "{count, plural, one {relancée une fois le {date}} other {relancée # fois, la dernière le {date}}}",
-      "status": {
-        "pending": "En attente",
-        "expired": "Expirée",
-        "accepted": "Acceptée",
-        "revoked": "Annulée"
-      },
-      "delivery": {
-        "sent": "envoi en cours",
-        "delivered": "e-mail remis",
-        "delayed": "remise retardée",
-        "badge": {
-          "bounced": "Non délivré",
-          "complained": "Indésirable",
-          "failed": "Non envoyé"
-        },
-        "title": {
-          "bounced": "L'invitation n'est jamais arrivée",
-          "complained": "L'invitation a été signalée comme indésirable",
-          "failed": "L'e-mail n'a pas pu être envoyé"
-        },
-        "reasons": {
-          "no_email": "Cette adresse n'existe pas. Vérifiez l'orthographe, puis renvoyez l'invitation à la bonne adresse.",
-          "mailbox_full": "La boîte de réception du destinataire est pleine. Réessayez plus tard.",
-          "suppressed": "Cette adresse est bloquée après un échec précédent : plus rien ne lui sera envoyé. Utilisez une autre adresse.",
-          "blocked": "Le serveur du destinataire a refusé le message définitivement — le plus souvent, l'adresse n'existe pas. Vérifiez l'orthographe.",
-          "content": "Le serveur du destinataire a refusé le contenu du message.",
-          "spam": "Le destinataire ne recevra plus d'e-mail de notre part. Transmettez-lui le lien d'invitation autrement.",
-          "temporary": "La remise a échoué temporairement. Elle sera retentée automatiquement.",
-          "unknown": "L'e-mail n'a pas pu être remis."
-        },
-        "reinvite": "Réinviter",
-        "reinviteTitle": "Réinviter {email}",
-        "reinviteDescription": "Corrigez l'adresse si besoin : une nouvelle invitation part, l'ancienne reste en attente jusqu'à ce que vous l'annuliez."
-      }
+      "emailFailed": "Le compte de {email} est bien créé, mais l’e-mail n’est pas parti. Utilisez « Renvoyer les identifiants » pour réessayer."
     },
     "expired": "Accès expiré le {date}",
     "reactivate": "Réactiver 90 j",
     "reactivated": "Accès prolongé de 90 jours.",
     "lastOwnerHint": "Pour changer de propriétaire, transférez d'abord le bateau.",
-    "transferLink": "Transférer le bateau"
+    "transferLink": "Transférer le bateau",
+    "credentials": {
+      "reissue": "Renvoyer les identifiants",
+      "sent": "Nouveaux identifiants envoyés à {email}.",
+      "emailFailedTitle": "E-mail non envoyé"
+    },
+    "sentOn": "Identifiants envoyés le {date}",
+    "sentAndReminded": "Identifiants envoyés · {count, plural, one {relancé une fois} other {relancé # fois}}, la dernière le {date}",
+    "notSent": "Identifiants pas encore envoyés",
+    "remind": "Relancer",
+    "details": {
+      "open": "Ouvrir la fiche de {name}",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "access": "Accès",
+      "until": "Jusqu'au…",
+      "save": "Enregistrer",
+      "saved": "Membre mis à jour."
+    }
   },
   "profile": {
     "title": "Mon profil",
@@ -1576,22 +1554,20 @@
       "warningDescription": "Tout le carnet : checklist et historique, interventions, relevés, achats et coûts, sorties de l'eau, intervenants, équipements. Le nouveau propriétaire verra tout, y compris les montants.",
       "step1": "1. Exportez une copie pour vous",
       "step1Help": "L'export ci-dessus vous garde une trace complète, même après avoir quitté le bateau.",
-      "step2": "2. Donnez accès au nouveau propriétaire",
+      "step2": "2. Invitez le nouveau propriétaire",
       "email": "Adresse e-mail du nouveau propriétaire",
       "emailInvalid": "Adresse e-mail invalide.",
       "invite": "Inviter comme propriétaire",
       "invited": "Invitation envoyée à {email}.",
+      "expires": "expire le {date}",
+      "revoke": "Annuler",
       "step3": "3. Quittez le bateau une fois l'invitation acceptée",
       "step3Waiting": "Le bouton apparaîtra dès qu'un autre propriétaire aura rejoint le bateau.",
       "step3Ready": "{count, plural, one {Un autre propriétaire est en place} other {# autres propriétaires sont en place}} : vous pouvez quitter le bateau.",
       "leave": "Quitter le bateau",
       "leaveTitle": "Quitter {name} ?",
       "leaveDescription": "Vous perdez l'accès immédiatement. Les interventions que vous avez enregistrées restent dans le carnet.",
-      "membersLink": "Voir les membres",
-      "emailFailedTitle": "E-mail non envoyé",
-      "emailFailedPassword": "Aucun e-mail n’est parti. Le nouveau propriétaire a bien accès : copiez ce mot de passe et transmettez-le vous-même.",
-      "copyPassword": "Copier le mot de passe",
-      "passwordCopied": "Mot de passe copié."
+      "membersLink": "Voir les membres"
     },
     "delete": {
       "title": "Supprimer le bateau",

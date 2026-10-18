@@ -52,13 +52,14 @@ export default async function BoatLayout({
   // Une seule vague pour tout ce qui ne dépend que du `boatId` : le bateau, le rôle, la session
   // et les deux compteurs de la navigation. Les compteurs attendaient la réponse du bateau sans
   // rien en tirer — c'était une seconde vague pour rien, payée à chaque écran.
-  const [{ data: boat }, { data: role }, { data: auth }, attention, inboxPending] =
+  const [{ data: boat }, { data: role }, { data: auth }, attention, inboxPending, { count: boatsCount }] =
     await Promise.all([
       readBoatRow(boatId),
       readBoatRole(boatId),
       supabase.auth.getUser(),
       loadBoatAttention(supabase, boatId),
       pendingInboxCount(supabase, boatId),
+      supabase.from("boats").select("id", { count: "exact", head: true }),
     ]);
   if (!boat || !role) notFound();
   const boatRole = role as BoatRole;
@@ -112,7 +113,14 @@ export default async function BoatLayout({
               <PrimaryActionSheet boatId={boatId} role={boatRole} />
             ) : undefined
           }
-          accountMenu={<AccountMenu boatId={boatId} role={boatRole} user={account} />}
+          accountMenu={
+            <AccountMenu
+              boatId={boatId}
+              role={boatRole}
+              user={account}
+              multipleBoats={(boatsCount ?? 0) > 1}
+            />
+          }
           banner={<OfflineBanner lastSyncAt={new Date().toISOString()} />}
         >
           {children}

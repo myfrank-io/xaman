@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { MailIcon, LogInIcon } from "lucide-react";
 
 import { PasswordField } from "@/components/auth/PasswordField";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,10 +19,12 @@ import { passwordSignInSchema, type PasswordSignInInput } from "@/lib/schemas/au
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Sign-in, one way: a password (D151). The 6-digit code used to be the second mode, and the path
- * an invitee's account was created on — both gone: an invitee now receives their password by
- * e-mail the moment an owner grants them access (`src/lib/actions/members.ts`), and signs in
- * exactly like everyone else. Nothing left to differentiate, nothing left to fail in transit.
+ * Sign-in, password only (D151).
+ *
+ * There used to be a second mode, a six-to-ten-digit code sent by e-mail, which also served the
+ * invitation page (an account created on first code). Both the code and the invitation page are
+ * gone: an invited person's account is created up front, with a password they receive by e-mail,
+ * and they sign in here like everyone else.
  */
 export function LoginForm({
   next,
@@ -72,6 +74,7 @@ export function LoginForm({
         <Alert variant="destructive">
           <MailIcon />
           <AlertTitle>{error}</AlertTitle>
+          <AlertDescription>{t("errors.hint")}</AlertDescription>
         </Alert>
       ) : null}
 

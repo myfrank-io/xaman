@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       attachments: {
@@ -173,105 +178,12 @@ export type Database = {
           },
         ]
       }
-      boat_invitations: {
-        Row: {
-          accepted_at: string | null
-          accepted_by: string | null
-          boat_id: string
-          created_at: string
-          delivery_detail: string | null
-          delivery_reason: string | null
-          delivery_status: string | null
-          delivery_updated_at: string | null
-          email: string
-          email_id: string | null
-          expires_at: string
-          id: string
-          invited_by: string | null
-          reminded_at: string | null
-          reminder_count: number
-          revoked_at: string | null
-          role: Database["public"]["Enums"]["boat_role"]
-          updated_at: string
-          valid_until: string | null
-        }
-        Insert: {
-          accepted_at?: string | null
-          accepted_by?: string | null
-          boat_id: string
-          created_at?: string
-          delivery_detail?: string | null
-          delivery_reason?: string | null
-          delivery_status?: string | null
-          delivery_updated_at?: string | null
-          email: string
-          email_id?: string | null
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          reminded_at?: string | null
-          reminder_count?: number
-          revoked_at?: string | null
-          role: Database["public"]["Enums"]["boat_role"]
-          updated_at?: string
-          valid_until?: string | null
-        }
-        Update: {
-          accepted_at?: string | null
-          accepted_by?: string | null
-          boat_id?: string
-          created_at?: string
-          delivery_detail?: string | null
-          delivery_reason?: string | null
-          delivery_status?: string | null
-          delivery_updated_at?: string | null
-          email?: string
-          email_id?: string | null
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          reminded_at?: string | null
-          reminder_count?: number
-          revoked_at?: string | null
-          role?: Database["public"]["Enums"]["boat_role"]
-          updated_at?: string
-          valid_until?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "boat_invitations_accepted_by_fkey"
-            columns: ["accepted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "boat_invitations_boat_id_fkey"
-            columns: ["boat_id"]
-            isOneToOne: false
-            referencedRelation: "boat_dashboard_stats"
-            referencedColumns: ["boat_id"]
-          },
-          {
-            foreignKeyName: "boat_invitations_boat_id_fkey"
-            columns: ["boat_id"]
-            isOneToOne: false
-            referencedRelation: "boats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "boat_invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       boat_members: {
         Row: {
           boat_id: string
           created_at: string
+          credentials_sent_at: string | null
+          credentials_sent_count: number
           invited_by: string | null
           role: Database["public"]["Enums"]["boat_role"]
           updated_at: string
@@ -282,6 +194,8 @@ export type Database = {
         Insert: {
           boat_id: string
           created_at?: string
+          credentials_sent_at?: string | null
+          credentials_sent_count?: number
           invited_by?: string | null
           role: Database["public"]["Enums"]["boat_role"]
           updated_at?: string
@@ -292,6 +206,8 @@ export type Database = {
         Update: {
           boat_id?: string
           created_at?: string
+          credentials_sent_at?: string | null
+          credentials_sent_count?: number
           invited_by?: string | null
           role?: Database["public"]["Enums"]["boat_role"]
           updated_at?: string
@@ -696,7 +612,7 @@ export type Database = {
       }
       checklist_items: {
         Row: {
-          actions: NonNullable<Json>
+          actions: Json
           anchor_date: string
           anchor_hours: number | null
           boat_id: string
@@ -721,7 +637,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          actions?: NonNullable<Json>
+          actions?: Json
           anchor_date?: string
           anchor_hours?: number | null
           boat_id: string
@@ -738,7 +654,7 @@ export type Database = {
           is_active?: boolean
           label: string
           rule_id?: string | null
-          search_text?: never
+          search_text?: string | null
           sort_order?: number
           source?: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id?: string | null
@@ -746,7 +662,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          actions?: NonNullable<Json>
+          actions?: Json
           anchor_date?: string
           anchor_hours?: number | null
           boat_id?: string
@@ -763,7 +679,7 @@ export type Database = {
           is_active?: boolean
           label?: string
           rule_id?: string | null
-          search_text?: never
+          search_text?: string | null
           sort_order?: number
           source?: Database["public"]["Enums"]["checklist_item_source"]
           template_item_id?: string | null
@@ -896,7 +812,7 @@ export type Database = {
       }
       checklist_template_items: {
         Row: {
-          actions: NonNullable<Json>
+          actions: Json
           created_at: string
           description: string | null
           engine_scope: string
@@ -912,7 +828,7 @@ export type Database = {
           zone_scope: string
         }
         Insert: {
-          actions?: NonNullable<Json>
+          actions?: Json
           created_at?: string
           description?: string | null
           engine_scope?: string
@@ -928,7 +844,7 @@ export type Database = {
           zone_scope?: string
         }
         Update: {
-          actions?: NonNullable<Json>
+          actions?: Json
           created_at?: string
           description?: string | null
           engine_scope?: string
@@ -1045,7 +961,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
-          search_text?: never
+          search_text?: string | null
           specialty: string
           updated_at?: string
           updated_by?: string | null
@@ -1063,7 +979,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
-          search_text?: never
+          search_text?: string | null
           specialty?: string
           updated_at?: string
           updated_by?: string | null
@@ -1343,7 +1259,7 @@ export type Database = {
           search_text: string | null
           serial: string | null
           sort_order: number
-          specs: NonNullable<Json>
+          specs: Json
           updated_at: string
           updated_by: string | null
         }
@@ -1363,10 +1279,10 @@ export type Database = {
           notes?: string | null
           quantity?: number
           removed_at?: string | null
-          search_text?: never
+          search_text?: string | null
           serial?: string | null
           sort_order?: number
-          specs?: NonNullable<Json>
+          specs?: Json
           updated_at?: string
           updated_by?: string | null
         }
@@ -1386,10 +1302,10 @@ export type Database = {
           notes?: string | null
           quantity?: number
           removed_at?: string | null
-          search_text?: never
+          search_text?: string | null
           serial?: string | null
           sort_order?: number
-          specs?: NonNullable<Json>
+          specs?: Json
           updated_at?: string
           updated_by?: string | null
         }
@@ -1615,7 +1531,7 @@ export type Database = {
           mime_type: string
           purchase_id?: string | null
           received_at?: string
-          search_text?: never
+          search_text?: string | null
           sender_email?: string | null
           sender_name?: string | null
           size_bytes: number
@@ -1642,7 +1558,7 @@ export type Database = {
           mime_type?: string
           purchase_id?: string | null
           received_at?: string
-          search_text?: never
+          search_text?: string | null
           sender_email?: string | null
           sender_name?: string | null
           size_bytes?: number
@@ -1867,7 +1783,7 @@ export type Database = {
           notes?: string | null
           pending_engine_hours?: Json | null
           performed_at: string
-          search_text?: never
+          search_text?: string | null
           status?: Database["public"]["Enums"]["log_status"]
           title: string
           updated_at?: string
@@ -1891,7 +1807,7 @@ export type Database = {
           notes?: string | null
           pending_engine_hours?: Json | null
           performed_at?: string
-          search_text?: never
+          search_text?: string | null
           status?: Database["public"]["Enums"]["log_status"]
           title?: string
           updated_at?: string
@@ -1979,9 +1895,9 @@ export type Database = {
       }
       maintenance_rules: {
         Row: {
-          actions: NonNullable<Json>
+          actions: Json
           brand: string | null
-          consumables: NonNullable<Json>
+          consumables: Json
           created_at: string
           description: string | null
           engine_scope: string
@@ -2000,9 +1916,9 @@ export type Database = {
           zone_scope: string
         }
         Insert: {
-          actions?: NonNullable<Json>
+          actions?: Json
           brand?: string | null
-          consumables?: NonNullable<Json>
+          consumables?: Json
           created_at?: string
           description?: string | null
           engine_scope?: string
@@ -2021,9 +1937,9 @@ export type Database = {
           zone_scope?: string
         }
         Update: {
-          actions?: NonNullable<Json>
+          actions?: Json
           brand?: string | null
-          consumables?: NonNullable<Json>
+          consumables?: Json
           created_at?: string
           description?: string | null
           engine_scope?: string
@@ -2162,7 +2078,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           reference?: string | null
-          search_text?: never
+          search_text?: string | null
           supplier_contact_id?: string | null
           unit?: string
           updated_at?: string
@@ -2183,7 +2099,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           reference?: string | null
-          search_text?: never
+          search_text?: string | null
           supplier_contact_id?: string | null
           unit?: string
           updated_at?: string
@@ -2249,6 +2165,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_platform_admin: boolean
+          last_sign_in_at: string | null
           locale: string
           updated_at: string
         }
@@ -2259,6 +2176,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_platform_admin?: boolean
+          last_sign_in_at?: string | null
           locale?: string
           updated_at?: string
         }
@@ -2269,6 +2187,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_platform_admin?: boolean
+          last_sign_in_at?: string | null
           locale?: string
           updated_at?: string
         }
@@ -2319,7 +2238,7 @@ export type Database = {
           part_id?: string | null
           purchased_at: string
           quantity?: number
-          search_text?: never
+          search_text?: string | null
           supplier_contact_id?: string | null
           supplier_name?: string | null
           updated_at?: string
@@ -2344,7 +2263,7 @@ export type Database = {
           part_id?: string | null
           purchased_at?: string
           quantity?: number
-          search_text?: never
+          search_text?: string | null
           supplier_contact_id?: string | null
           supplier_name?: string | null
           updated_at?: string
@@ -2472,58 +2391,6 @@ export type Database = {
           review_pending_purchases?: never
         }
         Relationships: []
-      }
-      boat_invitations_safe: {
-        Row: {
-          accepted_at: string | null
-          accepted_by: string | null
-          boat_id: string | null
-          created_at: string | null
-          delivery_reason: string | null
-          delivery_status: string | null
-          delivery_updated_at: string | null
-          email: string | null
-          expires_at: string | null
-          id: string | null
-          invited_by: string | null
-          invited_by_name: string | null
-          reminded_at: string | null
-          reminder_count: number | null
-          revoked_at: string | null
-          role: Database["public"]["Enums"]["boat_role"] | null
-          status: string | null
-          valid_until: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "boat_invitations_accepted_by_fkey"
-            columns: ["accepted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "boat_invitations_boat_id_fkey"
-            columns: ["boat_id"]
-            isOneToOne: false
-            referencedRelation: "boat_dashboard_stats"
-            referencedColumns: ["boat_id"]
-          },
-          {
-            foreignKeyName: "boat_invitations_boat_id_fkey"
-            columns: ["boat_id"]
-            isOneToOne: false
-            referencedRelation: "boats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "boat_invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       checklist_category_progress: {
         Row: {
@@ -3014,26 +2881,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      enqueue_weekly_digest: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      enqueue_weekly_digest: { Args: never; Returns: undefined }
       generic_template_for_boat_type: {
         Args: { p_type: Database["public"]["Enums"]["boat_type"] }
         Returns: string
       }
-      grant_boat_access: {
-        Args: {
-          p_boat_id: string
-          p_role: Database["public"]["Enums"]["boat_role"]
-          p_user_id: string
-          p_valid_until: string | null
-        }
-        Returns: undefined
-      }
       is_boat_member: { Args: { p_boat_id: string }; Returns: boolean }
       is_boat_owner: { Args: { p_boat_id: string }; Returns: boolean }
-      is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      is_platform_admin: { Args: never; Returns: boolean }
       log_title_suggestions: {
         Args: { p_boat_id: string; p_query: string }
         Returns: {
@@ -3053,7 +2908,7 @@ export type Database = {
         Returns: undefined
       }
       normalise_for_match: { Args: { p_value: string }; Returns: string }
-      purge_trash: { Args: Record<PropertyKey, never>; Returns: number }
+      purge_trash: { Args: never; Returns: number }
       save_checklist_item: {
         Args: {
           p_category_ids: string[]
@@ -3116,7 +2971,7 @@ export type Database = {
       text_fold: { Args: { p_text: string }; Returns: string }
       text_haystack: { Args: { p_parts: string[] }; Returns: string }
       weekly_digest_payload: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           boat_id: string
           boat_name: string

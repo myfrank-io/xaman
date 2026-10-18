@@ -164,37 +164,6 @@ describeWithDb("read access (select)", () => {
     expect(await count(U.stranger, "boat_members", "boat_id = $1", [BOAT])).toBe(0);
   });
 
-  it("boat_invitations: only owners (and admin) see them; the hidden columns stay hidden (D151 — legacy rows only, nothing inserts here any more)", async () => {
-    expect(await count(U.owner, "boat_invitations", "boat_id = $1", [BOAT])).toBe(1);
-    expect(await count(U.admin, "boat_invitations", "boat_id = $1", [BOAT])).toBe(1);
-    for (const role of ["editor", "pro", "viewer", "stranger"] as Role[]) {
-      expect(await count(U[role], "boat_invitations", "boat_id = $1", [BOAT]), role).toBe(0);
-    }
-    const star = await run(U.owner, "select * from public.boat_invitations");
-    expect(star.ok).toBe(false);
-
-    // D79 (0023): what became of the e-mail is readable, the mailer's own id and its English
-    // sentence are not — they are written by the service key and never leave the server.
-    const delivery = await run(
-      U.owner,
-      "select delivery_status, delivery_reason, delivery_updated_at from public.boat_invitations",
-    );
-    expect(delivery.ok).toBe(true);
-
-    // D112 (0031): the reminders are read on the Membres screen — « relancée 3 fois » is what
-    // ends the waiting — and written by the Server Action alone, with the service key.
-    const reminders = await run(
-      U.owner,
-      "select reminded_at, reminder_count from public.boat_invitations",
-    );
-    expect(reminders.ok).toBe(true);
-    for (const column of ["email_id", "delivery_detail"]) {
-      const hidden = await run(U.owner, `select ${column} from public.boat_invitations`);
-      expect(hidden.ok, column).toBe(false);
-      if (!hidden.ok) expect(hidden.code, column).toBe("42501");
-    }
-  });
-
   it("profiles: a user sees themself and the people sharing a boat; the admin sees everyone", async () => {
     expect(await count(U.owner, "profiles")).toBe(4);
     expect(await count(U.pro, "profiles")).toBe(4);
@@ -317,20 +286,12 @@ describeWithDb("insert", () => {
     expect((await run(U.viewer, sql, [U.viewer.id])).ok).toBe(false);
   });
 
-  it("boat_members and boat_invitations: owner only", async () => {
+  it("boat_members: owner only", async () => {
     const member =
       "insert into public.boat_members (boat_id, user_id, role) values ($1, $2, 'viewer')";
     expect((await run(U.owner, member, [BOAT, U.stranger.id])).ok).toBe(true);
     expect((await run(U.admin, member, [BOAT, U.stranger.id])).ok).toBe(true);
     expect((await run(U.editor, member, [BOAT, U.stranger.id])).ok).toBe(false);
-    // D151: nothing in the app writes this row any more (a grant goes straight to boat_members,
-    // `grant_boat_access`). The insert policy itself is untouched, so a direct insert — the only
-    // way anyone still reaches this table — still obeys it.
-    const invite =
-      "insert into public.boat_invitations (boat_id, email, role, invited_by) values ($1, 'new@test.xaman', 'editor', $2)";
-    expect((await run(U.owner, invite, [BOAT, U.owner.id])).ok).toBe(true);
-    expect((await run(U.owner, invite, [BOAT, U.editor.id])).ok).toBe(false);
-    expect((await run(U.editor, invite, [BOAT, U.editor.id])).ok).toBe(false);
   });
 
   it("checklist templates: platform admin only", async () => {
@@ -1170,44 +1131,6 @@ describeWithDb("update", () => {
     expect(twoOwners).toBe(1);
   });
 
-  it("boat_invitations: owner revokes; nothing else is updatable", async () => {
-    expect(
-      await run(
-        U.owner,
-        "update public.boat_invitations set revoked_at = now() where boat_id = $1",
-        [BOAT],
-      ),
-    ).toEqual({ ok: true, rowCount: 1 });
-    expect(
-      (
-        await run(
-          U.owner,
-          "update public.boat_invitations set email = 'x@test.xaman' where boat_id = $1",
-          [BOAT],
-        )
-      ).ok,
-    ).toBe(false);
-    expect(
-      await run(
-        U.editor,
-        "update public.boat_invitations set revoked_at = now() where boat_id = $1",
-        [BOAT],
-      ),
-    ).toEqual({ ok: true, rowCount: 0 });
-
-    // D112 (0031): a reminder is a Server Action, never a browser writing a date on a row.
-    // `revoked_at` stays the single column `authenticated` may update on this table.
-    for (const column of ["reminded_at = now()", "reminder_count = 5", "expires_at = now()"]) {
-      const written = await run(
-        U.owner,
-        `update public.boat_invitations set ${column} where boat_id = $1`,
-        [BOAT],
-      );
-      expect(written.ok, column).toBe(false);
-      if (!written.ok) expect(written.code, column).toBe("42501");
-    }
-  });
-
   it("profiles: a user edits their own display data only, never is_platform_admin", async () => {
     expect(
       await run(U.owner, "update public.profiles set full_name = 'O' where id = $1", [U.owner.id]),
@@ -1227,6 +1150,18 @@ describeWithDb("update", () => {
       [U.owner.id],
     );
     expect(email.ok).toBe(false);
+  });
+
+  // D152: last_sign_in_at is selectable (co-members see who has joined) but never writable by
+  // authenticated — only the on_auth_user_sign_in trigger (security definer) sets it.
+  it("profiles: last_sign_in_at is readable by co-members, never writable by authenticated", async () => {
+    expect(await count(U.owner, "profiles", "last_sign_in_at is null")).toBeGreaterThanOrEqual(0);
+    const write = await run(
+      U.owner,
+      "update public.profiles set last_sign_in_at = now() where id = $1",
+      [U.owner.id],
+    );
+    expect(write.ok).toBe(false);
   });
 });
 
@@ -1266,10 +1201,6 @@ describeWithDb("delete", () => {
     ).toEqual({ ok: true, rowCount: 0 });
   });
 });
-
-// `get_invitation_preview` and `accept_invitation` are gone with D151 (no more /invite/[token]):
-// `grant_boat_access` is their replacement, tested above alongside the insert policy it stands in
-// place of at acceptance time.
 
 describeWithDb("storage bucket boat-files", () => {
   const OBJECT = `boats/${BOAT}/maintenance_log/${LOG_OWNER}/photo.jpg`;
@@ -1558,92 +1489,6 @@ describeWithDb("attachments (E10-1)", () => {
 // ---------------------------------------------------------------------------------------------
 const COMPLETION_OWNER = "00000000-0000-0000-0000-000000004001";
 const COMPLETION_PRO = "00000000-0000-0000-0000-000000004002";
-
-// D151: `boat_invitations_insert` is untouched (nothing drops the policy — only its caller, the
-// pre-D151 code path, is gone), so a direct insert still proves the same rule. The one case that
-// moved — `accept_invitation` carrying `valid_until` to the membership — is proven on its
-// replacement, `grant_boat_access`, below.
-describeWithDb("invitations issued by an editor (D28)", () => {
-  const invite = (u: User, role: string, days: number | null) =>
-    run(
-      u,
-      `insert into public.boat_invitations (boat_id, email, role, invited_by, valid_until)
-       values ($1, 'meca@test.xaman', $2::public.boat_role, $3, current_date + $4::int)`,
-      [BOAT, role, u.id, days],
-    );
-
-  it("an editor may invite a pro or a viewer for 90 days at most", async () => {
-    expect((await invite(U.editor, "pro", 30)).ok, "pro 30 d").toBe(true);
-    expect((await invite(U.editor, "viewer", 90)).ok, "viewer 90 d").toBe(true);
-    expect((await invite(U.editor, "pro", 91)).ok, "pro 91 d").toBe(false);
-    expect((await invite(U.editor, "pro", null)).ok, "pro, no end date").toBe(false);
-    expect((await invite(U.editor, "editor", 30)).ok, "editor role").toBe(false);
-    expect((await invite(U.editor, "owner", 30)).ok, "owner role").toBe(false);
-  });
-
-  it("an owner keeps inviting any role, with or without an end date", async () => {
-    expect((await invite(U.owner, "editor", null)).ok).toBe(true);
-    expect((await invite(U.owner, "pro", 365)).ok).toBe(true);
-    // D89: the UI now offers `owner` at the invitation. The policy always allowed it — this is
-    // what says so, and what would fail if a later migration decided to close it.
-    expect((await invite(U.owner, "owner", null)).ok, "owner role").toBe(true);
-    expect((await invite(U.pro, "viewer", 30)).ok, "a pro invites nobody").toBe(false);
-    expect((await invite(U.viewer, "viewer", 30)).ok, "a viewer invites nobody").toBe(false);
-  });
-});
-
-describeWithDb("grant_boat_access (D151)", () => {
-  const grant = (u: User, target: User, role: string, validUntil: string | null) =>
-    run(u, "select public.grant_boat_access($1, $2, $3::public.boat_role, $4::date)", [
-      BOAT,
-      target.id,
-      role,
-      validUntil,
-    ]);
-
-  it("an owner grants any role, and an owner grant never expires regardless of what is passed", async () => {
-    expect((await grant(U.owner, U.stranger, "viewer", "2026-10-01")).ok).toBe(true);
-    const row = await as(U.admin, async (c) => {
-      const res = await c.query(
-        "select role, valid_until from public.boat_members where boat_id = $1 and user_id = $2",
-        [BOAT, U.stranger.id],
-      );
-      return res.rows[0] as { role: string; valid_until: string | null };
-    });
-    expect(row).toEqual({ role: "viewer", valid_until: expect.any(Date) });
-
-    expect((await grant(U.owner, U.stranger, "owner", "2026-10-01")).ok).toBe(true);
-    const owner = await as(U.admin, async (c) => {
-      const res = await c.query(
-        "select role, valid_until from public.boat_members where boat_id = $1 and user_id = $2",
-        [BOAT, U.stranger.id],
-      );
-      return res.rows[0] as { role: string; valid_until: Date | null };
-    });
-    expect(owner.role).toBe("owner");
-    expect(owner.valid_until).toBeNull();
-  });
-
-  it("an editor grants a fresh pro/viewer only, dated, never a peer, never someone already aboard", async () => {
-    expect(
-      (await grant(U.editor, U.stranger, "viewer", "2026-10-01")).ok,
-      "pro/viewer, dated",
-    ).toBe(true);
-    expect((await grant(U.editor, U.stranger, "viewer", null)).ok, "no end date").toBe(false);
-    expect((await grant(U.editor, U.stranger, "editor", "2026-10-01")).ok, "a peer role").toBe(
-      false,
-    );
-    // The stranger is already aboard from the call just above: an editor may not touch them again.
-    expect((await grant(U.editor, U.stranger, "viewer", "2026-10-01")).ok, "already a member").toBe(
-      false,
-    );
-  });
-
-  it("a pro or a viewer grants nobody anything", async () => {
-    expect((await grant(U.pro, U.stranger, "viewer", "2026-10-01")).ok).toBe(false);
-    expect((await grant(U.viewer, U.stranger, "viewer", "2026-10-01")).ok).toBe(false);
-  });
-});
 
 describeWithDb("cancelling a completion (D15)", () => {
   const del = (u: User, id: string) =>
@@ -2076,38 +1921,6 @@ describeWithDb("secondary views", () => {
       expect(await count(null, v)).toBe(-1);
     },
   );
-
-  it("boat_invitations_safe: owners and the admin only, never the token", async () => {
-    expect(await count(U.owner, "boat_invitations_safe", "boat_id = $1", [BOAT])).toBeGreaterThan(
-      0,
-    );
-    expect(await count(U.admin, "boat_invitations_safe", "boat_id = $1", [BOAT])).toBeGreaterThan(
-      0,
-    );
-    for (const role of ["editor", "pro", "viewer", "stranger"] as Role[]) {
-      expect(await count(U[role], "boat_invitations_safe", "boat_id = $1", [BOAT]), role).toBe(0);
-    }
-    const columns = await as(U.owner, async (c) => {
-      const res = await c.query(
-        "select column_name from information_schema.columns where table_schema = 'public' and table_name = 'boat_invitations_safe'",
-      );
-      return res.rows.map((row) => row.column_name as string);
-    });
-    expect(columns).not.toContain("token");
-    expect(columns).toContain("valid_until");
-    // D79: the delivery is part of what an owner reads; the message id and the raw provider
-    // sentence stay out of the view, as the token does.
-    expect(columns).toEqual(
-      expect.arrayContaining(["delivery_status", "delivery_reason", "delivery_updated_at"]),
-    );
-    expect(columns).not.toContain("email_id");
-    expect(columns).not.toContain("delivery_detail");
-    // D112: the reminders are read from the same place as the rest of an invitation.
-    expect(columns).toEqual(expect.arrayContaining(["reminded_at", "reminder_count"]));
-    // A recreated view comes back granted to everyone by Supabase's default privileges; 0031
-    // restates what 0004 wanted, and this is what would have caught the drift 0023 left.
-    expect(await count(null, "boat_invitations_safe")).toBe(-1);
-  });
 
   it("maintenance_logs_trash_view: a trashed log shows for owner/editor, nothing for outsiders", async () => {
     const seen = async (u: User) =>

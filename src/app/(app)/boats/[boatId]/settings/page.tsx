@@ -54,7 +54,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ boatI
     updatedAt: category.updated_at,
   }));
 
-  // Transfer (E1-8): other owners — the new one is granted right away (D151), no pending step.
+  // Transfer (E1-8, D151): the new owner's membership exists the moment they are invited, so
+  // this only needs the count of owners other than the one looking at this screen.
   let otherOwners = 0;
   if (isOwner) {
     const { count } = await supabase

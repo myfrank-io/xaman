@@ -85,6 +85,7 @@ Miroir public de `auth.users`, créé par trigger `on_auth_user_created`.
 | avatar_url | text | | |
 | locale | text | not null default 'fr' | |
 | is_platform_admin | boolean | not null default false | Joseph = true. `revoke update (is_platform_admin) on profiles from authenticated` : modifiable uniquement en SQL / clé service |
+| last_sign_in_at | timestamptz | nullable | D152 : miroir de `auth.users.last_sign_in_at` via trigger `on_auth_user_sign_in` ; `null` = compte créé (identifiants envoyés) mais jamais utilisé pour se connecter |
 | created_at | timestamptz | not null default now() | |
 | updated_at | timestamptz | not null default now() | |
 
@@ -164,41 +165,23 @@ d'autre** : nom, type, constructeur et modèle restent ce que le formulaire affi
 | user_id | uuid | FK profiles on delete cascade | |
 | role | boat_role | not null | |
 | valid_from / valid_until | date | null | V2 (renter) ; null = illimité. Les fonctions RLS vérifient `valid_until is null or valid_until >= current_date` |
+| credentials_sent_count | integer | 0 | D154 : e-mails d'identifiants acceptés par le mailer (1 = premier envoi, chaque suivant = une relance) |
+| credentials_sent_at | timestamptz | null | D154 : dernier envoi accepté |
 | invited_by | uuid | FK profiles | |
 | created_at | timestamptz | | |
 | PK | (boat_id, user_id) | | |
 
 Contrainte métier : un bateau a **au moins un `owner`** (trigger empêchant la suppression / rétrogradation du dernier owner).
 
-### 3.6 `boat_invitations` (legacy — D151)
+### 3.6 Invitations (supprimé, D151)
 
-Depuis `20260924120000` (D151) l'app n'insère plus dans cette table : inviter quelqu'un crée son
-compte et sa ligne `boat_members` dans le même appel (`grant_boat_access`, security definer,
-appelé par l'inviteur — pas par l'invité), et envoie un e-mail avec l'identifiant et le mot de
-passe plutôt qu'un lien à token. La table est conservée pour les lignes déjà envoyées sous
-l'ancien modèle : le bouton « Relancer » de l'écran Membres les convertit une par une (crée le
-compte, accorde l'accès, envoie le nouvel e-mail, supprime la ligne) au lieu de renvoyer le lien.
-Une fois ce solde à zéro, une migration ultérieure pourra supprimer la table. La colonne `token`
-est supprimée (plus rien ne la lit) ; `accept_invitation` et `get_invitation_preview` aussi
-(`/invite/[token]` n'existe plus).
-
-| Colonne | Type | Contraintes | Notes |
-|---|---|---|---|
-| id | uuid | PK | |
-| boat_id | uuid | FK boats on delete cascade | |
-| email | text | not null | normalisé en minuscules |
-| role | boat_role | not null | jamais 'owner' via l'UI V1 (un owner promeut ensuite) |
-| invited_by | uuid | FK profiles | |
-| expires_at | timestamptz | not null default now() + interval '14 days' | |
-| accepted_at | timestamptz | null | |
-| accepted_by | uuid | FK profiles, null | |
-| revoked_at | timestamptz | null | |
-| created_at | timestamptz | | |
-| email_id | text | null | id du message chez l'expéditeur (Resend), écrit quand l'app envoie l'invitation elle-même (D75) ; index partiel `boat_invitations_email_id_idx`. Non lisible par `authenticated` (D79, `0023`) |
-| delivery_status | text | null, check | `sent` / `delivered` / `bounced` / `complained` / `delayed` / `failed`. Null = l'app n'a pas envoyé le message (pas d'expéditeur configuré) : inconnu, pas « remis » |
-| delivery_reason | text | null, check | cause de l'échec dans le vocabulaire de l'app : `no_email`, `mailbox_full`, `suppressed`, `blocked`, `content`, `spam`, `temporary`, `unknown` — traduit en français par `members.invitations.delivery.reasons.*` |
-| delivery_detail | text | null | la phrase du fournisseur, telle quelle, pour la table et les journaux. Non lisible par `authenticated` |
-| delivery_updated_at | timestamptz | null | horodatage de l'événement (pas de l'écriture) : une mise à jour plus ancienne que la valeur stockée est refusée, ce qui rend inoffensif un webhook arrivé dans le désordre |
+`boat_invitations`, `accept_invitation(token)`, `get_invitation_preview(token)` et la vue
+`boat_invitations_safe` ont existé jusqu'à `0047_drop_invitations.sql`. Le flux à token/OTP est
+remplacé par une adhésion instantanée : `inviteMember` / `inviteNewOwner` /
+`reissueCredentials` (`src/lib/actions/members.ts`) créent ou réinitialisent directement le compte
+`auth.users` (clé service) et font un `upsert` sur `boat_members`, puis envoient un e-mail
+« identifiants » (adresse + mot de passe, `src/lib/email/credentials.ts`). Il n'y a plus rien de
+« en attente » : pas de ligne, pas de token, pas de statut de remise à suivre.
 
 ### 3.7 `engines`
 
@@ -734,13 +717,13 @@ create function is_boat_owner(p_boat_id uuid) returns boolean      -- boat_role 
 create function can_write_boat(p_boat_id uuid) returns boolean     -- owner | editor
 create function can_contribute_boat(p_boat_id uuid) returns boolean -- owner | editor | pro
 
--- D151 (20260924120000) : accorder l'accès, tout de suite, appelé par l'inviteur (pas par l'invité).
--- security definer ; mêmes règles que l'ancienne politique d'insertion sur boat_invitations (0004,
--- D28) : owner → n'importe quel rôle (valid_until forcé à null si role = 'owner', D89) ; editor →
--- pro/viewer uniquement, sur quelqu'un qui n'est pas déjà membre, toujours daté (<= 90 jours).
--- Upsert dans boat_members ; retourne void, l'appelant a déjà le user_id (compte créé juste avant
--- avec la clé service — src/lib/actions/members.ts).
-create function grant_boat_access(p_boat_id uuid, p_user_id uuid, p_role boat_role, p_valid_until date) returns void ...;
+-- Aperçu d'une invitation pour la page /invite/[token], appelable par un utilisateur anonyme
+-- (security definer) : renvoie boat_name, inviter_name, email, role, status ('pending'|'expired'|'accepted'|'revoked').
+create function get_invitation_preview(p_token text) returns table (...) ...;
+
+-- Acceptation d'invitation (security definer) : vérifie token, non expiré, non révoqué, non accepté,
+-- email = auth.email() (insensible à la casse), upsert boat_members, marque accepted_at / accepted_by. Retourne boat_id.
+create function accept_invitation(p_token text) returns uuid ...;
 
 -- Instanciation d'un modèle de checklist (security definer, réservé owner/editor/admin). Idempotente :
 --  * upsert des catégories dans boat_categories (clé (boat_id, external_ref) = external_ref de la catégorie du modèle) ;
@@ -963,8 +946,8 @@ La même logique est implémentée en TypeScript dans `src/lib/checklist-status.
 ### 6.3 `maintenance_logs_view`
 `maintenance_logs` non supprimés, joints à `boat_categories` (nom, couleur), `contacts` (nom), `profiles` (nom du créateur), avec `engine_hours` agrégé en JSON `[{engine_id, label, hours}]` depuis `engine_hour_readings`, `completions_count`, `attachments_count`, et depuis `0042` `checklist_item_id` et `checklist_item_label` (le point dont la ligne est le faire, D140). Utilisée par la liste, le détail et l'export. Une variante `maintenance_logs_trash_view` expose les lignes supprimées (< 30 jours).
 
-### 6.4 `boat_invitations_safe` (legacy — D151, lit les lignes qui restent de l'ancien modèle)
-`boat_invitations`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur. Depuis `0023` (D79) elle expose aussi `delivery_status`, `delivery_reason` et `delivery_updated_at` — jamais `email_id` ni `delivery_detail`.
+### 6.4 `boat_invitations_safe`
+`boat_invitations` sans la colonne `token`, avec `status` calculé (`pending` / `expired` / `accepted` / `revoked`) et le nom de l'inviteur. Depuis `0023` (D79) elle expose aussi `delivery_status`, `delivery_reason` et `delivery_updated_at` — jamais `email_id` ni `delivery_detail`.
 
 ### 6.5 `expenses_by_category`
 Union de `maintenance_logs` (`cost`, `date = performed_at`, `source = 'log'`, `purchase_kind = null`), `purchases` (`amount`, `date = purchased_at`, `source = 'purchase'`, `purchase_kind = kind`), `haul_outs` (`cost`, `date = started_at`, `source = 'haul_out'`, `purchase_kind = null`), non supprimés, montant non null. Colonnes : `boat_id`, `category_id` (null → « Non catégorisé »), `category_name`, `source`, `purchase_kind`, `date`, `amount`, `currency`, `entity_id`. Agrégation par période côté requête ; le tableau E5-5 croise `category_name` × (`source`, `purchase_kind`).
@@ -1014,6 +997,7 @@ Publication `supabase_realtime` sur : `maintenance_logs`, `checklist_items`, `ch
 - Contraintes de forme : `color ~ '^#[0-9A-Fa-f]{6}$'` (catégories et modèles), `jsonb_typeof(actions) = 'array'`, `jsonb_typeof(specs) = 'object'`, `pending_engine_hours` objet ou null, `boat_invitations.email = lower(email)`, `maintenance_logs.title` entre 1 et 160 caractères, `attachments.size_bytes` entre 1 et 10 Mio, `checklist_template_items.source in ('briefing','proposal','builder')`, `organization_members.role in ('admin','member')`, `boat_members.valid_until >= valid_from`.
 - Index supplémentaires sur `boat_id` (+ FK fréquentes) de toutes les tables métier, pour les politiques RLS et les listes ; index partiels sur `maintenance_logs.haul_out_id`, `checklist_items.engine_id`, `checklist_completions.maintenance_log_id`, `purchases.maintenance_log_id`.
 - Trigger `on_auth_user_email_updated` : synchronise `profiles.email` quand l'e-mail change dans `auth.users` ; `handle_new_user` lit `full_name` / `avatar_url` dans `raw_user_meta_data` (renseignés par le seed via `inviteUserByEmail`).
+- Trigger `on_auth_user_sign_in` (D152, `0048_last_sign_in.sql`) : synchronise `profiles.last_sign_in_at` quand `auth.users.last_sign_in_at` change, pour distinguer côté écran Membres un compte créé (identifiants envoyés) d'un compte réellement utilisé.
 - Supabase fournit Postgres 17 ; la validation locale sans Docker se fait sur Postgres 16 avec `tests/support/supabase-shim.sql` (aucune fonctionnalité spécifique à la 17 n'est utilisée).
 
 ## 11. Notes d'implémentation (migration `0003_logic.sql`)
