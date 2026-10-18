@@ -12,6 +12,7 @@ import {
   type UploadStage,
 } from "@/components/attachments/upload";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Progress } from "@/components/ui/progress";
 import { createInboxUpload } from "@/lib/actions/inbox";
 import { rejectionReason } from "@/lib/attachments/image";
@@ -53,11 +54,17 @@ export function LogDocumentStart({
   boatId,
   read,
   onRead,
+  inboxAddress = null,
 }: {
   boatId: string;
   /** The document already read, when there is one: the block then says which. */
   read: ReadDocument | null;
   onRead: (document: ReadDocument) => void;
+  /**
+   * L'adresse du carnet, quand un domaine d'arrivée est configuré (D145) : celui qui a la facture
+   * dans sa boîte la transfère plutôt que de la téléverser. Null sinon — la porte n'existe pas.
+   */
+  inboxAddress?: string | null;
 }) {
   const t = useTranslations("logs.document");
   const ta = useTranslations("attachments");
@@ -225,6 +232,24 @@ export function LogDocumentStart({
                 </span>
               </>
             )}
+          </div>
+        </div>
+      ) : null}
+
+      {/* L'autre porte, pour qui a déjà la facture dans sa boîte (D145) : la même chaîne de lecture,
+          sans rien téléverser. Présente seulement quand le carnet a une adresse. */}
+      {inboxAddress ? (
+        <div className="flex flex-col gap-2 border-t border-border pt-3">
+          <p className="text-caption text-ink-2">{t("mailHint")}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-lg border border-border bg-surface px-3 py-2 num text-label break-all select-all">
+              {inboxAddress}
+            </span>
+            <CopyButton
+              value={inboxAddress}
+              label={t("mailCopy")}
+              onCopied={() => toast.success(t("mailCopied"))}
+            />
           </div>
         </div>
       ) : null}

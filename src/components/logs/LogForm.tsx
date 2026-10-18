@@ -106,6 +106,7 @@ export function LogForm({
   haulOuts,
   attachments = [],
   askForDocument = false,
+  inboxAddress = null,
   canCreateContact,
 }: {
   boatId: string;
@@ -126,6 +127,8 @@ export function LogForm({
    * sheet: they arrive with their subject named and have nothing to read.
    */
   askForDocument?: boolean;
+  /** Boat's inbox address (D145), to offer forwarding a document by e-mail; null when unconfigured. */
+  inboxAddress?: string | null;
   canCreateContact: boolean;
 }) {
   const t = useTranslations("logs.form");
@@ -549,7 +552,12 @@ export function LogForm({
               <FileTextIcon className="size-4" aria-hidden />
               {t("readDocument")}
             </summary>
-            <LogDocumentStart boatId={boatId} read={read} onRead={applyReading} />
+            <LogDocumentStart
+              boatId={boatId}
+              read={read}
+              onRead={applyReading}
+              inboxAddress={inboxAddress}
+            />
           </details>
         ) : null}
       </AttachmentFormSection>
